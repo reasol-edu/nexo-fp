@@ -5,8 +5,10 @@ use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
+#[Auditable]
 class Company
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

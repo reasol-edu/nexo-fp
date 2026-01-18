@@ -3,8 +3,10 @@ namespace App\Entity;
 
 use App\Repository\WorkerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 
 #[ORM\Entity(repositoryClass: WorkerRepository::class)]
+#[Auditable]
 class Worker
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

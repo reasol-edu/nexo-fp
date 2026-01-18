@@ -3,8 +3,10 @@ namespace App\Entity;
 
 use App\Repository\AcademicYearRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 
 #[ORM\Entity(repositoryClass: AcademicYearRepository::class)]
+#[Auditable]
 class AcademicYear
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
