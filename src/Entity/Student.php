@@ -3,8 +3,10 @@ namespace App\Entity;
 
 use App\Repository\StudentRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 
 #[ORM\Entity(repositoryClass: StudentRepository::class)]
+#[Auditable]
 class Student
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

@@ -4,8 +4,10 @@ namespace App\Entity;
 use App\Repository\CommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
+#[Auditable]
 class Comment
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
