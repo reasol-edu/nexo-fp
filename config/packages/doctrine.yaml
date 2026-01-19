@@ -22,6 +22,7 @@ doctrine:
                 alias: App
         controller_resolver:
             auto_mapping: false
+        enable_native_lazy_objects: true
 
 when@test:
     doctrine:
