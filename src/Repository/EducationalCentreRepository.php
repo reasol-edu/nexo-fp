@@ -15,4 +15,9 @@ class EducationalCentreRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, EducationalCentre::class);
     }
+
+    public function findByCode(string $code): ?EducationalCentre
+    {
+        return $this->findOneBy(['code' => $code]);
+    }
 }
