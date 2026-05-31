@@ -26,7 +26,10 @@ class TrainingPosition
     #[ORM\Column(type: 'string', enumType: TrainingPositionState::class)]
     private TrainingPositionState $state = TrainingPositionState::DRAFT;
 
-    // Relación con Estudiante
+    #[ORM\ManyToOne(inversedBy: 'trainingPositions')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Stay $stay = null;
+
     #[ORM\ManyToOne]
     private ?Student $student = null;
 
@@ -91,6 +94,18 @@ class TrainingPosition
     public function setState(TrainingPositionState $state): static
     {
         $this->state = $state;
+
+        return $this;
+    }
+
+    public function getStay(): ?Stay
+    {
+        return $this->stay;
+    }
+
+    public function setStay(?Stay $stay): static
+    {
+        $this->stay = $stay;
 
         return $this;
     }
@@ -190,6 +205,4 @@ class TrainingPosition
 
         return $this;
     }
-
-
 }
