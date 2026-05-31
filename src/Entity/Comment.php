@@ -29,9 +29,6 @@ class Comment
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Company $company = null;
 
-    #[ORM\Column(enumType: CommentScope::class)]
-    private CommentScope $scope = CommentScope::GENERAL;
-
     public function __construct()
     {
         $this->id = Uuid::v7();
@@ -84,17 +81,6 @@ class Comment
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
-        return $this;
-    }
-
-    public function getScope(): CommentScope
-    {
-        return $this->scope;
-    }
-
-    public function setScope(CommentScope $scope): static
-    {
-        $this->scope = $scope;
         return $this;
     }
 }
