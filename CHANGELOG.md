@@ -1,13 +1,13 @@
-# Registro de cambios
+# Changelog
 
-Todos los cambios notables en este proyecto se documentarán en este archivo.
+All notable changes to this project will be documented in this file.
 
-El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/),
-y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Sin publicar]
+## [Unreleased]
 
-### Añadido
+### Added
 
 - `feat(i18n)`: Traducir cadenas del comando app:create-admin
 - `feat(command)`: Comando para crear administrador global
@@ -28,7 +28,7 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - `core`: Añadido componente webprofiler y debug
 - `core`: Añadido componente de migraciones de bases de datos y maker-bundle
 
-### Modificado
+### Changed
 
 - `refactor`: Inyectar repositorio tipado y usar métodos named
 - `refactor(model)`: Eliminar academicYear de Teacher
@@ -43,7 +43,7 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - `chore(deps)`: Instalado componente de auditoría rcsofttech/audit-trail-bundle
 - `chore`: Actualizados componentes a la última versión
 
-### Corregido
+### Fixed
 
 - `fix(docs)`: Indicar correctamente que se usa Symfony 8.1
 - `fix(model)`: Corregida errata en atributo. Rehechas las migraciones
