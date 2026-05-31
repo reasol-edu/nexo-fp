@@ -32,6 +32,10 @@ class Company
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $exceptionalCircumstances = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?EducationalCentre $educationalCentre = null;
+
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'company_liaisons')]
     private Collection $liaisons;
@@ -115,6 +119,18 @@ class Company
     public function removeLiaison(Teacher $liaison): static
     {
         $this->liaisons->removeElement($liaison);
+
+        return $this;
+    }
+
+    public function getEducationalCentre(): ?EducationalCentre
+    {
+        return $this->educationalCentre;
+    }
+
+    public function setEducationalCentre(?EducationalCentre $educationalCentre): static
+    {
+        $this->educationalCentre = $educationalCentre;
 
         return $this;
     }
