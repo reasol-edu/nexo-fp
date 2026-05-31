@@ -32,10 +32,6 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $active = true;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?AcademicYear $academicYear = null;
-
     public function __construct(PersonName $name)
     {
         $this->id = Uuid::v7();
@@ -136,15 +132,4 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getAcademicYear(): ?AcademicYear
-    {
-        return $this->academicYear;
-    }
-
-    public function setAcademicYear(?AcademicYear $academicYear): static
-    {
-        $this->academicYear = $academicYear;
-
-        return $this;
-    }
 }
