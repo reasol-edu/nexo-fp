@@ -33,10 +33,14 @@ class Group
     #[ORM\ManyToOne]
     private ?Teacher $tutor = null;
 
+    #[ORM\ManyToMany(targetEntity: Student::class, mappedBy: 'groups')]
+    private Collection $students;
+
     public function __construct()
     {
         $this->id = Uuid::v7();
         $this->teachers = new ArrayCollection();
+        $this->students = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -112,6 +116,33 @@ class Group
     public function setTutor(?Teacher $tutor): static
     {
         $this->tutor = $tutor;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Student>
+     */
+    public function getStudents(): Collection
+    {
+        return $this->students;
+    }
+
+    public function addStudent(Student $student): static
+    {
+        if (!$this->students->contains($student)) {
+            $this->students->add($student);
+            $student->addGroup($this);
+        }
+
+        return $this;
+    }
+
+    public function removeStudent(Student $student): static
+    {
+        if ($this->students->removeElement($student)) {
+            $student->removeGroup($this);
+        }
 
         return $this;
     }
