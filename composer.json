@@ -9,18 +9,18 @@
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^3.2.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
-        "doctrine/orm": "^3.6.1",
-        "rcsofttech/audit-trail-bundle": "^1.7",
+        "doctrine/orm": "^3.6.7",
+        "rcsofttech/audit-trail-bundle": "^1.10",
         "symfony/uid": "8.1.*",
         "symfony/console": "8.1.*",
         "symfony/dotenv": "8.1.*",
-        "symfony/flex": "^2.10",
+        "symfony/flex": "^2.11",
         "symfony/framework-bundle": "8.1.*",
         "symfony/runtime": "8.1.*",
         "symfony/twig-bundle": "8.1.*",
         "symfony/yaml": "8.1.*",
-        "twig/extra-bundle": "^2.12|^3.22.2",
-        "twig/twig": "^2.12|^3.22.2"
+        "twig/extra-bundle": "^2.12|^3.24.0",
+        "twig/twig": "^2.12|^3.27.1"
     },
     "config": {
         "allow-plugins": {
@@ -76,8 +76,8 @@
     },
     "require-dev": {
         "symfony/debug-bundle": "8.1.*",
-        "symfony/maker-bundle": "^1.65.1",
-        "symfony/monolog-bundle": "^3.0|^4.0.1",
+        "symfony/maker-bundle": "^1.67.0",
+        "symfony/monolog-bundle": "^3.0|^4.0.2",
         "symfony/stopwatch": "8.1.*",
         "symfony/web-profiler-bundle": "8.1.*"
     }
