@@ -28,7 +28,7 @@ class Company
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $exceptionalCircumstances = null;
 
-    #[ORM\ManyToMany(targetEntity: Teacher::class)]
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'company_liaisons')]
     private Collection $liaisons;
 

@@ -30,7 +30,7 @@ class Programme
     #[ORM\JoinColumn(nullable: false)]
     private ?ProfessionalFamily $professionalFamily = null;
 
-    #[ORM\ManyToMany(targetEntity: Teacher::class)]
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'programme_coordinator')]
     private Collection $coordinators;
 

@@ -39,7 +39,7 @@ class TrainingPosition
     #[ORM\ManyToOne]
     private ?Worker $workplaceMentor = null;
 
-    #[ORM\ManyToMany(targetEntity: ProgrammeYear::class)]
+    #[ORM\ManyToMany(targetEntity: ProgrammeYear::class, fetch: 'EXTRA_LAZY')]
     private Collection $programmeYears;
 
     #[ORM\ManyToOne]
