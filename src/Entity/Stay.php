@@ -27,11 +27,11 @@ class Stay
     #[ORM\JoinColumn(nullable: false)]
     private ?Programme $programme = null;
 
-    #[ORM\ManyToMany(targetEntity: Student::class)]
+    #[ORM\ManyToMany(targetEntity: Student::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'stay_students')]
     private Collection $students;
 
-    #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $trainingPositions;
 
     public function __construct()

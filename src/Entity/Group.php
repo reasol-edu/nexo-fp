@@ -27,13 +27,13 @@ class Group
     #[ORM\JoinColumn(nullable: false)]
     private ?ProgrammeYear $programmeYear = null;
 
-    #[ORM\ManyToMany(targetEntity: Teacher::class)]
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     private Collection $teachers;
 
     #[ORM\ManyToOne]
     private ?Teacher $tutor = null;
 
-    #[ORM\ManyToMany(targetEntity: Student::class, mappedBy: 'groups')]
+    #[ORM\ManyToMany(targetEntity: Student::class, mappedBy: 'groups', fetch: 'EXTRA_LAZY')]
     private Collection $students;
 
     public function __construct()

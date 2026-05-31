@@ -28,7 +28,7 @@ class Student
     #[ORM\Column(nullable: true)]
     private ?string $details = null;
 
-    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: 'students')]
+    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: 'students', fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'student_groups')]
     private Collection $groups;
 

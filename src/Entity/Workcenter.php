@@ -26,7 +26,7 @@ class Workcenter
     #[ORM\JoinColumn(nullable: false)]
     private ?Company $company = null;
 
-    #[ORM\ManyToMany(targetEntity: Worker::class)]
+    #[ORM\ManyToMany(targetEntity: Worker::class, fetch: 'EXTRA_LAZY')]
     private Collection $workers;
 
     public function __construct()
