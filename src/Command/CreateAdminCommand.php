@@ -12,25 +12,27 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
-#[AsCommand(
-    name: 'app:create-admin',
-    description: 'Crea una cuenta de docente con privilegios de administrador global',
-)]
+#[AsCommand(name: 'app:create-admin')]
 class CreateAdminCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly TranslatorInterface $translator,
     ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
+        $t = fn(string $key) => $this->translator->trans($key, domain: 'command');
+
         $this
-            ->addArgument('username', InputArgument::OPTIONAL, 'Nombre de usuario', 'admin')
-            ->addArgument('password', InputArgument::OPTIONAL, 'Contraseña', 'admin');
+            ->setDescription($t('create_admin.description'))
+            ->addArgument('username', InputArgument::OPTIONAL, $t('create_admin.argument.username'), 'admin')
+            ->addArgument('password', InputArgument::OPTIONAL, $t('create_admin.argument.password'), 'admin');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -41,7 +43,11 @@ class CreateAdminCommand extends Command
         $password = $input->getArgument('password');
 
         if ($this->em->getRepository(Teacher::class)->findOneBy(['username' => $username]) !== null) {
-            $io->error(sprintf('Ya existe un docente con el nombre de usuario "%s".', $username));
+            $io->error($this->translator->trans(
+                'create_admin.error.existing_user',
+                ['%username%' => $username],
+                'command',
+            ));
 
             return Command::FAILURE;
         }
@@ -54,7 +60,11 @@ class CreateAdminCommand extends Command
         $this->em->persist($teacher);
         $this->em->flush();
 
-        $io->success(sprintf('Administrador "%s" creado correctamente.', $username));
+        $io->success($this->translator->trans(
+            'create_admin.success',
+            ['%username%' => $username],
+            'command',
+        ));
 
         return Command::SUCCESS;
     }
