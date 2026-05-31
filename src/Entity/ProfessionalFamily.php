@@ -13,11 +13,11 @@ class ProfessionalFamily
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?AcademicYear $academicYear = null;
+    private AcademicYear $academicYear;
 
     #[ORM\ManyToOne]
     private ?Teacher $head = null;
@@ -32,7 +32,7 @@ class ProfessionalFamily
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -44,12 +44,12 @@ class ProfessionalFamily
         return $this;
     }
 
-    public function getAcademicYear(): ?AcademicYear
+    public function getAcademicYear(): AcademicYear
     {
         return $this->academicYear;
     }
 
-    public function setAcademicYear(?AcademicYear $academicYear): static
+    public function setAcademicYear(AcademicYear $academicYear): static
     {
         $this->academicYear = $academicYear;
 

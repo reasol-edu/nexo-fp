@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `fix`: Corregir 50 errores de tipado detectados por PHPStan
 - `feat`: Instalar PHPStan nivel 6 con extensiones Symfony y Doctrine
 - `feat(model)`: Añadir requireActiveAcademicYear() a EducationalCentre
 - `feat(model)`: Curso académico activo en EducationalCentre

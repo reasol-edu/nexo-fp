@@ -27,7 +27,7 @@ class TrainingPosition
 
     #[ORM\ManyToOne(inversedBy: 'trainingPositions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Stay $stay = null;
+    private Stay $stay;
 
     #[ORM\ManyToOne]
     private ?Student $student = null;
@@ -38,6 +38,7 @@ class TrainingPosition
     #[ORM\ManyToOne]
     private ?Worker $workplaceMentor = null;
 
+    /** @var Collection<int, ProgrammeYear> */
     #[ORM\ManyToMany(targetEntity: ProgrammeYear::class, fetch: 'EXTRA_LAZY')]
     private Collection $programmeYears;
 
@@ -73,7 +74,7 @@ class TrainingPosition
         return $this;
     }
 
-    public function isSigned(): ?bool
+    public function isSigned(): bool
     {
         return $this->signed;
     }
@@ -85,7 +86,7 @@ class TrainingPosition
         return $this;
     }
 
-    public function getState(): ?TrainingPositionState
+    public function getState(): TrainingPositionState
     {
         return $this->state;
     }
@@ -97,12 +98,12 @@ class TrainingPosition
         return $this;
     }
 
-    public function getStay(): ?Stay
+    public function getStay(): Stay
     {
         return $this->stay;
     }
 
-    public function setStay(?Stay $stay): static
+    public function setStay(Stay $stay): static
     {
         $this->stay = $stay;
 

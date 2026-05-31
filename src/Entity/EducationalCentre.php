@@ -15,17 +15,18 @@ class EducationalCentre
     private readonly Uuid $id;
 
     #[ORM\Column(length: 8, unique: true)]
-    private ?string $code = null;
+    private string $code;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255)]
-    private ?string $city = null;
+    private string $city;
 
     #[ORM\ManyToOne]
     private ?AcademicYear $activeAcademicYear = null;
 
+    /** @var Collection<int, Teacher> */
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'educational_centre_admins')]
     private Collection $admins;
@@ -41,7 +42,7 @@ class EducationalCentre
         return $this->id;
     }
 
-    public function getCode(): ?string
+    public function getCode(): string
     {
         return $this->code;
     }
@@ -53,7 +54,7 @@ class EducationalCentre
         return $this;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -65,7 +66,7 @@ class EducationalCentre
         return $this;
     }
 
-    public function getCity(): ?string
+    public function getCity(): string
     {
         return $this->city;
     }
