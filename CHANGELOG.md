@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `refactor(i18n)`: Separar messages.es.yaml en dominios login y dashboard
 - `chore(migrations)`: Rehacer migración con el modelo de datos actual
 - `feat(i18n)`: Extraer todas las cadenas de plantillas al dominio messages
 - `feat`: Pantalla de login con Tailwind CSS, Asset Mapper y Symfony UX
