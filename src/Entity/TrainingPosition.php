@@ -10,6 +10,7 @@ use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: TrainingPositionRepository::class)]
+#[ORM\UniqueConstraint(name: 'uq_stay_student', columns: ['stay_id', 'student_id'])]
 #[Auditable]
 class TrainingPosition
 {
