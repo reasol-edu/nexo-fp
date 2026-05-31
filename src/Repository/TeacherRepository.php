@@ -19,6 +19,11 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         parent::__construct($registry, Teacher::class);
     }
 
+    public function findByUsername(string $username): ?Teacher
+    {
+        return $this->findOneBy(['username' => $username]);
+    }
+
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (!$user instanceof Teacher) {
