@@ -68,9 +68,11 @@ class CreateEducationalCentreCommand extends Command
 
     private function notBlank(): \Closure
     {
-        return static function (?string $value): string {
+        $message = $this->translator->trans('field.required', domain: 'command');
+
+        return static function (?string $value) use ($message): string {
             if ($value === null || trim($value) === '') {
-                throw new \RuntimeException('Este campo es obligatorio.');
+                throw new \RuntimeException($message);
             }
 
             return $value;
