@@ -82,6 +82,12 @@ class EducationalCentre
         return $this->activeAcademicYear;
     }
 
+    public function requireActiveAcademicYear(): AcademicYear
+    {
+        return $this->activeAcademicYear
+            ?? throw new \LogicException('This educational centre has no active academic year.');
+    }
+
     public function setActiveAcademicYear(?AcademicYear $academicYear): static
     {
         if ($academicYear !== null && $academicYear->getEducationalCentre() !== $this) {
