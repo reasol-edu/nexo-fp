@@ -3,11 +3,9 @@ namespace App\Entity;
 
 use App\Repository\WorkerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: WorkerRepository::class)]
-#[Auditable]
 class Worker
 {
     #[ORM\Id]

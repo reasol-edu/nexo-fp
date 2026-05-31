@@ -3,12 +3,10 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[Auditable]
 class User
 {
     #[ORM\Id]
