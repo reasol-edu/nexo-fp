@@ -1,20 +1,2 @@
 app:
     name: 'Nexo FP'
-
-login:
-    page_title: 'Iniciar sesión · Nexo FP'
-    platform_label: 'Plataforma FFEOE'
-    hero_title: 'Gestión de prácticas'
-    hero_subtitle: 'en empresa'
-    hero_description: 'Coordina la formación en empresas u organismos equiparados de tu centro educativo.'
-    copyright: '© %year% REASOL'
-    welcome_title: 'Bienvenido de nuevo'
-    welcome_subtitle: 'Introduce tus credenciales para continuar'
-    username_label: 'Nombre de usuario'
-    password_label: 'Contraseña'
-    submit: 'Iniciar sesión'
-
-dashboard:
-    page_title: 'Inicio · Nexo FP'
-    welcome_message: 'Has iniciado sesión correctamente.'
-    logout: 'Cerrar sesión'
