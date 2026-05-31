@@ -13,3 +13,5 @@ create_centre.ask.name: 'Nombre del centro'
 create_centre.ask.city: 'Localidad'
 create_centre.error.existing_code: 'Ya existe un centro con el código "%code%".'
 create_centre.success: 'Centro educativo "%name%" (%code%) creado correctamente.'
+
+field.required: 'Este campo es obligatorio.'
