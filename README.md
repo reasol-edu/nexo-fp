@@ -3,7 +3,7 @@ NEXO-FP
 
 Aplicación web para gestionar la asignación de puestos formativos en la fase de formación en empresas u organismo equiparado.
 
-Este proyecto está desarrollado en PHP utilizando [Symfony] 8.0 y otros muchos componentes que se instalan usando
+Este proyecto está desarrollado en PHP utilizando [Symfony] 8.1 y otros muchos componentes que se instalan usando
 [Composer].
 
 ## Requisitos
