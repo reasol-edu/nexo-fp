@@ -26,9 +26,6 @@ class Student
     #[ORM\Column(nullable: true)]
     private ?string $details = null;
 
-    #[ORM\Column]
-    private bool $excluded = false;
-
     #[ORM\ManyToOne]
     private ?Group $group = null;
 
@@ -86,18 +83,6 @@ class Student
     public function setDetails(?string $details): static
     {
         $this->details = $details;
-
-        return $this;
-    }
-
-    public function isExcluded(): ?bool
-    {
-        return $this->excluded;
-    }
-
-    public function setExcluded(bool $excluded): static
-    {
-        $this->excluded = $excluded;
 
         return $this;
     }
