@@ -1,0 +1,5 @@
+create_admin.description: 'Crea una cuenta de docente con privilegios de administrador global'
+create_admin.argument.username: 'Nombre de usuario'
+create_admin.argument.password: 'Contraseña'
+create_admin.error.existing_user: 'Ya existe un docente con el nombre de usuario "%username%".'
+create_admin.success: 'Administrador "%username%" creado correctamente.'
