@@ -32,6 +32,9 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $active = true;
 
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $email = null;
+
     public function __construct(PersonName $name)
     {
         $this->id = Uuid::v7();
@@ -132,4 +135,15 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
 }
