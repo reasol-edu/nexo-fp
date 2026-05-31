@@ -2,6 +2,8 @@
 namespace App\Entity;
 
 use App\Repository\StudentRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
@@ -26,12 +28,14 @@ class Student
     #[ORM\Column(nullable: true)]
     private ?string $details = null;
 
-    #[ORM\ManyToOne]
-    private ?Group $group = null;
+    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: 'students')]
+    #[ORM\JoinTable(name: 'student_groups')]
+    private Collection $groups;
 
     public function __construct()
     {
         $this->id = Uuid::v7();
+        $this->groups = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -87,14 +91,29 @@ class Student
         return $this;
     }
 
-    public function getGroup(): ?Group
+    /**
+     * @return Collection<int, Group>
+     */
+    public function getGroups(): Collection
     {
-        return $this->group;
+        return $this->groups;
     }
 
-    public function setGroup(?Group $group): static
+    public function addGroup(Group $group): static
     {
-        $this->group = $group;
+        if (!$this->groups->contains($group)) {
+            $this->groups->add($group);
+            $group->addStudent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroup(Group $group): static
+    {
+        if ($this->groups->removeElement($group)) {
+            $group->removeStudent($this);
+        }
 
         return $this;
     }
