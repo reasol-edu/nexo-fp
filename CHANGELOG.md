@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `chore`: Eliminar hook commit-msg para actualizar CHANGELOG
 - `refactor`: Inyectar repositorio tipado y usar métodos named
 - `refactor(model)`: Eliminar academicYear de Teacher
 - `refactor(model)`: Sustituir roles dinámicos por columna admin en Teacher
