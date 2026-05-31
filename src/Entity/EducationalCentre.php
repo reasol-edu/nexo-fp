@@ -17,7 +17,7 @@ class EducationalCentre
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'educational_centre_admins')]
     private Collection $admins;
 
@@ -45,14 +45,14 @@ class EducationalCentre
     }
 
     /**
-     * @return Collection<int, User>
+     * @return Collection<int, Teacher>
      */
     public function getAdmins(): Collection
     {
         return $this->admins;
     }
 
-    public function addAdmin(User $admin): static
+    public function addAdmin(Teacher $admin): static
     {
         if (!$this->admins->contains($admin)) {
             $this->admins->add($admin);
@@ -61,7 +61,7 @@ class EducationalCentre
         return $this;
     }
 
-    public function removeAdmin(User $admin): static
+    public function removeAdmin(Teacher $admin): static
     {
         $this->admins->removeElement($admin);
 

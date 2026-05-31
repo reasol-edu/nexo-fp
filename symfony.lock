@@ -35,8 +35,8 @@
             "migrations/.gitignore"
         ]
     },
-    "rcsofttech/audit-trail-bundle": {
-        "version": "v1.7.5"
+    "stof/doctrine-extensions-bundle": {
+        "version": "v1.15.3"
     },
     "symfony/console": {
         "version": "8.0",
@@ -105,7 +105,7 @@
         }
     },
     "symfony/messenger": {
-        "version": "8.0",
+        "version": "8.1",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
@@ -129,7 +129,7 @@
         ]
     },
     "symfony/property-info": {
-        "version": "8.0",
+        "version": "8.1",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
@@ -154,7 +154,7 @@
         ]
     },
     "symfony/security-bundle": {
-        "version": "8.0",
+        "version": "8.1",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
@@ -189,7 +189,7 @@
         }
     },
     "symfony/validator": {
-        "version": "8.0",
+        "version": "8.1",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
