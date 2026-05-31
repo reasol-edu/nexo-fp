@@ -14,11 +14,8 @@ class Worker
     #[ORM\Column(type: 'uuid')]
     private readonly Uuid $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $firstName = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $lastName = null;
+    #[ORM\Embedded(class: PersonName::class)]
+    private PersonName $name;
 
     #[ORM\Column(length: 20, unique: true)]
     private ?string $nationalIdNumber = null;
@@ -29,9 +26,10 @@ class Worker
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $workPhoneNumber = null;
 
-    public function __construct()
+    public function __construct(PersonName $name)
     {
         $this->id = Uuid::v7();
+        $this->name = $name;
     }
 
     public function getId(): Uuid
@@ -39,26 +37,14 @@ class Worker
         return $this->id;
     }
 
-    public function getFirstName(): ?string
+    public function getName(): PersonName
     {
-        return $this->firstName;
+        return $this->name;
     }
 
-    public function setFirstName(string $firstName): static
+    public function setName(PersonName $name): static
     {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    public function getLastName(): ?string
-    {
-        return $this->lastName;
-    }
-
-    public function setLastName(string $lastName): static
-    {
-        $this->lastName = $lastName;
+        $this->name = $name;
 
         return $this;
     }
