@@ -23,6 +23,9 @@ class EducationalCentre
     #[ORM\Column(length: 255)]
     private ?string $city = null;
 
+    #[ORM\ManyToOne]
+    private ?AcademicYear $activeAcademicYear = null;
+
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'educational_centre_admins')]
     private Collection $admins;
@@ -70,6 +73,22 @@ class EducationalCentre
     public function setCity(string $city): static
     {
         $this->city = $city;
+
+        return $this;
+    }
+
+    public function getActiveAcademicYear(): ?AcademicYear
+    {
+        return $this->activeAcademicYear;
+    }
+
+    public function setActiveAcademicYear(?AcademicYear $academicYear): static
+    {
+        if ($academicYear !== null && $academicYear->getEducationalCentre() !== $this) {
+            throw new \LogicException('The academic year does not belong to this educational centre.');
+        }
+
+        $this->activeAcademicYear = $academicYear;
 
         return $this;
     }

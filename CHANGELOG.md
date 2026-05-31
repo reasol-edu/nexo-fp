@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat(model)`: Curso académico activo en EducationalCentre
 - `feat(command)`: Comando para crear un centro educativo
 - `feat(model)`: Añadir localidad a EducationalCentre
 - `feat(model)`: Añadir código de centro a EducationalCentre
