@@ -20,8 +20,8 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     private ?string $username = null;
 
-    #[ORM\Column(type: 'json')]
-    private array $roles = [];
+    #[ORM\Column]
+    private bool $admin = false;
 
     #[ORM\Column(nullable: true)]
     private ?string $password = null;
@@ -78,15 +78,22 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
+        $roles = ['ROLE_TEACHER'];
+        if ($this->admin) {
+            $roles[] = 'ROLE_ADMIN';
+        }
 
-        return array_unique($roles);
+        return $roles;
     }
 
-    public function setRoles(array $roles): static
+    public function isAdmin(): bool
     {
-        $this->roles = $roles;
+        return $this->admin;
+    }
+
+    public function setAdmin(bool $admin): static
+    {
+        $this->admin = $admin;
 
         return $this;
     }
