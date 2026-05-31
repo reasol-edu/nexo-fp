@@ -21,7 +21,7 @@ class Comment
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $author = null;
+    private ?Teacher $author = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -60,12 +60,12 @@ class Comment
         return $this;
     }
 
-    public function getAuthor(): ?User
+    public function getAuthor(): ?Teacher
     {
         return $this->author;
     }
 
-    public function setAuthor(?User $author): static
+    public function setAuthor(?Teacher $author): static
     {
         $this->author = $author;
         return $this;
