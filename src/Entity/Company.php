@@ -29,13 +29,13 @@ class Company
     private ?string $exceptionalCircumstances = null;
 
     #[ORM\ManyToMany(targetEntity: Teacher::class)]
-    #[ORM\JoinTable(name: 'company_liason')]
-    private Collection $liasons;
+    #[ORM\JoinTable(name: 'company_liaisons')]
+    private Collection $liaisons;
 
     public function __construct()
     {
         $this->id = Uuid::v7();
-        $this->liasons = new ArrayCollection();
+        $this->liaisons = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -94,23 +94,23 @@ class Company
     /**
      * @return Collection<int, Teacher>
      */
-    public function getLiasons(): Collection
+    public function getLiaisons(): Collection
     {
-        return $this->liasons;
+        return $this->liaisons;
     }
 
-    public function addLiason(Teacher $liason): static
+    public function addLiaison(Teacher $liaison): static
     {
-        if (!$this->liasons->contains($liason)) {
-            $this->liasons->add($liason);
+        if (!$this->liaisons->contains($liaison)) {
+            $this->liaisons->add($liaison);
         }
 
         return $this;
     }
 
-    public function removeLiason(Teacher $liason): static
+    public function removeLiaison(Teacher $liaison): static
     {
-        $this->liasons->removeElement($liason);
+        $this->liaisons->removeElement($liaison);
 
         return $this;
     }
