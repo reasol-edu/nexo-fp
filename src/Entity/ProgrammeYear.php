@@ -3,11 +3,9 @@ namespace App\Entity;
 
 use App\Repository\ProgrammeYearRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ProgrammeYearRepository::class)]
-#[Auditable]
 class ProgrammeYear
 {
     #[ORM\Id]

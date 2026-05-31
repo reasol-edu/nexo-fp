@@ -5,11 +5,9 @@ use App\Repository\StayRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: StayRepository::class)]
-#[Auditable]
 class Stay
 {
     #[ORM\Id]
