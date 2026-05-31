@@ -18,11 +18,12 @@ class Student
     private PersonName $name;
 
     #[ORM\Column(length: 50)]
-    private ?string $studentId = null;
+    private string $studentId;
 
     #[ORM\Column(nullable: true)]
     private ?string $details = null;
 
+    /** @var Collection<int, Group> */
     #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: 'students', fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'student_groups')]
     private Collection $groups;
@@ -51,7 +52,7 @@ class Student
         return $this;
     }
 
-    public function getStudentId(): ?string
+    public function getStudentId(): string
     {
         return $this->studentId;
     }

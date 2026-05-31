@@ -13,14 +13,14 @@ class ProgrammeYear
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $details = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Programme $programme = null;
+    private Programme $programme;
 
     public function __construct()
     {
@@ -32,7 +32,7 @@ class ProgrammeYear
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -56,12 +56,12 @@ class ProgrammeYear
         return $this;
     }
 
-    public function getProgramme(): ?Programme
+    public function getProgramme(): Programme
     {
         return $this->programme;
     }
 
-    public function setProgramme(?Programme $programme): static
+    public function setProgramme(Programme $programme): static
     {
         $this->programme = $programme;
 

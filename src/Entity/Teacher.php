@@ -18,7 +18,7 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     private PersonName $name;
 
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $username = null;
+    private string $username;
 
     #[ORM\Column]
     private bool $admin = false;
@@ -58,7 +58,7 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getUsername(): ?string
+    public function getUsername(): string
     {
         return $this->username;
     }
@@ -72,7 +72,7 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->username;
+        return $this->username;
     }
 
     public function getRoles(): array

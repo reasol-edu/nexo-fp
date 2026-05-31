@@ -14,11 +14,11 @@ class AcademicYear
     private readonly Uuid $id;
 
     #[ORM\Column(length: 50)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?EducationalCentre $educationalCentre = null;
+    private EducationalCentre $educationalCentre;
 
     public function __construct()
     {
@@ -30,7 +30,7 @@ class AcademicYear
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -42,12 +42,12 @@ class AcademicYear
         return $this;
     }
 
-    public function getEducationalCentre(): ?EducationalCentre
+    public function getEducationalCentre(): EducationalCentre
     {
         return $this->educationalCentre;
     }
 
-    public function setEducationalCentre(?EducationalCentre $educationalCentre): static
+    public function setEducationalCentre(EducationalCentre $educationalCentre): static
     {
         $this->educationalCentre = $educationalCentre;
 

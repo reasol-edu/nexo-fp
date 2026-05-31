@@ -15,15 +15,16 @@ class Workcenter
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $city = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Company $company = null;
+    private Company $company;
 
+    /** @var Collection<int, Worker> */
     #[ORM\ManyToMany(targetEntity: Worker::class, fetch: 'EXTRA_LAZY')]
     private Collection $workers;
 
@@ -38,7 +39,7 @@ class Workcenter
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -62,12 +63,12 @@ class Workcenter
         return $this;
     }
 
-    public function getCompany(): ?Company
+    public function getCompany(): Company
     {
         return $this->company;
     }
 
-    public function setCompany(?Company $company): static
+    public function setCompany(Company $company): static
     {
         $this->company = $company;
 

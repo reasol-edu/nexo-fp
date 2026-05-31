@@ -18,7 +18,7 @@ class Company
 
     #[Gedmo\Versioned]
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[Gedmo\Versioned]
     #[ORM\Column(length: 50, nullable: true)]
@@ -26,7 +26,7 @@ class Company
 
     #[Gedmo\Versioned]
     #[ORM\Column(length: 255)]
-    private ?string $city = null;
+    private string $city;
 
     #[Gedmo\Versioned]
     #[ORM\Column(type: 'text', nullable: true)]
@@ -34,8 +34,9 @@ class Company
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?EducationalCentre $educationalCentre = null;
+    private EducationalCentre $educationalCentre;
 
+    /** @var Collection<int, Teacher> */
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'company_liaisons')]
     private Collection $liaisons;
@@ -51,7 +52,7 @@ class Company
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -75,7 +76,7 @@ class Company
         return $this;
     }
 
-    public function getCity(): ?string
+    public function getCity(): string
     {
         return $this->city;
     }
@@ -95,6 +96,18 @@ class Company
     public function setExceptionalCircumstances(?string $exceptionalCircumstances): static
     {
         $this->exceptionalCircumstances = $exceptionalCircumstances;
+
+        return $this;
+    }
+
+    public function getEducationalCentre(): EducationalCentre
+    {
+        return $this->educationalCentre;
+    }
+
+    public function setEducationalCentre(EducationalCentre $educationalCentre): static
+    {
+        $this->educationalCentre = $educationalCentre;
 
         return $this;
     }
@@ -119,18 +132,6 @@ class Company
     public function removeLiaison(Teacher $liaison): static
     {
         $this->liaisons->removeElement($liaison);
-
-        return $this;
-    }
-
-    public function getEducationalCentre(): ?EducationalCentre
-    {
-        return $this->educationalCentre;
-    }
-
-    public function setEducationalCentre(?EducationalCentre $educationalCentre): static
-    {
-        $this->educationalCentre = $educationalCentre;
 
         return $this;
     }

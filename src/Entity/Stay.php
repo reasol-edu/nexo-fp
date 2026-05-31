@@ -15,20 +15,22 @@ class Stay
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?AcademicYear $academicYear = null;
+    private AcademicYear $academicYear;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Programme $programme = null;
+    private Programme $programme;
 
+    /** @var Collection<int, Student> */
     #[ORM\ManyToMany(targetEntity: Student::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'stay_students')]
     private Collection $students;
 
+    /** @var Collection<int, TrainingPosition> */
     #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $trainingPositions;
 
@@ -44,7 +46,7 @@ class Stay
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -56,24 +58,24 @@ class Stay
         return $this;
     }
 
-    public function getAcademicYear(): ?AcademicYear
+    public function getAcademicYear(): AcademicYear
     {
         return $this->academicYear;
     }
 
-    public function setAcademicYear(?AcademicYear $academicYear): static
+    public function setAcademicYear(AcademicYear $academicYear): static
     {
         $this->academicYear = $academicYear;
 
         return $this;
     }
 
-    public function getProgramme(): ?Programme
+    public function getProgramme(): Programme
     {
         return $this->programme;
     }
 
-    public function setProgramme(?Programme $programme): static
+    public function setProgramme(Programme $programme): static
     {
         $this->programme = $programme;
 
@@ -111,5 +113,4 @@ class Stay
     {
         return $this->trainingPositions;
     }
-
 }

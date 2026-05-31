@@ -16,21 +16,23 @@ class Group
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $details = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?ProgrammeYear $programmeYear = null;
+    private ProgrammeYear $programmeYear;
 
+    /** @var Collection<int, Teacher> */
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     private Collection $teachers;
 
     #[ORM\ManyToOne]
     private ?Teacher $tutor = null;
 
+    /** @var Collection<int, Student> */
     #[ORM\ManyToMany(targetEntity: Student::class, mappedBy: 'groups', fetch: 'EXTRA_LAZY')]
     private Collection $students;
 
@@ -46,7 +48,7 @@ class Group
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -70,12 +72,12 @@ class Group
         return $this;
     }
 
-    public function getProgrammeYear(): ?ProgrammeYear
+    public function getProgrammeYear(): ProgrammeYear
     {
         return $this->programmeYear;
     }
 
-    public function setProgrammeYear(?ProgrammeYear $programmeYear): static
+    public function setProgrammeYear(ProgrammeYear $programmeYear): static
     {
         $this->programmeYear = $programmeYear;
 

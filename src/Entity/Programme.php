@@ -15,19 +15,20 @@ class Programme
     private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $details = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?AcademicYear $academicYear = null;
+    private AcademicYear $academicYear;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?ProfessionalFamily $professionalFamily = null;
+    private ProfessionalFamily $professionalFamily;
 
+    /** @var Collection<int, Teacher> */
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     #[ORM\JoinTable(name: 'programme_coordinator')]
     private Collection $coordinators;
@@ -43,7 +44,7 @@ class Programme
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -67,24 +68,24 @@ class Programme
         return $this;
     }
 
-    public function getAcademicYear(): ?AcademicYear
+    public function getAcademicYear(): AcademicYear
     {
         return $this->academicYear;
     }
 
-    public function setAcademicYear(?AcademicYear $academicYear): static
+    public function setAcademicYear(AcademicYear $academicYear): static
     {
         $this->academicYear = $academicYear;
 
         return $this;
     }
 
-    public function getProfessionalFamily(): ?ProfessionalFamily
+    public function getProfessionalFamily(): ProfessionalFamily
     {
         return $this->professionalFamily;
     }
 
-    public function setProfessionalFamily(?ProfessionalFamily $professionalFamily): static
+    public function setProfessionalFamily(ProfessionalFamily $professionalFamily): static
     {
         $this->professionalFamily = $professionalFamily;
 

@@ -14,18 +14,18 @@ class Comment
     private readonly Uuid $id;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $postedAt = null;
+    private \DateTimeImmutable $postedAt;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Teacher $author = null;
+    private Teacher $author;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private ?Company $company = null;
+    private Company $company;
 
     public function __construct()
     {
@@ -38,7 +38,7 @@ class Comment
         return $this->id;
     }
 
-    public function getContent(): ?string
+    public function getContent(): string
     {
         return $this->content;
     }
@@ -46,10 +46,11 @@ class Comment
     public function setContent(string $content): static
     {
         $this->content = $content;
+
         return $this;
     }
 
-    public function getPostedAt(): ?\DateTimeImmutable
+    public function getPostedAt(): \DateTimeImmutable
     {
         return $this->postedAt;
     }
@@ -57,28 +58,31 @@ class Comment
     public function setPostedAt(\DateTimeImmutable $postedAt): static
     {
         $this->postedAt = $postedAt;
+
         return $this;
     }
 
-    public function getAuthor(): ?Teacher
+    public function getAuthor(): Teacher
     {
         return $this->author;
     }
 
-    public function setAuthor(?Teacher $author): static
+    public function setAuthor(Teacher $author): static
     {
         $this->author = $author;
+
         return $this;
     }
 
-    public function getCompany(): ?Company
+    public function getCompany(): Company
     {
         return $this->company;
     }
 
-    public function setCompany(?Company $company): static
+    public function setCompany(Company $company): static
     {
         $this->company = $company;
+
         return $this;
     }
 }

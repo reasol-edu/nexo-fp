@@ -16,7 +16,7 @@ class Worker
     private PersonName $name;
 
     #[ORM\Column(length: 20, unique: true)]
-    private ?string $nationalIdNumber = null;
+    private string $nationalIdNumber;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $workEmail = null;
@@ -47,7 +47,7 @@ class Worker
         return $this;
     }
 
-    public function getNationalIdNumber(): ?string
+    public function getNationalIdNumber(): string
     {
         return $this->nationalIdNumber;
     }
