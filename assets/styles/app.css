@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-plum-50:  #f6f3f9;
+    --color-plum-100: #ece6f4;
+    --color-plum-200: #d8cce8;
+    --color-plum-300: #bfadd8;
+    --color-plum-400: #a38dc5;
+    --color-plum-500: #876baf;
+    --color-plum-600: #67597a;
+    --color-plum-700: #574a68;
+    --color-plum-800: #453a54;
+    --color-plum-900: #362d42;
+    --color-plum-950: #1f192a;
+}
