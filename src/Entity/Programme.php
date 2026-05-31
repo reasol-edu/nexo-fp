@@ -14,7 +14,7 @@ class Programme
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
-    private ?Uuid $id = null;
+    private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -40,7 +40,7 @@ class Programme
         $this->coordinators = new ArrayCollection();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): Uuid
     {
         return $this->id;
     }

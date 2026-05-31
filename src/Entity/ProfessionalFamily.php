@@ -12,7 +12,7 @@ class ProfessionalFamily
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
-    private ?Uuid $id = null;
+    private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -29,7 +29,7 @@ class ProfessionalFamily
         $this->id = Uuid::v7();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): Uuid
     {
         return $this->id;
     }

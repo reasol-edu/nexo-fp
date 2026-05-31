@@ -16,7 +16,7 @@ class TrainingPosition
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
-    private ?Uuid $id = null;
+    private readonly Uuid $id;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $details = null;
@@ -58,7 +58,7 @@ class TrainingPosition
         $this->programmeYears = new ArrayCollection();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): Uuid
     {
         return $this->id;
     }

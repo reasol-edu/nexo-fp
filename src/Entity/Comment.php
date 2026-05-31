@@ -13,7 +13,7 @@ class Comment
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
-    private ?Uuid $id = null;
+    private readonly Uuid $id;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
@@ -35,7 +35,7 @@ class Comment
         $this->postedAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): Uuid
     {
         return $this->id;
     }

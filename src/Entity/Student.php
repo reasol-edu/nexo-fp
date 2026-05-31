@@ -14,7 +14,7 @@ class Student
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
-    private ?Uuid $id = null;
+    private readonly Uuid $id;
 
     #[ORM\Column(length: 255)]
     private ?string $firstName = null;
@@ -38,7 +38,7 @@ class Student
         $this->groups = new ArrayCollection();
     }
 
-    public function getId(): ?Uuid
+    public function getId(): Uuid
     {
         return $this->id;
     }
