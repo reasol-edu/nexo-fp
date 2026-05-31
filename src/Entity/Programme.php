@@ -24,6 +24,10 @@ class Programme
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    private ?AcademicYear $academicYear = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
     private ?ProfessionalFamily $professionalFamily = null;
 
     #[ORM\ManyToMany(targetEntity: Teacher::class)]
@@ -61,6 +65,18 @@ class Programme
     public function setDetails(?string $details): static
     {
         $this->details = $details;
+
+        return $this;
+    }
+
+    public function getAcademicYear(): ?AcademicYear
+    {
+        return $this->academicYear;
+    }
+
+    public function setAcademicYear(?AcademicYear $academicYear): static
+    {
+        $this->academicYear = $academicYear;
 
         return $this;
     }
