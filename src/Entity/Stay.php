@@ -31,7 +31,7 @@ class Stay
     #[ORM\JoinTable(name: 'stay_students')]
     private Collection $students;
 
-    #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay')]
+    #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', orphanRemoval: true)]
     private Collection $trainingPositions;
 
     public function __construct()
