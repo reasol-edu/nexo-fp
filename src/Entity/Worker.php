@@ -4,13 +4,15 @@ namespace App\Entity;
 use App\Repository\WorkerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: WorkerRepository::class)]
 #[Auditable]
 class Worker
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id]
+    #[ORM\Column(type: 'uuid')]
+    private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $firstName = null;
@@ -27,7 +29,12 @@ class Worker
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $workPhoneNumber = null;
 
-    public function getId(): ?int
+    public function __construct()
+    {
+        $this->id = Uuid::v7();
+    }
+
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
