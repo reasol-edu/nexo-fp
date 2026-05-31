@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -19,6 +20,7 @@ class CreateAdminCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly TeacherRepository $teachers,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
     ) {
@@ -42,7 +44,7 @@ class CreateAdminCommand extends Command
         $username = $input->getArgument('username');
         $password = $input->getArgument('password');
 
-        if ($this->em->getRepository(Teacher::class)->findOneBy(['username' => $username]) !== null) {
+        if ($this->teachers->findByUsername($username) !== null) {
             $io->error($this->translator->trans(
                 'create_admin.error.existing_user',
                 ['%username%' => $username],
