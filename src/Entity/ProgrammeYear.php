@@ -4,13 +4,15 @@ namespace App\Entity;
 use App\Repository\ProgrammeYearRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Rcsofttech\AuditTrailBundle\Attribute\Auditable;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ProgrammeYearRepository::class)]
 #[Auditable]
 class ProgrammeYear
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id]
+    #[ORM\Column(type: 'uuid')]
+    private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -22,7 +24,12 @@ class ProgrammeYear
     #[ORM\JoinColumn(nullable: false)]
     private ?Programme $programme = null;
 
-    public function getId(): ?int
+    public function __construct()
+    {
+        $this->id = Uuid::v7();
+    }
+
+    public function getId(): ?Uuid
     {
         return $this->id;
     }
