@@ -14,6 +14,9 @@ class EducationalCentre
     #[ORM\Column(type: 'uuid')]
     private readonly Uuid $id;
 
+    #[ORM\Column(length: 8, unique: true)]
+    private ?string $code = null;
+
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
@@ -30,6 +33,18 @@ class EducationalCentre
     public function getId(): Uuid
     {
         return $this->id;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(string $code): static
+    {
+        $this->code = $code;
+
+        return $this;
     }
 
     public function getName(): ?string
