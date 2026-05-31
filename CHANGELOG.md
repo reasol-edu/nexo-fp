@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Sustituir Gedmo Loggable por auditoría propia en Company
 - `fix`: Corregir 50 errores de tipado detectados por PHPStan
 - `feat`: Instalar PHPStan nivel 6 con extensiones Symfony y Doctrine
 - `feat(model)`: Añadir requireActiveAcademicYear() a EducationalCentre

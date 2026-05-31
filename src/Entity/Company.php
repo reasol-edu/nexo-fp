@@ -5,30 +5,24 @@ use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
-#[Gedmo\Loggable]
 class Company
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
     private readonly Uuid $id;
 
-    #[Gedmo\Versioned]
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[Gedmo\Versioned]
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $vatNumber = null;
 
-    #[Gedmo\Versioned]
     #[ORM\Column(length: 255)]
     private string $city;
 
-    #[Gedmo\Versioned]
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $exceptionalCircumstances = null;
 
