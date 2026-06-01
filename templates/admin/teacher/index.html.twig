@@ -24,7 +24,7 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
-        {% if teachers is empty %}
+        {% if pagination.totalItems == 0 %}
             <div class="px-6 py-16 text-center">
                 {{ ux_icon('heroicons:users', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
                 <p class="text-sm text-gray-500">{{ 'teachers.empty'|trans({}, 'admin') }}</p>
@@ -51,7 +51,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    {% for teacher in teachers %}
+                    {% for teacher in pagination.items %}
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4">
                                 <span class="font-medium text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
@@ -112,6 +112,10 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% include 'components/_pagination.html.twig' with {
+                pagination: pagination,
+                route: 'app_admin_teachers_index',
+            } %}
         {% endif %}
     </div>
 

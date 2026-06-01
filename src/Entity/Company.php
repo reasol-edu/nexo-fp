@@ -11,8 +11,10 @@ use Symfony\Component\Uid\Uuid;
 class Company
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(length: 255)]
     private string $name;
@@ -37,7 +39,6 @@ class Company
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->liaisons = new ArrayCollection();
     }
 

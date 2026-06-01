@@ -9,8 +9,10 @@ use Symfony\Component\Uid\Uuid;
 class Worker
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Embedded(class: PersonName::class)]
     private PersonName $name;
@@ -26,7 +28,6 @@ class Worker
 
     public function __construct(PersonName $name)
     {
-        $this->id = Uuid::v7();
         $this->name = $name;
     }
 

@@ -11,8 +11,10 @@ use Symfony\Component\Uid\Uuid;
 class EducationalCentre
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(length: 8, unique: true)]
     private string $code;
@@ -33,7 +35,6 @@ class EducationalCentre
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->admins = new ArrayCollection();
     }
 

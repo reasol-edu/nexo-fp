@@ -4,9 +4,11 @@ namespace App\Controller\Admin;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Pagination\Paginator;
 use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -23,13 +25,17 @@ class TeacherController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
+        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
     #[Route('', name: 'app_admin_teachers_index')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $page = max(1, $request->query->getInt('page', 1));
+        $pagination = new Paginator($this->teachers->createOrderedByNameQuery(), $page, $this->pageSize);
+
         return $this->render('admin/teacher/index.html.twig', [
-            'teachers' => $this->teachers->findAllOrderedByName(),
+            'pagination' => $pagination,
         ]);
     }
 

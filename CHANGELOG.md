@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Implementación inicial de paginación
 - `feat`: El campo de contraseña se oculta dinámicamente al activar la autenticación externa en el formulario de docente
 - `feat`: No es necesario especificar contraseña al crear un docente con autenticación externa activada
 - `feat`: Un administrador no puede eliminarse, desactivarse ni quitarse los permisos de administrador a sí mismo

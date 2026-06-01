@@ -1,2 +1,9 @@
 app:
     welcome: "¡Hola!"
+
+# Paginación
+pagination.summary: 'Mostrando %from%–%to% de %total%'
+pagination.previous: 'Página anterior'
+pagination.next: 'Página siguiente'
+pagination.nav_label: 'Navegación de páginas'
+
