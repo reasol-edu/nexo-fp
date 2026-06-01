@@ -12,8 +12,10 @@ use Symfony\Component\Uid\Uuid;
 class Group
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(length: 255)]
     private string $name;
@@ -38,7 +40,6 @@ class Group
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->teachers = new ArrayCollection();
         $this->students = new ArrayCollection();
     }

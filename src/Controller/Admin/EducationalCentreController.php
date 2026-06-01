@@ -5,11 +5,13 @@ namespace App\Controller\Admin;
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
+use App\Pagination\Paginator;
 use App\Repository\AcademicYearRepository;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,13 +28,17 @@ class EducationalCentreController extends AbstractController
         private readonly AcademicYearRepository $years,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
+        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $page = max(1, $request->query->getInt('page', 1));
+        $pagination = new Paginator($this->centres->createAllWithActiveYearQuery(), $page, $this->pageSize);
+
         return $this->render('admin/educational_centre/index.html.twig', [
-            'centres' => $this->centres->findAllWithActiveYear(),
+            'pagination' => $pagination,
         ]);
     }
 

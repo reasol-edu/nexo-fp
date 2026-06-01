@@ -6,6 +6,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -69,6 +70,16 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->orderBy('ec.name', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /** @return Query<null, EducationalCentre> */
+    public function createAllWithActiveYearQuery(): Query
+    {
+        return $this->createQueryBuilder('ec')
+            ->leftJoin('ec.activeAcademicYear', 'ay')
+            ->addSelect('ay')
+            ->orderBy('ec.name', 'ASC')
+            ->getQuery();
     }
 
     /** @return EducationalCentre[] */

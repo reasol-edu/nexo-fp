@@ -11,8 +11,10 @@ use Symfony\Component\Uid\Uuid;
 class Stay
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(length: 255)]
     private string $name;
@@ -36,7 +38,6 @@ class Stay
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->students = new ArrayCollection();
         $this->trainingPositions = new ArrayCollection();
     }

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -36,6 +37,15 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             ->addOrderBy('t.name.firstName', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /** @return Query<null, Teacher> */
+    public function createOrderedByNameQuery(): Query
+    {
+        return $this->createQueryBuilder('t')
+            ->orderBy('t.name.lastName', 'ASC')
+            ->addOrderBy('t.name.firstName', 'ASC')
+            ->getQuery();
     }
 
     public function findByUsername(string $username): ?Teacher

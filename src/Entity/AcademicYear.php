@@ -10,8 +10,10 @@ use Symfony\Component\Uid\Uuid;
 class AcademicYear
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(length: 50)]
     private string $name;
@@ -20,10 +22,6 @@ class AcademicYear
     #[ORM\JoinColumn(nullable: false)]
     private EducationalCentre $educationalCentre;
 
-    public function __construct()
-    {
-        $this->id = Uuid::v7();
-    }
 
     public function getId(): Uuid
     {

@@ -10,8 +10,10 @@ use Symfony\Component\Uid\Uuid;
 class Comment
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(type: Types::TEXT)]
     private string $content;
@@ -29,7 +31,6 @@ class Comment
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->postedAt = new \DateTimeImmutable();
     }
 

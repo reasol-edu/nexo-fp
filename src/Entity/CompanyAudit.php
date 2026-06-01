@@ -9,8 +9,10 @@ use Symfony\Component\Uid\Uuid;
 class CompanyAudit
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -29,7 +31,6 @@ class CompanyAudit
     /** @param array<string, array{old: scalar|null, new: scalar|null}> $changes */
     public function __construct(Company $company, ?Teacher $changedBy, array $changes)
     {
-        $this->id = Uuid::v7();
         $this->company = $company;
         $this->changedBy = $changedBy;
         $this->changedAt = new \DateTimeImmutable();

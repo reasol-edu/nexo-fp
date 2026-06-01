@@ -13,8 +13,10 @@ use Symfony\Component\Uid\Uuid;
 class TrainingPosition
 {
     #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
     #[ORM\Column(type: 'uuid')]
-    private readonly Uuid $id;
+    private Uuid $id;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $details = null;
@@ -53,7 +55,6 @@ class TrainingPosition
 
     public function __construct()
     {
-        $this->id = Uuid::v7();
         $this->programmeYears = new ArrayCollection();
     }
 
