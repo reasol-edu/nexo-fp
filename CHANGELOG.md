@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Dashboard con barra de navegación lateral y soporte de suplantación
 - `feat`: Exponer nombre y versión de la app como parámetros y globales Twig
 - `refactor(i18n)`: Separar messages.es.yaml en dominios login y dashboard
 - `chore(migrations)`: Rehacer migración con el modelo de datos actual

@@ -1,0 +1,165 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+{% set current_route = app.request.attributes.get('_route') %}
+<div data-controller="sidebar" class="h-full">
+
+    {# ── Backdrop móvil ──────────────────────────────────────────────────────── #}
+    <div data-sidebar-target="backdrop"
+         data-action="click->sidebar#close"
+         class="fixed inset-0 z-40 bg-black/60 hidden lg:hidden"></div>
+
+    {# ── Sidebar ─────────────────────────────────────────────────────────────── #}
+    <aside data-sidebar-target="panel"
+           class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-plum-950
+                  -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+
+        {# Cabecera: logo #}
+        <div class="flex items-center gap-3 px-5 h-16 border-b border-white/8 shrink-0">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-plum-600">
+                {{ ux_icon('heroicons:academic-cap', {class: 'h-4.5 w-4.5 text-white'}) }}
+            </div>
+            <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-white leading-none">{{ app_name }}</p>
+                {% if app_version %}
+                    <p class="mt-0.5 text-xs text-plum-400">v{{ app_version }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Navegación principal #}
+        <nav class="flex-1 overflow-y-auto px-3 py-4">
+
+            {% macro nav_item(label, route, icon, current_route, prefix) %}
+                {% set is_active = current_route starts with prefix %}
+                <a href="{{ route }}"
+                   class="{{ is_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
+                          group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
+                    {{ ux_icon(icon, {class: 'h-5 w-5 shrink-0'}) }}
+                    <span class="truncate">{{ label }}</span>
+                </a>
+            {% endmacro %}
+
+            {# Inicio #}
+            {{ _self.nav_item(
+                'dashboard'|trans({}, 'navigation'),
+                path('app_dashboard'),
+                'heroicons:squares-2x2',
+                current_route,
+                'app_dashboard'
+            ) }}
+
+            <div class="my-3 h-px bg-white/8"></div>
+
+            {# Estancias #}
+            {{ _self.nav_item(
+                'stays'|trans({}, 'navigation'),
+                '#',
+                'heroicons:briefcase',
+                current_route,
+                'app_stays'
+            ) }}
+
+            {# Empresas #}
+            {{ _self.nav_item(
+                'companies'|trans({}, 'navigation'),
+                '#',
+                'heroicons:building-office-2',
+                current_route,
+                'app_companies'
+            ) }}
+
+            {# Centro educativo #}
+            {{ _self.nav_item(
+                'educational_centre'|trans({}, 'navigation'),
+                '#',
+                'heroicons:building-library',
+                current_route,
+                'app_educational_centre'
+            ) }}
+
+            {# Administración — solo para admins #}
+            {% if is_granted('ROLE_ADMIN') %}
+                <div class="my-3 h-px bg-white/8"></div>
+                {{ _self.nav_item(
+                    'administration'|trans({}, 'navigation'),
+                    '#',
+                    'heroicons:cog-6-tooth',
+                    current_route,
+                    'app_admin'
+                ) }}
+            {% endif %}
+
+        </nav>
+
+        {# Sección de usuario #}
+        <div class="shrink-0 border-t border-white/8 p-4 space-y-3">
+
+            {# Banner de suplantación #}
+            {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
+                <div class="rounded-lg bg-amber-500/15 border border-amber-400/25 px-3 py-2.5">
+                    <div class="flex items-center gap-2 mb-2">
+                        {{ ux_icon('heroicons:eye', {class: 'h-3.5 w-3.5 shrink-0 text-amber-300'}) }}
+                        <p class="text-xs font-medium text-amber-200 truncate">
+                            {{ 'impersonating'|trans({'%username%': app.user.username}, 'navigation') }}
+                        </p>
+                    </div>
+                    <a href="{{ path('app_dashboard') }}?_switch_user=_exit"
+                       class="inline-flex items-center gap-1.5 rounded-md bg-amber-400/20 px-2.5 py-1 text-xs font-medium text-amber-200 hover:bg-amber-400/30 hover:text-white transition-colors">
+                        {{ ux_icon('heroicons:arrow-uturn-left', {class: 'h-3.5 w-3.5'}) }}
+                        {{ 'switch_back'|trans({}, 'navigation') }}
+                    </a>
+                </div>
+            {% endif %}
+
+            {# Datos del usuario #}
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-plum-700 text-sm font-semibold text-white select-none">
+                    {{ app.user.name.firstName|first|upper }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-medium text-white leading-none">{{ app.user.name.full() }}</p>
+                    <p class="mt-0.5 truncate text-xs text-plum-400">@{{ app.user.username }}</p>
+                </div>
+            </div>
+
+            {# Acciones del usuario #}
+            <div class="space-y-0.5">
+                <a href="#"
+                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium
+                          text-plum-300 hover:bg-plum-900 hover:text-white transition-colors">
+                    {{ ux_icon('heroicons:user', {class: 'h-4 w-4 shrink-0'}) }}
+                    {{ 'profile'|trans({}, 'navigation') }}
+                </a>
+                <a href="{{ path('app_logout') }}"
+                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium
+                          text-plum-300 hover:bg-red-500/15 hover:text-red-300 transition-colors">
+                    {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-4 w-4 shrink-0'}) }}
+                    {{ 'logout'|trans({}, 'navigation') }}
+                </a>
+            </div>
+
+        </div>
+    </aside>
+
+    {# ── Contenido principal ─────────────────────────────────────────────────── #}
+    <div class="flex min-h-full flex-col lg:pl-64">
+
+        {# Cabecera móvil #}
+        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
+            <button type="button"
+                    data-action="sidebar#toggle"
+                    class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                {{ ux_icon('heroicons:bars-3', {class: 'h-5 w-5'}) }}
+            </button>
+            <span class="text-sm font-semibold text-plum-900">{{ app_name }}</span>
+        </header>
+
+        <main class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
+
+    </div>
+
+</div>
+{% endblock %}
