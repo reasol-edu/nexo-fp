@@ -46,8 +46,11 @@ teacher.field.active: 'Cuenta activa'
 teacher.field.external: 'Docente externo'
 teacher.save: 'Guardar'
 teacher.cancel: 'Cancelar'
+teacher.self_protection_help: 'Por seguridad, no puedes desactivar tu propia cuenta ni retirarte los permisos de administrador.'
 teacher.delete_section: 'Peligro: eliminación del docente'
 teacher.delete_warning: 'Una vez eliminado el docente, no se podrá recuperar.'
+teacher.delete_self_blocked: 'No puedes eliminar tu propia cuenta de administrador.'
+teacher.delete_self_blocked_short: 'Tu cuenta'
 
 # Errores de validación de docente
 teacher.error.first_name_required: 'El nombre es obligatorio.'
@@ -62,6 +65,8 @@ teacher.flash.created: 'Docente creado correctamente.'
 teacher.flash.saved: 'Docente guardado correctamente.'
 teacher.flash.deleted: 'Docente eliminado correctamente.'
 teacher.flash.delete_self_error: 'No puedes eliminar tu propia cuenta.'
+teacher.flash.deactivate_self_error: 'No puedes desactivar tu propia cuenta.'
+teacher.flash.demote_self_error: 'No puedes quitarte los permisos de administrador.'
 teacher.flash.delete_error: 'No se puede eliminar este docente porque tiene datos asociados.'
 
 # Lista de centros

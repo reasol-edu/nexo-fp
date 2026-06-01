@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: El campo de contraseña se oculta dinámicamente al activar la autenticación externa en el formulario de docente
+- `feat`: No es necesario especificar contraseña al crear un docente con autenticación externa activada
+- `feat`: Un administrador no puede eliminarse, desactivarse ni quitarse los permisos de administrador a sí mismo
 - `feat`: Se puede entrar en la aplicación con el usuario IdEA de Séneca/Pasen
 - `feat`: Ahora se puede añadir al equipo directivo en la administración de centros
 - `feat:` Sección Administración de docentes
