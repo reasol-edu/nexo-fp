@@ -32,10 +32,21 @@
         {# Centro y curso activo #}
         {% if active_centre %}
         <div class="shrink-0 border-b border-white/8 px-5 py-3">
-            <p class="truncate text-xs font-medium text-white leading-none">{{ active_centre.name }}</p>
-            {% if active_year %}
-                <p class="mt-1 truncate text-xs text-plum-400">{{ active_year.name }}</p>
-            {% endif %}
+            <div class="flex items-center gap-2">
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-xs font-medium text-white leading-none">{{ active_centre.name }}</p>
+                    {% if active_year %}
+                        <p class="mt-1 truncate text-xs text-plum-400">{{ active_year.name }}</p>
+                    {% endif %}
+                </div>
+                {% if can_switch_centre() %}
+                    <a href="{{ path('app_select_centre') }}"
+                       title="{{ 'switch_centre'|trans({}, 'navigation') }}"
+                       class="shrink-0 rounded-md p-1 text-plum-500 hover:bg-plum-800 hover:text-white transition-colors">
+                        {{ ux_icon('heroicons:arrows-right-left', {class: 'h-3.5 w-3.5'}) }}
+                    </a>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
 
