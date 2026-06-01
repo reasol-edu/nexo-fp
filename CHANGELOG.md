@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `fix(i18n)`: Corregidas algunas traducciones
 - `fix(docs)`: Indicar correctamente que se usa Symfony 8.1
 - `fix(model)`: Corregida errata en atributo. Rehechas las migraciones
 - `fix`: Actualizar dependencias y corregir mapeo UUID tras rebase
