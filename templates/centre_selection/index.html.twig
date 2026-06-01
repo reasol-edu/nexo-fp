@@ -9,9 +9,8 @@
 
         {# Cabecera de marca #}
         <div class="flex items-center justify-center gap-3 mb-8">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-plum-600">
-                {{ ux_icon('heroicons:academic-cap', {class: 'h-5 w-5 text-white'}) }}
-            </div>
+            <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}"
+                 class="h-10 w-10 shrink-0">
             <span class="text-xl font-semibold text-plum-900">{{ app_name }}</span>
         </div>
 
