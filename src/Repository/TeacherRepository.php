@@ -34,4 +34,30 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
+
+    public function countAll(): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countActive(): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.active = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countAdmins(): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.admin = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

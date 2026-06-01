@@ -43,10 +43,29 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function countAll(): int
+    {
+        return (int) $this->createQueryBuilder('ec')
+            ->select('COUNT(ec.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /** @return EducationalCentre[] */
     public function findAllOrderedByName(): array
     {
         return $this->createQueryBuilder('ec')
+            ->orderBy('ec.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return EducationalCentre[] */
+    public function findAllWithActiveYear(): array
+    {
+        return $this->createQueryBuilder('ec')
+            ->leftJoin('ec.activeAcademicYear', 'ay')
+            ->addSelect('ay')
             ->orderBy('ec.name', 'ASC')
             ->getQuery()
             ->getResult();
