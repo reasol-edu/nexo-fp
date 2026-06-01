@@ -15,3 +15,95 @@
     --color-plum-900: #362d42;
     --color-plum-950: #1f192a;
 }
+
+/* TomSelect (Symfony UX Autocomplete): adapta el look al tema plum.
+   Se usa :root como prefijo para aumentar la especificidad y que estos
+   overrides prevalezcan sobre el CSS de tom-select.default.css. */
+:root .ts-wrapper .ts-control {
+    border: 1px solid var(--color-plum-200);
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root .ts-wrapper.focus .ts-control,
+:root .ts-wrapper.dropdown-active .ts-control {
+    border-color: var(--color-plum-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-plum-500) 18%, transparent);
+    outline: none;
+}
+
+:root .ts-wrapper .ts-control > input {
+    color: var(--color-plum-900);
+}
+
+:root .ts-wrapper .ts-control > input::placeholder {
+    color: var(--color-plum-400);
+}
+
+/* Tags en selección múltiple */
+:root .ts-wrapper.multi .ts-control > div {
+    background: var(--color-plum-100);
+    color: var(--color-plum-900);
+    border: 1px solid var(--color-plum-300);
+    border-radius: 0.375rem;
+}
+
+:root .ts-wrapper.multi .ts-control > div.active {
+    background: var(--color-plum-200);
+    color: var(--color-plum-900);
+    border-color: var(--color-plum-400);
+}
+
+/* Dropdown */
+:root .ts-dropdown {
+    border: 1px solid var(--color-plum-200);
+    border-top: 0;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--color-plum-950) 45%, transparent);
+    background: white;
+}
+
+:root .ts-dropdown .option,
+:root .ts-dropdown .optgroup-header,
+:root .ts-dropdown .no-results,
+:root .ts-dropdown .create {
+    color: var(--color-plum-900);
+}
+
+:root .ts-dropdown .active {
+    background: var(--color-plum-50);
+    color: var(--color-plum-900);
+}
+
+:root .ts-dropdown [data-selectable].option:hover {
+    background: var(--color-plum-50);
+    color: var(--color-plum-900);
+}
+
+:root .ts-dropdown [data-selectable] .highlight {
+    background: color-mix(in srgb, var(--color-plum-300) 40%, white);
+    border-radius: 2px;
+}
+
+:root .ts-dropdown .optgroup-header {
+    color: var(--color-plum-500);
+    background: var(--color-plum-50);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Estado deshabilitado */
+:root .disabled .ts-control {
+    background: var(--color-plum-50);
+    border-color: var(--color-plum-200);
+}
+
+/* Spinner de carga */
+:root .ts-dropdown .spinner::after {
+    border-color: var(--color-plum-300) transparent var(--color-plum-300) transparent;
+}
+
