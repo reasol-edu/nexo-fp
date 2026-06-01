@@ -27,7 +27,7 @@ final class TenantContext
             return null;
         }
 
-        return $this->centres->findById($id);
+        return $this->centres->findByIdWithActiveYear($id);
     }
 
     public function selectCentre(EducationalCentre $centre): void

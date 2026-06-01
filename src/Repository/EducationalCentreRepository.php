@@ -29,6 +29,17 @@ class EducationalCentreRepository extends ServiceEntityRepository
         return $this->find(Uuid::fromRfc4122($id));
     }
 
+    public function findByIdWithActiveYear(string $id): ?EducationalCentre
+    {
+        return $this->createQueryBuilder('ec')
+            ->leftJoin('ec.activeAcademicYear', 'ay')
+            ->addSelect('ay')
+            ->where('ec.id = :id')
+            ->setParameter('id', Uuid::fromRfc4122($id))
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /** @return EducationalCentre[] */
     public function findAllOrderedByName(): array
     {
