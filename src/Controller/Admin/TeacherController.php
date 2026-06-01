@@ -58,7 +58,7 @@ class TeacherController extends AbstractController
                 'external' => $request->request->has('external'),
             ];
 
-            $errors = $this->validateTeacher($values, true);
+            $errors = $this->validateTeacher($values, !$flags['external']);
 
             if (empty($errors['username']) && $this->teachers->findByUsername($values['username']) !== null) {
                 $errors['username'] = $this->t('teacher.error.username_duplicate');
@@ -70,8 +70,11 @@ class TeacherController extends AbstractController
                     ->setEmail($values['email'] !== '' ? $values['email'] : null)
                     ->setAdmin($flags['admin'])
                     ->setActive($flags['active'])
-                    ->setExternal($flags['external'])
-                    ->setPassword($this->hasher->hashPassword($teacher, $values['password']));
+                    ->setExternal($flags['external']);
+
+                if (!$flags['external']) {
+                    $teacher->setPassword($this->hasher->hashPassword($teacher, $values['password']));
+                }
 
                 $this->em->persist($teacher);
                 $this->em->flush();
@@ -96,6 +99,9 @@ class TeacherController extends AbstractController
         if ($teacher === null) {
             throw $this->createNotFoundException();
         }
+
+        $currentUser = $this->getUser();
+        $isCurrentUser = $currentUser instanceof Teacher && $currentUser->getId()->toRfc4122() === $id;
 
         $errors = [];
         $values = [
@@ -129,6 +135,26 @@ class TeacherController extends AbstractController
                 'external' => $request->request->has('external'),
             ];
 
+            if ($isCurrentUser) {
+                $selfProtectionErrors = [];
+
+                if (!$flags['admin']) {
+                    $selfProtectionErrors[] = $this->t('teacher.flash.demote_self_error');
+                }
+
+                if (!$flags['active']) {
+                    $selfProtectionErrors[] = $this->t('teacher.flash.deactivate_self_error');
+                }
+
+                if ($selfProtectionErrors !== []) {
+                    foreach ($selfProtectionErrors as $message) {
+                        $this->addFlash('error', $message);
+                    }
+
+                    return $this->redirectToRoute('app_admin_teachers_edit', ['id' => $id]);
+                }
+            }
+
             $errors = $this->validateTeacher($values, false);
 
             $existing = $this->teachers->findByUsername($values['username']);
@@ -158,10 +184,11 @@ class TeacherController extends AbstractController
         }
 
         return $this->render('admin/teacher/edit.html.twig', [
-            'teacher' => $teacher,
-            'errors'  => $errors,
-            'values'  => $values,
-            'flags'   => $flags,
+            'teacher'         => $teacher,
+            'errors'          => $errors,
+            'values'          => $values,
+            'flags'           => $flags,
+            'is_current_user' => $isCurrentUser,
         ]);
     }
 

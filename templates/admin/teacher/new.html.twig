@@ -20,7 +20,8 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
-        <form method="post" class="px-6 py-6 space-y-5">
+        <form method="post" class="px-6 py-6 space-y-5"
+              data-controller="external-auth">
             <input type="hidden" name="_token" value="{{ csrf_token('new_teacher') }}">
 
             {# Nombre y apellidos #}
@@ -95,12 +96,14 @@
             </div>
 
             {# Contraseña #}
-            <div>
+            <div data-external-auth-target="passwordBlock"
+                 style="transition: max-height 0.25s ease, opacity 0.25s ease;">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
                     {{ 'teacher.field.password'|trans({}, 'admin') }}
                 </label>
                 <input id="password" type="password" name="password"
                        autocomplete="new-password"
+                       data-external-auth-target="passwordInput"
                        class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
                               transition-colors focus:outline-none focus:ring-3
                               {{ errors.password is defined
@@ -128,6 +131,8 @@
                 <label class="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" name="external" value="1"
                            {{ flags.external ? 'checked' : '' }}
+                           data-external-auth-target="checkbox"
+                           data-action="change->external-auth#toggle"
                            class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
                     <span class="text-sm text-gray-700">{{ 'teacher.field.external'|trans({}, 'admin') }}</span>
                 </label>
