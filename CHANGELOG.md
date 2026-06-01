@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Cambiar de centro activo desde el sidebar si se tiene acceso a más de uno
 - `fix`: Especificar tipo 'uuid' explícito en setParameter para búsquedas por ID
 - `fix`: Evitar proxy lazy de AcademicYear cargando activeAcademicYear con JOIN
 - `feat`: Selección de centro educativo al iniciar sesión con persistencia en sesión

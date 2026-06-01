@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\EducationalCentre;
+use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -33,6 +34,11 @@ final class TenantContext
     public function selectCentre(EducationalCentre $centre): void
     {
         $this->requestStack->getSession()->set(self::SESSION_KEY, $centre->getId()->toRfc4122());
+    }
+
+    public function canSwitchCentre(Teacher $teacher): bool
+    {
+        return \count($this->centres->findAccessibleByTeacher($teacher)) > 1;
     }
 
     public function clear(): void
