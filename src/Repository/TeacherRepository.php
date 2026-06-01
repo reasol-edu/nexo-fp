@@ -54,6 +54,23 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->getEntityManager()->flush();
     }
 
+    /** @return Teacher[] */
+    public function search(string $query, int $limit = 10): array
+    {
+        $q = '%' . $query . '%';
+
+        return $this->createQueryBuilder('t')
+            ->where('LOWER(t.name.firstName) LIKE LOWER(:q)')
+            ->orWhere('LOWER(t.name.lastName) LIKE LOWER(:q)')
+            ->orWhere('LOWER(t.username) LIKE LOWER(:q)')
+            ->setParameter('q', $q)
+            ->orderBy('t.name.lastName', 'ASC')
+            ->addOrderBy('t.name.firstName', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countAll(): int
     {
         return (int) $this->createQueryBuilder('t')

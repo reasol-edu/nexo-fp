@@ -4,14 +4,17 @@ namespace App\Controller\Admin;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\Teacher;
 use App\Repository\AcademicYearRepository;
 use App\Repository\EducationalCentreRepository;
+use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/centros')]
 #[IsGranted('ROLE_ADMIN')]
@@ -21,6 +24,8 @@ class EducationalCentreController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly EducationalCentreRepository $centres,
         private readonly AcademicYearRepository $years,
+        private readonly TeacherRepository $teachers,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
@@ -51,7 +56,7 @@ class EducationalCentreController extends AbstractController
             $errors = $this->validateCentre($values);
 
             if (empty($errors) && $this->centres->findByCode($values['code']) !== null) {
-                $errors['code'] = 'Ya existe un centro con este código.';
+                $errors['code'] = $this->t('centre.error.code_duplicate');
             }
 
             if (empty($errors)) {
@@ -70,7 +75,7 @@ class EducationalCentreController extends AbstractController
                 $this->em->persist($academicYear);
                 $this->em->flush();
 
-                $this->addFlash('success', 'Centro educativo creado correctamente.');
+                $this->addFlash('success', $this->t('centre.flash.created'));
 
                 return $this->redirectToRoute('app_admin_centres_index');
             }
@@ -92,6 +97,9 @@ class EducationalCentreController extends AbstractController
 
         $errors = [];
 
+        /** @var Teacher[] $selectedAdmins */
+        $selectedAdmins = $centre->getAdmins()->toArray();
+
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('edit_centre_' . $id, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException();
@@ -108,26 +116,53 @@ class EducationalCentreController extends AbstractController
             $existing = $this->centres->findByCode($values['code']);
             if (empty($errors['code']) && $existing !== null
                 && $existing->getId()->toRfc4122() !== $id) {
-                $errors['code'] = 'Ya existe un centro con este código.';
+                $errors['code'] = $this->t('centre.error.code_duplicate');
             }
 
-            if (empty($errors)) {
+            $submittedIds = array_values(array_filter(
+                array_map(
+                    static fn(mixed $v): string => \is_string($v) ? $v : '',
+                    $request->request->all('admins')
+                ),
+                static fn(string $v): bool => $v !== ''
+            ));
+
+            if (!empty($errors)) {
+                $selectedAdmins = [];
+                foreach ($submittedIds as $adminId) {
+                    $teacher = $this->teachers->findById($adminId);
+                    if ($teacher !== null) {
+                        $selectedAdmins[] = $teacher;
+                    }
+                }
+            } else {
                 $centre->setCode($values['code'])
                     ->setName($values['name'])
                     ->setCity($values['city']);
 
+                foreach ($centre->getAdmins()->toArray() as $admin) {
+                    $centre->removeAdmin($admin);
+                }
+                foreach ($submittedIds as $adminId) {
+                    $teacher = $this->teachers->findById($adminId);
+                    if ($teacher !== null) {
+                        $centre->addAdmin($teacher);
+                    }
+                }
+
                 $this->em->flush();
 
-                $this->addFlash('success', 'Centro educativo guardado correctamente.');
+                $this->addFlash('success', $this->t('centre.flash.saved'));
 
                 return $this->redirectToRoute('app_admin_centres_edit', ['id' => $id]);
             }
         }
 
         return $this->render('admin/educational_centre/edit.html.twig', [
-            'centre' => $centre,
-            'years'  => $this->years->findByCentreOrderedByName($centre),
-            'errors' => $errors,
+            'centre'         => $centre,
+            'years'          => $this->years->findByCentreOrderedByName($centre),
+            'errors'         => $errors,
+            'selectedAdmins' => $selectedAdmins,
         ]);
     }
 
@@ -151,9 +186,9 @@ class EducationalCentreController extends AbstractController
             }
             $this->em->remove($centre);
             $this->em->flush();
-            $this->addFlash('success', 'Centro educativo eliminado correctamente.');
+            $this->addFlash('success', $this->t('centre.flash.deleted'));
         } catch (\Exception) {
-            $this->addFlash('error', 'No se puede eliminar este centro porque tiene datos asociados.');
+            $this->addFlash('error', $this->t('centre.flash.delete_error'));
         }
 
         return $this->redirectToRoute('app_admin_centres_index');
@@ -174,7 +209,7 @@ class EducationalCentreController extends AbstractController
         $name = trim($request->request->getString('name'));
 
         if ($name === '') {
-            $this->addFlash('error', 'El nombre del curso es obligatorio.');
+            $this->addFlash('error', $this->t('year.flash.name_required'));
         } else {
             $year = (new AcademicYear())
                 ->setName($name)
@@ -183,7 +218,7 @@ class EducationalCentreController extends AbstractController
             $this->em->persist($year);
             $this->em->flush();
 
-            $this->addFlash('success', 'Curso académico añadido correctamente.');
+            $this->addFlash('success', $this->t('year.flash.added'));
         }
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $id]);
@@ -212,12 +247,12 @@ class EducationalCentreController extends AbstractController
             $name = trim($request->request->getString('name'));
 
             if ($name === '') {
-                $errors['name'] = 'El nombre es obligatorio.';
+                $errors['name'] = $this->t('year.error.name_required');
             } else {
                 $year->setName($name);
                 $this->em->flush();
 
-                $this->addFlash('success', 'Curso académico guardado correctamente.');
+                $this->addFlash('success', $this->t('year.flash.saved'));
 
                 return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
             }
@@ -248,11 +283,11 @@ class EducationalCentreController extends AbstractController
         }
 
         if ($centre->getActiveAcademicYear() === $year) {
-            $this->addFlash('error', 'No puedes eliminar el curso activo. Establece otro como activo primero.');
+            $this->addFlash('error', $this->t('year.flash.delete_active_error'));
         } else {
             $this->em->remove($year);
             $this->em->flush();
-            $this->addFlash('success', 'Curso académico eliminado correctamente.');
+            $this->addFlash('success', $this->t('year.flash.deleted'));
         }
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
@@ -278,7 +313,7 @@ class EducationalCentreController extends AbstractController
         $centre->setActiveAcademicYear($year);
         $this->em->flush();
 
-        $this->addFlash('success', 'Curso académico establecido como activo.');
+        $this->addFlash('success', $this->t('year.flash.activated'));
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
     }
@@ -292,19 +327,24 @@ class EducationalCentreController extends AbstractController
         $errors = [];
 
         if ($values['code'] === '') {
-            $errors['code'] = 'El código es obligatorio.';
+            $errors['code'] = $this->t('centre.error.code_required');
         } elseif (\strlen($values['code']) > 8) {
-            $errors['code'] = 'El código no puede tener más de 8 caracteres.';
+            $errors['code'] = $this->t('centre.error.code_too_long');
         }
 
         if ($values['name'] === '') {
-            $errors['name'] = 'El nombre es obligatorio.';
+            $errors['name'] = $this->t('centre.error.name_required');
         }
 
         if ($values['city'] === '') {
-            $errors['city'] = 'La localidad es obligatoria.';
+            $errors['city'] = $this->t('centre.error.city_required');
         }
 
         return $errors;
+    }
+
+    private function t(string $key): string
+    {
+        return $this->translator->trans($key, [], 'admin');
     }
 }

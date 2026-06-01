@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/docentes')]
 #[IsGranted('ROLE_ADMIN')]
@@ -21,6 +22,7 @@ class TeacherController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly TeacherRepository $teachers,
         private readonly UserPasswordHasherInterface $hasher,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     #[Route('', name: 'app_admin_teachers_index')]
@@ -59,7 +61,7 @@ class TeacherController extends AbstractController
             $errors = $this->validateTeacher($values, true);
 
             if (empty($errors['username']) && $this->teachers->findByUsername($values['username']) !== null) {
-                $errors['username'] = 'Ya existe un docente con este nombre de usuario.';
+                $errors['username'] = $this->t('teacher.error.username_duplicate');
             }
 
             if (empty($errors)) {
@@ -74,7 +76,7 @@ class TeacherController extends AbstractController
                 $this->em->persist($teacher);
                 $this->em->flush();
 
-                $this->addFlash('success', 'Docente creado correctamente.');
+                $this->addFlash('success', $this->t('teacher.flash.created'));
 
                 return $this->redirectToRoute('app_admin_teachers_index');
             }
@@ -132,7 +134,7 @@ class TeacherController extends AbstractController
             $existing = $this->teachers->findByUsername($values['username']);
             if (empty($errors['username']) && $existing !== null
                 && $existing->getId()->toRfc4122() !== $id) {
-                $errors['username'] = 'Ya existe un docente con este nombre de usuario.';
+                $errors['username'] = $this->t('teacher.error.username_duplicate');
             }
 
             if (empty($errors)) {
@@ -149,7 +151,7 @@ class TeacherController extends AbstractController
 
                 $this->em->flush();
 
-                $this->addFlash('success', 'Docente guardado correctamente.');
+                $this->addFlash('success', $this->t('teacher.flash.saved'));
 
                 return $this->redirectToRoute('app_admin_teachers_edit', ['id' => $id]);
             }
@@ -177,7 +179,7 @@ class TeacherController extends AbstractController
 
         $currentUser = $this->getUser();
         if ($currentUser instanceof Teacher && $currentUser->getId()->toRfc4122() === $id) {
-            $this->addFlash('error', 'No puedes eliminar tu propia cuenta.');
+            $this->addFlash('error', $this->t('teacher.flash.delete_self_error'));
 
             return $this->redirectToRoute('app_admin_teachers_index');
         }
@@ -185,9 +187,9 @@ class TeacherController extends AbstractController
         try {
             $this->em->remove($teacher);
             $this->em->flush();
-            $this->addFlash('success', 'Docente eliminado correctamente.');
+            $this->addFlash('success', $this->t('teacher.flash.deleted'));
         } catch (\Exception) {
-            $this->addFlash('error', 'No se puede eliminar este docente porque tiene datos asociados.');
+            $this->addFlash('error', $this->t('teacher.flash.delete_error'));
         }
 
         return $this->redirectToRoute('app_admin_teachers_index');
@@ -202,25 +204,30 @@ class TeacherController extends AbstractController
         $errors = [];
 
         if ($values['first_name'] === '') {
-            $errors['first_name'] = 'El nombre es obligatorio.';
+            $errors['first_name'] = $this->t('teacher.error.first_name_required');
         }
 
         if ($values['last_name'] === '') {
-            $errors['last_name'] = 'Los apellidos son obligatorios.';
+            $errors['last_name'] = $this->t('teacher.error.last_name_required');
         }
 
         if ($values['username'] === '') {
-            $errors['username'] = 'El nombre de usuario es obligatorio.';
+            $errors['username'] = $this->t('teacher.error.username_required');
         }
 
         if ($values['email'] !== '' && !filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'El email no tiene un formato válido.';
+            $errors['email'] = $this->t('teacher.error.email_invalid');
         }
 
         if ($passwordRequired && $values['password'] === '') {
-            $errors['password'] = 'La contraseña es obligatoria.';
+            $errors['password'] = $this->t('teacher.error.password_required');
         }
 
         return $errors;
+    }
+
+    private function t(string $key): string
+    {
+        return $this->translator->trans($key, [], 'admin');
     }
 }

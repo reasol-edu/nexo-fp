@@ -13,6 +13,9 @@ card.centres.title: 'Centros educativos'
 card.centres.total: 'Centros registrados'
 card.centres.action: 'Gestionar centros'
 
+# Autocomplete
+autocomplete.no_results: 'Sin resultados'
+
 # Lista de docentes
 teachers.title: 'Docentes'
 teachers.new: 'Nuevo docente'
@@ -46,6 +49,21 @@ teacher.cancel: 'Cancelar'
 teacher.delete_section: 'Peligro: eliminación del docente'
 teacher.delete_warning: 'Una vez eliminado el docente, no se podrá recuperar.'
 
+# Errores de validación de docente
+teacher.error.first_name_required: 'El nombre es obligatorio.'
+teacher.error.last_name_required: 'Los apellidos son obligatorios.'
+teacher.error.username_required: 'El nombre de usuario es obligatorio.'
+teacher.error.username_duplicate: 'Ya existe un docente con este nombre de usuario.'
+teacher.error.email_invalid: 'El email no tiene un formato válido.'
+teacher.error.password_required: 'La contraseña es obligatoria.'
+
+# Flash de docente
+teacher.flash.created: 'Docente creado correctamente.'
+teacher.flash.saved: 'Docente guardado correctamente.'
+teacher.flash.deleted: 'Docente eliminado correctamente.'
+teacher.flash.delete_self_error: 'No puedes eliminar tu propia cuenta.'
+teacher.flash.delete_error: 'No se puede eliminar este docente porque tiene datos asociados.'
+
 # Lista de centros
 centres.title: 'Centros educativos'
 centres.new: 'Nuevo centro'
@@ -68,7 +86,33 @@ centre.field.code: 'Código de centro'
 centre.field.code_help: 'Hasta 8 caracteres, p. ej. 23700281'
 centre.field.name: 'Nombre'
 centre.field.city: 'Localidad'
+centre.admins.label: 'Equipo directivo'
+centre.admins.help: 'Docentes con acceso a la gestión del centro. Escribe al menos 2 caracteres para buscar.'
 centre.save: 'Guardar'
+
+# Errores de validación de centro
+centre.error.code_required: 'El código es obligatorio.'
+centre.error.code_too_long: 'El código no puede tener más de 8 caracteres.'
+centre.error.code_duplicate: 'Ya existe un centro con este código.'
+centre.error.name_required: 'El nombre es obligatorio.'
+centre.error.city_required: 'La localidad es obligatoria.'
+
+# Flash de centro
+centre.flash.created: 'Centro educativo creado correctamente.'
+centre.flash.saved: 'Centro educativo guardado correctamente.'
+centre.flash.deleted: 'Centro educativo eliminado correctamente.'
+centre.flash.delete_error: 'No se puede eliminar este centro porque tiene datos asociados.'
+
+# Errores de validación de curso académico
+year.error.name_required: 'El nombre es obligatorio.'
+
+# Flash de curso académico
+year.flash.added: 'Curso académico añadido correctamente.'
+year.flash.saved: 'Curso académico guardado correctamente.'
+year.flash.deleted: 'Curso académico eliminado correctamente.'
+year.flash.activated: 'Curso académico establecido como activo.'
+year.flash.name_required: 'El nombre del curso es obligatorio.'
+year.flash.delete_active_error: 'No puedes eliminar el curso activo. Establece otro como activo primero.'
 centre.cancel: 'Cancelar'
 centre.delete_section: 'Peligro: eliminación del centro'
 centre.delete_warning: 'Una vez eliminado el centro, no se podrá recuperar.'
