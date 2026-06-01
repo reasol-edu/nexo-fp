@@ -2,6 +2,8 @@
 
 {% block body %}
 {% set current_route = app.request.attributes.get('_route') %}
+{% set active_centre = active_centre() %}
+{% set active_year = active_centre ? active_centre.activeAcademicYear : null %}
 <div data-controller="sidebar" class="h-full">
 
     {# ── Backdrop móvil ──────────────────────────────────────────────────────── #}
@@ -26,6 +28,16 @@
                 {% endif %}
             </div>
         </div>
+
+        {# Centro y curso activo #}
+        {% if active_centre %}
+        <div class="shrink-0 border-b border-white/8 px-5 py-3">
+            <p class="truncate text-xs font-medium text-white leading-none">{{ active_centre.name }}</p>
+            {% if active_year %}
+                <p class="mt-1 truncate text-xs text-plum-400">{{ active_year.name }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
 
         {# Navegación principal #}
         <nav class="flex-1 overflow-y-auto px-3 py-4">
