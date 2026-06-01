@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Repository\EducationalCentreRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -53,15 +54,25 @@ class CreateEducationalCentreCommand extends Command
             return Command::FAILURE;
         }
 
+        $year = (int) (new \DateTimeImmutable())->format('Y');
+        $yearName = $year . '-' . ($year + 1);
+
         $centre = new EducationalCentre();
         $centre->setCode($code);
         $centre->setName($name);
         $centre->setCity($city);
 
+        $academicYear = (new AcademicYear())
+            ->setName($yearName)
+            ->setEducationalCentre($centre);
+
+        $centre->setActiveAcademicYear($academicYear);
+
         $this->em->persist($centre);
+        $this->em->persist($academicYear);
         $this->em->flush();
 
-        $io->success($t('create_centre.success', ['%name%' => $name, '%code%' => $code]));
+        $io->success($t('create_centre.success', ['%name%' => $name, '%code%' => $code, '%year%' => $yearName]));
 
         return Command::SUCCESS;
     }

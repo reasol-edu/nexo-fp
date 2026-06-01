@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'page_title'|trans({}, 'centre_selection') }}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-plum-50 flex flex-col items-center justify-center p-6">
+
+    <div class="w-full max-w-lg">
+
+        {# Cabecera de marca #}
+        <div class="flex items-center justify-center gap-3 mb-8">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-plum-600">
+                {{ ux_icon('heroicons:academic-cap', {class: 'h-5 w-5 text-white'}) }}
+            </div>
+            <span class="text-xl font-semibold text-plum-900">{{ app_name }}</span>
+        </div>
+
+        {# Tarjeta principal #}
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
+
+            {# Encabezado de la tarjeta #}
+            <div class="border-b border-gray-100 px-6 py-5">
+                <h1 class="text-lg font-semibold text-gray-900">
+                    {{ 'page_title'|trans({}, 'centre_selection') }}
+                </h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    {{ 'subtitle'|trans({}, 'centre_selection') }}
+                </p>
+            </div>
+
+            {# Lista de centros #}
+            {% if centres is empty %}
+                <div class="px-6 py-10 text-center">
+                    {{ ux_icon('heroicons:building-library', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+                    <p class="text-sm text-gray-500">{{ 'no_centres'|trans({}, 'centre_selection') }}</p>
+                </div>
+            {% else %}
+                <ul class="divide-y divide-gray-100">
+                    {% for centre in centres %}
+                        <li>
+                            <form method="post"
+                                  action="{{ path('app_select_centre_choose', {id: centre.id}) }}">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('select_centre_' ~ centre.id) }}">
+                                <button type="submit"
+                                        class="group flex w-full items-center gap-4 px-6 py-4
+                                               text-left transition-colors hover:bg-plum-50">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                                                rounded-xl bg-plum-100 text-plum-600
+                                                group-hover:bg-plum-600 group-hover:text-white transition-colors">
+                                        {{ ux_icon('heroicons:building-library', {class: 'h-5 w-5'}) }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="truncate text-sm font-semibold text-gray-900
+                                                   group-hover:text-plum-700">
+                                            {{ centre.name }}
+                                        </p>
+                                        <p class="mt-0.5 truncate text-xs text-gray-500">
+                                            {{ centre.city }} · {{ centre.code }}
+                                        </p>
+                                    </div>
+                                    {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0 text-gray-300 group-hover:text-plum-400 transition-colors'}) }}
+                                </button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {# Pie: cerrar sesión #}
+            <div class="border-t border-gray-100 px-6 py-4">
+                <a href="{{ path('app_logout') }}"
+                   class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition-colors">
+                    {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-4 w-4'}) }}
+                    {{ 'logout'|trans({}, 'centre_selection') }}
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

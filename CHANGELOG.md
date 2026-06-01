@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Selección de centro educativo al iniciar sesión con persistencia en sesión
+- `feat`: Crear curso académico automáticamente al crear un centro educativo
 - `feat`: Dashboard con barra de navegación lateral y soporte de suplantación
 - `feat`: Exponer nombre y versión de la app como parámetros y globales Twig
 - `refactor(i18n)`: Separar messages.es.yaml en dominios login y dashboard
