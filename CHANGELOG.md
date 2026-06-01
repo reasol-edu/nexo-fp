@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `fix`: Especificar tipo 'uuid' explícito en setParameter para búsquedas por ID
 - `fix`: Evitar proxy lazy de AcademicYear cargando activeAcademicYear con JOIN
 - `feat`: Selección de centro educativo al iniciar sesión con persistencia en sesión
 - `feat`: Crear curso académico automáticamente al crear un centro educativo

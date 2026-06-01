@@ -7,7 +7,6 @@ use App\Entity\Group;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<EducationalCentre>
@@ -26,7 +25,11 @@ class EducationalCentreRepository extends ServiceEntityRepository
 
     public function findById(string $id): ?EducationalCentre
     {
-        return $this->find(Uuid::fromRfc4122($id));
+        return $this->createQueryBuilder('ec')
+            ->where('ec.id = :id')
+            ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     public function findByIdWithActiveYear(string $id): ?EducationalCentre
@@ -35,7 +38,7 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->leftJoin('ec.activeAcademicYear', 'ay')
             ->addSelect('ay')
             ->where('ec.id = :id')
-            ->setParameter('id', Uuid::fromRfc4122($id))
+            ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
     }
