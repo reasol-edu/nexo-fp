@@ -18,9 +18,8 @@
 
         {# Cabecera: logo #}
         <div class="flex items-center gap-3 px-5 h-16 border-b border-white/8 shrink-0">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-plum-600">
-                {{ ux_icon('heroicons:academic-cap', {class: 'h-4.5 w-4.5 text-white'}) }}
-            </div>
+            <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}"
+                 class="h-8 w-8 shrink-0">
             <div class="min-w-0">
                 <p class="truncate text-sm font-semibold text-white leading-none">{{ app_name }}</p>
                 {% if app_version %}

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGradient2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#67597A" />
+      <stop offset="100%" stop-color="#342F3C" />
+    </radialGradient>
+    
+    <linearGradient id="nexoGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6E8894" />
+      <stop offset="50%" stop-color="#67597A" />
+      <stop offset="100%" stop-color="#544E61" />
+    </linearGradient>
+
+    <filter id="dropShadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1A171E" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <rect width="400" height="400" rx="80" fill="url(#bgGradient2)" />
+
+  <path d="M 120 230 L 120 70 L 280 230 L 280 70" 
+        fill="none" 
+        stroke="url(#nexoGradient2)" 
+        stroke-width="44" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        filter="url(#dropShadow2)" />
+
+  <circle cx="120" cy="230" r="14" fill="#ffffff" filter="url(#dropShadow2)" />
+  <circle cx="280" cy="70" r="14" fill="#ffffff" filter="url(#dropShadow2)" />
+
+  <text x="200" y="330" 
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        font-size="54" 
+        font-weight="800" 
+        text-anchor="middle" 
+        letter-spacing="3">
+    <tspan fill="#ffffff">NX </tspan>
+    <tspan fill="#6E8894">FP</tspan>
+  </text>
+</svg>
