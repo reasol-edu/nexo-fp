@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Se puede entrar en la aplicación con el usuario IdEA de Séneca/Pasen
+- `feat`: Ahora se puede añadir al equipo directivo en la administración de centros
+- `feat:` Sección Administración de docentes
 - `feat`: Sección Administración con CRUD de centros educativos y cursos académicos
 - `feat`: Usar logo SVG propio en todas las plantillas en lugar del icono genérico
 - `feat`: Cambiar de centro activo desde el sidebar si se tiene acceso a más de uno
