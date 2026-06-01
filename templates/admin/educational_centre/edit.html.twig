@@ -1,0 +1,204 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'centre.edit.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    {# Breadcrumb #}
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'dashboard.title'|trans({}, 'admin') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'centres.title'|trans({}, 'admin') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ centre.name }}</h1>
+    </div>
+
+    {# ── Datos del centro ─────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'centre.edit.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_centre_' ~ centre.id) }}">
+
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                {# Código #}
+                <div>
+                    <label for="code" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'centre.field.code'|trans({}, 'admin') }}
+                    </label>
+                    <input id="code" type="text" name="code"
+                           value="{{ errors is not empty ? app.request.request.get('code') : centre.code }}"
+                           maxlength="8"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm font-mono text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.code is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.code is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.code }}</p>
+                    {% endif %}
+                </div>
+
+                {# Nombre #}
+                <div class="sm:col-span-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'centre.field.name'|trans({}, 'admin') }}
+                    </label>
+                    <input id="name" type="text" name="name"
+                           value="{{ errors is not empty ? app.request.request.get('name') : centre.name }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.name is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.name is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.name }}</p>
+                    {% endif %}
+                </div>
+
+                {# Localidad #}
+                <div class="sm:col-span-3">
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'centre.field.city'|trans({}, 'admin') }}
+                    </label>
+                    <input id="city" type="text" name="city"
+                           value="{{ errors is not empty ? app.request.request.get('city') : centre.city }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.city is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.city is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.city }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'centre.save'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Cursos académicos ────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'years.title'|trans({}, 'admin') }}</h2>
+        </div>
+
+        {# Lista de cursos #}
+        {% if years is empty %}
+            <div class="px-6 py-8 text-center">
+                <p class="text-sm text-gray-400">{{ 'years.empty'|trans({}, 'admin') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-100">
+                {% for year in years %}
+                    <li class="flex items-center gap-4 px-6 py-4">
+                        <div class="flex-1 min-w-0 flex items-center gap-3">
+                            <span class="text-sm font-medium text-gray-900">{{ year.name }}</span>
+                            {% if centre.activeAcademicYear and centre.activeAcademicYear.id == year.id %}
+                                <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                    {{ ux_icon('heroicons:check', {class: 'h-3 w-3 mr-1'}) }}{{ 'years.badge.active'|trans({}, 'admin') }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            {# Establecer activo #}
+                            {% if not centre.activeAcademicYear or centre.activeAcademicYear.id != year.id %}
+                                <form method="post"
+                                      action="{{ path('app_admin_centres_year_activate', {centreId: centre.id, yearId: year.id}) }}">
+                                    <input type="hidden" name="_token"
+                                           value="{{ csrf_token('activate_year_' ~ year.id) }}">
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-green-200 px-2.5 py-1.5
+                                                   text-xs font-medium text-green-700 hover:bg-green-50 hover:border-green-300 transition-colors">
+                                        {{ ux_icon('heroicons:check-circle', {class: 'h-3.5 w-3.5'}) }}
+                                        {{ 'years.action.set_active'|trans({}, 'admin') }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {# Editar #}
+                            <a href="{{ path('app_admin_centres_year_edit', {centreId: centre.id, yearId: year.id}) }}"
+                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                      text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                {{ 'years.action.edit'|trans({}, 'admin') }}
+                            </a>
+                            {# Eliminar #}
+                            <form method="post"
+                                  action="{{ path('app_admin_centres_year_delete', {centreId: centre.id, yearId: year.id}) }}"
+                                  onsubmit="return confirm('{{ 'years.delete_confirm'|trans({}, 'admin') }}')">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('delete_year_' ~ year.id) }}">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
+                                               text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                    {{ 'years.action.delete'|trans({}, 'admin') }}
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Añadir curso #}
+        <div class="border-t border-gray-100 px-6 py-5 bg-gray-50">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                {{ 'years.add.title'|trans({}, 'admin') }}
+            </p>
+            <form method="post"
+                  action="{{ path('app_admin_centres_year_add', {id: centre.id}) }}"
+                  class="flex gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('add_year_' ~ centre.id) }}">
+                <input type="text" name="name"
+                       placeholder="{{ 'years.field.name_placeholder'|trans({}, 'admin') }}"
+                       class="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs shrink-0">
+                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4 mr-1 inline'}) }}{{ 'years.add.submit'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {# ── Zona peligrosa ───────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+            <h2 class="text-base font-semibold text-red-700">{{ 'centre.delete_section'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">{{ 'centre.delete_warning'|trans({}, 'admin') }}</p>
+            <form method="post"
+                  action="{{ path('app_admin_centres_delete', {id: centre.id}) }}"
+                  onsubmit="return confirm('{{ 'centres.delete_confirm'|trans({}, 'admin') }}')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_centre_' ~ centre.id) }}">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium
+                               text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
+                    {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                    {{ 'centres.delete'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

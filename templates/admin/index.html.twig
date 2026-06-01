@@ -1,0 +1,71 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'dashboard.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-7xl mx-auto">
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'dashboard.title'|trans({}, 'admin') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ 'dashboard.subtitle'|trans({}, 'admin') }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+        {# ── Card: Docentes ───────────────────────────────────────────────────── #}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col">
+            <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600">
+                    {{ ux_icon('heroicons:users', {class: 'h-5 w-5'}) }}
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">{{ 'card.teachers.title'|trans({}, 'admin') }}</h2>
+            </div>
+            <div class="px-6 py-5 space-y-3 flex-1">
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-gray-500">{{ 'card.teachers.total'|trans({}, 'admin') }}</span>
+                    <span class="text-2xl font-bold text-gray-900">{{ stats.teachers_total }}</span>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-gray-500">{{ 'card.teachers.active'|trans({}, 'admin') }}</span>
+                    <span class="text-lg font-semibold text-green-600">{{ stats.teachers_active }}</span>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-gray-500">{{ 'card.teachers.admins'|trans({}, 'admin') }}</span>
+                    <span class="text-lg font-semibold text-plum-600">{{ stats.teachers_admin }}</span>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                <a href="#"
+                   class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 hover:text-plum-800 transition-colors">
+                    {{ 'card.teachers.action'|trans({}, 'admin') }}
+                    {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
+                </a>
+            </div>
+        </div>
+
+        {# ── Card: Centros educativos ─────────────────────────────────────────── #}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col">
+            <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600">
+                    {{ ux_icon('heroicons:building-library', {class: 'h-5 w-5'}) }}
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">{{ 'card.centres.title'|trans({}, 'admin') }}</h2>
+            </div>
+            <div class="px-6 py-5 flex-1">
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-gray-500">{{ 'card.centres.total'|trans({}, 'admin') }}</span>
+                    <span class="text-2xl font-bold text-gray-900">{{ stats.centres_total }}</span>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                <a href="{{ path('app_admin_centres_index') }}"
+                   class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 hover:text-plum-800 transition-colors">
+                    {{ 'card.centres.action'|trans({}, 'admin') }}
+                    {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

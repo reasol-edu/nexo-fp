@@ -1,0 +1,57 @@
+# Dashboard
+dashboard.title: 'Administración'
+dashboard.subtitle: 'Gestión global de la plataforma Nexo FP'
+
+# Cards del dashboard
+card.teachers.title: 'Docentes'
+card.teachers.total: 'Docentes registrados'
+card.teachers.active: 'Docentes activos'
+card.teachers.admins: 'Administradores'
+card.teachers.action: 'Gestionar docentes'
+
+card.centres.title: 'Centros educativos'
+card.centres.total: 'Centros registrados'
+card.centres.action: 'Gestionar centros'
+
+# Lista de centros
+centres.title: 'Centros educativos'
+centres.new: 'Nuevo centro'
+centres.back: 'Volver'
+centres.code: 'Código'
+centres.name: 'Nombre'
+centres.city: 'Localidad'
+centres.active_year: 'Curso activo'
+centres.no_active_year: '—'
+centres.actions: 'Acciones'
+centres.edit: 'Editar'
+centres.delete: 'Eliminar'
+centres.delete_confirm: '¿Eliminar este centro educativo? Esta acción no se puede deshacer.'
+centres.empty: 'No hay centros educativos registrados.'
+
+# Formulario de centro
+centre.new.title: 'Nuevo centro educativo'
+centre.edit.title: 'Editar centro educativo'
+centre.field.code: 'Código de centro'
+centre.field.code_help: 'Hasta 8 caracteres, p. ej. 23700281'
+centre.field.name: 'Nombre'
+centre.field.city: 'Localidad'
+centre.save: 'Guardar'
+centre.cancel: 'Cancelar'
+centre.delete_section: 'Peligro: eliminación del centro'
+centre.delete_warning: 'Una vez eliminado el centro, no se podrá recuperar.'
+
+# Cursos académicos
+years.title: 'Cursos académicos'
+years.add.title: 'Añadir curso'
+years.add.submit: 'Añadir'
+years.field.name: 'Nombre del curso'
+years.field.name_placeholder: 'ej: 2026-2027'
+years.badge.active: 'Activo'
+years.action.set_active: 'Establecer activo'
+years.action.edit: 'Editar'
+years.action.delete: 'Eliminar'
+years.delete_confirm: '¿Eliminar este curso académico?'
+years.empty: 'No hay cursos académicos registrados.'
+years.edit.title: 'Editar curso académico'
+years.edit.save: 'Guardar'
+years.edit.cancel: 'Cancelar'

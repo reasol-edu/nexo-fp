@@ -45,6 +45,11 @@ final class TenantContextSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Admin section does not require centre selection
+        if (\is_string($route) && \str_starts_with($route, 'app_admin')) {
+            return;
+        }
+
         $user = $this->security->getUser();
         if (!$user instanceof Teacher) {
             return;
