@@ -19,6 +19,25 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         parent::__construct($registry, Teacher::class);
     }
 
+    public function findById(string $id): ?Teacher
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.id = :id')
+            ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /** @return Teacher[] */
+    public function findAllOrderedByName(): array
+    {
+        return $this->createQueryBuilder('t')
+            ->orderBy('t.name.lastName', 'ASC')
+            ->addOrderBy('t.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findByUsername(string $username): ?Teacher
     {
         return $this->findOneBy(['username' => $username]);
