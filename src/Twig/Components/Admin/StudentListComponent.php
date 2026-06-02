@@ -46,16 +46,6 @@ class StudentListComponent extends AbstractController
         $this->centre = $centre;
     }
 
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-    }
-
-    public function updatedGroupId(): void
-    {
-        $this->page = 1;
-    }
-
     /** @return Group[] */
     public function getAvailableGroups(): array
     {
@@ -77,6 +67,12 @@ class StudentListComponent extends AbstractController
             max(1, $this->page),
             $this->pageSize,
         );
+    }
+
+    #[LiveAction]
+    public function resetPage(): void
+    {
+        $this->page = 1;
     }
 
     #[LiveAction]
