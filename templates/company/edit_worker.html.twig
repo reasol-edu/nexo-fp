@@ -20,7 +20,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ 'worker.edit.title'|trans({}, 'companies') }}</h1>
     </div>
 
-    <twig:live:Company:WorkerFormComponent :worker="worker" :company="company" />
+    <twig:Company:WorkerFormComponent :worker="worker" :company="company" />
 
 </div>
 {% endblock %}

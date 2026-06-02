@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Filtrado en tiempo real y paginación sin recarga en los listados de empresas, docentes y centros educativos
 - `refactor`: Componentes Twig anónimos (Form/Field, Form/Textarea) y Live Components (WorkcenterForm, WorkerForm) en la sección Empresas
 - `feat`: Selector de docentes de enlace filtrado por equipo directivo y docentes de grupos del centro
 - `feat`: Sección Empresas con CRUD de empresas y centros de trabajo, paginación y Voter de seguridad por roles
