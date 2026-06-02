@@ -94,24 +94,30 @@
             {% endif %}
 
             {# Centro educativo #}
-            {{ _self.nav_item(
-                'educational_centre'|trans({}, 'navigation'),
-                path('app_educational_centre_index'),
-                'heroicons:building-library',
-                current_route,
-                'app_educational_centre'
-            ) }}
+            {% set centre_active = current_route starts with 'app_educational_centre'
+                or current_route starts with 'app_admin_families'
+                or current_route starts with 'app_admin_programmes'
+                or current_route starts with 'app_admin_levels'
+                or current_route starts with 'app_admin_groups' %}
+            <a href="{{ path('app_educational_centre_index') }}"
+               class="{{ centre_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
+                      group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
+                {{ ux_icon('heroicons:building-library', {class: 'h-5 w-5 shrink-0'}) }}
+                <span class="truncate">{{ 'educational_centre'|trans({}, 'navigation') }}</span>
+            </a>
 
             {# Administración — solo para admins #}
             {% if is_granted('ROLE_ADMIN') %}
                 <div class="my-3 h-px bg-white/8"></div>
-                {{ _self.nav_item(
-                    'administration'|trans({}, 'navigation'),
-                    path('app_admin'),
-                    'heroicons:cog-6-tooth',
-                    current_route,
-                    'app_admin'
-                ) }}
+                {% set admin_active = current_route == 'app_admin'
+                    or current_route starts with 'app_admin_teachers'
+                    or current_route starts with 'app_admin_centres' %}
+                <a href="{{ path('app_admin') }}"
+                   class="{{ admin_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
+                          group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
+                    {{ ux_icon('heroicons:cog-6-tooth', {class: 'h-5 w-5 shrink-0'}) }}
+                    <span class="truncate">{{ 'administration'|trans({}, 'navigation') }}</span>
+                </a>
             {% endif %}
 
         </nav>
