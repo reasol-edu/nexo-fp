@@ -2,6 +2,15 @@
 
 {% block title %}{{ 'families.title'|trans({}, 'admin') }} · {{ centre.name }} · {{ app_name }}{% endblock %}
 
+{% block stylesheets %}{{ parent() }}
+<style>
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] > summary .tree-chevron { transform: rotate(90deg); }
+.tree-chevron { transition: transform 0.15s ease; display: inline-flex; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="px-6 py-8 max-w-7xl mx-auto">
 
