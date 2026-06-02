@@ -31,6 +31,7 @@ teachers.search: 'Buscar docente…'
 teachers.empty: 'No hay docentes registrados.'
 teachers.search_empty: 'No se encontraron docentes con ese criterio.'
 teachers.badge.admin: 'Admin'
+teachers.badge.centre_admin: 'Equipo directivo'
 teachers.badge.inactive: 'Inactivo'
 teachers.badge.external: 'Externo'
 
