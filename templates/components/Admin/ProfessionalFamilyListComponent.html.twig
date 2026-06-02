@@ -1,0 +1,125 @@
+<div {{ attributes }}>
+    {% if centre.activeAcademicYear is null %}
+        <div class="px-6 py-16 text-center">
+            {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
+            <p class="text-sm text-gray-500">{{ 'families.no_active_year'|trans({}, 'admin') }}</p>
+        </div>
+    {% else %}
+        {% set pagination = this.pagination %}
+
+        <div class="px-6 py-3 border-b border-gray-100 bg-gray-50/50">
+            <div class="relative max-w-xs">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
+                </div>
+                <input type="search"
+                       data-model="search"
+                       placeholder="{{ 'families.search'|trans({}, 'admin') }}"
+                       value="{{ search }}"
+                       class="block w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm
+                              text-gray-900 placeholder-gray-400 focus:border-plum-500 focus:outline-none
+                              focus:ring-3 focus:ring-plum-500/20 transition-colors">
+            </div>
+        </div>
+
+        {% if pagination.totalItems == 0 %}
+            <div class="px-6 py-16 text-center">
+                {{ ux_icon('heroicons:academic-cap', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+                <p class="text-sm text-gray-500">
+                    {% if search is not empty %}
+                        {{ 'families.search_empty'|trans({}, 'admin') }}
+                    {% else %}
+                        {{ 'families.empty'|trans({}, 'admin') }}
+                    {% endif %}
+                </p>
+            </div>
+        {% else %}
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-100 bg-gray-50">
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.name'|trans({}, 'admin') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.head'|trans({}, 'admin') }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.actions'|trans({}, 'admin') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for family in pagination.items %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-medium text-gray-900">{{ family.name }}</td>
+                            <td class="px-6 py-4 text-gray-600">
+                                {% if family.head %}
+                                    {{ family.head.name.lastName }}, {{ family.head.name.firstName }}
+                                {% else %}
+                                    <span class="text-gray-400">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
+                                       class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
+                                              text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                        {{ 'families.edit'|trans({}, 'admin') }}
+                                    </a>
+                                    <form method="post"
+                                          action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
+                                          onsubmit="return confirm('{{ 'families.delete_confirm'|trans({}, 'admin') }}')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
+                                                       text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                            {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                            {{ 'families.delete'|trans({}, 'admin') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if pagination.totalPages > 1 %}
+                <div class="flex items-center justify-between border-t border-gray-100 px-6 py-3 gap-4 flex-wrap">
+                    <p class="text-xs text-gray-500 shrink-0">
+                        {{ 'pagination.summary'|trans({'%from%': pagination.firstItemIndex, '%to%': pagination.lastItemIndex, '%total%': pagination.totalItems}) }}
+                    </p>
+                    <nav class="flex items-center gap-1">
+                        {% if pagination.hasPreviousPage %}
+                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.previousPage }}"
+                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+                            </button>
+                        {% else %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+                            </span>
+                        {% endif %}
+                        {% for p in pagination.pageRange %}
+                            {% if p is null %}
+                                <span class="inline-flex items-center justify-center h-8 px-1 text-xs text-gray-400 select-none">…</span>
+                            {% elseif p == pagination.currentPage %}
+                                <span class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg bg-plum-600 text-white text-xs font-semibold">{{ p }}</span>
+                            {% else %}
+                                <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ p }}"
+                                        class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg border border-gray-200 text-gray-600 text-xs hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                    {{ p }}
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+                        {% if pagination.hasNextPage %}
+                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.nextPage }}"
+                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+                            </button>
+                        {% else %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+                            </span>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>
