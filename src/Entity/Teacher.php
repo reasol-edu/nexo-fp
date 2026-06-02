@@ -2,6 +2,8 @@
 namespace App\Entity;
 
 use App\Repository\TeacherRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -37,9 +39,14 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, nullable: true)]
     private ?string $email = null;
 
+    /** @var Collection<int, AcademicYear> */
+    #[ORM\ManyToMany(targetEntity: AcademicYear::class, mappedBy: 'teachers', fetch: 'EXTRA_LAZY')]
+    private Collection $academicYears;
+
     public function __construct(PersonName $name)
     {
-        $this->name = $name;
+        $this->name   = $name;
+        $this->academicYears = new ArrayCollection();
     }
 
     public function getId(): Uuid
@@ -144,6 +151,31 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(?string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    /** @return Collection<int, AcademicYear> */
+    public function getAcademicYears(): Collection
+    {
+        return $this->academicYears;
+    }
+
+    public function addAcademicYear(AcademicYear $year): static
+    {
+        if (!$this->academicYears->contains($year)) {
+            $this->academicYears->add($year);
+            $year->addTeacher($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAcademicYear(AcademicYear $year): static
+    {
+        if ($this->academicYears->removeElement($year)) {
+            $year->removeTeacher($this);
+        }
 
         return $this;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\AcademicYear;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -64,6 +65,38 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         }
 
         return $qb->getQuery();
+    }
+
+    /** @return Query<null, Teacher> */
+    public function createByAcademicYearFilteredQuery(AcademicYear $year, string $search = ''): Query
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->join('t.academicYears', 'ay')
+            ->where('ay.id = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->orderBy('t.name.lastName', 'ASC')
+            ->addOrderBy('t.name.firstName', 'ASC');
+
+        if ($search !== '') {
+            $q = '%' . $search . '%';
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    'LOWER(t.name.firstName) LIKE LOWER(:q)',
+                    'LOWER(t.name.lastName) LIKE LOWER(:q)',
+                    'LOWER(t.username) LIKE LOWER(:q)',
+                )
+            )->setParameter('q', $q);
+        }
+
+        return $qb->getQuery();
+    }
+
+    /** @return Query<null, Teacher> */
+    public function findNoneQuery(): Query
+    {
+        return $this->createQueryBuilder('t')
+            ->where('1 = 0')
+            ->getQuery();
     }
 
     public function findByUsername(string $username): ?Teacher

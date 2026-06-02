@@ -142,6 +142,39 @@ years.edit.title: 'Editar curso académico'
 years.edit.save: 'Guardar'
 years.edit.cancel: 'Cancelar'
 
+# Docentes del curso
+centre_teachers.title: 'Docentes del centro'
+centre_teachers.hub_help: 'Docentes asignados al curso académico activo.'
+centre_teachers.manage: 'Gestionar docentes'
+centre_teachers.no_active_year: 'Sin curso activo.'
+centre_teachers.search: 'Buscar docente…'
+centre_teachers.empty: 'No hay docentes asignados a este curso.'
+centre_teachers.search_empty: 'No se encontraron docentes con ese criterio.'
+centre_teachers.remove_confirm: '¿Quitar este docente del curso activo?'
+
+centre_teachers.col.name: 'Nombre'
+centre_teachers.col.username: 'Usuario'
+centre_teachers.col.email: 'Correo'
+centre_teachers.col.roles: 'Roles'
+centre_teachers.col.actions: 'Acciones'
+
+centre_teachers.action.remove: 'Quitar del curso'
+
+centre_teachers.add.title: 'Añadir docente al curso'
+centre_teachers.add.hint: 'Introduce el nombre de usuario del docente. Si no existe en el sistema, podrás registrarlo a continuación.'
+centre_teachers.add.username_label: 'Nombre de usuario de Séneca'
+centre_teachers.add.username_placeholder: 'Usuario IdEA'
+centre_teachers.add.submit: 'Añadir'
+
+centre_teachers.register.title: 'Registrar nuevo docente'
+centre_teachers.register.not_found_info: 'No existe ningún docente con el usuario «%username%». Completa los datos para registrarlo y añadirlo al curso activo.'
+centre_teachers.register.submit: 'Registrar y añadir al curso'
+
+centre_teachers.flash.added: 'Docente añadido al curso correctamente.'
+centre_teachers.flash.removed: 'Docente eliminado del curso correctamente.'
+centre_teachers.flash.not_found: 'Docente no encontrado.'
+centre_teachers.flash.registered_and_added: 'Docente registrado y añadido al curso correctamente.'
+
 # Estudiantes
 students.title: 'Estudiantes'
 students.new: 'Nuevo estudiante'
