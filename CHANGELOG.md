@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Selector de docentes de enlace filtrado por equipo directivo y docentes de grupos del centro
 - `feat`: Sección Empresas con CRUD de empresas y centros de trabajo, paginación y Voter de seguridad por roles
 - `feat`: CIF/NIF obligatorio y único por centro educativo en las empresas
 - `feat`: Gestión de empleados asociados a la empresa con vinculación por DNI/NIE

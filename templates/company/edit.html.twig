@@ -129,7 +129,7 @@
                 <p class="text-xs text-gray-400 mb-2">{{ 'company.liaisons.help'|trans({}, 'companies') }}</p>
                 <select name="liaisons[]" multiple
                         data-controller="symfony--ux-autocomplete--autocomplete"
-                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_liaison'}) }}"
                         data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         class="w-full">
