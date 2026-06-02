@@ -20,11 +20,7 @@
 
     <div>
         <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">{{ 'dashboard.title'|trans({}, 'admin') }}</a>
-            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-            <a href="{{ path('app_admin_centres_index') }}" class="hover:text-plum-600 transition-colors">{{ 'centres.title'|trans({}, 'admin') }}</a>
-            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-            <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ centre.name }}</a>
+            <a href="{{ path('app_educational_centre_index') }}" class="hover:text-plum-600 transition-colors">{{ 'educational_centre'|trans({}, 'navigation') }}</a>
             {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
             <a href="{{ path('app_admin_families_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'families.title'|trans({}, 'admin') }}</a>
             {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
