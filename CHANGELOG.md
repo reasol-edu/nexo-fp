@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Sección «Docentes del centro» en el hub Centro educativo para gestionar qué docentes pertenecen al curso académico activo
+- `feat`: Formulario de alta de docente desde la sección «Docentes del centro» — si el nombre de usuario introducido no existe, redirige a un formulario de registro pre-rellenado que crea al docente y lo añade al curso en una sola operación; nuevo docente marcado como externo por defecto
+- `feat`: Listado de docentes del curso con columnas de usuario, correo, badges de roles (Equipo directivo, Admin, Inactivo, Externo) y paginación con búsqueda en tiempo real
+- `feat`: Relación ManyToMany entre `Teacher` y `AcademicYear` (tabla `teacher_academic_year`) para asociar docentes a cursos académicos
+- `feat`: Nuevo alias de autocomplete `teacher_centre` que filtra los docentes por el año académico activo del centro; los formularios de la sección «Oferta formativa» usan este alias en lugar de `teacher_admin`
+- `feat`: Sección «Estudiantes» en el hub Centro educativo con CRUD completo, listado paginado con búsqueda por NIE/nombre/apellidos y filtro por grupo
+- `feat`: Importación masiva de estudiantes desde CSV exportado de Séneca (mapeo de columnas por nombre, detección de codificación Windows-1252, upsert por NIE, omisión de filas con matrícula no activa)
+- `feat`: Columna de grupo en el listado de estudiantes, filtrada al curso activo
 - `feat`: Página hub «Centro educativo» (`/mi-centro`) como punto de entrada con tarjetas para las secciones del centro activo
 - `feat`: Vista árbol colapsable con `<details>/<summary>` para la sección «Oferta formativa» (familias → enseñanzas → niveles → grupos), con búsqueda en tiempo real vía Live Component
 - `feat`: CRUD completo de familias profesionales, enseñanzas, niveles y grupos anidado bajo el centro educativo activo
