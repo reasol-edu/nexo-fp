@@ -25,6 +25,8 @@
             </div>
         </div>
 
+        {% set centreAdminIds = centre.admins|map(a => a.id.toRfc4122) %}
+
         {% if pagination.totalItems == 0 %}
             <div class="px-6 py-16 text-center">
                 {{ ux_icon('heroicons:user-group', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
@@ -53,6 +55,11 @@
                             <td class="px-6 py-4 text-xs text-gray-500 hidden md:table-cell">{{ teacher.email ?? '—' }}</td>
                             <td class="px-6 py-4 hidden lg:table-cell">
                                 <div class="flex items-center gap-1.5 flex-wrap">
+                                    {% if teacher.id.toRfc4122 in centreAdminIds %}
+                                        <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                                            {{ 'teachers.badge.centre_admin'|trans({}, 'admin') }}
+                                        </span>
+                                    {% endif %}
                                     {% if teacher.admin %}
                                         <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700 ring-1 ring-inset ring-plum-600/20">
                                             {{ 'teachers.badge.admin'|trans({}, 'admin') }}

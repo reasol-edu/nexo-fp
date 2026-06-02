@@ -80,7 +80,7 @@ class CentreTeacherController extends AbstractController
             'email'      => '',
             'password'   => '',
         ];
-        $flags = ['admin' => false, 'active' => true, 'external' => false];
+        $flags = ['admin' => false, 'active' => true, 'external' => true];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('register_centre_teacher', $request->request->getString('_token'))) {
