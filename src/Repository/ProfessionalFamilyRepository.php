@@ -61,6 +61,22 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /** @return ProfessionalFamily[] */
+    public function findByAcademicYearFiltered(AcademicYear $year, string $search = ''): array
+    {
+        $qb = $this->createQueryBuilder('pf')
+            ->where('pf.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->orderBy('pf.name', 'ASC');
+
+        if ($search !== '') {
+            $qb->andWhere('LOWER(pf.name) LIKE LOWER(:search)')
+               ->setParameter('search', '%' . $search . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function findNoneQuery(): Query
     {
         return $this->createQueryBuilder('pf')->where('1 = 0')->getQuery();

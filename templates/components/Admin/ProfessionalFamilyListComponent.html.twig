@@ -5,8 +5,9 @@
             <p class="text-sm text-gray-500">{{ 'families.no_active_year'|trans({}, 'admin') }}</p>
         </div>
     {% else %}
-        {% set pagination = this.pagination %}
+        {% set tree = this.tree %}
 
+        {# Barra de búsqueda #}
         <div class="px-6 py-3 border-b border-gray-100 bg-gray-50/50">
             <div class="relative max-w-xs">
                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -22,104 +23,204 @@
             </div>
         </div>
 
-        {% if pagination.totalItems == 0 %}
+        {% if tree is empty %}
             <div class="px-6 py-16 text-center">
                 {{ ux_icon('heroicons:academic-cap', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
                 <p class="text-sm text-gray-500">
-                    {% if search is not empty %}
-                        {{ 'families.search_empty'|trans({}, 'admin') }}
-                    {% else %}
-                        {{ 'families.empty'|trans({}, 'admin') }}
-                    {% endif %}
+                    {{ (search is not empty ? 'families.search_empty' : 'families.empty')|trans({}, 'admin') }}
                 </p>
             </div>
         {% else %}
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 bg-gray-50">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.name'|trans({}, 'admin') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.head'|trans({}, 'admin') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'families.actions'|trans({}, 'admin') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    {% for family in pagination.items %}
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 font-medium text-gray-900">{{ family.name }}</td>
-                            <td class="px-6 py-4 text-gray-600">
-                                {% if family.head %}
-                                    {{ family.head.name.lastName }}, {{ family.head.name.firstName }}
-                                {% else %}
-                                    <span class="text-gray-400">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
-                                       class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
-                                              text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                        {{ 'families.edit'|trans({}, 'admin') }}
-                                    </a>
-                                    <form method="post"
-                                          action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
-                                          onsubmit="return confirm('{{ 'families.delete_confirm'|trans({}, 'admin') }}')">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
-                                        <button type="submit"
-                                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
-                                                       text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
-                                            {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
-                                            {{ 'families.delete'|trans({}, 'admin') }}
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="divide-y divide-gray-100">
+                {% for family_node in tree %}
+                    {% set family = family_node.family %}
+                    {% set prog_count = family_node.programmes|length %}
 
-            {% if pagination.totalPages > 1 %}
-                <div class="flex items-center justify-between border-t border-gray-100 px-6 py-3 gap-4 flex-wrap">
-                    <p class="text-xs text-gray-500 shrink-0">
-                        {{ 'pagination.summary'|trans({'%from%': pagination.firstItemIndex, '%to%': pagination.lastItemIndex, '%total%': pagination.totalItems}) }}
-                    </p>
-                    <nav class="flex items-center gap-1">
-                        {% if pagination.hasPreviousPage %}
-                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.previousPage }}"
-                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
-                            </button>
-                        {% else %}
-                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+                    {# ── Familia ────────────────────────────────────────── #}
+                    <details id="family-{{ family.id }}"
+                             class="group/family"
+                             {{ search is not empty or prog_count == 0 ? '' : '' }}>
+                        <summary class="flex items-center gap-3 px-6 py-3.5 cursor-pointer
+                                        hover:bg-gray-50 transition-colors select-none list-none">
+                            <span class="tree-chevron shrink-0 text-gray-400 group-open/family:text-plum-600 transition-colors">
+                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
                             </span>
-                        {% endif %}
-                        {% for p in pagination.pageRange %}
-                            {% if p is null %}
-                                <span class="inline-flex items-center justify-center h-8 px-1 text-xs text-gray-400 select-none">…</span>
-                            {% elseif p == pagination.currentPage %}
-                                <span class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg bg-plum-600 text-white text-xs font-semibold">{{ p }}</span>
-                            {% else %}
-                                <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ p }}"
-                                        class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg border border-gray-200 text-gray-600 text-xs hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                    {{ p }}
-                                </button>
+                            <span class="font-semibold text-sm text-gray-900 flex-1 min-w-0 truncate">
+                                {{ family.name }}
+                            </span>
+                            {% if family.head %}
+                                <span class="hidden sm:inline text-xs text-gray-500 shrink-0">
+                                    {{ family.head.name.lastName }}, {{ family.head.name.firstName }}
+                                </span>
                             {% endif %}
-                        {% endfor %}
-                        {% if pagination.hasNextPage %}
-                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.nextPage }}"
-                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                            </button>
-                        {% else %}
-                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                                         {{ prog_count > 0 ? 'bg-plum-50 text-plum-700' : 'bg-gray-100 text-gray-400' }}">
+                                {{ prog_count }}
+                                {{ (prog_count == 1 ? 'tree.programme_one' : 'tree.programme_other')|trans({}, 'admin') }}
                             </span>
+                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                                <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
+                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
+                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                    {{ 'families.edit'|trans({}, 'admin') }}
+                                </a>
+                                <form method="post"
+                                      action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
+                                      onsubmit="return confirm('{{ 'families.delete_confirm'|trans({}, 'admin') }}')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
+                                    <button type="submit"
+                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                        {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                    </button>
+                                </form>
+                            </div>
+                        </summary>
+
+                        {# ── Enseñanzas (hijos de la familia) ──────────── #}
+                        {% if family_node.programmes is empty %}
+                            <div class="pl-14 pr-6 py-3 text-xs text-gray-400 italic border-t border-gray-50">
+                                {{ 'programmes.empty'|trans({}, 'admin') }}
+                            </div>
+                        {% else %}
+                            <div class="border-t border-gray-50 divide-y divide-gray-50 bg-gray-50/40">
+                                {% for prog_node in family_node.programmes %}
+                                    {% set programme = prog_node.programme %}
+                                    {% set level_count = prog_node.levels|length %}
+
+                                    <details id="programme-{{ programme.id }}"
+                                             class="group/programme">
+                                        <summary class="flex items-center gap-3 pl-14 pr-6 py-3 cursor-pointer
+                                                        hover:bg-gray-100/60 transition-colors select-none list-none">
+                                            <span class="tree-chevron shrink-0 text-gray-300 group-open/programme:text-plum-500 transition-colors">
+                                                {{ ux_icon('heroicons:chevron-right', {class: 'h-3.5 w-3.5'}) }}
+                                            </span>
+                                            <span class="text-sm text-gray-800 flex-1 min-w-0 truncate">
+                                                {{ programme.name }}
+                                            </span>
+                                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                                                         {{ level_count > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-400' }}">
+                                                {{ level_count }}
+                                                {{ (level_count == 1 ? 'tree.level_one' : 'tree.level_other')|trans({}, 'admin') }}
+                                            </span>
+                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                                                <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
+                                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
+                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                                    {{ 'programmes.action.edit'|trans({}, 'admin') }}
+                                                </a>
+                                                <form method="post"
+                                                      action="{{ path('app_admin_programmes_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
+                                                      onsubmit="return confirm('{{ 'programmes.delete_confirm'|trans({}, 'admin') }}')">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_programme_' ~ programme.id) }}">
+                                                    <button type="submit"
+                                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </summary>
+
+                                        {# ── Niveles ──────────────────────────────── #}
+                                        {% if prog_node.levels is empty %}
+                                            <div class="pl-24 pr-6 py-3 text-xs text-gray-400 italic border-t border-gray-100/80">
+                                                {{ 'levels.empty'|trans({}, 'admin') }}
+                                            </div>
+                                        {% else %}
+                                            <div class="border-t border-gray-100/80 divide-y divide-gray-100/80 bg-white/60">
+                                                {% for level_node in prog_node.levels %}
+                                                    {% set level = level_node.level %}
+                                                    {% set group_count = level_node.groups|length %}
+
+                                                    <details id="level-{{ level.id }}"
+                                                             class="group/level">
+                                                        <summary class="flex items-center gap-3 pl-24 pr-6 py-2.5 cursor-pointer
+                                                                        hover:bg-gray-50 transition-colors select-none list-none">
+                                                            <span class="tree-chevron shrink-0 text-gray-300 group-open/level:text-plum-400 transition-colors">
+                                                                {{ ux_icon('heroicons:chevron-right', {class: 'h-3 w-3'}) }}
+                                                            </span>
+                                                            <span class="text-sm text-gray-700 flex-1 min-w-0 truncate">
+                                                                {{ level.name }}
+                                                            </span>
+                                                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                                                                         {{ group_count > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-400' }}">
+                                                                {{ group_count }}
+                                                                {{ (group_count == 1 ? 'tree.group_one' : 'tree.group_other')|trans({}, 'admin') }}
+                                                            </span>
+                                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                                                                <a href="{{ path('app_admin_levels_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
+                                                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
+                                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                                                    {{ 'levels.action.edit'|trans({}, 'admin') }}
+                                                                </a>
+                                                                <form method="post"
+                                                                      action="{{ path('app_admin_levels_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
+                                                                      onsubmit="return confirm('{{ 'levels.delete_confirm'|trans({}, 'admin') }}')">
+                                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_level_' ~ level.id) }}">
+                                                                    <button type="submit"
+                                                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                                        {{ ux_icon('heroicons:trash', {class: 'h-3 w-3'}) }}
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </summary>
+
+                                                        {# ── Grupos ──────────────────────── #}
+                                                        {% if level_node.groups is empty %}
+                                                            <div class="pl-32 pr-6 py-2.5 text-xs text-gray-400 italic border-t border-gray-100/60">
+                                                                {{ 'groups.empty'|trans({}, 'admin') }}
+                                                            </div>
+                                                        {% else %}
+                                                            <ul class="border-t border-gray-100/60 divide-y divide-gray-50 bg-gray-50/20">
+                                                                {% for group in level_node.groups %}
+                                                                    <li class="flex items-center gap-3 pl-32 pr-6 py-2 hover:bg-gray-50/60 transition-colors">
+                                                                        <span class="shrink-0 h-1.5 w-1.5 rounded-full bg-gray-300"></span>
+                                                                        <span class="text-xs font-medium text-gray-700 flex-1 min-w-0 truncate">
+                                                                            {{ group.name }}
+                                                                        </span>
+                                                                        {% if group.tutor %}
+                                                                            <span class="hidden md:inline text-xs text-gray-400 shrink-0">
+                                                                                {{ group.tutor.name.lastName }}, {{ group.tutor.name.firstName }}
+                                                                            </span>
+                                                                        {% endif %}
+                                                                        <div class="shrink-0 flex items-center gap-1.5 ml-2">
+                                                                            <a href="{{ path('app_admin_groups_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
+                                                                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1
+                                                                                      text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
+                                                                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                                                                {{ 'groups.action.edit'|trans({}, 'admin') }}
+                                                                            </a>
+                                                                            <form method="post"
+                                                                                  action="{{ path('app_admin_groups_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
+                                                                                  onsubmit="return confirm('{{ 'groups.delete_confirm'|trans({}, 'admin') }}')">
+                                                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_group_' ~ group.id) }}">
+                                                                                <button type="submit"
+                                                                                        class="inline-flex items-center rounded-lg border border-transparent px-2 py-1
+                                                                                               text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% endif %}
+                                                    </details>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </details>
+                                {% endfor %}
+                            </div>
                         {% endif %}
-                    </nav>
-                </div>
-            {% endif %}
+                    </details>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endif %}
 </div>
