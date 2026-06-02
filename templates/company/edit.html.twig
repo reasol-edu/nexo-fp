@@ -1,0 +1,338 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'company.edit.title'|trans({}, 'companies') }} · {{ app_name }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}
+<style>
+.ts-wrapper { font-size: 0.875rem; }
+.ts-control {
+    border-radius: 0.75rem !important;
+    border-color: #e5e7eb !important;
+    background-color: #f9fafb !important;
+    padding: 0.5rem 0.875rem !important;
+    box-shadow: none !important;
+    gap: 0.25rem;
+}
+.ts-control:focus-within {
+    border-color: #876baf !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 3px rgb(135 107 175 / 0.2) !important;
+}
+.ts-control .item {
+    background: #ece6f4;
+    color: #574a68;
+    border: 1px solid #d8cce8;
+    border-radius: 0.5rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.8125rem;
+}
+.ts-control .item .remove { color: #876baf; border-left-color: #d8cce8; }
+.ts-dropdown { border-radius: 0.75rem; border-color: #e5e7eb; box-shadow: 0 4px 12px rgb(0 0 0 / 0.08); overflow: hidden; }
+.ts-dropdown .option { padding: 0.5rem 0.875rem; }
+.ts-dropdown .option.active { background-color: #f6f3f9; color: #1f192a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    {# Breadcrumb #}
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            <a href="{{ path('app_companies_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'companies.title'|trans({}, 'companies') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ company.name }}</h1>
+    </div>
+
+    {# ── Datos de la empresa ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'company.edit.title'|trans({}, 'companies') }}</h2>
+        </div>
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_company_' ~ company.id) }}">
+
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+
+                {# Nombre #}
+                <div class="sm:col-span-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'company.field.name'|trans({}, 'companies') }}
+                    </label>
+                    <input id="name" type="text" name="name"
+                           value="{{ errors is not empty ? app.request.request.get('name') : values.name }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.name is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.name is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.name }}</p>
+                    {% endif %}
+                </div>
+
+                {# CIF/NIF #}
+                <div>
+                    <label for="vat_number" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'company.field.vat_number'|trans({}, 'companies') }}
+                    </label>
+                    <input id="vat_number" type="text" name="vat_number"
+                           value="{{ errors is not empty ? app.request.request.get('vat_number') : values.vat_number }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm font-mono text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.vat_number is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.vat_number is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.vat_number }}</p>
+                    {% endif %}
+                </div>
+
+                {# Localidad #}
+                <div class="sm:col-span-3">
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'company.field.city'|trans({}, 'companies') }}
+                    </label>
+                    <input id="city" type="text" name="city"
+                           value="{{ errors is not empty ? app.request.request.get('city') : values.city }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.city is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.city is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.city }}</p>
+                    {% endif %}
+                </div>
+
+                {# Circunstancias excepcionales #}
+                <div class="sm:col-span-3">
+                    <label for="exceptional_circumstances" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'company.field.exceptional_circumstances'|trans({}, 'companies') }}
+                    </label>
+                    <p class="text-xs text-gray-400 mb-2">{{ 'company.field.exceptional_circumstances_help'|trans({}, 'companies') }}</p>
+                    <textarea id="exceptional_circumstances" name="exceptional_circumstances" rows="3"
+                              class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3.5 text-sm text-gray-900
+                                     transition-colors focus:outline-none focus:ring-3 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20">{{ errors is not empty ? app.request.request.get('exceptional_circumstances') : values.exceptional_circumstances }}</textarea>
+                </div>
+
+            </div>
+
+            {# Docentes de enlace #}
+            <div class="pt-3 border-t border-gray-100">
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'company.liaisons.label'|trans({}, 'companies') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'company.liaisons.help'|trans({}, 'companies') }}</p>
+                <select name="liaisons[]" multiple
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
+                        class="w-full">
+                    {% for liaison in selectedLiaisons %}
+                        <option value="{{ liaison.id }}" selected>{{ liaison.name.lastName }}, {{ liaison.name.firstName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'company.save'|trans({}, 'companies') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Empleados ────────────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'workers.title'|trans({}, 'companies') }}</h2>
+        </div>
+
+        {% if workers is empty %}
+            <div class="px-6 py-8 text-center">
+                <p class="text-sm text-gray-400">{{ 'workers.empty'|trans({}, 'companies') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-100">
+                {% for worker in workers %}
+                    <li class="flex items-center gap-4 px-6 py-4">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-sm font-medium text-gray-900">{{ worker.name.lastName }}, {{ worker.name.firstName }}</span>
+                            <span class="ml-2 font-mono text-xs text-gray-400">{{ worker.nationalIdNumber }}</span>
+                            {% if worker.workEmail %}
+                                <span class="ml-2 text-xs text-gray-400">{{ worker.workEmail }}</span>
+                            {% endif %}
+                            {% if worker.workPhoneNumber %}
+                                <span class="ml-2 text-xs text-gray-400">{{ worker.workPhoneNumber }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="{{ path('app_companies_worker_edit', {id: company.id, workerID: worker.id}) }}"
+                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                      text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                {{ 'workers.action.edit'|trans({}, 'companies') }}
+                            </a>
+                            <form method="post"
+                                  action="{{ path('app_companies_worker_remove', {id: company.id, workerID: worker.id}) }}"
+                                  onsubmit="return confirm('{{ 'workers.delete_confirm'|trans({}, 'companies') }}')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('remove_worker_' ~ worker.id) }}">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
+                                               text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                    {{ ux_icon('heroicons:x-mark', {class: 'h-3.5 w-3.5'}) }}
+                                    {{ 'workers.action.remove'|trans({}, 'companies') }}
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Añadir empleado #}
+        <div class="border-t border-gray-100 px-6 py-5 bg-gray-50">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                {{ 'workers.add.title'|trans({}, 'companies') }}
+            </p>
+            <form method="post"
+                  action="{{ path('app_companies_worker_add', {id: company.id}) }}"
+                  class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('add_worker_' ~ company.id) }}">
+                <input type="text" name="first_name"
+                       placeholder="{{ 'workers.field.first_name_placeholder'|trans({}, 'companies') }}"
+                       class="rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <input type="text" name="last_name"
+                       placeholder="{{ 'workers.field.last_name_placeholder'|trans({}, 'companies') }}"
+                       class="rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <input type="text" name="national_id"
+                       placeholder="{{ 'workers.field.national_id_placeholder'|trans({}, 'companies') }}"
+                       class="rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm font-mono
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <input type="email" name="work_email"
+                       placeholder="{{ 'workers.field.work_email_placeholder'|trans({}, 'companies') }}"
+                       class="rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors">
+                <input type="text" name="work_phone"
+                       placeholder="{{ 'workers.field.work_phone_placeholder'|trans({}, 'companies') }}"
+                       class="rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors">
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4 mr-1 inline'}) }}{{ 'workers.add.submit'|trans({}, 'companies') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {# ── Centros de trabajo ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'workcenters.title'|trans({}, 'companies') }}</h2>
+        </div>
+
+        {% if workcenters is empty %}
+            <div class="px-6 py-8 text-center">
+                <p class="text-sm text-gray-400">{{ 'workcenters.empty'|trans({}, 'companies') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-100">
+                {% for workcenter in workcenters %}
+                    <li class="flex items-center gap-4 px-6 py-4">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-sm font-medium text-gray-900">{{ workcenter.name }}</span>
+                            {% if workcenter.city %}
+                                <span class="ml-2 text-sm text-gray-400">{{ workcenter.city }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="{{ path('app_companies_workcenter_edit', {companyId: company.id, workcenterID: workcenter.id}) }}"
+                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
+                                      text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                {{ 'workcenters.action.edit'|trans({}, 'companies') }}
+                            </a>
+                            <form method="post"
+                                  action="{{ path('app_companies_workcenter_delete', {companyId: company.id, workcenterID: workcenter.id}) }}"
+                                  onsubmit="return confirm('{{ 'workcenters.delete_confirm'|trans({}, 'companies') }}')">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('delete_workcenter_' ~ workcenter.id) }}">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
+                                               text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                    {{ 'workcenters.action.delete'|trans({}, 'companies') }}
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Añadir centro de trabajo #}
+        <div class="border-t border-gray-100 px-6 py-5 bg-gray-50">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                {{ 'workcenters.add.title'|trans({}, 'companies') }}
+            </p>
+            <form method="post"
+                  action="{{ path('app_companies_workcenter_add', {id: company.id}) }}"
+                  class="flex gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('add_workcenter_' ~ company.id) }}">
+                <input type="text" name="name"
+                       placeholder="{{ 'workcenters.field.name_placeholder'|trans({}, 'companies') }}"
+                       class="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <input type="text" name="city"
+                       placeholder="{{ 'workcenters.field.city_placeholder'|trans({}, 'companies') }}"
+                       class="w-40 rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm
+                              focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs shrink-0">
+                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4 mr-1 inline'}) }}{{ 'workcenters.add.submit'|trans({}, 'companies') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {# ── Zona peligrosa (solo equipo directivo y admin) ────────────────────────── #}
+    {% if canDelete %}
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+            <h2 class="text-base font-semibold text-red-700">{{ 'company.delete_section'|trans({}, 'companies') }}</h2>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">{{ 'company.delete_warning'|trans({}, 'companies') }}</p>
+            <form method="post"
+                  action="{{ path('app_companies_delete', {id: company.id}) }}"
+                  onsubmit="return confirm('{{ 'companies.delete_confirm'|trans({}, 'companies') }}')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_company_' ~ company.id) }}">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium
+                               text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
+                    {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                    {{ 'companies.delete'|trans({}, 'companies') }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

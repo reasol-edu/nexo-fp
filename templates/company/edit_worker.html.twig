@@ -1,0 +1,115 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'worker.edit.title'|trans({}, 'companies') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto space-y-8">
+
+    {# Breadcrumb #}
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            <a href="{{ path('app_companies_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'companies.title'|trans({}, 'companies') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_companies_edit', {id: company.id}) }}" class="hover:text-plum-600 transition-colors">
+                {{ company.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'worker.edit.title'|trans({}, 'companies') }}</h1>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_worker_' ~ worker.id) }}">
+
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                {# DNI/NIE (solo lectura) #}
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.national_id'|trans({}, 'companies') }}
+                    </label>
+                    <p class="rounded-xl border border-gray-100 bg-gray-100 py-2.5 px-3.5 text-sm font-mono text-gray-500">
+                        {{ worker.nationalIdNumber }}
+                    </p>
+                </div>
+
+                {# Nombre #}
+                <div>
+                    <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.first_name'|trans({}, 'companies') }}
+                    </label>
+                    <input id="first_name" type="text" name="first_name"
+                           value="{{ errors is not empty ? app.request.request.get('first_name') : worker.name.firstName }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.first_name is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.first_name is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.first_name }}</p>
+                    {% endif %}
+                </div>
+
+                {# Apellidos #}
+                <div>
+                    <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.last_name'|trans({}, 'companies') }}
+                    </label>
+                    <input id="last_name" type="text" name="last_name"
+                           value="{{ errors is not empty ? app.request.request.get('last_name') : worker.name.lastName }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.last_name is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.last_name is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.last_name }}</p>
+                    {% endif %}
+                </div>
+
+                {# Email profesional #}
+                <div>
+                    <label for="work_email" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.work_email'|trans({}, 'companies') }}
+                        <span class="font-normal text-gray-400">({{ 'worker.field.work_email_help'|trans({}, 'companies') }})</span>
+                    </label>
+                    <input id="work_email" type="email" name="work_email"
+                           value="{{ errors is not empty ? app.request.request.get('work_email') : (worker.workEmail ?? '') }}"
+                           class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20">
+                </div>
+
+                {# Teléfono #}
+                <div>
+                    <label for="work_phone" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.work_phone'|trans({}, 'companies') }}
+                        <span class="font-normal text-gray-400">({{ 'worker.field.work_phone_help'|trans({}, 'companies') }})</span>
+                    </label>
+                    <input id="work_phone" type="text" name="work_phone"
+                           value="{{ errors is not empty ? app.request.request.get('work_phone') : (worker.workPhoneNumber ?? '') }}"
+                           class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20">
+                </div>
+
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{{ path('app_companies_edit', {id: company.id}) }}"
+                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
+                          hover:bg-gray-50 transition-colors">
+                    {{ 'worker.edit.cancel'|trans({}, 'companies') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'worker.edit.save'|trans({}, 'companies') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

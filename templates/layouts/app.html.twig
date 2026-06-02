@@ -82,14 +82,16 @@
                 'app_stays'
             ) }}
 
-            {# Empresas #}
-            {{ _self.nav_item(
-                'companies'|trans({}, 'navigation'),
-                '#',
-                'heroicons:building-office-2',
-                current_route,
-                'app_companies'
-            ) }}
+            {# Empresas — solo para quienes tienen permiso en el centro activo #}
+            {% if active_centre and is_granted('company.section', active_centre) %}
+                {{ _self.nav_item(
+                    'companies'|trans({}, 'navigation'),
+                    path('app_companies_index'),
+                    'heroicons:building-office-2',
+                    current_route,
+                    'app_companies'
+                ) }}
+            {% endif %}
 
             {# Centro educativo #}
             {{ _self.nav_item(
