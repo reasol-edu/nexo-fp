@@ -1,0 +1,62 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'students.import.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_educational_centre_index') }}" class="hover:text-plum-600 transition-colors">{{ 'educational_centre'|trans({}, 'navigation') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_students_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'students.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'students.import.title'|trans({}, 'admin') }}</h1>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'students.import.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="px-6 py-6 space-y-6">
+            <input type="hidden" name="_token" value="{{ csrf_token('import_students') }}">
+
+            <div class="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3.5 text-sm text-blue-700 space-y-1">
+                <p class="font-medium">{{ 'students.import.help.title'|trans({}, 'admin') }}</p>
+                <ul class="list-disc list-inside space-y-0.5 text-blue-600 text-xs mt-1">
+                    <li>{{ 'students.import.help.encoding'|trans({}, 'admin') }}</li>
+                    <li>{{ 'students.import.help.skipped'|trans({}, 'admin') }}</li>
+                    <li>{{ 'students.import.help.columns'|trans({}, 'admin') }}</li>
+                    <li>{{ 'students.import.help.existing'|trans({}, 'admin') }}</li>
+                    <li>{{ 'students.import.help.groups'|trans({}, 'admin') }}</li>
+                </ul>
+            </div>
+
+            <div>
+                <label for="csv" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ 'students.import.file_label'|trans({}, 'admin') }}
+                </label>
+                <input type="file" id="csv" name="csv" accept=".csv,text/csv"
+                       class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
+                              file:rounded-lg file:border file:border-gray-200 file:bg-gray-50
+                              file:text-sm file:font-medium file:text-gray-700
+                              hover:file:bg-gray-100 file:transition-colors cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+                <a href="{{ path('app_admin_students_index', {centreId: centre.id}) }}"
+                   class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    {{ 'students.import.cancel'|trans({}, 'admin') }}
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ ux_icon('heroicons:arrow-up-tray', {class: 'h-4 w-4'}) }}
+                    {{ 'students.import.submit'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
