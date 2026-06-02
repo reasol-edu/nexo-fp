@@ -1,0 +1,121 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ group.name }} · {{ level.name }} · {{ app_name }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}
+<style>
+.ts-wrapper { font-size: 0.875rem; }
+.ts-control { border-radius: 0.75rem !important; border-color: #e5e7eb !important; background-color: #f9fafb !important; padding: 0.5rem 0.875rem !important; box-shadow: none !important; gap: 0.25rem; }
+.ts-control:focus-within { border-color: #876baf !important; background-color: #fff !important; box-shadow: 0 0 0 3px rgb(135 107 175 / 0.2) !important; }
+.ts-control .item { background: #ece6f4; color: #574a68; border: 1px solid #d8cce8; border-radius: 0.5rem; padding: 0.125rem 0.375rem; font-size: 0.8125rem; }
+.ts-control .item .remove { color: #876baf; border-left-color: #d8cce8; }
+.ts-dropdown { border-radius: 0.75rem; border-color: #e5e7eb; box-shadow: 0 4px 12px rgb(0 0 0 / 0.08); overflow: hidden; }
+.ts-dropdown .option { padding: 0.5rem 0.875rem; }
+.ts-dropdown .option.active { background-color: #f6f3f9; color: #1f192a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">{{ 'dashboard.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ centre.name }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}" class="hover:text-plum-600 transition-colors">{{ family.name }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}" class="hover:text-plum-600 transition-colors">{{ programme.name }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_levels_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}" class="hover:text-plum-600 transition-colors">{{ level.name }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ group.name }}</h1>
+    </div>
+
+    {# ── Datos del grupo ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'group.edit.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_group_' ~ group.id) }}">
+
+            <twig:Form:Field
+                id="name" name="name" type="text"
+                label="{{ 'group.field.name'|trans({}, 'admin') }}"
+                value="{{ values.name }}"
+                :error="errors.name ?? null"
+                required="true" />
+
+            <twig:Form:Textarea
+                id="details" name="details"
+                label="{{ 'group.field.details'|trans({}, 'admin') }}"
+                value="{{ values.details }}" />
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'group.field.tutor'|trans({}, 'admin') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'group.field.tutor_help'|trans({}, 'admin') }}</p>
+                <select name="tutor"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
+                        class="w-full">
+                    {% if selectedTutor %}
+                        <option value="{{ selectedTutor.id }}" selected>{{ selectedTutor.name.lastName }}, {{ selectedTutor.name.firstName }}</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'group.field.teachers'|trans({}, 'admin') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'group.field.teachers_help'|trans({}, 'admin') }}</p>
+                <select name="teachers[]" multiple
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
+                        class="w-full">
+                    {% for teacher in selectedTeachers %}
+                        <option value="{{ teacher.id }}" selected>{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'group.save'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Zona peligrosa ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+            <h2 class="text-base font-semibold text-red-700">{{ 'group.delete_section'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">{{ 'group.delete_warning'|trans({}, 'admin') }}</p>
+            <form method="post"
+                  action="{{ path('app_admin_groups_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
+                  onsubmit="return confirm('{{ 'groups.delete_confirm'|trans({}, 'admin') }}')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_group_' ~ group.id) }}">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
+                    {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                    {{ 'groups.action.delete'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

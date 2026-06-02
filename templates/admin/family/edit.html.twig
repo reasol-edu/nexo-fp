@@ -1,0 +1,161 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ family.name }} · {{ 'families.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}
+<style>
+.ts-wrapper { font-size: 0.875rem; }
+.ts-control { border-radius: 0.75rem !important; border-color: #e5e7eb !important; background-color: #f9fafb !important; padding: 0.5rem 0.875rem !important; box-shadow: none !important; gap: 0.25rem; }
+.ts-control:focus-within { border-color: #876baf !important; background-color: #fff !important; box-shadow: 0 0 0 3px rgb(135 107 175 / 0.2) !important; }
+.ts-control .item { background: #ece6f4; color: #574a68; border: 1px solid #d8cce8; border-radius: 0.5rem; padding: 0.125rem 0.375rem; font-size: 0.8125rem; }
+.ts-control .item .remove { color: #876baf; border-left-color: #d8cce8; }
+.ts-dropdown { border-radius: 0.75rem; border-color: #e5e7eb; box-shadow: 0 4px 12px rgb(0 0 0 / 0.08); overflow: hidden; }
+.ts-dropdown .option { padding: 0.5rem 0.875rem; }
+.ts-dropdown .option.active { background-color: #f6f3f9; color: #1f192a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">{{ 'dashboard.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_index') }}" class="hover:text-plum-600 transition-colors">{{ 'centres.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ centre.name }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_families_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'families.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ family.name }}</h1>
+    </div>
+
+    {# ── Datos de la familia ───────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'family.edit.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_family_' ~ family.id) }}">
+
+            <twig:Form:Field
+                id="name" name="name" type="text"
+                label="{{ 'family.field.name'|trans({}, 'admin') }}"
+                value="{{ values.name }}"
+                :error="errors.name ?? null"
+                required="true" />
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'family.field.head'|trans({}, 'admin') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'family.field.head_help'|trans({}, 'admin') }}</p>
+                <select name="head"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
+                        class="w-full">
+                    {% if selectedHead %}
+                        <option value="{{ selectedHead.id }}" selected>{{ selectedHead.name.lastName }}, {{ selectedHead.name.firstName }}</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'family.save'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Enseñanzas ───────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'programmes.title'|trans({}, 'admin') }}</h2>
+        </div>
+
+        {% if programmes is empty %}
+            <div class="px-6 py-8 text-center">
+                <p class="text-sm text-gray-400">{{ 'programmes.empty'|trans({}, 'admin') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-100">
+                {% for programme in programmes %}
+                    <li class="flex items-center gap-4 px-6 py-4">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-sm font-medium text-gray-900">{{ programme.name }}</span>
+                            {% if programme.coordinators is not empty %}
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    {% for c in programme.coordinators %}{{ c.name.lastName }}, {{ c.name.firstName }}{% if not loop.last %} · {% endif %}{% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
+                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                                {{ 'programmes.action.edit'|trans({}, 'admin') }}
+                            </a>
+                            <form method="post"
+                                  action="{{ path('app_admin_programmes_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
+                                  onsubmit="return confirm('{{ 'programmes.delete_confirm'|trans({}, 'admin') }}')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_programme_' ~ programme.id) }}">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
+                                    {{ 'programmes.action.delete'|trans({}, 'admin') }}
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="border-t border-gray-100 px-6 py-5 bg-gray-50">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                {{ 'programmes.add.title'|trans({}, 'admin') }}
+            </p>
+            <form method="post"
+                  action="{{ path('app_admin_programmes_add', {centreId: centre.id, familyId: family.id}) }}"
+                  class="flex gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('add_programme_' ~ family.id) }}">
+                <input type="text" name="name"
+                       placeholder="{{ 'programmes.field.name_placeholder'|trans({}, 'admin') }}"
+                       class="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 px-3.5 text-sm focus:border-plum-500 focus:ring-3 focus:ring-plum-500/20 focus:outline-none transition-colors"
+                       required>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs shrink-0">
+                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4 mr-1 inline'}) }}{{ 'programmes.add.submit'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {# ── Zona peligrosa ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+            <h2 class="text-base font-semibold text-red-700">{{ 'family.delete_section'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">{{ 'family.delete_warning'|trans({}, 'admin') }}</p>
+            <form method="post"
+                  action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
+                  onsubmit="return confirm('{{ 'families.delete_confirm'|trans({}, 'admin') }}')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
+                    {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                    {{ 'families.delete'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
