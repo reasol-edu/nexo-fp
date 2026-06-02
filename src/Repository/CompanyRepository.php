@@ -22,11 +22,29 @@ class CompanyRepository extends ServiceEntityRepository
     /** @return Query<null, Company> */
     public function createByCentreOrderedByNameQuery(EducationalCentre $centre): Query
     {
-        return $this->createQueryBuilder('c')
+        return $this->createByCentreFilteredQuery($centre);
+    }
+
+    /** @return Query<null, Company> */
+    public function createByCentreFilteredQuery(EducationalCentre $centre, string $search = ''): Query
+    {
+        $qb = $this->createQueryBuilder('c')
             ->where('c.educationalCentre = :centre')
             ->setParameter('centre', $centre->getId(), 'uuid')
-            ->orderBy('c.name', 'ASC')
-            ->getQuery();
+            ->orderBy('c.name', 'ASC');
+
+        if ($search !== '') {
+            $q = '%' . $search . '%';
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    'LOWER(c.name) LIKE LOWER(:q)',
+                    'LOWER(c.vatNumber) LIKE LOWER(:q)',
+                    'LOWER(c.city) LIKE LOWER(:q)',
+                )
+            )->setParameter('q', $q);
+        }
+
+        return $qb->getQuery();
     }
 
     public function findByIdAndCentre(string $id, EducationalCentre $centre): ?Company

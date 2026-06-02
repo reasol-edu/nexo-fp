@@ -29,14 +29,9 @@ class TeacherController extends AbstractController
     ) {}
 
     #[Route('', name: 'app_admin_teachers_index')]
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $page = max(1, $request->query->getInt('page', 1));
-        $pagination = new Paginator($this->teachers->createOrderedByNameQuery(), $page, $this->pageSize);
-
-        return $this->render('admin/teacher/index.html.twig', [
-            'pagination' => $pagination,
-        ]);
+        return $this->render('admin/teacher/index.html.twig');
     }
 
     #[Route('/nuevo', name: 'app_admin_teachers_new')]
