@@ -151,9 +151,9 @@ tree.group_one: 'grupo'
 tree.group_other: 'grupos'
 
 # Familias profesionales
-families.title: 'Familias profesionales'
+families.title: 'Oferta formativa'
 families.new: 'Nueva familia'
-families.manage: 'Gestionar familias'
+families.manage: 'Gestionar oferta formativa'
 families.name: 'Nombre'
 families.head: 'Responsable'
 families.actions: 'Acciones'
