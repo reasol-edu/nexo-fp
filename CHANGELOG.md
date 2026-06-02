@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Sección Empresas con CRUD de empresas y centros de trabajo, paginación y Voter de seguridad por roles
+- `feat`: CIF/NIF obligatorio y único por centro educativo en las empresas
+- `feat`: Gestión de empleados asociados a la empresa con vinculación por DNI/NIE
+- `feat`: Creación automática de centro de trabajo «Sede Principal» al crear una empresa
+- `feat`: Acceso a la sección Empresas para docentes de enlace y jefes de familia profesional
 - `feat`: Implementación inicial de paginación
 - `feat`: El campo de contraseña se oculta dinámicamente al activar la autenticación externa en el formulario de docente
 - `feat`: No es necesario especificar contraseña al crear un docente con autenticación externa activada
@@ -74,6 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `fix`: Eliminar centros de trabajo en cascada al eliminar una empresa
+- `fix`: Localidad obligatoria en centros de trabajo (migración y modelo)
 - `fix(i18n)`: Corregidas algunas traducciones
 - `fix(docs)`: Indicar correctamente que se usa Symfony 8.1
 - `fix(model)`: Corregida errata en atributo. Rehechas las migraciones

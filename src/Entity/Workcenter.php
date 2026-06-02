@@ -2,8 +2,6 @@
 namespace App\Entity;
 
 use App\Repository\WorkcenterRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -19,21 +17,14 @@ class Workcenter
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $city = null;
+    #[ORM\Column(length: 255)]
+    private string $city;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private Company $company;
 
-    /** @var Collection<int, Worker> */
-    #[ORM\ManyToMany(targetEntity: Worker::class, fetch: 'EXTRA_LAZY')]
-    private Collection $workers;
-
-    public function __construct()
-    {
-        $this->workers = new ArrayCollection();
-    }
+    public function __construct() {}
 
     public function getId(): Uuid
     {
@@ -52,12 +43,12 @@ class Workcenter
         return $this;
     }
 
-    public function getCity(): ?string
+    public function getCity(): string
     {
         return $this->city;
     }
 
-    public function setCity(?string $city): static
+    public function setCity(string $city): static
     {
         $this->city = $city;
 
@@ -76,27 +67,4 @@ class Workcenter
         return $this;
     }
 
-    /**
-     * @return Collection<int, Worker>
-     */
-    public function getWorkers(): Collection
-    {
-        return $this->workers;
-    }
-
-    public function addWorker(Worker $worker): static
-    {
-        if (!$this->workers->contains($worker)) {
-            $this->workers->add($worker);
-        }
-
-        return $this;
-    }
-
-    public function removeWorker(Worker $worker): static
-    {
-        $this->workers->removeElement($worker);
-
-        return $this;
-    }
 }

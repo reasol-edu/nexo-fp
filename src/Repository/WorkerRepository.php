@@ -15,4 +15,9 @@ class WorkerRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Worker::class);
     }
+
+    public function findByNationalIdNumber(string $nationalIdNumber): ?Worker
+    {
+        return $this->findOneBy(['nationalIdNumber' => $nationalIdNumber]);
+    }
 }

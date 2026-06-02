@@ -1,0 +1,115 @@
+# Lista de empresas
+companies.title: 'Empresas'
+companies.new: 'Nueva empresa'
+companies.name: 'Nombre'
+companies.city: 'Localidad'
+companies.vat_number: 'CIF/NIF'
+companies.liaisons: 'Docentes de enlace'
+companies.actions: 'Acciones'
+companies.edit: 'Editar'
+companies.delete: 'Eliminar'
+companies.delete_confirm: '¿Eliminar esta empresa? Esta acción no se puede deshacer.'
+companies.empty: 'No hay empresas registradas para este centro.'
+companies.back: 'Volver a empresas'
+
+# Formulario de empresa
+company.new.title: 'Nueva empresa'
+company.edit.title: 'Editar empresa'
+company.field.name: 'Nombre'
+company.field.vat_number: 'CIF/NIF'
+company.field.city: 'Localidad'
+company.field.exceptional_circumstances: 'Circunstancias excepcionales'
+company.field.exceptional_circumstances_help: 'Detalles relevantes para la realización de las prácticas (opcional)'
+company.liaisons.label: 'Docentes de enlace'
+company.liaisons.help: 'Docentes asignados como enlace con esta empresa. Escribe al menos 2 caracteres para buscar.'
+company.save: 'Guardar'
+company.cancel: 'Cancelar'
+company.delete_section: 'Peligro: eliminación de la empresa'
+company.delete_warning: 'Una vez eliminada la empresa y todos sus centros de trabajo, no se podrá recuperar.'
+
+# Errores de validación de empresa
+company.error.name_required: 'El nombre es obligatorio.'
+company.error.vat_number_required: 'El CIF/NIF es obligatorio.'
+company.error.vat_number_duplicate: 'Ya existe una empresa con este CIF/NIF en el centro.'
+company.error.city_required: 'La localidad es obligatoria.'
+
+# Flash de empresa
+company.flash.created: 'Empresa creada correctamente.'
+company.flash.saved: 'Empresa guardada correctamente.'
+company.flash.deleted: 'Empresa eliminada correctamente.'
+company.flash.delete_error: 'No se puede eliminar esta empresa porque tiene datos asociados.'
+
+# Centros de trabajo — lista
+workcenters.title: 'Centros de trabajo'
+workcenters.add.title: 'Añadir centro de trabajo'
+workcenters.add.submit: 'Añadir'
+workcenters.field.name: 'Nombre'
+workcenters.field.name_placeholder: 'Ej: Sede central'
+workcenters.field.city: 'Localidad'
+workcenters.field.city_placeholder: 'Localidad'
+workcenters.action.edit: 'Editar'
+workcenters.action.delete: 'Eliminar'
+workcenters.delete_confirm: '¿Eliminar este centro de trabajo? Esta acción no se puede deshacer.'
+workcenters.empty: 'No hay centros de trabajo registrados.'
+
+# Formulario de centro de trabajo
+workcenter.edit.title: 'Editar centro de trabajo'
+workcenter.edit.save: 'Guardar'
+workcenter.edit.cancel: 'Cancelar'
+
+# Nombre por defecto del primer centro de trabajo
+workcenter.default_name: 'Sede Principal'
+
+# Empleados del centro de trabajo
+workers.title: 'Empleados'
+workers.add.title: 'Añadir empleado'
+workers.add.submit: 'Añadir'
+workers.field.first_name: 'Nombre'
+workers.field.first_name_placeholder: 'Nombre'
+workers.field.last_name: 'Apellidos'
+workers.field.last_name_placeholder: 'Apellidos'
+workers.field.national_id: 'DNI/NIE'
+workers.field.national_id_placeholder: 'DNI/NIE'
+workers.field.work_email: 'Email profesional'
+workers.field.work_email_placeholder: 'correo@empresa.com'
+workers.field.work_phone: 'Teléfono'
+workers.field.work_phone_placeholder: 'Teléfono'
+workers.empty: 'No hay empleados registrados en esta empresa.'
+workers.action.edit: 'Editar'
+workers.action.remove: 'Desvincular'
+workers.delete_confirm: '¿Desvincular este empleado de la empresa?'
+
+# Formulario de empleado
+worker.edit.title: 'Editar empleado'
+worker.edit.save: 'Guardar'
+worker.edit.cancel: 'Cancelar'
+worker.field.national_id: 'DNI/NIE'
+worker.field.first_name: 'Nombre'
+worker.field.last_name: 'Apellidos'
+worker.field.work_email: 'Correo-e profesional'
+worker.field.work_email_help: 'Opcional'
+worker.field.work_phone: 'Teléfono'
+worker.field.work_phone_help: 'Opcional'
+
+# Errores de empleado
+worker.error.first_name_required: 'El nombre es obligatorio.'
+worker.error.last_name_required: 'Los apellidos son obligatorios.'
+worker.error.national_id_required: 'El DNI/NIE es obligatorio.'
+
+# Flash de empleado
+worker.flash.added: 'Empleado creado y vinculado a la empresa.'
+worker.flash.linked: 'Empleado ya existente vinculado a la empresa.'
+worker.flash.saved: 'Empleado guardado correctamente.'
+worker.flash.removed: 'Empleado desvinculado correctamente.'
+
+# Errores de centro de trabajo
+workcenter.error.name_required: 'El nombre es obligatorio.'
+workcenter.error.city_required: 'La localidad es obligatoria.'
+
+# Flash de centro de trabajo
+workcenter.flash.added: 'Centro de trabajo añadido correctamente.'
+workcenter.flash.saved: 'Centro de trabajo guardado correctamente.'
+workcenter.flash.deleted: 'Centro de trabajo eliminado correctamente.'
+workcenter.flash.delete_error: 'No se puede eliminar este centro de trabajo porque tiene datos asociados.'
+workcenter.flash.name_required: 'El nombre del centro de trabajo es obligatorio.'
+workcenter.flash.city_required: 'La localidad del centro de trabajo es obligatoria.'

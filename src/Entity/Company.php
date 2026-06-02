@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
+#[ORM\UniqueConstraint(name: 'uq_company_vat_centre', columns: ['vat_number', 'educational_centre_id'])]
 class Company
 {
     #[ORM\Id]
@@ -19,8 +20,8 @@ class Company
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $vatNumber = null;
+    #[ORM\Column(length: 50)]
+    private string $vatNumber;
 
     #[ORM\Column(length: 255)]
     private string $city;
@@ -37,9 +38,15 @@ class Company
     #[ORM\JoinTable(name: 'company_liaisons')]
     private Collection $liaisons;
 
+    /** @var Collection<int, Worker> */
+    #[ORM\ManyToMany(targetEntity: Worker::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinTable(name: 'company_workers')]
+    private Collection $workers;
+
     public function __construct()
     {
         $this->liaisons = new ArrayCollection();
+        $this->workers  = new ArrayCollection();
     }
 
     public function getId(): Uuid
@@ -59,12 +66,12 @@ class Company
         return $this;
     }
 
-    public function getVatNumber(): ?string
+    public function getVatNumber(): string
     {
         return $this->vatNumber;
     }
 
-    public function setVatNumber(?string $vatNumber): static
+    public function setVatNumber(string $vatNumber): static
     {
         $this->vatNumber = $vatNumber;
 
@@ -127,6 +134,30 @@ class Company
     public function removeLiaison(Teacher $liaison): static
     {
         $this->liaisons->removeElement($liaison);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Worker>
+     */
+    public function getWorkers(): Collection
+    {
+        return $this->workers;
+    }
+
+    public function addWorker(Worker $worker): static
+    {
+        if (!$this->workers->contains($worker)) {
+            $this->workers->add($worker);
+        }
+
+        return $this;
+    }
+
+    public function removeWorker(Worker $worker): static
+    {
+        $this->workers->removeElement($worker);
 
         return $this;
     }
