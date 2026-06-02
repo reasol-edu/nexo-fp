@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: CRUD completo de familias profesionales, enseñanzas, niveles y grupos anidado bajo el centro educativo activo
 - `feat`: Filtrado en tiempo real y paginación sin recarga en los listados de empresas, docentes y centros educativos
 - `refactor`: Componentes Twig anónimos (Form/Field, Form/Textarea) y Live Components (WorkcenterForm, WorkerForm) en la sección Empresas
 - `feat`: Selector de docentes de enlace filtrado por equipo directivo y docentes de grupos del centro
