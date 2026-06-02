@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\ProgrammeYear;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -39,5 +40,23 @@ class GroupRepository extends ServiceEntityRepository
             ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /** @return Group[] */
+    public function findByActiveYearOfCentreOrderedByName(EducationalCentre $centre): array
+    {
+        if ($centre->getActiveAcademicYear() === null) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('g')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'prog')
+            ->join('prog.professionalFamily', 'f')
+            ->where('f.academicYear = :year')
+            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->orderBy('g.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

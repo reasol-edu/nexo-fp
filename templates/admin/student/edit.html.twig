@@ -1,0 +1,107 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ student.name.lastName }}, {{ student.name.firstName }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_educational_centre_index') }}" class="hover:text-plum-600 transition-colors">{{ 'educational_centre'|trans({}, 'navigation') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_students_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'students.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ student.name.lastName }}, {{ student.name.firstName }}</h1>
+        <p class="mt-1 text-sm font-mono text-gray-500">{{ student.studentId }}</p>
+    </div>
+
+    {# ── Datos del estudiante ─────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'student.edit.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_student_' ~ student.id) }}">
+
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <twig:Form:Field
+                    id="firstName" name="firstName" type="text"
+                    label="{{ 'student.field.first_name'|trans({}, 'admin') }}"
+                    value="{{ values.firstName }}"
+                    :error="errors.firstName ?? null"
+                    required="true" />
+
+                <twig:Form:Field
+                    id="lastName" name="lastName" type="text"
+                    label="{{ 'student.field.last_name'|trans({}, 'admin') }}"
+                    value="{{ values.lastName }}"
+                    :error="errors.lastName ?? null"
+                    required="true" />
+            </div>
+
+            <twig:Form:Field
+                id="studentId" name="studentId" type="text"
+                label="{{ 'student.field.student_id'|trans({}, 'admin') }}"
+                value="{{ values.studentId }}"
+                :error="errors.studentId ?? null"
+                required="true" />
+
+            <twig:Form:Textarea
+                id="details" name="details"
+                label="{{ 'student.field.details'|trans({}, 'admin') }}"
+                value="{{ values.details }}" />
+
+            {% if availableGroups is not empty %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ 'student.field.groups'|trans({}, 'admin') }}
+                    </label>
+                    <div class="grid grid-cols-2 gap-1.5 rounded-xl border border-gray-200 p-3 bg-gray-50/50 max-h-48 overflow-y-auto">
+                        {% for group in availableGroups %}
+                            <label class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-white cursor-pointer text-sm transition-colors">
+                                <input type="checkbox" name="groups[]" value="{{ group.id.toRfc4122 }}"
+                                       {{ group.id.toRfc4122 in selectedGroupIds ? 'checked' : '' }}
+                                       class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                                <span class="text-gray-700">{{ group.name }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between pt-2">
+                <a href="{{ path('app_admin_students_index', {centreId: centre.id}) }}"
+                   class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    {{ 'student.cancel'|trans({}, 'admin') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'student.save'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Zona peligrosa ───────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-red-100 bg-red-50">
+            <h2 class="text-base font-semibold text-red-700">{{ 'student.delete_section'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">{{ 'student.delete_warning'|trans({}, 'admin') }}</p>
+            <form method="post"
+                  action="{{ path('app_admin_students_delete', {centreId: centre.id, id: student.id}) }}"
+                  onsubmit="return confirm('{{ 'students.delete_confirm'|trans({}, 'admin') }}')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_student_' ~ student.id) }}">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
+                    {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                    {{ 'students.action.delete'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
