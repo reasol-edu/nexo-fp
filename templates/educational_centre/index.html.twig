@@ -43,6 +43,35 @@
             </a>
         {% endif %}
 
+        {# ── Docentes del curso ── solo admins #}
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ centre.activeAcademicYear ? path('app_admin_centre_teachers_index', {centreId: centre.id}) : '#' }}"
+               class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
+                      hover:border-plum-200 hover:shadow-sm transition-all
+                      {{ centre.activeAcademicYear is null ? 'opacity-60 pointer-events-none' : '' }}">
+                <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600
+                                group-hover:bg-plum-600 group-hover:text-white transition-colors">
+                        {{ ux_icon('heroicons:user-group', {class: 'h-5 w-5'}) }}
+                    </div>
+                    <h2 class="text-base font-semibold text-gray-900">{{ 'centre_teachers.title'|trans({}, 'admin') }}</h2>
+                </div>
+                <div class="px-6 py-4 flex-1">
+                    <p class="text-sm text-gray-500">{{ 'centre_teachers.hub_help'|trans({}, 'admin') }}</p>
+                </div>
+                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    {% if centre.activeAcademicYear %}
+                        <span class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 group-hover:text-plum-800 transition-colors">
+                            {{ 'centre_teachers.manage'|trans({}, 'admin') }}
+                            {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
+                        </span>
+                    {% else %}
+                        <span class="text-xs text-gray-400">{{ 'centre_teachers.no_active_year'|trans({}, 'admin') }}</span>
+                    {% endif %}
+                </div>
+            </a>
+        {% endif %}
+
         {# ── Familias profesionales ── solo admins #}
         {% if is_granted('ROLE_ADMIN') %}
             <a href="{{ centre.activeAcademicYear ? path('app_admin_families_index', {centreId: centre.id}) : '#' }}"
