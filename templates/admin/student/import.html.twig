@@ -34,14 +34,21 @@
             </div>
 
             <div>
-                <label for="csv" class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ 'students.import.file_label'|trans({}, 'admin') }}
+                <label for="csv"
+                       class="flex flex-col items-center justify-center gap-3 w-full rounded-xl border-2 border-dashed
+                              border-gray-300 bg-gray-50 px-6 py-8 cursor-pointer
+                              hover:border-plum-400 hover:bg-plum-50/40 transition-colors group mt-4 mb-2">
+                    {{ ux_icon('heroicons:arrow-up-tray', {class: 'h-8 w-8 text-gray-400 group-hover:text-plum-500 transition-colors'}) }}
+                    <span class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2
+                                 text-sm font-medium text-gray-700 shadow-xs group-hover:border-plum-300 group-hover:text-plum-700 transition-colors">
+                        {{ 'students.import.choose_file'|trans({}, 'admin') }}
+                    </span>
+                    <span id="csv-filename" class="text-xs text-gray-400">
+                        {{ 'students.import.no_file_chosen'|trans({}, 'admin') }}
+                    </span>
                 </label>
-                <input type="file" id="csv" name="csv" accept=".csv,text/csv"
-                       class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
-                              file:rounded-lg file:border file:border-gray-200 file:bg-gray-50
-                              file:text-sm file:font-medium file:text-gray-700
-                              hover:file:bg-gray-100 file:transition-colors cursor-pointer">
+                <input type="file" id="csv" name="csv" accept=".csv,text/csv" class="sr-only hidden"
+                       onchange="document.getElementById('csv-filename').textContent = this.files[0]?.name ?? '{{ 'students.import.no_file_chosen'|trans({}, 'admin') }}'">
             </div>
 
             <div class="flex items-center justify-between pt-2">
