@@ -67,6 +67,106 @@ class CentreTeacherController extends AbstractController
         return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
     }
 
+    #[Route('/importar', name: 'app_admin_centre_teachers_import')]
+    public function import(string $centreId, Request $request): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/centre_teacher/import.html.twig', ['centre' => $centre]);
+        }
+
+        if (!$this->isCsrfTokenValid('import_centre_teachers', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $file = $request->files->get('csv');
+        if ($file === null || !$file->isValid()) {
+            $this->addFlash('error', $this->t('centre_teachers.import.error.no_file'));
+
+            return $this->render('admin/centre_teacher/import.html.twig', ['centre' => $centre]);
+        }
+
+        $content = (string) file_get_contents($file->getPathname());
+        $content = ltrim($content, "\xEF\xBB\xBF");
+        if (!mb_check_encoding($content, 'UTF-8')) {
+            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+        }
+
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $content);
+        rewind($stream);
+
+        /** @var list<string>|false $headers */
+        $headers = fgetcsv($stream);
+        if ($headers === false || $headers === [null]) {
+            fclose($stream);
+            $this->addFlash('error', $this->t('centre_teachers.import.error.empty_file'));
+
+            return $this->redirectToRoute('app_admin_centre_teachers_import', ['centreId' => $centre->getId()]);
+        }
+
+        /** @var array<string, int> $headerMap */
+        $headerMap = array_flip(array_map('trim', $headers));
+
+        $required = ['Empleado/a', 'Usuario IdEA'];
+        foreach ($required as $col) {
+            if (!isset($headerMap[$col])) {
+                fclose($stream);
+                $this->addFlash('error', $this->t('centre_teachers.import.error.missing_column') . ' «' . $col . '»');
+
+                return $this->redirectToRoute('app_admin_centre_teachers_import', ['centreId' => $centre->getId()]);
+            }
+        }
+
+        $year    = $centre->getActiveAcademicYear();
+        $created = 0;
+        $added   = 0;
+        $skipped = 0;
+
+        while (($row = fgetcsv($stream)) !== false) {
+            if (count(array_filter($row, static fn ($v) => trim((string) $v) !== '')) === 0) {
+                continue;
+            }
+
+            $username  = trim((string) ($row[$headerMap['Usuario IdEA']] ?? ''));
+            $fullName  = trim((string) ($row[$headerMap['Empleado/a']] ?? ''));
+            $nameParts = explode(', ', $fullName, 2);
+            $lastName  = $nameParts[0];
+            $firstName = $nameParts[1] ?? '';
+
+            if ($username === '' || $firstName === '' || $lastName === '') {
+                $skipped++;
+                continue;
+            }
+            $teacher  = $this->teachers->findByUsername($username);
+
+            if ($teacher === null) {
+                $teacher = new Teacher(new PersonName($firstName, $lastName));
+                $teacher->setUsername($username)
+                    ->setExternal(true)
+                    ->setActive(true);
+                $this->em->persist($teacher);
+                $year->addTeacher($teacher);
+                $created++;
+            } elseif (!$year->getTeachers()->contains($teacher)) {
+                $year->addTeacher($teacher);
+                $added++;
+            }
+        }
+
+        fclose($stream);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->translator->trans('centre_teachers.import.flash.summary', [
+            '%created%' => $created,
+            '%added%'   => $added,
+            '%skipped%' => $skipped,
+        ], 'admin'));
+
+        return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
+    }
+
     #[Route('/registrar', name: 'app_admin_centre_teachers_register')]
     public function register(string $centreId, Request $request): Response
     {
