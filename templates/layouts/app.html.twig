@@ -95,6 +95,7 @@
 
             {# Centro educativo #}
             {% set centre_active = current_route starts with 'app_educational_centre'
+                or current_route starts with 'app_admin_students'
                 or current_route starts with 'app_admin_families'
                 or current_route starts with 'app_admin_programmes'
                 or current_route starts with 'app_admin_levels'

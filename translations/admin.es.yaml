@@ -142,6 +142,47 @@ years.edit.title: 'Editar curso académico'
 years.edit.save: 'Guardar'
 years.edit.cancel: 'Cancelar'
 
+# Estudiantes
+students.title: 'Estudiantes'
+students.new: 'Nuevo estudiante'
+students.hub_help: 'Alumnado matriculado en los grupos del curso activo.'
+students.manage: 'Gestionar estudiantes'
+students.no_active_year: 'Este centro no tiene un curso académico activo. Establece uno activo para gestionar los estudiantes.'
+students.search: 'Buscar por NIE, nombre o apellidos…'
+students.filter.all_groups: 'Todos los grupos'
+students.empty: 'No hay estudiantes matriculados en este curso.'
+students.search_empty: 'No se encontraron estudiantes con ese criterio.'
+students.delete_confirm: '¿Eliminar este estudiante? Esta acción no se puede deshacer.'
+
+students.col.nie: 'NIE'
+students.col.name: 'Nombre'
+students.col.groups: 'Grupos'
+students.col.actions: 'Acciones'
+
+students.action.edit: 'Editar'
+students.action.delete: 'Eliminar'
+
+student.new.title: 'Nuevo estudiante'
+student.edit.title: 'Editar estudiante'
+student.field.first_name: 'Nombre'
+student.field.last_name: 'Apellidos'
+student.field.student_id: 'NIE (Número de Identificación Escolar)'
+student.field.details: 'Observaciones'
+student.field.groups: 'Grupos'
+student.save: 'Guardar'
+student.cancel: 'Cancelar'
+student.delete_section: 'Peligro: eliminación del estudiante'
+student.delete_warning: 'Una vez eliminado el estudiante, no se podrá recuperar.'
+
+student.error.first_name_required: 'El nombre es obligatorio.'
+student.error.last_name_required: 'Los apellidos son obligatorios.'
+student.error.student_id_required: 'El NIE es obligatorio.'
+student.error.student_id_duplicate: 'Ya existe un estudiante con este NIE.'
+
+student.flash.created: 'Estudiante creado correctamente.'
+student.flash.saved: 'Estudiante guardado correctamente.'
+student.flash.deleted: 'Estudiante eliminado correctamente.'
+
 # Árbol de familias (badges de conteo)
 tree.programme_one: 'enseñanza'
 tree.programme_other: 'enseñanzas'
