@@ -58,7 +58,7 @@
                                 {{ prog_count }}
                                 {{ (prog_count == 1 ? 'tree.programme_one' : 'tree.programme_other')|trans({}, 'admin') }}
                             </span>
-                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                 <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
                                           text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
@@ -104,7 +104,7 @@
                                                 {{ level_count }}
                                                 {{ (level_count == 1 ? 'tree.level_one' : 'tree.level_other')|trans({}, 'admin') }}
                                             </span>
-                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                                 <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
                                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
                                                           text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
@@ -150,7 +150,7 @@
                                                                 {{ group_count }}
                                                                 {{ (group_count == 1 ? 'tree.group_one' : 'tree.group_other')|trans({}, 'admin') }}
                                                             </span>
-                                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.preventDefault()">
+                                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                                                 <a href="{{ path('app_admin_levels_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
                                                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
                                                                           text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
