@@ -38,7 +38,7 @@ class CompanyController extends AbstractController
     ) {}
 
     #[Route('', name: 'app_companies_index')]
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $centre = $this->tenantContext->getSelectedCentre();
         if ($centre === null) {
@@ -47,15 +47,7 @@ class CompanyController extends AbstractController
 
         $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
 
-        $pagination = new Paginator(
-            $this->companies->createByCentreOrderedByNameQuery($centre),
-            max(1, $request->query->getInt('page', 1)),
-            $this->pageSize,
-        );
-
-        return $this->render('company/index.html.twig', [
-            'pagination' => $pagination,
-        ]);
+        return $this->render('company/index.html.twig');
     }
 
     #[Route('/nueva', name: 'app_companies_new')]

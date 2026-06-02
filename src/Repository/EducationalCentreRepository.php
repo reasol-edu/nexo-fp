@@ -77,11 +77,29 @@ class EducationalCentreRepository extends ServiceEntityRepository
     /** @return Query<null, EducationalCentre> */
     public function createAllWithActiveYearQuery(): Query
     {
-        return $this->createQueryBuilder('ec')
+        return $this->createAllWithActiveYearFilteredQuery();
+    }
+
+    /** @return Query<null, EducationalCentre> */
+    public function createAllWithActiveYearFilteredQuery(string $search = ''): Query
+    {
+        $qb = $this->createQueryBuilder('ec')
             ->leftJoin('ec.activeAcademicYear', 'ay')
             ->addSelect('ay')
-            ->orderBy('ec.name', 'ASC')
-            ->getQuery();
+            ->orderBy('ec.name', 'ASC');
+
+        if ($search !== '') {
+            $q = '%' . $search . '%';
+            $qb->where(
+                $qb->expr()->orX(
+                    'LOWER(ec.name) LIKE LOWER(:q)',
+                    'LOWER(ec.code) LIKE LOWER(:q)',
+                    'LOWER(ec.city) LIKE LOWER(:q)',
+                )
+            )->setParameter('q', $q);
+        }
+
+        return $qb->getQuery();
     }
 
     /** @return EducationalCentre[] */

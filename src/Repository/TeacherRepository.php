@@ -42,10 +42,28 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
     /** @return Query<null, Teacher> */
     public function createOrderedByNameQuery(): Query
     {
-        return $this->createQueryBuilder('t')
+        return $this->createFilteredOrderedByNameQuery();
+    }
+
+    /** @return Query<null, Teacher> */
+    public function createFilteredOrderedByNameQuery(string $search = ''): Query
+    {
+        $qb = $this->createQueryBuilder('t')
             ->orderBy('t.name.lastName', 'ASC')
-            ->addOrderBy('t.name.firstName', 'ASC')
-            ->getQuery();
+            ->addOrderBy('t.name.firstName', 'ASC');
+
+        if ($search !== '') {
+            $q = '%' . $search . '%';
+            $qb->where(
+                $qb->expr()->orX(
+                    'LOWER(t.name.firstName) LIKE LOWER(:q)',
+                    'LOWER(t.name.lastName) LIKE LOWER(:q)',
+                    'LOWER(t.username) LIKE LOWER(:q)',
+                )
+            )->setParameter('q', $q);
+        }
+
+        return $qb->getQuery();
     }
 
     public function findByUsername(string $username): ?Teacher

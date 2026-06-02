@@ -9,7 +9,9 @@ companies.actions: 'Acciones'
 companies.edit: 'Editar'
 companies.delete: 'Eliminar'
 companies.delete_confirm: '¿Eliminar esta empresa? Esta acción no se puede deshacer.'
+companies.search: 'Buscar empresa…'
 companies.empty: 'No hay empresas registradas para este centro.'
+companies.search_empty: 'No se encontraron empresas con ese criterio.'
 companies.back: 'Volver a empresas'
 
 # Formulario de empresa

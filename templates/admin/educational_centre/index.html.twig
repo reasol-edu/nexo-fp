@@ -24,78 +24,7 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
-        {% if pagination.totalItems == 0 %}
-            <div class="px-6 py-16 text-center">
-                {{ ux_icon('heroicons:building-library', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
-                <p class="text-sm text-gray-500">{{ 'centres.empty'|trans({}, 'admin') }}</p>
-            </div>
-        {% else %}
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 bg-gray-50">
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            {{ 'centres.code'|trans({}, 'admin') }}
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            {{ 'centres.name'|trans({}, 'admin') }}
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            {{ 'centres.city'|trans({}, 'admin') }}
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            {{ 'centres.active_year'|trans({}, 'admin') }}
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            {{ 'centres.actions'|trans({}, 'admin') }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    {% for centre in pagination.items %}
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 font-mono text-xs text-gray-500">{{ centre.code }}</td>
-                            <td class="px-6 py-4 font-medium text-gray-900">{{ centre.name }}</td>
-                            <td class="px-6 py-4 text-gray-600">{{ centre.city }}</td>
-                            <td class="px-6 py-4">
-                                {% if centre.activeAcademicYear %}
-                                    <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                        {{ centre.activeAcademicYear.name }}
-                                    </span>
-                                {% else %}
-                                    <span class="text-gray-400 text-xs">{{ 'centres.no_active_year'|trans({}, 'admin') }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}"
-                                       class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
-                                              text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                        {{ 'centres.edit'|trans({}, 'admin') }}
-                                    </a>
-                                    <form method="post"
-                                          action="{{ path('app_admin_centres_delete', {id: centre.id}) }}"
-                                          onsubmit="return confirm('{{ 'centres.delete_confirm'|trans({}, 'admin') }}')">
-                                        <input type="hidden" name="_token"
-                                               value="{{ csrf_token('delete_centre_' ~ centre.id) }}">
-                                        <button type="submit"
-                                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
-                                                       text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
-                                            {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
-                                            {{ 'centres.delete'|trans({}, 'admin') }}
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% include 'components/_pagination.html.twig' with {
-                pagination: pagination,
-                route: 'app_admin_centres_index',
-            } %}
-        {% endif %}
+        <twig:live:Admin:EducationalCentreListComponent />
     </div>
 
 </div>
