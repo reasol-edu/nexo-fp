@@ -59,64 +59,48 @@
 
                 {# Nombre #}
                 <div class="sm:col-span-2">
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'company.field.name'|trans({}, 'companies') }}
-                    </label>
-                    <input id="name" type="text" name="name"
-                           value="{{ errors is not empty ? app.request.request.get('name') : values.name }}"
-                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                                  transition-colors focus:outline-none focus:ring-3
-                                  {{ errors.name is defined
-                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
-                    {% if errors.name is defined %}
-                        <p class="mt-1.5 text-xs text-red-600">{{ errors.name }}</p>
-                    {% endif %}
+                    <twig:Form:Field
+                        id="name"
+                        name="name"
+                        label="{{ 'company.field.name'|trans({}, 'companies') }}"
+                        value="{{ errors is not empty ? app.request.request.get('name') : values.name }}"
+                        :error="errors.name ?? null"
+                    />
                 </div>
 
                 {# CIF/NIF #}
                 <div>
-                    <label for="vat_number" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'company.field.vat_number'|trans({}, 'companies') }}
-                    </label>
-                    <input id="vat_number" type="text" name="vat_number"
-                           value="{{ errors is not empty ? app.request.request.get('vat_number') : values.vat_number }}"
-                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm font-mono text-gray-900
-                                  transition-colors focus:outline-none focus:ring-3
-                                  {{ errors.vat_number is defined
-                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
-                    {% if errors.vat_number is defined %}
-                        <p class="mt-1.5 text-xs text-red-600">{{ errors.vat_number }}</p>
-                    {% endif %}
+                    <twig:Form:Field
+                        id="vat_number"
+                        name="vat_number"
+                        label="{{ 'company.field.vat_number'|trans({}, 'companies') }}"
+                        value="{{ errors is not empty ? app.request.request.get('vat_number') : values.vat_number }}"
+                        :error="errors.vat_number ?? null"
+                        :mono="true"
+                    />
                 </div>
 
                 {# Localidad #}
                 <div class="sm:col-span-3">
-                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'company.field.city'|trans({}, 'companies') }}
-                    </label>
-                    <input id="city" type="text" name="city"
-                           value="{{ errors is not empty ? app.request.request.get('city') : values.city }}"
-                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                                  transition-colors focus:outline-none focus:ring-3
-                                  {{ errors.city is defined
-                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
-                    {% if errors.city is defined %}
-                        <p class="mt-1.5 text-xs text-red-600">{{ errors.city }}</p>
-                    {% endif %}
+                    <twig:Form:Field
+                        id="city"
+                        name="city"
+                        label="{{ 'company.field.city'|trans({}, 'companies') }}"
+                        value="{{ errors is not empty ? app.request.request.get('city') : values.city }}"
+                        :error="errors.city ?? null"
+                    />
                 </div>
 
                 {# Circunstancias excepcionales #}
                 <div class="sm:col-span-3">
-                    <label for="exceptional_circumstances" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'company.field.exceptional_circumstances'|trans({}, 'companies') }}
-                    </label>
-                    <p class="text-xs text-gray-400 mb-2">{{ 'company.field.exceptional_circumstances_help'|trans({}, 'companies') }}</p>
-                    <textarea id="exceptional_circumstances" name="exceptional_circumstances" rows="3"
-                              class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3.5 text-sm text-gray-900
-                                     transition-colors focus:outline-none focus:ring-3 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20">{{ errors is not empty ? app.request.request.get('exceptional_circumstances') : values.exceptional_circumstances }}</textarea>
+                    <twig:Form:Textarea
+                        id="exceptional_circumstances"
+                        name="exceptional_circumstances"
+                        label="{{ 'company.field.exceptional_circumstances'|trans({}, 'companies') }}"
+                        value="{{ errors is not empty ? app.request.request.get('exceptional_circumstances') : values.exceptional_circumstances }}"
+                        help="{{ 'company.field.exceptional_circumstances_help'|trans({}, 'companies') }}"
+                        :rows="3"
+                    />
                 </div>
 
             </div>

@@ -20,66 +20,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ workcenter.name }}</h1>
     </div>
 
-    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="text-base font-semibold text-gray-900">{{ 'workcenter.edit.title'|trans({}, 'companies') }}</h2>
-        </div>
-        <form method="post" class="px-6 py-6 space-y-5">
-            <input type="hidden" name="_token" value="{{ csrf_token('edit_workcenter_' ~ workcenter.id) }}">
-
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-
-                {# Nombre #}
-                <div class="sm:col-span-2">
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'workcenters.field.name'|trans({}, 'companies') }}
-                    </label>
-                    <input id="name" type="text" name="name"
-                           value="{{ errors is not empty ? app.request.request.get('name') : workcenter.name }}"
-                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                                  transition-colors focus:outline-none focus:ring-3
-                                  {{ errors.name is defined
-                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
-                    {% if errors.name is defined %}
-                        <p class="mt-1.5 text-xs text-red-600">{{ errors.name }}</p>
-                    {% endif %}
-                </div>
-
-                {# Localidad #}
-                <div>
-                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        {{ 'workcenters.field.city'|trans({}, 'companies') }}
-                    </label>
-                    <input id="city" type="text" name="city"
-                           value="{{ errors is not empty ? app.request.request.get('city') : workcenter.city }}"
-                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                                  transition-colors focus:outline-none focus:ring-3
-                                  {{ errors.city is defined
-                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}"
-                           required>
-                    {% if errors.city is defined %}
-                        <p class="mt-1.5 text-xs text-red-600">{{ errors.city }}</p>
-                    {% endif %}
-                </div>
-
-            </div>
-
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <a href="{{ path('app_companies_edit', {id: company.id}) }}"
-                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
-                          hover:bg-gray-50 transition-colors">
-                    {{ 'workcenter.edit.cancel'|trans({}, 'companies') }}
-                </a>
-                <button type="submit"
-                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
-                               hover:bg-plum-700 transition-colors shadow-xs">
-                    {{ 'workcenter.edit.save'|trans({}, 'companies') }}
-                </button>
-            </div>
-        </form>
-    </div>
+    <twig:live:Company:WorkcenterFormComponent :workcenter="workcenter" />
 
 </div>
 {% endblock %}
