@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Página hub «Centro educativo» (`/mi-centro`) como punto de entrada con tarjetas para las secciones del centro activo
+- `feat`: Vista árbol colapsable con `<details>/<summary>` para la sección «Oferta formativa» (familias → enseñanzas → niveles → grupos), con búsqueda en tiempo real vía Live Component
 - `feat`: CRUD completo de familias profesionales, enseñanzas, niveles y grupos anidado bajo el centro educativo activo
 - `feat`: Filtrado en tiempo real y paginación sin recarga en los listados de empresas, docentes y centros educativos
 - `refactor`: Componentes Twig anónimos (Form/Field, Form/Textarea) y Live Components (WorkcenterForm, WorkerForm) en la sección Empresas
@@ -67,6 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `chore`: Renombrado el apartado de «Familias profesionales» a «Oferta formativa» en toda la UI y traducciones
+- `refactor`: Breadcrumbs de oferta formativa actualizados para reflejar la jerarquía «Centro educativo → Oferta formativa → …»
+- `refactor`: Enlace a oferta formativa movido desde la barra lateral directamente al hub «Centro educativo»
 - `chore`: Eliminar hook commit-msg para actualizar CHANGELOG
 - `refactor`: Inyectar repositorio tipado y usar métodos named
 - `refactor(model)`: Eliminar academicYear de Teacher
@@ -83,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `fix`: Botones «Editar» en la vista árbol no navegaban al usar `preventDefault` en el wrapper del botón; corregido con `stopPropagation`
+- `fix`: Sección «Administración» se marcaba activa en el sidebar al navegar por oferta formativa; corregido con matching explícito de prefijos de ruta por ítem de navegación
 - `fix`: Eliminar centros de trabajo en cascada al eliminar una empresa
 - `fix`: Localidad obligatoria en centros de trabajo (migración y modelo)
 - `fix(i18n)`: Corregidas algunas traducciones
