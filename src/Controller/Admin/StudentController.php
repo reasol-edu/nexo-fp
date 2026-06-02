@@ -187,6 +187,131 @@ class StudentController extends AbstractController
         ]);
     }
 
+    #[Route('/importar', name: 'app_admin_students_import')]
+    public function import(string $centreId, Request $request): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
+        }
+
+        if (!$this->isCsrfTokenValid('import_students', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $file = $request->files->get('csv');
+        if ($file === null || !$file->isValid()) {
+            $this->addFlash('error', $this->t('students.import.error.no_file'));
+            return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
+        }
+
+        $content = (string) file_get_contents($file->getPathname());
+        $content = ltrim($content, "\xEF\xBB\xBF"); // strip UTF-8 BOM
+        if (!mb_check_encoding($content, 'UTF-8')) {
+            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+        }
+
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $content);
+        rewind($stream);
+
+        /** @var list<string>|false $headers */
+        $headers = fgetcsv($stream);
+        if ($headers === false || $headers === [null]) {
+            fclose($stream);
+            $this->addFlash('error', $this->t('students.import.error.empty_file'));
+            return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
+        }
+
+        /** @var array<string, int> $headerMap */
+        $headerMap = array_flip(array_map('trim', $headers));
+
+        $required = ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad'];
+        foreach ($required as $col) {
+            if (!isset($headerMap[$col])) {
+                fclose($stream);
+                $this->addFlash('error', $this->t('students.import.error.missing_column') . ' «' . $col . '»');
+                return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
+            }
+        }
+
+        /** @var array<string, Group> */
+        $groupsByName = [];
+        foreach ($this->groups->findByActiveYearOfCentreOrderedByName($centre) as $group) {
+            $groupsByName[mb_strtolower($group->getName())] = $group;
+        }
+
+        $created = 0;
+        $updated = 0;
+        $skipped = 0;
+        /** @var array<string, true> $unknownGroups */
+        $unknownGroups = [];
+
+        while (($row = fgetcsv($stream)) !== false) {
+            if (count(array_filter($row, static fn($v) => trim((string) $v) !== '')) === 0) {
+                continue;
+            }
+
+            if (trim((string) ($row[$headerMap['Estado Matrícula']] ?? '')) !== '') {
+                $skipped++;
+                continue;
+            }
+
+            $studentId = trim((string) ($row[$headerMap['Nº Id. Escolar']] ?? ''));
+            $firstName  = trim((string) ($row[$headerMap['Nombre']] ?? ''));
+            $lastName1  = trim((string) ($row[$headerMap['Primer apellido']] ?? ''));
+            $lastName2  = trim((string) ($row[$headerMap['Segundo apellido']] ?? ''));
+            $groupName  = trim((string) ($row[$headerMap['Unidad']] ?? ''));
+
+            if ($studentId === '' || $firstName === '' || $lastName1 === '') {
+                $skipped++;
+                continue;
+            }
+
+            $lastName = $lastName2 !== '' ? $lastName1 . ' ' . $lastName2 : $lastName1;
+
+            $group = $groupsByName[mb_strtolower($groupName)] ?? null;
+            if ($group === null && $groupName !== '') {
+                $unknownGroups[$groupName] = true;
+            }
+
+            $student = $this->students->findByStudentId($studentId);
+            if ($student === null) {
+                $student = new Student(new PersonName($firstName, $lastName));
+                $student->setStudentId($studentId);
+                $this->em->persist($student);
+                $created++;
+            } else {
+                $student->setName(new PersonName($firstName, $lastName));
+                $updated++;
+            }
+
+            if ($group !== null && !$student->getGroups()->contains($group)) {
+                $student->addGroup($group);
+            }
+        }
+
+        fclose($stream);
+        $this->em->flush();
+
+        $summary = $this->translator->trans('students.import.flash.summary', [
+            '%created%' => $created,
+            '%updated%' => $updated,
+            '%skipped%' => $skipped,
+        ], 'admin');
+
+        if (!empty($unknownGroups)) {
+            $summary .= ' ' . $this->translator->trans('students.import.flash.unknown_groups', [
+                '%groups%' => implode(', ', array_map(static fn(string $g) => '«' . $g . '»', array_keys($unknownGroups))),
+            ], 'admin');
+        }
+
+        $this->addFlash('success', $summary);
+
+        return $this->redirectToRoute('app_admin_students_index', ['centreId' => $centre->getId()]);
+    }
+
     #[Route('/{id}/eliminar', name: 'app_admin_students_delete', methods: ['POST'])]
     public function delete(string $centreId, string $id, Request $request): Response
     {
