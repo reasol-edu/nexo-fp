@@ -266,7 +266,7 @@ class CompanyController extends AbstractController
     }
 
     #[Route('/{companyId}/centros-trabajo/{workcenterID}', name: 'app_companies_workcenter_edit')]
-    public function editWorkcenter(string $companyId, string $workcenterID, Request $request): Response
+    public function editWorkcenter(string $companyId, string $workcenterID): Response
     {
         $company = $this->requireCompanyInCurrentCentre($companyId);
         $this->denyAccessUnlessGranted(CompanyVoter::EDIT, $company);
@@ -276,39 +276,9 @@ class CompanyController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $errors = [];
-
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('edit_workcenter_' . $workcenterID, $request->request->getString('_token'))) {
-                throw $this->createAccessDeniedException();
-            }
-
-            $name = trim($request->request->getString('name'));
-            $city = trim($request->request->getString('city'));
-
-            if ($name === '') {
-                $errors['name'] = $this->t('workcenter.error.name_required');
-            }
-
-            if ($city === '') {
-                $errors['city'] = $this->t('workcenter.error.city_required');
-            }
-
-            if (empty($errors)) {
-                $workcenter->setName($name)->setCity($city);
-
-                $this->em->flush();
-
-                $this->addFlash('success', $this->t('workcenter.flash.saved'));
-
-                return $this->redirectToRoute('app_companies_edit', ['id' => $companyId]);
-            }
-        }
-
         return $this->render('company/edit_workcenter.html.twig', [
             'company'    => $company,
             'workcenter' => $workcenter,
-            'errors'     => $errors,
         ]);
     }
 
@@ -382,7 +352,7 @@ class CompanyController extends AbstractController
     }
 
     #[Route('/{id}/empleados/{workerID}', name: 'app_companies_worker_edit')]
-    public function editWorker(string $id, string $workerID, Request $request): Response
+    public function editWorker(string $id, string $workerID): Response
     {
         $company = $this->requireCompanyInCurrentCentre($id);
         $this->denyAccessUnlessGranted(CompanyVoter::EDIT, $company);
@@ -392,41 +362,9 @@ class CompanyController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $errors = [];
-
-        if ($request->isMethod('POST')) {
-            if (!$this->isCsrfTokenValid('edit_worker_' . $workerID, $request->request->getString('_token'))) {
-                throw $this->createAccessDeniedException();
-            }
-
-            $firstName = trim($request->request->getString('first_name'));
-            $lastName  = trim($request->request->getString('last_name'));
-
-            if ($firstName === '') {
-                $errors['first_name'] = $this->t('worker.error.first_name_required');
-            }
-
-            if ($lastName === '') {
-                $errors['last_name'] = $this->t('worker.error.last_name_required');
-            }
-
-            if (empty($errors)) {
-                $worker->getName()->setFirstName($firstName)->setLastName($lastName);
-                $worker->setWorkEmail($request->request->getString('work_email') !== '' ? trim($request->request->getString('work_email')) : null);
-                $worker->setWorkPhoneNumber($request->request->getString('work_phone') !== '' ? trim($request->request->getString('work_phone')) : null);
-
-                $this->em->flush();
-
-                $this->addFlash('success', $this->t('worker.flash.saved'));
-
-                return $this->redirectToRoute('app_companies_edit', ['id' => $id]);
-            }
-        }
-
         return $this->render('company/edit_worker.html.twig', [
             'company' => $company,
             'worker'  => $worker,
-            'errors'  => $errors,
         ]);
     }
 

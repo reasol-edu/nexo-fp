@@ -1,0 +1,84 @@
+<div {{ attributes }}>
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <form
+            method="post"
+            class="px-6 py-6 space-y-5"
+            data-action="submit->live#action:prevent"
+            data-live-action-param="save"
+        >
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                {# DNI/NIE — solo lectura #}
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'worker.field.national_id'|trans({}, 'companies') }}
+                    </label>
+                    <p class="rounded-xl border border-gray-100 bg-gray-100 py-2.5 px-3.5 text-sm font-mono text-gray-500">
+                        {{ worker.nationalIdNumber }}
+                    </p>
+                </div>
+
+                {# Nombre #}
+                <div>
+                    <twig:Form:Field
+                        id="first_name"
+                        name="first_name"
+                        label="{{ 'worker.field.first_name'|trans({}, 'companies') }}"
+                        value="{{ firstName }}"
+                        :error="errors.firstName ?? null"
+                        data-model="on(change)|firstName"
+                    />
+                </div>
+
+                {# Apellidos #}
+                <div>
+                    <twig:Form:Field
+                        id="last_name"
+                        name="last_name"
+                        label="{{ 'worker.field.last_name'|trans({}, 'companies') }}"
+                        value="{{ lastName }}"
+                        :error="errors.lastName ?? null"
+                        data-model="on(change)|lastName"
+                    />
+                </div>
+
+                {# Email profesional #}
+                <div>
+                    <twig:Form:Field
+                        id="work_email"
+                        name="work_email"
+                        type="email"
+                        label="{{ 'worker.field.work_email'|trans({}, 'companies') }}"
+                        value="{{ workEmail }}"
+                        data-model="on(change)|workEmail"
+                    />
+                </div>
+
+                {# Teléfono #}
+                <div>
+                    <twig:Form:Field
+                        id="work_phone"
+                        name="work_phone"
+                        label="{{ 'worker.field.work_phone'|trans({}, 'companies') }}"
+                        value="{{ workPhone }}"
+                        data-model="on(change)|workPhone"
+                    />
+                </div>
+
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{{ path('app_companies_edit', {id: company.id}) }}"
+                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
+                          hover:bg-gray-50 transition-colors">
+                    {{ 'worker.edit.cancel'|trans({}, 'companies') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'worker.edit.save'|trans({}, 'companies') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
