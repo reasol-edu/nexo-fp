@@ -261,7 +261,9 @@ class StayController extends AbstractController
             }
 
             $workcenter = null;
-            if ($values['workcenter_id'] !== '') {
+            if ($values['workcenter_id'] === '') {
+                $errors['workcenter_id'] = $this->t('stays.error.workcenter_required');
+            } else {
                 $workcenter = $this->workcenters->findByCentreAndId($centre, $values['workcenter_id']);
                 if ($workcenter === null) {
                     $errors['workcenter_id'] = $this->t('stays.error.workcenter_invalid');
@@ -274,6 +276,9 @@ class StayController extends AbstractController
                 if ($py !== null) {
                     $selectedYears[] = $py;
                 }
+            }
+            if ($programmeYears !== [] && $selectedYears === []) {
+                $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
             }
 
             if (empty($errors)) {

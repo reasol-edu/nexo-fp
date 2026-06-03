@@ -32,6 +32,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->leftJoin('tp.workcenter', 'wc')->addSelect('wc')
             ->leftJoin('wc.company', 'co')->addSelect('co')
             ->leftJoin('tp.academicTutor', 'at')->addSelect('at')
+            ->leftJoin('tp.workplaceMentor', 'wm')->addSelect('wm')
             ->where('tp.stay = :stay')
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->orderBy('co.name', 'ASC')
