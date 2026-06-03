@@ -32,6 +32,12 @@ class Stay
     #[ORM\JoinTable(name: 'stay_students')]
     private Collection $students;
 
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $startDate = null;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $endDate = null;
+
     /** @var Collection<int, TrainingPosition> */
     #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $trainingPositions;
@@ -103,6 +109,30 @@ class Stay
     public function removeStudent(Student $student): static
     {
         $this->students->removeElement($student);
+
+        return $this;
+    }
+
+    public function getStartDate(): ?\DateTimeImmutable
+    {
+        return $this->startDate;
+    }
+
+    public function setStartDate(?\DateTimeImmutable $startDate): static
+    {
+        $this->startDate = $startDate;
+
+        return $this;
+    }
+
+    public function getEndDate(): ?\DateTimeImmutable
+    {
+        return $this->endDate;
+    }
+
+    public function setEndDate(?\DateTimeImmutable $endDate): static
+    {
+        $this->endDate = $endDate;
 
         return $this;
     }

@@ -68,6 +68,42 @@
                 {% endif %}
             </div>
 
+            {# Fechas #}
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'stays.field.start_date'|trans({}, 'stays') }}
+                        <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <input id="start_date" type="date" name="start_date"
+                           value="{{ values.start_date }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.start_date is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.start_date is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.start_date }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'stays.field.end_date'|trans({}, 'stays') }}
+                        <span class="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <input id="end_date" type="date" name="end_date"
+                           value="{{ values.end_date }}"
+                           class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
+                                  transition-colors focus:outline-none focus:ring-3
+                                  {{ errors.end_date is defined
+                                      ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                      : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                    {% if errors.end_date is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.end_date }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-2">
                 <a href="{{ path('app_stays_index') }}"
                    class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700

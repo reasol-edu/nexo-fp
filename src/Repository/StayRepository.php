@@ -21,19 +21,25 @@ class StayRepository extends ServiceEntityRepository
         parent::__construct($registry, Stay::class);
     }
 
-    /** @return Query<null, Stay> */
+    /**
+     * @param list<'current'|'future'|'past'> $periods
+     * @return Query<null, Stay>
+     */
     public function createByCentreFilteredQuery(
         AcademicYear $year,
         string $search = '',
         string $familyId = '',
         string $programmeId = '',
+        array $periods = ['current', 'future', 'past'],
     ): Query {
         $qb = $this->createQueryBuilder('s')
             ->join('s.programme', 'p')
             ->join('p.professionalFamily', 'f')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
-            ->orderBy('f.name', 'ASC')
+            ->orderBy('s.endDate', 'DESC')
+            ->addOrderBy('s.startDate', 'DESC')
+            ->addOrderBy('f.name', 'ASC')
             ->addOrderBy('p.name', 'ASC')
             ->addOrderBy('s.name', 'ASC');
 
@@ -55,6 +61,32 @@ class StayRepository extends ServiceEntityRepository
         if ($programmeId !== '') {
             $qb->andWhere('p.id = :programmeId')
                ->setParameter('programmeId', $programmeId, 'uuid');
+        }
+
+        $allPeriods = ['current', 'future', 'past'];
+        $activePeriods = array_values(array_intersect($periods, $allPeriods));
+
+        if ($activePeriods === []) {
+            $qb->andWhere('1 = 0');
+        } elseif (count($activePeriods) < 3) {
+            $today = new \DateTimeImmutable('today');
+            $qb->setParameter('today', $today);
+
+            $orConditions = $qb->expr()->orX();
+
+            if (in_array('past', $activePeriods, true)) {
+                $orConditions->add('s.endDate IS NOT NULL AND s.endDate < :today');
+            }
+            if (in_array('future', $activePeriods, true)) {
+                $orConditions->add('s.startDate IS NOT NULL AND s.startDate > :today');
+            }
+            if (in_array('current', $activePeriods, true)) {
+                $orConditions->add(
+                    '(s.endDate IS NULL OR s.endDate >= :today) AND (s.startDate IS NULL OR s.startDate <= :today)'
+                );
+            }
+
+            $qb->andWhere($orConditions);
         }
 
         return $qb->getQuery();
