@@ -321,7 +321,7 @@ class CentreTeacherController extends AbstractController
                 'password'   => $request->request->getString('password'),
             ];
             $flags = [
-                'admin'    => $request->request->has('admin'),
+                'admin'    => false,
                 'active'   => $request->request->has('active'),
                 'external' => $request->request->has('external'),
             ];
