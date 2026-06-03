@@ -137,7 +137,9 @@ class StayRepository extends ServiceEntityRepository
 
         $em = $this->getEntityManager();
 
-        $positionRows = $em->createQueryBuilder()
+        // s IN (:array_of_entities) produces incorrect SQL for binary UUIDs on MySQL.
+        // Use individual OR conditions with explicit 'uuid' type instead.
+        $posQb = $em->createQueryBuilder()
             ->select(
                 's.id AS stayId',
                 'COUNT(tp.id) AS total',
@@ -153,26 +155,30 @@ class StayRepository extends ServiceEntityRepository
             ->from(Stay::class, 's')
             ->leftJoin('s.trainingPositions', 'tp')
             ->leftJoin('tp.workcenter', 'wc')
-            ->where('s IN (:stays)')
             ->groupBy('s.id')
-            ->setParameter('stays', $stays)
             ->setParameter('btrue', true)
             ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
             ->setParameter('s_registered', TrainingPositionState::REGISTERED->value)
             ->setParameter('s_pending', TrainingPositionState::PENDING->value)
-            ->setParameter('s_done', TrainingPositionState::DONE->value)
-            ->getQuery()
-            ->getScalarResult();
+            ->setParameter('s_done', TrainingPositionState::DONE->value);
+        $orPos = $posQb->expr()->orX();
+        foreach ($stays as $i => $stay) {
+            $orPos->add("s.id = :sid_{$i}");
+            $posQb->setParameter("sid_{$i}", $stay->getId(), 'uuid');
+        }
+        $positionRows = $posQb->where($orPos)->getQuery()->getScalarResult();
 
-        $studentRows = $em->createQueryBuilder()
+        $stQb = $em->createQueryBuilder()
             ->select('s.id AS stayId', 'COUNT(st.id) AS cnt')
             ->from(Stay::class, 's')
             ->leftJoin('s.students', 'st')
-            ->where('s IN (:stays)')
-            ->groupBy('s.id')
-            ->setParameter('stays', $stays)
-            ->getQuery()
-            ->getScalarResult();
+            ->groupBy('s.id');
+        $orSt = $stQb->expr()->orX();
+        foreach ($stays as $i => $stay) {
+            $orSt->add("s.id = :sid_{$i}");
+            $stQb->setParameter("sid_{$i}", $stay->getId(), 'uuid');
+        }
+        $studentRows = $stQb->where($orSt)->getQuery()->getScalarResult();
 
         // getScalarResult() returns UUIDs in binary form on MySQL.
         // Build a lookup map so any representation normalises to RFC4122.
