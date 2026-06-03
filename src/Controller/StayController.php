@@ -8,6 +8,7 @@ use App\Entity\Stay;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
+use App\Repository\TrainingPositionRepository;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,7 @@ class StayController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly TenantContext $tenant,
         private readonly StayRepository $stays,
+        private readonly TrainingPositionRepository $positions,
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
         private readonly TranslatorInterface $translator,
@@ -144,6 +146,54 @@ class StayController extends AbstractController
             'by_family' => $byFamily,
             'errors'    => $errors,
             'values'    => $values,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_stays_show')]
+    public function show(string $id): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $trainingPositions = $this->positions->findByStayOrdered($stay);
+
+        $assignedIds = [];
+        foreach ($trainingPositions as $tp) {
+            if ($tp->getStudent() !== null) {
+                $assignedIds[$tp->getStudent()->getId()->toRfc4122()] = true;
+            }
+        }
+
+        $unassigned = array_values(
+            $stay->getStudents()
+                 ->filter(fn ($s) => !isset($assignedIds[$s->getId()->toRfc4122()]))
+                 ->toArray()
+        );
+        usort($unassigned, static fn ($a, $b) =>
+            $a->getName()->getLastName() <=> $b->getName()->getLastName()
+            ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
+        );
+
+        $statsMap = $this->stays->findStatsForStays([$stay]);
+        $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
+
+        return $this->render('stays/show.html.twig', [
+            'centre'     => $centre,
+            'stay'       => $stay,
+            'positions'  => $trainingPositions,
+            'unassigned' => $unassigned,
+            'stats'      => $stats,
         ]);
     }
 

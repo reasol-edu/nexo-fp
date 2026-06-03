@@ -213,7 +213,7 @@
 
                         {# ── Footer ────────────────────────────────────────────── #}
                         <div class="px-5 py-3 mt-auto flex items-center justify-end">
-                            <a href="#"
+                            <a href="{{ path('app_stays_show', {id: sid}) }}"
                                class="inline-flex items-center gap-1.5 text-xs font-medium text-plum-600
                                       hover:text-plum-800 transition-colors group-hover:underline">
                                 {{ 'stays.card.view'|trans({}, 'stays') }}

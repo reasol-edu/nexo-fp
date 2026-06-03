@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
+use App\Entity\Stay;
 use App\Entity\TrainingPosition;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,5 +17,28 @@ class TrainingPositionRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, TrainingPosition::class);
+    }
+
+    /**
+     * Returns all positions for a stay, eager-loading student, workcenter,
+     * company and academic tutor to avoid N+1 queries in the detail view.
+     *
+     * @return TrainingPosition[]
+     */
+    public function findByStayOrdered(Stay $stay): array
+    {
+        return $this->createQueryBuilder('tp')
+            ->leftJoin('tp.student', 'st')->addSelect('st')
+            ->leftJoin('tp.workcenter', 'wc')->addSelect('wc')
+            ->leftJoin('wc.company', 'co')->addSelect('co')
+            ->leftJoin('tp.academicTutor', 'at')->addSelect('at')
+            ->where('tp.stay = :stay')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->orderBy('co.name', 'ASC')
+            ->addOrderBy('wc.name', 'ASC')
+            ->addOrderBy('st.name.lastName', 'ASC')
+            ->addOrderBy('st.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }
