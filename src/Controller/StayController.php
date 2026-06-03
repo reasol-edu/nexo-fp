@@ -96,7 +96,9 @@ class StayController extends AbstractController
             }
 
             $startDate = null;
-            if ($values['start_date'] !== '') {
+            if ($values['start_date'] === '') {
+                $errors['start_date'] = $this->t('stays.error.date_required');
+            } else {
                 $startDate = \DateTimeImmutable::createFromFormat('Y-m-d', $values['start_date']);
                 if ($startDate === false) {
                     $errors['start_date'] = $this->t('stays.error.date_invalid');
@@ -105,7 +107,9 @@ class StayController extends AbstractController
             }
 
             $endDate = null;
-            if ($values['end_date'] !== '') {
+            if ($values['end_date'] === '') {
+                $errors['end_date'] = $this->t('stays.error.date_required');
+            } else {
                 $endDate = \DateTimeImmutable::createFromFormat('Y-m-d', $values['end_date']);
                 if ($endDate === false) {
                     $errors['end_date'] = $this->t('stays.error.date_invalid');
@@ -116,7 +120,7 @@ class StayController extends AbstractController
                 }
             }
 
-            if (empty($errors) && $programme !== null) {
+            if (empty($errors) && $programme !== null && $startDate !== null && $endDate !== null) {
                 $stay = new Stay();
                 $stay->setName($values['name'])
                      ->setAcademicYear($year)

@@ -20,7 +20,7 @@ final class Version20260603165047 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE stay ADD start_date DATE DEFAULT NULL, ADD end_date DATE DEFAULT NULL');
+        $this->addSql('ALTER TABLE stay ADD start_date DATE NOT NULL, ADD end_date DATE NOT NULL');
     }
 
     public function down(Schema $schema): void

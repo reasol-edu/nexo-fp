@@ -131,10 +131,10 @@
                     {% set pct_occupied = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
                     {% set pct_free     = s.total_positions > 0 ? ((s.free / s.total_positions) * 100)|round : 0 %}
 
-                    {% set end_str   = stay.endDate   ? stay.endDate|date("Y-m-d")   : null %}
-                    {% set start_str = stay.startDate ? stay.startDate|date("Y-m-d") : null %}
-                    {% set is_past    = end_str   and end_str < today_str %}
-                    {% set is_future  = start_str and start_str > today_str and not is_past %}
+                    {% set end_str   = stay.endDate|date("Y-m-d") %}
+                    {% set start_str = stay.startDate|date("Y-m-d") %}
+                    {% set is_past    = end_str < today_str %}
+                    {% set is_future  = start_str > today_str and not is_past %}
                     {% set is_current = not is_past and not is_future %}
 
                     <article class="rounded-2xl border bg-white shadow-xs overflow-hidden flex flex-col
@@ -172,15 +172,7 @@
                             {# Fechas #}
                             <div class="mt-2 flex items-center gap-1 text-xs text-gray-400">
                                 {{ ux_icon('heroicons:calendar-days', {class: 'h-3.5 w-3.5 shrink-0'}) }}
-                                {% if stay.startDate or stay.endDate %}
-                                    <span>
-                                        {{ stay.startDate ? stay.startDate|date('d/m/Y') : '—' }}
-                                        &nbsp;→&nbsp;
-                                        {{ stay.endDate ? stay.endDate|date('d/m/Y') : '—' }}
-                                    </span>
-                                {% else %}
-                                    <span class="italic">{{ 'stays.card.no_dates'|trans({}, 'stays') }}</span>
-                                {% endif %}
+                                <span>{{ stay.startDate|date('d/m/Y') }}&nbsp;→&nbsp;{{ stay.endDate|date('d/m/Y') }}</span>
                             </div>
                         </div>
 
