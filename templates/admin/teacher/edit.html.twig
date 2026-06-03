@@ -98,9 +98,34 @@
                 {% endif %}
             </div>
 
+            {# Modo de acceso #}
+            <div>
+                <span class="block text-sm font-medium text-gray-700 mb-2">{{ 'teacher.field.auth_method'|trans({}, 'admin') }}</span>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 cursor-pointer transition-colors
+                                  hover:border-gray-300 has-[:checked]:border-plum-400 has-[:checked]:bg-plum-50">
+                        <input type="radio" name="auth_method" value="password"
+                               {{ not flags.external ? 'checked' : '' }}
+                               data-external-auth-target="radio"
+                               data-action="change->external-auth#toggle"
+                               class="h-4 w-4 border-gray-300 text-plum-600 focus:ring-plum-500">
+                        <span class="text-sm font-medium text-gray-700">{{ 'teacher.field.auth_password'|trans({}, 'admin') }}</span>
+                    </label>
+                    <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 cursor-pointer transition-colors
+                                  hover:border-gray-300 has-[:checked]:border-plum-400 has-[:checked]:bg-plum-50">
+                        <input type="radio" name="auth_method" value="external"
+                               {{ flags.external ? 'checked' : '' }}
+                               data-external-auth-target="radio"
+                               data-action="change->external-auth#toggle"
+                               class="h-4 w-4 border-gray-300 text-plum-600 focus:ring-plum-500">
+                        <span class="text-sm font-medium text-gray-700">{{ 'teacher.field.auth_external'|trans({}, 'admin') }}</span>
+                    </label>
+                </div>
+            </div>
+
             {# Contraseña #}
             <div data-external-auth-target="passwordBlock"
-                 style="transition: max-height 0.25s ease, opacity 0.25s ease;">
+                 class="{{ flags.external ? 'hidden' : '' }}">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
                     {{ 'teacher.field.password'|trans({}, 'admin') }}
                 </label>
@@ -133,14 +158,6 @@
                            {{ is_current_user ? 'disabled' : '' }}
                            class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
                     <span class="text-sm text-gray-700">{{ 'teacher.field.active'|trans({}, 'admin') }}</span>
-                </label>
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="external" value="1"
-                           {{ flags.external ? 'checked' : '' }}
-                           data-external-auth-target="checkbox"
-                           data-action="change->external-auth#toggle"
-                           class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
-                    <span class="text-sm text-gray-700">{{ 'teacher.field.external'|trans({}, 'admin') }}</span>
                 </label>
             </div>
 
