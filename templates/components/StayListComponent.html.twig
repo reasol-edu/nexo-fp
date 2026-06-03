@@ -74,11 +74,13 @@
         {% else %}
 
             {# Grid de cards #}
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {% for stay in items %}
                     {% set sid = stay.id.toRfc4122 %}
-                    {% set s = stats[sid] ?? {students: 0, total_positions: 0, occupied: 0, free: 0, signed: 0, state_draft: 0, state_registered: 0, state_pending: 0, state_done: 0} %}
-                    {% set pct = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
+                    {% set s = stats[sid] ?? {students: 0, students_with_position: 0, total_positions: 0, occupied: 0, free: 0, companies: 0} %}
+                    {% set pct_students = s.students > 0 ? ((s.students_with_position / s.students) * 100)|round : 0 %}
+                    {% set pct_occupied = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
+                    {% set pct_free     = s.total_positions > 0 ? ((s.free / s.total_positions) * 100)|round : 0 %}
 
                     <article class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
                                     hover:border-plum-200 hover:shadow-sm transition-all group">
@@ -92,57 +94,40 @@
                             <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ stay.programme.name }}</p>
                         </div>
 
-                        {# ── Stats principales ─────────────────────────────────── #}
-                        <div class="px-5 py-4 grid grid-cols-3 gap-3 border-b border-gray-100">
-                            <div class="text-center">
-                                <p class="text-2xl font-bold text-gray-900 leading-none">{{ s.students }}</p>
-                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.students'|trans({}, 'stays') }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-2xl font-bold text-gray-900 leading-none">{{ s.total_positions }}</p>
-                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.positions'|trans({}, 'stays') }}</p>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-2xl font-bold leading-none
-                                          {{ pct >= 100 ? 'text-green-600' : (pct >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
-                                    {{ pct }}%
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.occupancy'|trans({}, 'stays') }}</p>
-                                <p class="text-xs text-gray-400">{{ s.occupied }}/{{ s.total_positions }}</p>
-                            </div>
-                        </div>
+                        {# ── Stats ─────────────────────────────────────────────── #}
+                        <div class="px-5 py-4 space-y-2.5 border-b border-gray-100 text-sm">
 
-                        {# ── Desglose por estado ────────────────────────────────── #}
-                        {% if s.total_positions > 0 %}
-                            <div class="px-5 py-3 flex flex-wrap gap-1.5 border-b border-gray-100">
-                                {% if s.state_draft > 0 %}
-                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                                        {{ 'stays.state.draft'|trans({}, 'stays') }}: {{ s.state_draft }}
-                                    </span>
-                                {% endif %}
-                                {% if s.state_registered > 0 %}
-                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                        {{ 'stays.state.registered'|trans({}, 'stays') }}: {{ s.state_registered }}
-                                    </span>
-                                {% endif %}
-                                {% if s.state_pending > 0 %}
-                                    <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                                        {{ 'stays.state.pending'|trans({}, 'stays') }}: {{ s.state_pending }}
-                                    </span>
-                                {% endif %}
-                                {% if s.state_done > 0 %}
-                                    <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                                        {{ 'stays.state.done'|trans({}, 'stays') }}: {{ s.state_done }}
-                                    </span>
-                                {% endif %}
-                                {% if s.signed > 0 %}
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700">
-                                        {{ ux_icon('heroicons:check-badge', {class: 'h-3 w-3'}) }}
-                                        {{ 'stays.card.signed'|trans({}, 'stays') }}: {{ s.signed }}
-                                    </span>
-                                {% endif %}
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
+                                <span class="font-semibold text-gray-900 tabular-nums">
+                                    {{ s.students_with_position }}/{{ s.students }}
+                                    <span class="text-xs font-normal text-gray-400">({{ pct_students }}%)</span>
+                                </span>
                             </div>
-                        {% endif %}
+
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.companies'|trans({}, 'stays') }}</span>
+                                <span class="font-semibold text-gray-900 tabular-nums">{{ s.companies }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
+                                <span class="font-semibold tabular-nums
+                                             {{ pct_occupied >= 100 ? 'text-green-600' : (pct_occupied >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
+                                    {{ s.occupied }}/{{ s.total_positions }}
+                                    <span class="text-xs font-normal text-gray-400">({{ pct_occupied }}%)</span>
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.free'|trans({}, 'stays') }}</span>
+                                <span class="font-semibold text-gray-900 tabular-nums">
+                                    {{ s.free }}/{{ s.total_positions }}
+                                    <span class="text-xs font-normal text-gray-400">({{ pct_free }}%)</span>
+                                </span>
+                            </div>
+
+                        </div>
 
                         {# ── Footer ────────────────────────────────────────────── #}
                         <div class="px-5 py-3 mt-auto flex items-center justify-end">

@@ -96,15 +96,18 @@ class StayRepository extends ServiceEntityRepository
             ->select(
                 's.id AS stayId',
                 'COUNT(tp.id) AS total',
+                'COUNT(DISTINCT IDENTITY(tp.student)) AS students_with_position',
                 'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
                 'SUM(CASE WHEN tp.signed = :btrue THEN 1 ELSE 0 END) AS signed_count',
                 'SUM(CASE WHEN tp.state = :s_draft THEN 1 ELSE 0 END) AS state_draft',
                 'SUM(CASE WHEN tp.state = :s_registered THEN 1 ELSE 0 END) AS state_registered',
                 'SUM(CASE WHEN tp.state = :s_pending THEN 1 ELSE 0 END) AS state_pending',
                 'SUM(CASE WHEN tp.state = :s_done THEN 1 ELSE 0 END) AS state_done',
+                'COUNT(DISTINCT IDENTITY(wc.company)) AS companies',
             )
             ->from(Stay::class, 's')
             ->leftJoin('s.trainingPositions', 'tp')
+            ->leftJoin('tp.workcenter', 'wc')
             ->where('s IN (:stays)')
             ->groupBy('s.id')
             ->setParameter('stays', $stays)
@@ -137,15 +140,17 @@ class StayRepository extends ServiceEntityRepository
             $total = (int) $row['total'];
             $occ   = (int) $row['occupied'];
             $stats[$id] = [
-                'students'         => $studentMap[$id] ?? 0,
-                'total_positions'  => $total,
-                'occupied'         => $occ,
-                'free'             => $total - $occ,
-                'signed'           => (int) $row['signed_count'],
-                'state_draft'      => (int) $row['state_draft'],
-                'state_registered' => (int) $row['state_registered'],
-                'state_pending'    => (int) $row['state_pending'],
-                'state_done'       => (int) $row['state_done'],
+                'students'              => $studentMap[$id] ?? 0,
+                'students_with_position'=> (int) $row['students_with_position'],
+                'total_positions'       => $total,
+                'occupied'              => $occ,
+                'free'                  => $total - $occ,
+                'companies'             => (int) $row['companies'],
+                'signed'                => (int) $row['signed_count'],
+                'state_draft'           => (int) $row['state_draft'],
+                'state_registered'      => (int) $row['state_registered'],
+                'state_pending'         => (int) $row['state_pending'],
+                'state_done'            => (int) $row['state_done'],
             ];
         }
 
@@ -154,15 +159,17 @@ class StayRepository extends ServiceEntityRepository
             $id = $stay->getId()->toRfc4122();
             if (!isset($stats[$id])) {
                 $stats[$id] = [
-                    'students'         => $studentMap[$id] ?? 0,
-                    'total_positions'  => 0,
-                    'occupied'         => 0,
-                    'free'             => 0,
-                    'signed'           => 0,
-                    'state_draft'      => 0,
-                    'state_registered' => 0,
-                    'state_pending'    => 0,
-                    'state_done'       => 0,
+                    'students'               => $studentMap[$id] ?? 0,
+                    'students_with_position' => 0,
+                    'total_positions'        => 0,
+                    'occupied'               => 0,
+                    'free'                   => 0,
+                    'companies'              => 0,
+                    'signed'                 => 0,
+                    'state_draft'            => 0,
+                    'state_registered'       => 0,
+                    'state_pending'          => 0,
+                    'state_done'             => 0,
                 ];
             }
         }
