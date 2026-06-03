@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Stay;
+use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
+use App\Repository\CompanyRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
+use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
 use App\Repository\TrainingPositionRepository;
+use App\Repository\WorkcenterRepository;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +32,9 @@ class StayController extends AbstractController
         private readonly TenantContext $tenant,
         private readonly StayRepository $stays,
         private readonly TrainingPositionRepository $positions,
+        private readonly CompanyRepository $companies,
+        private readonly WorkcenterRepository $workcenters,
+        private readonly ProgrammeYearRepository $programmeYears,
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
         private readonly TranslatorInterface $translator,
@@ -194,7 +202,139 @@ class StayController extends AbstractController
             'positions'  => $trainingPositions,
             'unassigned' => $unassigned,
             'stats'      => $stats,
+            'can_manage' => $this->canManagePositions($stay, $centre),
         ]);
+    }
+
+    #[Route('/{id}/nuevo-puesto', name: 'app_stays_new_position')]
+    public function newPosition(string $id, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $allWorkcenters = $this->workcenters->findByCentreOrdered($centre);
+        $byCompany      = [];
+        foreach ($allWorkcenters as $wc) {
+            $cid = $wc->getCompany()->getId()->toRfc4122();
+            if (!isset($byCompany[$cid])) {
+                $byCompany[$cid] = ['company' => $wc->getCompany(), 'workcenters' => []];
+            }
+            $byCompany[$cid]['workcenters'][] = $wc;
+        }
+
+        $programmeYears = $this->programmeYears->findByProgrammeOrderedByName($stay->getProgramme());
+
+        $errors = [];
+        $values = ['workcenter_id' => '', 'programme_year_ids' => [], 'details' => '', 'count' => '1'];
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('new_position_' . $id, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $values = [
+                'workcenter_id'      => trim($request->request->getString('workcenter_id')),
+                'programme_year_ids' => $request->request->all('programme_year_ids'),
+                'details'            => trim($request->request->getString('details')),
+                'count'              => trim($request->request->getString('count')),
+            ];
+
+            $count = filter_var($values['count'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 50]]);
+            if ($count === false) {
+                $errors['count'] = $this->t('stays.error.position_count_invalid');
+                $count = 1;
+            }
+
+            $workcenter = null;
+            if ($values['workcenter_id'] !== '') {
+                $workcenter = $this->workcenters->findByCentreAndId($centre, $values['workcenter_id']);
+                if ($workcenter === null) {
+                    $errors['workcenter_id'] = $this->t('stays.error.workcenter_invalid');
+                }
+            }
+
+            $selectedYears = [];
+            foreach ($values['programme_year_ids'] as $pyId) {
+                $py = $this->programmeYears->findByProgrammeAndId($stay->getProgramme(), (string) $pyId);
+                if ($py !== null) {
+                    $selectedYears[] = $py;
+                }
+            }
+
+            if (empty($errors)) {
+                for ($i = 0; $i < $count; $i++) {
+                    $position = new TrainingPosition();
+                    $position->setStay($stay)
+                             ->setWorkcenter($workcenter)
+                             ->setDetails($values['details'] !== '' ? $values['details'] : null);
+                    foreach ($selectedYears as $py) {
+                        $position->addProgrammeYear($py);
+                    }
+                    $this->em->persist($position);
+                }
+                $this->em->flush();
+
+                $this->addFlash('success', $this->translator->trans(
+                    'stays.flash.positions_created',
+                    ['%count%' => $count],
+                    'stays'
+                ));
+
+                return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+            }
+        }
+
+        return $this->render('stays/new_position.html.twig', [
+            'centre'          => $centre,
+            'stay'            => $stay,
+            'by_company'      => $byCompany,
+            'programme_years' => $programmeYears,
+            'errors'          => $errors,
+            'values'          => $values,
+        ]);
+    }
+
+    private function canManagePositions(Stay $stay, \App\Entity\EducationalCentre $centre): bool
+    {
+        /** @var Teacher $teacher */
+        $teacher = $this->getUser();
+
+        if ($teacher->isAdmin()) {
+            return true;
+        }
+
+        $teacherId = $teacher->getId()->toRfc4122();
+
+        foreach ($centre->getAdmins() as $admin) {
+            if ($admin->getId()->toRfc4122() === $teacherId) {
+                return true;
+            }
+        }
+
+        if ($this->programmes->isCoordinatorOf($teacher, $stay->getProgramme())) {
+            return true;
+        }
+
+        if ($this->companies->hasLiaisonInCentre($teacher, $centre)) {
+            return true;
+        }
+
+        return false;
     }
 
     private function t(string $key): string

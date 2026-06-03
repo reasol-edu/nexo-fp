@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Company;
+use App\Entity\EducationalCentre;
 use App\Entity\Workcenter;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -34,6 +35,32 @@ class WorkcenterRepository extends ServiceEntityRepository
             ->where('w.company = :company')
             ->andWhere('w.id = :id')
             ->setParameter('company', $company->getId(), 'uuid')
+            ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /** @return Workcenter[] */
+    public function findByCentreOrdered(EducationalCentre $centre): array
+    {
+        return $this->createQueryBuilder('w')
+            ->join('w.company', 'co')
+            ->addSelect('co')
+            ->where('co.educationalCentre = :centre')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->orderBy('co.name', 'ASC')
+            ->addOrderBy('w.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByCentreAndId(EducationalCentre $centre, string $id): ?Workcenter
+    {
+        return $this->createQueryBuilder('w')
+            ->join('w.company', 'co')
+            ->where('co.educationalCentre = :centre')
+            ->andWhere('w.id = :id')
+            ->setParameter('centre', $centre->getId(), 'uuid')
             ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();

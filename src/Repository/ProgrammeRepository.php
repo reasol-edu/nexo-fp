@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\AcademicYear;
 use App\Entity\Programme;
 use App\Entity\ProfessionalFamily;
+use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -65,5 +66,19 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function isCoordinatorOf(Teacher $teacher, Programme $programme): bool
+    {
+        return $this->createQueryBuilder('p')
+            ->select('1')
+            ->join('p.coordinators', 'c')
+            ->where('p.id = :programme')
+            ->andWhere('c.id = :teacher')
+            ->setParameter('programme', $programme->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
     }
 }
