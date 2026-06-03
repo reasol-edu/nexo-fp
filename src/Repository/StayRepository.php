@@ -174,14 +174,25 @@ class StayRepository extends ServiceEntityRepository
             ->getQuery()
             ->getScalarResult();
 
+        // getScalarResult() returns UUIDs in binary form on MySQL.
+        // Build a lookup map so any representation normalises to RFC4122.
+        $uuidNorm = [];
+        foreach ($stays as $stay) {
+            $rfc = $stay->getId()->toRfc4122();
+            $uuidNorm[$rfc]                      = $rfc;
+            $uuidNorm[$stay->getId()->toBinary()] = $rfc;
+        }
+        $normalize = static fn (mixed $raw): string =>
+            $uuidNorm[(string) $raw] ?? (string) $raw;
+
         $studentMap = [];
         foreach ($studentRows as $row) {
-            $studentMap[(string) $row['stayId']] = (int) $row['cnt'];
+            $studentMap[$normalize($row['stayId'])] = (int) $row['cnt'];
         }
 
         $stats = [];
         foreach ($positionRows as $row) {
-            $id    = (string) $row['stayId'];
+            $id    = $normalize($row['stayId']);
             $total = (int) $row['total'];
             $occ   = (int) $row['occupied'];
             $stats[$id] = [
