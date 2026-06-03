@@ -32,11 +32,11 @@ class Stay
     #[ORM\JoinTable(name: 'stay_students')]
     private Collection $students;
 
-    #[ORM\Column(type: 'date_immutable', nullable: true)]
-    private ?\DateTimeImmutable $startDate = null;
+    #[ORM\Column(type: 'date_immutable')]
+    private \DateTimeImmutable $startDate;
 
-    #[ORM\Column(type: 'date_immutable', nullable: true)]
-    private ?\DateTimeImmutable $endDate = null;
+    #[ORM\Column(type: 'date_immutable')]
+    private \DateTimeImmutable $endDate;
 
     /** @var Collection<int, TrainingPosition> */
     #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
@@ -113,24 +113,24 @@ class Stay
         return $this;
     }
 
-    public function getStartDate(): ?\DateTimeImmutable
+    public function getStartDate(): \DateTimeImmutable
     {
         return $this->startDate;
     }
 
-    public function setStartDate(?\DateTimeImmutable $startDate): static
+    public function setStartDate(\DateTimeImmutable $startDate): static
     {
         $this->startDate = $startDate;
 
         return $this;
     }
 
-    public function getEndDate(): ?\DateTimeImmutable
+    public function getEndDate(): \DateTimeImmutable
     {
         return $this->endDate;
     }
 
-    public function setEndDate(?\DateTimeImmutable $endDate): static
+    public function setEndDate(\DateTimeImmutable $endDate): static
     {
         $this->endDate = $endDate;
 
