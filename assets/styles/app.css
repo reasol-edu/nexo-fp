@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source inline("bg-green-500 bg-green-700 bg-blue-700 bg-gray-600");
+
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 

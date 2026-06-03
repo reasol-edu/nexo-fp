@@ -35,6 +35,15 @@ class StayListComponent extends AbstractController
     public string $programmeId = '';
 
     #[LiveProp(writable: true)]
+    public bool $showCurrent = true;
+
+    #[LiveProp(writable: true)]
+    public bool $showFuture = true;
+
+    #[LiveProp(writable: true)]
+    public bool $showPast = true;
+
+    #[LiveProp(writable: true)]
     public int $page = 1;
 
     private ?Paginator $paginationCache = null;
@@ -57,8 +66,20 @@ class StayListComponent extends AbstractController
         }
 
         $year = $this->centre->getActiveAcademicYear();
+
+        $periods = [];
+        if ($this->showCurrent) {
+            $periods[] = 'current';
+        }
+        if ($this->showFuture) {
+            $periods[] = 'future';
+        }
+        if ($this->showPast) {
+            $periods[] = 'past';
+        }
+
         $query = $year !== null
-            ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId)
+            ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId, $periods)
             : $this->stays->findNoneQuery();
 
         $this->paginationCache = new Paginator($query, $this->page, $this->pageSize);

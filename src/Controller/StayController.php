@@ -69,7 +69,7 @@ class StayController extends AbstractController
         }
 
         $errors = [];
-        $values = ['name' => '', 'programme_id' => ''];
+        $values = ['name' => '', 'programme_id' => '', 'start_date' => '', 'end_date' => ''];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_stay', $request->request->getString('_token'))) {
@@ -79,6 +79,8 @@ class StayController extends AbstractController
             $values = [
                 'name'         => trim($request->request->getString('name')),
                 'programme_id' => trim($request->request->getString('programme_id')),
+                'start_date'   => trim($request->request->getString('start_date')),
+                'end_date'     => trim($request->request->getString('end_date')),
             ];
 
             if ($values['name'] === '') {
@@ -93,11 +95,34 @@ class StayController extends AbstractController
                 $errors['programme_id'] = $this->t('stays.error.programme_required');
             }
 
+            $startDate = null;
+            if ($values['start_date'] !== '') {
+                $startDate = \DateTimeImmutable::createFromFormat('Y-m-d', $values['start_date']);
+                if ($startDate === false) {
+                    $errors['start_date'] = $this->t('stays.error.date_invalid');
+                    $startDate = null;
+                }
+            }
+
+            $endDate = null;
+            if ($values['end_date'] !== '') {
+                $endDate = \DateTimeImmutable::createFromFormat('Y-m-d', $values['end_date']);
+                if ($endDate === false) {
+                    $errors['end_date'] = $this->t('stays.error.date_invalid');
+                    $endDate = null;
+                } elseif ($startDate !== null && $endDate < $startDate) {
+                    $errors['end_date'] = $this->t('stays.error.end_before_start');
+                    $endDate = null;
+                }
+            }
+
             if (empty($errors) && $programme !== null) {
                 $stay = new Stay();
                 $stay->setName($values['name'])
                      ->setAcademicYear($year)
-                     ->setProgramme($programme);
+                     ->setProgramme($programme)
+                     ->setStartDate($startDate)
+                     ->setEndDate($endDate);
 
                 $this->em->persist($stay);
                 $this->em->flush();

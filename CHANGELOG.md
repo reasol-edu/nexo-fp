@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Sección «Estancias» con listado en cards, búsqueda por nombre/enseñanza, filtros por familia profesional, enseñanza y período (En curso / Próximas / Pasadas), y formulario de alta
+- `feat`: Fechas de inicio y fin en las estancias; las cards muestran las fechas, un badge de estado (En curso, Próxima, Finalizada) y las estancias pasadas aparecen con opacidad reducida
+- `feat`: Estadísticas por estancia en las cards: estudiantes con puesto asignado, empresas con puestos, puestos asignados y puestos sin asignar, con porcentajes y código de color
+- `feat`: Radio buttons «Acceso por contraseña» / «Acceso vía usuario IdEA (Séneca)» en los formularios de alta y edición de docentes — reemplazan el checkbox de acceso externo y ocultan el campo de contraseña en tiempo real
+- `feat`: Importación de docentes de un centro educativo desde CSV de Séneca (columna `Empleado/a` para nombre y `Usuario IdEA` para el usuario); upsert por nombre de usuario; docentes importados marcados como externos por defecto
+- `feat`: Importación de asignaciones docente↔grupo desde CSV de Séneca (columnas `Unidad` y `Profesor/a`); informa de docentes o grupos no encontrados
+- `fix`: Eliminar opción de administrador global en el alta de docentes desde la sección Centro educativo (fallo de seguridad)
 - `feat`: Sección «Docentes del centro» en el hub Centro educativo para gestionar qué docentes pertenecen al curso académico activo
 - `feat`: Formulario de alta de docente desde la sección «Docentes del centro» — si el nombre de usuario introducido no existe, redirige a un formulario de registro pre-rellenado que crea al docente y lo añade al curso en una sola operación; nuevo docente marcado como externo por defecto
 - `feat`: Listado de docentes del curso con columnas de usuario, correo, badges de roles (Equipo directivo, Admin, Inactivo, Externo) y paginación con búsqueda en tiempo real

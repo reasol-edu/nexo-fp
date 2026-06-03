@@ -56,6 +56,54 @@
                 </select>
 
             </div>
+
+            {# Filtros de período #}
+            <div class="px-4 py-3 flex flex-wrap gap-2 border-t border-gray-100">
+                <span class="self-center text-xs text-gray-400 mr-1">Mostrar:</span>
+
+                <label class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer
+                              border transition-colors
+                              {{ showCurrent
+                                  ? 'border-green-300 bg-green-50 text-green-700'
+                                  : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300' }}">
+                    <input type="checkbox" class="sr-only"
+                           data-model="norender|showCurrent"
+                           data-action="change->live#action"
+                           data-live-action-param="resetPage"
+                           {{ showCurrent ? 'checked' : '' }}>
+                    <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ showCurrent ? 'bg-green-700' : 'bg-gray-300' }}"></span>
+                    {{ 'stays.period.current'|trans({}, 'stays') }}
+                </label>
+
+                <label class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer
+                              border transition-colors
+                              {{ showFuture
+                                  ? 'border-blue-300 bg-blue-50 text-blue-700'
+                                  : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300' }}">
+                    <input type="checkbox" class="sr-only"
+                           data-model="norender|showFuture"
+                           data-action="change->live#action"
+                           data-live-action-param="resetPage"
+                           {{ showFuture ? 'checked' : '' }}>
+                    <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ showFuture ? 'bg-blue-700' : 'bg-gray-300' }}"></span>
+                    {{ 'stays.period.future'|trans({}, 'stays') }}
+                </label>
+
+                <label class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium cursor-pointer
+                              border transition-colors
+                              {{ showPast
+                                  ? 'border-gray-400 bg-gray-100 text-gray-600'
+                                  : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300' }}">
+                    <input type="checkbox" class="sr-only"
+                           data-model="norender|showPast"
+                           data-action="change->live#action"
+                           data-live-action-param="resetPage"
+                           {{ showPast ? 'checked' : '' }}>
+                    <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ showPast ? 'bg-gray-600' : 'bg-gray-300' }}"></span>
+                    {{ 'stays.period.past'|trans({}, 'stays') }}
+                </label>
+            </div>
+
         </div>
 
         {# ── Contenido ─────────────────────────────────────────────────────────── #}
@@ -74,6 +122,7 @@
         {% else %}
 
             {# Grid de cards #}
+            {% set today_str = "now"|date("Y-m-d") %}
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {% for stay in items %}
                     {% set sid = stay.id.toRfc4122 %}
@@ -82,16 +131,57 @@
                     {% set pct_occupied = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
                     {% set pct_free     = s.total_positions > 0 ? ((s.free / s.total_positions) * 100)|round : 0 %}
 
-                    <article class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
-                                    hover:border-plum-200 hover:shadow-sm transition-all group">
+                    {% set end_str   = stay.endDate   ? stay.endDate|date("Y-m-d")   : null %}
+                    {% set start_str = stay.startDate ? stay.startDate|date("Y-m-d") : null %}
+                    {% set is_past    = end_str   and end_str < today_str %}
+                    {% set is_future  = start_str and start_str > today_str and not is_past %}
+                    {% set is_current = not is_past and not is_future %}
+
+                    <article class="rounded-2xl border bg-white shadow-xs overflow-hidden flex flex-col
+                                    transition-all group
+                                    {{ is_past
+                                        ? 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-300'
+                                        : 'border-gray-200 hover:border-plum-200 hover:shadow-sm' }}">
 
                         {# ── Cabecera ──────────────────────────────────────────── #}
-                        <div class="px-5 pt-5 pb-4 border-b border-gray-100">
-                            <span class="inline-flex items-center rounded-full bg-plum-50 px-2.5 py-0.5 text-xs font-medium text-plum-700 mb-2">
-                                {{ stay.programme.professionalFamily.name }}
-                            </span>
+                        <div class="px-5 pt-6 pb-4 border-b border-gray-100">
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <span class="inline-flex items-center rounded-full bg-plum-50 px-2.5 py-0.5 text-xs font-medium text-plum-700 shrink-0">
+                                    {{ stay.programme.professionalFamily.name }}
+                                </span>
+                                {# Badge de estado #}
+                                {% if is_current %}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 shrink-0">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+                                        {{ 'stays.period.badge.current'|trans({}, 'stays') }}
+                                    </span>
+                                {% elseif is_future %}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 shrink-0">
+                                        {{ ux_icon('heroicons:clock', {class: 'h-3 w-3'}) }}
+                                        {{ 'stays.period.badge.future'|trans({}, 'stays') }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 shrink-0">
+                                        {{ 'stays.period.badge.past'|trans({}, 'stays') }}
+                                    </span>
+                                {% endif %}
+                            </div>
                             <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ stay.name }}</h3>
-                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ stay.programme.name }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ stay.programme.name }}</p>
+
+                            {# Fechas #}
+                            <div class="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                                {{ ux_icon('heroicons:calendar-days', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                {% if stay.startDate or stay.endDate %}
+                                    <span>
+                                        {{ stay.startDate ? stay.startDate|date('d/m/Y') : '—' }}
+                                        &nbsp;→&nbsp;
+                                        {{ stay.endDate ? stay.endDate|date('d/m/Y') : '—' }}
+                                    </span>
+                                {% else %}
+                                    <span class="italic">{{ 'stays.card.no_dates'|trans({}, 'stays') }}</span>
+                                {% endif %}
+                            </div>
                         </div>
 
                         {# ── Stats ─────────────────────────────────────────────── #}
@@ -99,7 +189,8 @@
 
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold text-gray-900 tabular-nums">
+                                <span class="font-semibold tabular-nums
+                                             {{ pct_students >= 100 ? 'text-green-600' : (pct_students >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
                                     {{ s.students_with_position }}/{{ s.students }}
                                     <span class="text-xs font-normal text-gray-400">({{ pct_students }}%)</span>
                                 </span>
@@ -112,8 +203,7 @@
 
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold tabular-nums
-                                             {{ pct_occupied >= 100 ? 'text-green-600' : (pct_occupied >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
+                                <span class="font-semibold text-gray-900 tabular-nums">
                                     {{ s.occupied }}/{{ s.total_positions }}
                                     <span class="text-xs font-normal text-gray-400">({{ pct_occupied }}%)</span>
                                 </span>
