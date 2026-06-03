@@ -104,6 +104,18 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         return $this->findOneBy(['username' => $username]);
     }
 
+    public function findByFullName(string $firstName, string $lastName): ?Teacher
+    {
+        return $this->createQueryBuilder('t')
+            ->where('LOWER(t.name.firstName) = LOWER(:firstName)')
+            ->andWhere('LOWER(t.name.lastName) = LOWER(:lastName)')
+            ->setParameter('firstName', $firstName)
+            ->setParameter('lastName', $lastName)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (!$user instanceof Teacher) {

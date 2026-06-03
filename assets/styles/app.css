@@ -107,3 +107,6 @@
     border-color: var(--color-plum-300) transparent var(--color-plum-300) transparent;
 }
 
+:root .ts-wrapper.multi .ts-control [data-value] {
+    text-shadow: none;
+}

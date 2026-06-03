@@ -8,6 +8,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
+use App\Repository\GroupRepository;
 use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,6 +27,7 @@ class CentreTeacherController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly EducationalCentreRepository $centres,
         private readonly TeacherRepository $teachers,
+        private readonly GroupRepository $groups,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
     ) {}
@@ -163,6 +165,130 @@ class CentreTeacherController extends AbstractController
             '%added%'   => $added,
             '%skipped%' => $skipped,
         ], 'admin'));
+
+        return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
+    }
+
+    #[Route('/importar-asignaciones', name: 'app_admin_centre_teachers_import_assignments')]
+    public function importAssignments(string $centreId, Request $request): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/centre_teacher/import_assignments.html.twig', ['centre' => $centre]);
+        }
+
+        if (!$this->isCsrfTokenValid('import_teacher_assignments', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $file = $request->files->get('csv');
+        if ($file === null || !$file->isValid()) {
+            $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.no_file'));
+
+            return $this->render('admin/centre_teacher/import_assignments.html.twig', ['centre' => $centre]);
+        }
+
+        $content = (string) file_get_contents($file->getPathname());
+        $content = ltrim($content, "\xEF\xBB\xBF");
+        if (!mb_check_encoding($content, 'UTF-8')) {
+            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+        }
+
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $content);
+        rewind($stream);
+
+        /** @var list<string>|false $headers */
+        $headers = fgetcsv($stream);
+        if ($headers === false || $headers === [null]) {
+            fclose($stream);
+            $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.empty_file'));
+
+            return $this->redirectToRoute('app_admin_centre_teachers_import_assignments', ['centreId' => $centre->getId()]);
+        }
+
+        /** @var array<string, int> $headerMap */
+        $headerMap = array_flip(array_map('trim', $headers));
+
+        $required = ['Unidad', 'Profesor/a'];
+        foreach ($required as $col) {
+            if (!isset($headerMap[$col])) {
+                fclose($stream);
+                $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.missing_column') . ' «' . $col . '»');
+
+                return $this->redirectToRoute('app_admin_centre_teachers_import_assignments', ['centreId' => $centre->getId()]);
+            }
+        }
+
+        /** @var array<string, Group> $groupsByName */
+        $groupsByName = [];
+        foreach ($this->groups->findByActiveYearOfCentreOrderedByName($centre) as $group) {
+            $groupsByName[mb_strtolower($group->getName())] = $group;
+        }
+
+        $linked  = 0;
+        $skipped = 0;
+        /** @var array<string, true> $unknownTeachers */
+        $unknownTeachers = [];
+        /** @var array<string, true> $unknownGroups */
+        $unknownGroups = [];
+
+        while (($row = fgetcsv($stream)) !== false) {
+            if (count(array_filter($row, static fn ($v) => trim((string) $v) !== '')) === 0) {
+                continue;
+            }
+
+            $groupName  = trim((string) ($row[$headerMap['Unidad']] ?? ''));
+            $fullName   = trim((string) ($row[$headerMap['Profesor/a']] ?? ''));
+            $nameParts  = explode(', ', $fullName, 2);
+            $lastName   = $nameParts[0];
+            $firstName  = $nameParts[1] ?? '';
+
+            if ($groupName === '' || $firstName === '' || $lastName === '') {
+                $skipped++;
+                continue;
+            }
+
+            $group = $groupsByName[mb_strtolower($groupName)] ?? null;
+            if ($group === null) {
+                $unknownGroups[$groupName] = true;
+                continue;
+            }
+
+            $teacher = $this->teachers->findByFullName($firstName, $lastName);
+            if ($teacher === null) {
+                $unknownTeachers[$fullName] = true;
+                continue;
+            }
+
+            if (!$group->getTeachers()->contains($teacher)) {
+                $group->addTeacher($teacher);
+                $linked++;
+            }
+        }
+
+        fclose($stream);
+        $this->em->flush();
+
+        $summary = $this->translator->trans('centre_teachers.import_assignments.flash.summary', [
+            '%linked%'  => $linked,
+            '%skipped%' => $skipped,
+        ], 'admin');
+
+        if ($unknownTeachers !== []) {
+            $summary .= ' ' . $this->translator->trans('centre_teachers.import_assignments.flash.unknown_teachers', [
+                '%teachers%' => implode(', ', array_map(static fn (string $n) => '«' . $n . '»', array_keys($unknownTeachers))),
+            ], 'admin');
+        }
+
+        if ($unknownGroups !== []) {
+            $summary .= ' ' . $this->translator->trans('centre_teachers.import_assignments.flash.unknown_groups', [
+                '%groups%' => implode(', ', array_map(static fn (string $g) => '«' . $g . '»', array_keys($unknownGroups))),
+            ], 'admin');
+        }
+
+        $this->addFlash($unknownTeachers === [] && $unknownGroups === [] ? 'success' : 'error', $summary);
 
         return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
     }
