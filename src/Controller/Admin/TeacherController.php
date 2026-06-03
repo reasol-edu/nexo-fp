@@ -56,7 +56,7 @@ class TeacherController extends AbstractController
             $flags = [
                 'admin'    => $request->request->has('admin'),
                 'active'   => $request->request->has('active'),
-                'external' => $request->request->has('external'),
+                'external' => $request->request->getString('auth_method') === 'external',
             ];
 
             $errors = $this->validateTeacher($values, !$flags['external']);
@@ -133,7 +133,7 @@ class TeacherController extends AbstractController
             $flags = [
                 'admin'    => $request->request->has('admin'),
                 'active'   => $request->request->has('active'),
-                'external' => $request->request->has('external'),
+                'external' => $request->request->getString('auth_method') === 'external',
             ];
 
             if ($isCurrentUser) {

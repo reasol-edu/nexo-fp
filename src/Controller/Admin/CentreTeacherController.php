@@ -323,7 +323,7 @@ class CentreTeacherController extends AbstractController
             $flags = [
                 'admin'    => false,
                 'active'   => $request->request->has('active'),
-                'external' => $request->request->has('external'),
+                'external' => $request->request->getString('auth_method') === 'external',
             ];
 
             $errors = $this->validateTeacher($values, !$flags['external']);
