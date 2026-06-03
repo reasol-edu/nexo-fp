@@ -100,6 +100,19 @@ class StayRepository extends ServiceEntityRepository
             ->getQuery();
     }
 
+    public function existsByNameAndYear(string $name, AcademicYear $year): bool
+    {
+        return $this->createQueryBuilder('s')
+            ->select('1')
+            ->where('s.name = :name')
+            ->andWhere('s.academicYear = :year')
+            ->setParameter('name', $name)
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
+    }
+
     public function findById(string $id): ?Stay
     {
         return $this->createQueryBuilder('s')
