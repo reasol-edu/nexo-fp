@@ -85,6 +85,8 @@ class StayController extends AbstractController
 
             if ($values['name'] === '') {
                 $errors['name'] = $this->t('stays.error.name_required');
+            } elseif ($this->stays->existsByNameAndYear($values['name'], $year)) {
+                $errors['name'] = $this->t('stays.error.name_duplicate');
             }
 
             $programme = null;

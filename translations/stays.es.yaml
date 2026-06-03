@@ -36,6 +36,7 @@ stays.save: 'Crear estancia'
 stays.cancel: 'Cancelar'
 
 stays.error.name_required: 'El nombre de la estancia es obligatorio.'
+stays.error.name_duplicate: 'Ya existe una estancia con ese nombre en este curso académico.'
 stays.error.programme_required: 'Debes seleccionar una enseñanza.'
 stays.error.date_required: 'La fecha es obligatoria.'
 stays.error.date_invalid: 'La fecha no es válida.'

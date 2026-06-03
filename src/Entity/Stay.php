@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: StayRepository::class)]
+#[ORM\UniqueConstraint(name: 'uq_stay_name_year', columns: ['name', 'academic_year_id'])]
 class Stay
 {
     #[ORM\Id]
