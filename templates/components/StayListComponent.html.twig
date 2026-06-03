@@ -1,0 +1,206 @@
+<div {{ attributes }}>
+    {% if centre.activeAcademicYear is null %}
+        <div class="px-6 py-16 text-center">
+            {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
+            <p class="text-sm text-gray-500">{{ 'stays.no_active_year'|trans({}, 'stays') }}</p>
+        </div>
+    {% else %}
+        {% set pagination = this.pagination %}
+
+        {# ── Barra de filtros ──────────────────────────────────────────────────── #}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden mb-4">
+            <div class="px-4 py-3 flex flex-wrap gap-3 items-center bg-gray-50/50">
+
+                {# Búsqueda #}
+                <div class="relative flex-1 min-w-48">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
+                    </div>
+                    <input type="search"
+                           data-model="norender|search"
+                           data-action="input->live#action"
+                           data-live-action-param="resetPage"
+                           placeholder="{{ 'stays.search'|trans({}, 'stays') }}"
+                           value="{{ search }}"
+                           class="block w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm
+                                  text-gray-900 placeholder-gray-400 focus:border-plum-500 focus:outline-none
+                                  focus:ring-3 focus:ring-plum-500/20 transition-colors">
+                </div>
+
+                {# Familia profesional #}
+                <select data-model="norender|familyId"
+                        data-action="change->live#action"
+                        data-live-action-param="resetPage"
+                        class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+                    <option value="">{{ 'stays.filter.all_families'|trans({}, 'stays') }}</option>
+                    {% for family in this.availableFamilies %}
+                        <option value="{{ family.id }}" {{ familyId == family.id.toRfc4122 ? 'selected' : '' }}>
+                            {{ family.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                {# Enseñanza #}
+                <select data-model="norender|programmeId"
+                        data-action="change->live#action"
+                        data-live-action-param="resetPage"
+                        class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+                    <option value="">{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}</option>
+                    {% for p in this.availableProgrammes %}
+                        <option value="{{ p.id }}" {{ programmeId == p.id.toRfc4122 ? 'selected' : '' }}>
+                            {{ p.professionalFamily.name }} — {{ p.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </div>
+        </div>
+
+        {# ── Contenido ─────────────────────────────────────────────────────────── #}
+        {% set items = this.items %}
+        {% set stats = this.stats %}
+
+        {% if pagination.totalItems == 0 %}
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-16 text-center">
+                {{ ux_icon('heroicons:briefcase', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+                <p class="text-sm text-gray-500">
+                    {{ (search is not empty or familyId is not empty or programmeId is not empty
+                        ? 'stays.search_empty'
+                        : 'stays.empty')|trans({}, 'stays') }}
+                </p>
+            </div>
+        {% else %}
+
+            {# Grid de cards #}
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {% for stay in items %}
+                    {% set sid = stay.id.toRfc4122 %}
+                    {% set s = stats[sid] ?? {students: 0, total_positions: 0, occupied: 0, free: 0, signed: 0, state_draft: 0, state_registered: 0, state_pending: 0, state_done: 0} %}
+                    {% set pct = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
+
+                    <article class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
+                                    hover:border-plum-200 hover:shadow-sm transition-all group">
+
+                        {# ── Cabecera ──────────────────────────────────────────── #}
+                        <div class="px-5 pt-5 pb-4 border-b border-gray-100">
+                            <span class="inline-flex items-center rounded-full bg-plum-50 px-2.5 py-0.5 text-xs font-medium text-plum-700 mb-2">
+                                {{ stay.programme.professionalFamily.name }}
+                            </span>
+                            <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ stay.name }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ stay.programme.name }}</p>
+                        </div>
+
+                        {# ── Stats principales ─────────────────────────────────── #}
+                        <div class="px-5 py-4 grid grid-cols-3 gap-3 border-b border-gray-100">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900 leading-none">{{ s.students }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.students'|trans({}, 'stays') }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-gray-900 leading-none">{{ s.total_positions }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.positions'|trans({}, 'stays') }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold leading-none
+                                          {{ pct >= 100 ? 'text-green-600' : (pct >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
+                                    {{ pct }}%
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">{{ 'stays.card.occupancy'|trans({}, 'stays') }}</p>
+                                <p class="text-xs text-gray-400">{{ s.occupied }}/{{ s.total_positions }}</p>
+                            </div>
+                        </div>
+
+                        {# ── Desglose por estado ────────────────────────────────── #}
+                        {% if s.total_positions > 0 %}
+                            <div class="px-5 py-3 flex flex-wrap gap-1.5 border-b border-gray-100">
+                                {% if s.state_draft > 0 %}
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                        {{ 'stays.state.draft'|trans({}, 'stays') }}: {{ s.state_draft }}
+                                    </span>
+                                {% endif %}
+                                {% if s.state_registered > 0 %}
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                        {{ 'stays.state.registered'|trans({}, 'stays') }}: {{ s.state_registered }}
+                                    </span>
+                                {% endif %}
+                                {% if s.state_pending > 0 %}
+                                    <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                        {{ 'stays.state.pending'|trans({}, 'stays') }}: {{ s.state_pending }}
+                                    </span>
+                                {% endif %}
+                                {% if s.state_done > 0 %}
+                                    <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                                        {{ 'stays.state.done'|trans({}, 'stays') }}: {{ s.state_done }}
+                                    </span>
+                                {% endif %}
+                                {% if s.signed > 0 %}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700">
+                                        {{ ux_icon('heroicons:check-badge', {class: 'h-3 w-3'}) }}
+                                        {{ 'stays.card.signed'|trans({}, 'stays') }}: {{ s.signed }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {# ── Footer ────────────────────────────────────────────── #}
+                        <div class="px-5 py-3 mt-auto flex items-center justify-end">
+                            <a href="#"
+                               class="inline-flex items-center gap-1.5 text-xs font-medium text-plum-600
+                                      hover:text-plum-800 transition-colors group-hover:underline">
+                                {{ 'stays.card.view'|trans({}, 'stays') }}
+                                {{ ux_icon('heroicons:arrow-right', {class: 'h-3.5 w-3.5'}) }}
+                            </a>
+                        </div>
+
+                    </article>
+                {% endfor %}
+            </div>
+
+            {# ── Paginación ────────────────────────────────────────────────────── #}
+            {% if pagination.totalPages > 1 %}
+                <div class="mt-4 flex items-center justify-between gap-4 flex-wrap">
+                    <p class="text-xs text-gray-500 shrink-0">
+                        {{ 'pagination.summary'|trans({'%from%': pagination.firstItemIndex, '%to%': pagination.lastItemIndex, '%total%': pagination.totalItems}) }}
+                    </p>
+                    <nav class="flex items-center gap-1">
+                        {% if pagination.hasPreviousPage %}
+                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.previousPage }}"
+                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+                            </button>
+                        {% else %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+                            </span>
+                        {% endif %}
+                        {% for p in pagination.pageRange %}
+                            {% if p is null %}
+                                <span class="inline-flex items-center justify-center h-8 px-1 text-xs text-gray-400 select-none">…</span>
+                            {% elseif p == pagination.currentPage %}
+                                <span class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg bg-plum-600 text-white text-xs font-semibold">{{ p }}</span>
+                            {% else %}
+                                <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ p }}"
+                                        class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg border border-gray-200 text-gray-600 text-xs hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                    {{ p }}
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+                        {% if pagination.hasNextPage %}
+                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.nextPage }}"
+                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+                            </button>
+                        {% else %}
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+                            </span>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+
+        {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,28 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'stays.title'|trans({}, 'stays') }} · {{ centre.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-7xl mx-auto space-y-6">
+
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.title'|trans({}, 'stays') }}</h1>
+            {% if centre.activeAcademicYear %}
+                <p class="mt-1 text-sm text-gray-500">{{ centre.activeAcademicYear.name }}</p>
+            {% endif %}
+        </div>
+        {% if centre.activeAcademicYear %}
+            <a href="{{ path('app_stays_new') }}"
+               class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                      hover:bg-plum-700 transition-colors shadow-xs shrink-0">
+                {{ ux_icon('heroicons:plus', {class: 'h-4 w-4'}) }}
+                {{ 'stays.new'|trans({}, 'stays') }}
+            </a>
+        {% endif %}
+    </div>
+
+    <twig:StayListComponent :centre="centre" />
+
+</div>
+{% endblock %}
