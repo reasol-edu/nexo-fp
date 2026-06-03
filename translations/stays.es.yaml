@@ -44,3 +44,17 @@ stays.error.end_before_start: 'La fecha de fin debe ser posterior a la de inicio
 
 stays.flash.created: 'Estancia creada correctamente.'
 stays.flash.no_active_year: 'Este centro no tiene un curso académico activo.'
+
+stays.show.positions: 'Puestos formativos'
+stays.show.positions_count: '{0} Sin puestos|{1} 1 puesto|]1,Inf[ %count% puestos'
+stays.show.no_positions: 'No hay puestos formativos registrados en esta estancia.'
+stays.show.unassigned_title: 'Estudiantes sin puesto asignado'
+stays.show.unassigned_hint: 'Los siguientes estudiantes están inscritos en la estancia pero aún no tienen un puesto formativo asignado.'
+stays.show.col.workcenter: 'Empresa / Centro de trabajo'
+stays.show.col.student: 'Estudiante'
+stays.show.col.tutor: 'Tutor académico'
+stays.show.col.state: 'Estado'
+stays.show.col.signed: 'Firmado'
+stays.show.no_student: 'Sin asignar'
+stays.show.no_workcenter: 'Sin centro asignado'
+stays.show.no_tutor: '—'
