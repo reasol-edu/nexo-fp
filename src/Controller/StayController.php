@@ -397,21 +397,43 @@ class StayController extends AbstractController
             }
         }
 
+        // Teachers for inline academic-tutor assignment
+        $programmeTeachers = $this->teachers->findByProgrammeOrderedByName($stay->getProgramme());
+
+        // Workers by company for inline workplace-mentor assignment
+        $workersByCompanyId = [];
+        foreach ($studentPositionMap as $tp) {
+            if ($tp->getWorkplaceMentor() === null && $tp->getWorkcenter() !== null) {
+                $company = $tp->getWorkcenter()->getCompany();
+                $cid     = $company->getId()->toRfc4122();
+                if (!isset($workersByCompanyId[$cid])) {
+                    $workers = $company->getWorkers()->toArray();
+                    usort($workers, fn ($a, $b) =>
+                        $a->getName()->getLastName() <=> $b->getName()->getLastName()
+                        ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
+                    );
+                    $workersByCompanyId[$cid] = $workers;
+                }
+            }
+        }
+
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
 
         return $this->render('stays/show.html.twig', [
-            'centre'                          => $centre,
-            'stay'                            => $stay,
-            'by_group'                        => $byGroup,
-            'ungrouped_students'              => $ungroupedStudents,
-            'student_position_map'            => $studentPositionMap,
-            'unassigned_positions'            => $unassignedPositions,
+            'centre'                           => $centre,
+            'stay'                             => $stay,
+            'by_group'                         => $byGroup,
+            'ungrouped_students'               => $ungroupedStudents,
+            'student_position_map'             => $studentPositionMap,
+            'unassigned_positions'             => $unassignedPositions,
             'compatible_positions_for_student' => $compatiblePositionsForStudent,
-            'count_without_position'          => $countWithoutPosition,
-            'count_unsigned'                  => $countUnsigned,
-            'stats'                           => $stats,
-            'can_manage'                      => $this->canManagePositions($stay, $centre),
+            'count_without_position'           => $countWithoutPosition,
+            'count_unsigned'                   => $countUnsigned,
+            'stats'                            => $stats,
+            'can_manage'                       => $this->canManagePositions($stay, $centre),
+            'programme_teachers'               => $programmeTeachers,
+            'workers_by_company_id'            => $workersByCompanyId,
         ]);
     }
 
@@ -521,6 +543,99 @@ class StayController extends AbstractController
             'errors'          => $errors,
             'values'          => $values,
         ]);
+    }
+
+    #[Route('/{id}/puesto/{positionId}/asignar-tutor', name: 'app_stays_set_academic_tutor', methods: ['POST'])]
+    public function setAcademicTutor(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null || $position->getStudent() === null) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('set_tutor_' . $positionId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $teacher = $this->teachers->findById(trim($request->request->getString('teacher_id')));
+        if ($teacher === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $position->setAcademicTutor($teacher);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.academic_tutor_set'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/puesto/{positionId}/asignar-mentor', name: 'app_stays_set_workplace_mentor', methods: ['POST'])]
+    public function setWorkplaceMentor(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null || $position->getStudent() === null || $position->getWorkcenter() === null) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('set_mentor_' . $positionId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $workerId = trim($request->request->getString('worker_id'));
+        $mentor   = null;
+        foreach ($position->getWorkcenter()->getCompany()->getWorkers() as $w) {
+            if ($w->getId()->toRfc4122() === $workerId) {
+                $mentor = $w;
+                break;
+            }
+        }
+        if ($mentor === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $position->setWorkplaceMentor($mentor);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.workplace_mentor_set'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
     }
 
     #[Route('/{id}/puesto/{positionId}/desasignar', name: 'app_stays_unassign_position', methods: ['POST'])]
