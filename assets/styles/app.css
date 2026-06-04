@@ -134,3 +134,13 @@
 :root .ts-wrapper.multi .ts-control [data-value] {
     text-shadow: none;
 }
+
+/* Centro de trabajo autocomplete: jerarquía empresa (principal) / centro (secundario) */
+.ts-wc-option                   { padding: 0.125rem 0; line-height: 1.35; }
+.ts-wc-option .ts-wc-company    { font-size: 0.875rem; font-weight: 500; color: #111827; }
+.ts-wc-option .ts-wc-sub        { font-size: 0.75rem;  color: #9ca3af; margin-top: 0.1rem; }
+.ts-wc-option .ts-wc-city       { color: #9ca3af; }
+.ts-wc-item                     { display: flex; align-items: baseline; gap: 0; line-height: 1.4; }
+.ts-wc-item .ts-wc-company      { font-weight: 500; color: inherit; font-size: 0.875rem; }
+.ts-wc-item .ts-wc-sep          { color: #d1d5db; margin: 0 0.3rem; font-size: 0.875rem; }
+.ts-wc-item .ts-wc-sub          { font-size: 0.8125rem; color: #9ca3af; }
