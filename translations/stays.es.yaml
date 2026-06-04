@@ -6,6 +6,7 @@ stays.no_active_year: 'Este centro no tiene un curso académico activo.'
 stays.search: 'Buscar por nombre o enseñanza…'
 stays.filter.all_families: 'Todas las familias'
 stays.filter.all_programmes: 'Todas las enseñanzas'
+stays.filter.clear: 'Limpiar filtros'
 
 stays.card.students_with_position: 'Estudiantes con puesto asignado'
 stays.card.companies: 'Empresas con puestos'

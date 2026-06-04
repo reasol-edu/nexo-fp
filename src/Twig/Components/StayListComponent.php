@@ -144,6 +144,28 @@ class StayListComponent extends AbstractController
     }
 
     #[LiveAction]
+    public function clearFilters(): void
+    {
+        $this->search = '';
+        $this->familyId = '';
+        $this->programmeId = '';
+        $this->showCurrent = true;
+        $this->showFuture = true;
+        $this->showPast = true;
+        $this->page = 1;
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== ''
+            || $this->familyId !== ''
+            || $this->programmeId !== ''
+            || !$this->showCurrent
+            || !$this->showFuture
+            || !$this->showPast;
+    }
+
+    #[LiveAction]
     public function setPage(#[LiveArg] int $page): void
     {
         $this->page = max(1, $page);
