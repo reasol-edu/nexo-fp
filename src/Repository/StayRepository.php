@@ -132,7 +132,7 @@ class StayRepository extends ServiceEntityRepository
      * (one for training position stats, one for student counts) to avoid N+1.
      *
      * @param  Stay[] $stays
-     * @return array<string, array{students: int, total_positions: int, occupied: int, free: int, signed: int, state_draft: int, state_registered: int, state_pending: int, state_done: int}>
+     * @return array<string, array{students: int, total_positions: int, occupied: int, free: int, signed: int, state_draft: int, state_pending: int, state_done: int}>
      */
     public function findStatsForStays(array $stays): array
     {
@@ -213,7 +213,6 @@ class StayRepository extends ServiceEntityRepository
                 'companies'             => (int) $row['companies'],
                 'signed'                => (int) $row['signed_count'],
                 'state_draft'           => (int) $row['state_draft'],
-                'state_registered'      => (int) $row['state_registered'],
                 'state_pending'         => (int) $row['state_pending'],
                 'state_done'            => (int) $row['state_done'],
             ];
@@ -232,7 +231,6 @@ class StayRepository extends ServiceEntityRepository
                     'companies'              => 0,
                     'signed'                 => 0,
                     'state_draft'            => 0,
-                    'state_registered'       => 0,
                     'state_pending'          => 0,
                     'state_done'             => 0,
                 ];
