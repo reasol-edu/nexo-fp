@@ -1,6 +1,10 @@
 app:
     welcome: "¡Hola!"
 
+# Acciones globales
+ui.cancel: 'Cancelar'
+ui.confirm_delete: 'Sí, eliminar'
+
 # Paginación
 pagination.summary: 'Mostrando %from%–%to% de %total%'
 pagination.previous: 'Página anterior'

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Confirmación de borrado inline (panel con «Sí, eliminar» / «Cancelar») en lugar del diálogo nativo `confirm()` del navegador, tanto para eliminar estancia como para eliminar puesto
 - `refactor`: Reordenar campos en el formulario de edición de puesto: estado y firmado suben antes de observaciones para reflejar su mayor frecuencia de uso operativo
 - `feat`: Botón «Seleccionar todos / Deseleccionar todos» global en la página de gestión de estudiantes, que actúa sobre todos los grupos visibles (respeta el filtro de búsqueda activo y los estudiantes bloqueados)
 - `feat`: Badge de alerta en las cards del índice cuando hay estudiantes inscritos en la estancia sin puesto formativo asignado
