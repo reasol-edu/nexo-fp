@@ -24,9 +24,8 @@ stays.period.badge.future: 'Próxima'
 stays.period.badge.past: 'Finalizada'
 
 stays.state.draft: 'Borrador'
-stays.state.registered: 'Registrado'
-stays.state.pending: 'Pendiente'
-stays.state.done: 'Completado'
+stays.state.pending: 'Pendiente de Séneca'
+stays.state.done: 'Registrado en Séneca'
 
 stays.edit.title: 'Editar estancia'
 stays.edit.save: 'Guardar cambios'

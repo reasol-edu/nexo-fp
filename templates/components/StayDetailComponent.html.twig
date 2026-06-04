@@ -1,9 +1,5 @@
 {% macro state_badge(state) %}
-    {% if state.value == 'REGISTERED' %}
-        <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-            {{ 'stays.state.registered'|trans({}, 'stays') }}
-        </span>
-    {% elseif state.value == 'PENDING' %}
+    {% if state.value == 'PENDING' %}
         <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
             {{ 'stays.state.pending'|trans({}, 'stays') }}
         </span>

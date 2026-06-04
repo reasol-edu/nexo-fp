@@ -152,7 +152,6 @@ class StayRepository extends ServiceEntityRepository
                 'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
                 'SUM(CASE WHEN tp.signed = :btrue THEN 1 ELSE 0 END) AS signed_count',
                 'SUM(CASE WHEN tp.state = :s_draft THEN 1 ELSE 0 END) AS state_draft',
-                'SUM(CASE WHEN tp.state = :s_registered THEN 1 ELSE 0 END) AS state_registered',
                 'SUM(CASE WHEN tp.state = :s_pending THEN 1 ELSE 0 END) AS state_pending',
                 'SUM(CASE WHEN tp.state = :s_done THEN 1 ELSE 0 END) AS state_done',
                 'COUNT(DISTINCT IDENTITY(wc.company)) AS companies',
@@ -163,7 +162,6 @@ class StayRepository extends ServiceEntityRepository
             ->groupBy('s.id')
             ->setParameter('btrue', true)
             ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
-            ->setParameter('s_registered', TrainingPositionState::REGISTERED->value)
             ->setParameter('s_pending', TrainingPositionState::PENDING->value)
             ->setParameter('s_done', TrainingPositionState::DONE->value);
         $orPos = $posQb->expr()->orX();
