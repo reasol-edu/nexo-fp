@@ -55,7 +55,7 @@ stays.error.end_before_start: 'La fecha de fin debe ser posterior a la de inicio
 
 stays.students.title: 'Gestionar estudiantes'
 stays.students.manage_btn: 'Gestionar estudiantes'
-stays.students.search_placeholder: 'Buscar por nombre o NIA…'
+stays.students.search_placeholder: 'Buscar por nombre o NIE…'
 stays.students.no_eligible: 'No hay estudiantes elegibles para esta estancia.'
 stays.students.group_empty: 'Este grupo no tiene estudiantes.'
 stays.students.has_position_hint: 'Este estudiante ya tiene un puesto formativo asignado y no puede eliminarse de la estancia.'
