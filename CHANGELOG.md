@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Gestión de estudiantes inscritos en una estancia: alta y baja masiva desde una página dedicada, con búsqueda en tiempo real y agrupación por nivel y grupo; solo se pueden inscribir estudiantes de los grupos del programa de la estancia; los estudiantes con puesto formativo asignado no pueden darse de baja
+- `feat`: Vista de detalle de la estancia con cabecera (nombre, familia, fechas, badge de estado), franja de estadísticas (estudiantes con puesto, empresas, puestos ocupados/libres) y tabla de puestos formativos (empresa/centro de trabajo, estudiante, tutor dual docente, tutor dual de empresa, estado, firmado)
+- `feat`: Sección de estudiantes sin puesto asignado en la vista de detalle, visible solo cuando existe alguno
+- `feat`: Alta de puestos formativos en la vista de detalle: empresa/centro de trabajo (obligatorio), niveles (obligatorio, multi-selección), observaciones (opcional) y número de copias a crear; botón visible solo para usuarios con permiso de gestión
+- `feat`: Unicidad del nombre de estancia por curso académico (restricción de base de datos + validación en formulario)
 - `feat`: Sección «Estancias» con listado en cards, búsqueda por nombre/enseñanza, filtros por familia profesional, enseñanza y período (En curso / Próximas / Pasadas), y formulario de alta
 - `feat`: Fechas de inicio y fin en las estancias; las cards muestran las fechas, un badge de estado (En curso, Próxima, Finalizada) y las estancias pasadas aparecen con opacidad reducida
 - `feat`: Estadísticas por estancia en las cards: estudiantes con puesto asignado, empresas con puestos, puestos asignados y puestos sin asignar, con porcentajes y código de color
@@ -103,6 +108,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `fix`: Las estadísticas de puestos y estudiantes en las cards y en la vista de detalle de estancia no reflejaban los datos reales; causa: `WHERE stay IN (:array)` genera un único `IN (?)` que Doctrine no expande correctamente para UUIDs binarios en MySQL; corregido con condiciones OR individuales (`stay.id = :sid_N`) y tipo `'uuid'` explícito por parámetro
+- `fix`: Las fechas de inicio y fin de una estancia son obligatorias (columnas `NOT NULL` en base de datos)
+- `fix`: Terminología unificada: «tutor dual docente» (tutor académico) y «tutor dual de empresa» (workplaceMentor) en toda la sección de estancias
 - `fix`: Botones «Editar» en la vista árbol no navegaban al usar `preventDefault` en el wrapper del botón; corregido con `stopPropagation`
 - `fix`: Sección «Administración» se marcaba activa en el sidebar al navegar por oferta formativa; corregido con matching explícito de prefijos de ruta por ítem de navegación
 - `fix`: Eliminar centros de trabajo en cascada al eliminar una empresa

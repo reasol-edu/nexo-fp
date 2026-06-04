@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
+use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -40,6 +41,27 @@ class GroupRepository extends ServiceEntityRepository
             ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Returns all groups (with students eagerly loaded) that belong to ProgrammeYears
+     * of the given programme. Ordered by level name → group name → student surname.
+     *
+     * @return Group[]
+     */
+    public function findByProgrammeWithStudents(Programme $programme): array
+    {
+        return $this->createQueryBuilder('g')
+            ->leftJoin('g.students', 's')->addSelect('s')
+            ->join('g.programmeYear', 'py')
+            ->where('py.programme = :programme')
+            ->setParameter('programme', $programme->getId(), 'uuid')
+            ->orderBy('py.name', 'ASC')
+            ->addOrderBy('g.name', 'ASC')
+            ->addOrderBy('s.name.lastName', 'ASC')
+            ->addOrderBy('s.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /** @return Group[] */
