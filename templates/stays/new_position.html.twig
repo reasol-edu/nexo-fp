@@ -31,21 +31,18 @@
                     <span class="text-red-400 ml-0.5">*</span>
                 </label>
                 <select id="workcenter_id" name="workcenter_id"
-                        class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                               transition-colors focus:outline-none focus:ring-3
-                               {{ errors.workcenter_id is defined
-                                   ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                   : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                        data-ts-has-error="{{ errors.workcenter_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
                     <option value="">{{ 'stays.position.field.workcenter_placeholder'|trans({}, 'stays') }}</option>
                     {% for group in by_company %}
-                        <optgroup label="{{ group.company.name }}">
-                            {% for wc in group.workcenters %}
-                                <option value="{{ wc.id.toRfc4122 }}"
-                                        {{ values.workcenter_id == wc.id.toRfc4122 ? 'selected' : '' }}>
-                                    {{ wc.name }}{% if wc.city %} ({{ wc.city }}){% endif %}
-                                </option>
-                            {% endfor %}
-                        </optgroup>
+                        {% for wc in group.workcenters %}
+                            <option value="{{ wc.id.toRfc4122 }}"
+                                    data-company="{{ group.company.name|e('html_attr') }}"
+                                    data-city="{{ wc.city ? wc.city|e('html_attr') : '' }}"
+                                    {{ values.workcenter_id == wc.id.toRfc4122 ? 'selected' : '' }}>
+                                {{ wc.name }}
+                            </option>
+                        {% endfor %}
                     {% endfor %}
                 </select>
                 {% if errors.workcenter_id is defined %}
@@ -73,10 +70,9 @@
                             <input type="checkbox"
                                    name="programme_year_ids[]"
                                    value="{{ py.id.toRfc4122 }}"
-                                   class="sr-only"
+                                   class="sr-only peer"
                                    {{ py.id.toRfc4122 in values.programme_year_ids ? 'checked' : '' }}>
-                            <span class="h-1.5 w-1.5 rounded-full shrink-0"
-                                  style="background-color: {{ py.id.toRfc4122 in values.programme_year_ids ? '#67597a' : '#d1d5db' }}"></span>
+                            <span class="h-1.5 w-1.5 rounded-full shrink-0 bg-gray-300 peer-checked:bg-green-500"></span>
                             {{ py.name }}
                         </label>
                     {% endfor %}
@@ -136,4 +132,68 @@
     </div>
 
 </div>
+
+<script type="module">
+import TomSelect from 'tom-select';
+
+const el = document.getElementById('workcenter_id');
+if (el) {
+
+const currentValue = el.value;
+const placeholder  = el.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+// Build flat options list; company + workcenter + city all searchable
+const options = [{ value: '', text: placeholder, company: '', name: '', city: '' }];
+
+el.querySelectorAll('option[data-company]').forEach(opt => {
+    options.push({
+        value:   opt.value,
+        text:    opt.textContent.trim(),
+        company: opt.dataset.company ?? '',
+        name:    opt.textContent.trim(),
+        city:    opt.dataset.city    ?? '',
+        search:  `${opt.dataset.company} ${opt.textContent.trim()} ${opt.dataset.city ?? ''}`,
+    });
+});
+
+const ts = new TomSelect(el, {
+    options,
+    items:        currentValue ? [currentValue] : [],
+    valueField:   'value',
+    labelField:   'text',
+    searchField:  ['search'],
+    allowEmptyOption: true,
+    create:       false,
+    maxOptions:   null,
+    placeholder,
+    wrapperClass: 'ts-wrapper ts-local',
+    plugins:      ['clear_button'],
+    render: {
+        // Dropdown option: empresa (prominente) + centro de trabajo (subtítulo)
+        option: (d, esc) => {
+            if (!d.company) return `<div class="py-0.5 text-gray-400 italic">${esc(d.text)}</div>`;
+            const city = d.city ? ` <span class="ts-wc-city">· ${esc(d.city)}</span>` : '';
+            return `<div class="ts-wc-option">
+                        <p class="ts-wc-company">${esc(d.company)}</p>
+                        <p class="ts-wc-sub">${esc(d.name)}${city}</p>
+                    </div>`;
+        },
+        // Item seleccionado: empresa · centro (en línea)
+        item: (d, esc) => {
+            if (!d.company) return `<div>${esc(d.text)}</div>`;
+            return `<div class="ts-wc-item">
+                        <span class="ts-wc-company">${esc(d.company)}</span>
+                        <span class="ts-wc-sep">·</span>
+                        <span class="ts-wc-sub">${esc(d.name)}</span>
+                    </div>`;
+        },
+        no_results: () =>
+            `<div class="no-results px-3 py-2 text-sm">{{ 'stays.position.field.workcenter_no_results'|trans({}, 'stays') }}</div>`,
+    },
+});
+
+if (el.dataset.tsHasError) ts.wrapper.classList.add('has-error');
+
+} // end if (el)
+</script>
 {% endblock %}
