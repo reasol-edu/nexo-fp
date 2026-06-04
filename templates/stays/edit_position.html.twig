@@ -153,19 +153,6 @@
                 {% endif %}
             </div>
 
-            {# ── Observaciones ────────────────────────────────────────────────── #}
-            <div>
-                <label for="details" class="block text-sm font-medium text-gray-700 mb-1.5">
-                    {{ 'stays.position.field.details'|trans({}, 'stays') }}
-                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
-                </label>
-                <textarea id="details" name="details" rows="3"
-                          placeholder="{{ 'stays.position.field.details_placeholder'|trans({}, 'stays') }}"
-                          class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900 resize-none
-                                 border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20
-                                 transition-colors focus:outline-none focus:ring-3">{{ values.details }}</textarea>
-            </div>
-
             {# ── Estado + Firmado ─────────────────────────────────────────────── #}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -199,6 +186,19 @@
                     </label>
                 </div>
 
+            </div>
+
+            {# ── Observaciones ────────────────────────────────────────────────── #}
+            <div>
+                <label for="details" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.details'|trans({}, 'stays') }}
+                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
+                </label>
+                <textarea id="details" name="details" rows="3"
+                          placeholder="{{ 'stays.position.field.details_placeholder'|trans({}, 'stays') }}"
+                          class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900 resize-none
+                                 border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20
+                                 transition-colors focus:outline-none focus:ring-3">{{ values.details }}</textarea>
             </div>
 
             {# ── Acciones ─────────────────────────────────────────────────────── #}
