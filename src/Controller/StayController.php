@@ -368,20 +368,50 @@ class StayController extends AbstractController
             }
         }
 
+        // Build compatible unassigned positions per student (for inline quick-assign)
+        $compatiblePositionsForStudent = [];
+        foreach ($byGroup as $entry) {
+            $pyId = $entry['group']->getProgrammeYear()->getId()->toRfc4122();
+            foreach ($entry['students'] as $student) {
+                $sid = $student->getId()->toRfc4122();
+                if (!isset($studentPositionMap[$sid])) {
+                    $compatible = array_values(array_filter(
+                        $unassignedPositions,
+                        static function (TrainingPosition $pos) use ($pyId): bool {
+                            foreach ($pos->getProgrammeYears() as $py) {
+                                if ($py->getId()->toRfc4122() === $pyId) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    ));
+                    $compatiblePositionsForStudent[$sid] = $compatible;
+                }
+            }
+        }
+        foreach ($ungroupedStudents as $student) {
+            $sid = $student->getId()->toRfc4122();
+            if (!isset($studentPositionMap[$sid])) {
+                $compatiblePositionsForStudent[$sid] = $unassignedPositions;
+            }
+        }
+
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
 
         return $this->render('stays/show.html.twig', [
-            'centre'                 => $centre,
-            'stay'                   => $stay,
-            'by_group'               => $byGroup,
-            'ungrouped_students'     => $ungroupedStudents,
-            'student_position_map'   => $studentPositionMap,
-            'unassigned_positions'   => $unassignedPositions,
-            'count_without_position' => $countWithoutPosition,
-            'count_unsigned'         => $countUnsigned,
-            'stats'                  => $stats,
-            'can_manage'             => $this->canManagePositions($stay, $centre),
+            'centre'                          => $centre,
+            'stay'                            => $stay,
+            'by_group'                        => $byGroup,
+            'ungrouped_students'              => $ungroupedStudents,
+            'student_position_map'            => $studentPositionMap,
+            'unassigned_positions'            => $unassignedPositions,
+            'compatible_positions_for_student' => $compatiblePositionsForStudent,
+            'count_without_position'          => $countWithoutPosition,
+            'count_unsigned'                  => $countUnsigned,
+            'stats'                           => $stats,
+            'can_manage'                      => $this->canManagePositions($stay, $centre),
         ]);
     }
 
@@ -491,6 +521,98 @@ class StayController extends AbstractController
             'errors'          => $errors,
             'values'          => $values,
         ]);
+    }
+
+    #[Route('/{id}/puesto/{positionId}/desasignar', name: 'app_stays_unassign_position', methods: ['POST'])]
+    public function unassignPosition(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null || $position->getStudent() === null) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($position->getState() !== TrainingPositionState::DRAFT) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('unassign_position_' . $positionId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position->setStudent(null);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.position_unassigned'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+    }
+
+    #[Route('/{id}/estudiante/{studentId}/asignar', name: 'app_stays_assign_position', methods: ['POST'])]
+    public function assignPosition(string $id, string $studentId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('assign_position_' . $id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $student = null;
+        foreach ($stay->getStudents() as $s) {
+            if ($s->getId()->toRfc4122() === $studentId) {
+                $student = $s;
+                break;
+            }
+        }
+        if ($student === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $positionId = trim($request->request->getString('position_id'));
+        $position   = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null || $position->getStudent() !== null) {
+            throw $this->createNotFoundException();
+        }
+
+        $position->setStudent($student);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.position_assigned'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
     }
 
     #[Route('/{id}/puesto/{positionId}/eliminar', name: 'app_stays_delete_position', methods: ['POST'])]

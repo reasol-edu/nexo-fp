@@ -218,7 +218,7 @@
                                 {% set sid = student.id.toRfc4122 %}
                                 {% set position = student_position_map[sid] is defined ? student_position_map[sid] : null %}
                                 {% if position is null %}
-                                    {% set row_bg = 'bg-red-50/70 hover:bg-red-50' %}
+                                    {% set row_bg = '' %}
                                 {% elseif position.signed %}
                                     {% set row_bg = 'bg-green-50/60 hover:bg-green-50' %}
                                 {% else %}
@@ -235,10 +235,41 @@
                                     {# Empresa / Centro o «Sin puesto» #}
                                     <td class="px-5 py-3">
                                         {% if position is null %}
-                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
-                                                {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
-                                                {{ 'stays.show.position_none'|trans({}, 'stays') }}
-                                            </span>
+                                            {% set compatible = compatible_positions_for_student[sid] ?? [] %}
+                                            {% if compatible is not empty and can_manage %}
+                                                <form method="post"
+                                                      action="{{ path('app_stays_assign_position', {id: stay.id.toRfc4122, studentId: sid}) }}"
+                                                      class="js-assign-form">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('assign_position_' ~ stay.id.toRfc4122) }}">
+                                                    <button type="button"
+                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
+                                                        {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                        {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                                                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                    </button>
+                                                    <div class="js-assign-select hidden mt-1.5 min-w-[220px]">
+                                                        <select name="position_id"
+                                                                class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
+                                                            <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
+                                                            {% for pos in compatible %}
+                                                                <option value="{{ pos.id.toRfc4122 }}"
+                                                                        data-company="{{ pos.workcenter ? pos.workcenter.company.name|e('html_attr') : '' }}"
+                                                                        data-center="{{ pos.workcenter ? pos.workcenter.name|e('html_attr') : '' }}"
+                                                                        data-city="{{ pos.workcenter and pos.workcenter.city ? pos.workcenter.city|e('html_attr') : '' }}"
+                                                                        data-details="{{ pos.details ? pos.details|e('html_attr') : '' }}">
+                                                                    {{- pos.workcenter ? pos.workcenter.company.name ~ ' — ' ~ pos.workcenter.name : '—' -}}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </form>
+                                            {% else %}
+                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
+                                                    {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                    {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                                                </span>
+                                            {% endif %}
                                         {% elseif position.workcenter %}
                                             <p class="font-medium text-gray-900 leading-snug">{{ position.workcenter.company.name }}</p>
                                             <p class="text-xs text-gray-500 mt-0.5">{{ position.workcenter.name }}{% if position.workcenter.city %} · {{ position.workcenter.city }}{% endif %}</p>
@@ -286,12 +317,26 @@
                                     {% if can_manage %}
                                     <td class="px-3 py-3 text-right">
                                         {% if position %}
-                                            <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
-                                               class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
-                                                      text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
-                                                {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
-                                            </a>
+                                            <div class="inline-flex items-center gap-1">
+                                                {% if position.state.value == 'DRAFT' %}
+                                                    <form method="post"
+                                                          action="{{ path('app_stays_unassign_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('unassign_position_' ~ position.id.toRfc4122) }}">
+                                                        <button type="submit"
+                                                                class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                                       text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                                title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                            {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                   class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                          text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                                   title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+                                                </a>
+                                            </div>
                                         {% endif %}
                                     </td>
                                     {% endif %}
@@ -327,10 +372,41 @@
                                     </td>
                                     <td class="px-5 py-3">
                                         {% if position is null %}
-                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
-                                                {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
-                                                {{ 'stays.show.position_none'|trans({}, 'stays') }}
-                                            </span>
+                                            {% set compatible = compatible_positions_for_student[sid] ?? [] %}
+                                            {% if compatible is not empty and can_manage %}
+                                                <form method="post"
+                                                      action="{{ path('app_stays_assign_position', {id: stay.id.toRfc4122, studentId: sid}) }}"
+                                                      class="js-assign-form">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('assign_position_' ~ stay.id.toRfc4122) }}">
+                                                    <button type="button"
+                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
+                                                        {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                        {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                                                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                    </button>
+                                                    <div class="js-assign-select hidden mt-1.5 min-w-[220px]">
+                                                        <select name="position_id"
+                                                                class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
+                                                            <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
+                                                            {% for pos in compatible %}
+                                                                <option value="{{ pos.id.toRfc4122 }}"
+                                                                        data-company="{{ pos.workcenter ? pos.workcenter.company.name|e('html_attr') : '' }}"
+                                                                        data-center="{{ pos.workcenter ? pos.workcenter.name|e('html_attr') : '' }}"
+                                                                        data-city="{{ pos.workcenter and pos.workcenter.city ? pos.workcenter.city|e('html_attr') : '' }}"
+                                                                        data-details="{{ pos.details ? pos.details|e('html_attr') : '' }}">
+                                                                    {{- pos.workcenter ? pos.workcenter.company.name ~ ' — ' ~ pos.workcenter.name : '—' -}}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </form>
+                                            {% else %}
+                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
+                                                    {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                    {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                                                </span>
+                                            {% endif %}
                                         {% elseif position.workcenter %}
                                             <p class="font-medium text-gray-900 leading-snug">{{ position.workcenter.company.name }}</p>
                                             <p class="text-xs text-gray-500 mt-0.5">{{ position.workcenter.name }}{% if position.workcenter.city %} · {{ position.workcenter.city }}{% endif %}</p>
@@ -370,12 +446,26 @@
                                     {% if can_manage %}
                                     <td class="px-3 py-3 text-right">
                                         {% if position %}
-                                            <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
-                                               class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
-                                                      text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
-                                                {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
-                                            </a>
+                                            <div class="inline-flex items-center gap-1">
+                                                {% if position.state.value == 'DRAFT' %}
+                                                    <form method="post"
+                                                          action="{{ path('app_stays_unassign_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('unassign_position_' ~ position.id.toRfc4122) }}">
+                                                        <button type="submit"
+                                                                class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                                       text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                                title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                            {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                   class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                          text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                                   title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+                                                </a>
+                                            </div>
                                         {% endif %}
                                     </td>
                                     {% endif %}
@@ -510,6 +600,7 @@
 
 <script>
 (function () {
+    // ── Inline delete confirmation ────────────────────────────────────────────
     const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
     const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
 
@@ -553,5 +644,80 @@
         });
     });
 }());
+</script>
+
+<script type="module">
+import TomSelect from 'tom-select';
+
+document.querySelectorAll('.js-assign-form').forEach(function (form) {
+    const trigger  = form.querySelector('.js-assign-trigger');
+    const wrap     = form.querySelector('.js-assign-select');
+    const dropdown = form.querySelector('.js-assign-dropdown');
+    if (!trigger || !wrap || !dropdown) return;
+
+    const ph = dropdown.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+    const opts = [{ value: '', text: ph, company: '', center: '', city: '', details: '', search: '' }];
+    dropdown.querySelectorAll('option:not([value=""])').forEach(function (opt) {
+        const company = opt.dataset.company ?? '';
+        const center  = opt.dataset.center  ?? '';
+        const city    = opt.dataset.city    ?? '';
+        const details = opt.dataset.details ?? '';
+        opts.push({
+            value: opt.value,
+            text:  opt.textContent.trim(),
+            company, center, city, details,
+            search: [company, center, city, details].filter(Boolean).join(' '),
+        });
+    });
+
+    const ts = new TomSelect(dropdown, {
+        options:          opts,
+        items:            [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['search'],
+        allowEmptyOption: false,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      ph,
+        wrapperClass:     'ts-wrapper ts-local',
+        render: {
+            option: function (d, esc) {
+                if (!d.value) return '<div class="py-0.5 text-gray-400 italic">' + esc(d.text) + '</div>';
+                const citySpan = d.city    ? ' <span class="ts-wc-city">· ' + esc(d.city) + '</span>' : '';
+                const detailEl = d.details ? '<p class="ts-pos-details">' + esc(d.details) + '</p>' : '';
+                return '<div class="ts-pos-option">'
+                     + '<p class="ts-pos-company">' + esc(d.company) + '</p>'
+                     + '<p class="ts-pos-sub">' + esc(d.center) + citySpan + '</p>'
+                     + detailEl + '</div>';
+            },
+            item: function (d, esc) {
+                if (!d.value) return '<div>' + esc(d.text) + '</div>';
+                return '<div class="ts-wc-item">'
+                     + '<span class="ts-wc-company">' + esc(d.company) + '</span>'
+                     + '<span class="ts-wc-sep">·</span>'
+                     + '<span class="ts-wc-sub">' + esc(d.center) + '</span>'
+                     + '</div>';
+            },
+            no_results: function () {
+                return '<div class="no-results px-3 py-2 text-sm">{{ 'stays.position.field.workcenter_no_results'|trans({}, 'stays') }}</div>';
+            },
+        },
+        onChange: function (value) {
+            if (value) form.submit();
+        },
+        onDropdownClose: function () {
+            wrap.classList.add('hidden');
+            trigger.classList.remove('hidden');
+        },
+    });
+
+    trigger.addEventListener('click', function () {
+        wrap.classList.remove('hidden');
+        trigger.classList.add('hidden');
+        requestAnimationFrame(function () { ts.open(); });
+    });
+});
 </script>
 {% endblock %}

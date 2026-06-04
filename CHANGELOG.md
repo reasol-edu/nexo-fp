@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Asignación rápida de puesto desde la fila del alumno: al hacer clic en «Sin puesto asignado» se despliega un selector filtrado por nivel del alumno con empresa, centro de trabajo y observaciones; al seleccionar, se asigna el puesto y se recarga la página
 - `fix`: Añadir `autofocus` al campo centro de trabajo en el formulario de edición de puesto, igual que en los formularios de alta
 - `fix`: Pasar la etiqueta «Mostrar:» del filtro de período por el sistema de traducciones
 - `feat`: Confirmación de borrado inline (panel con «Sí, eliminar» / «Cancelar») en lugar del diálogo nativo `confirm()` del navegador, tanto para eliminar estancia como para eliminar puesto
