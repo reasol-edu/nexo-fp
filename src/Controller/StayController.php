@@ -655,15 +655,20 @@ class StayController extends AbstractController
             fn ($py) => $py->getId()->toRfc4122(),
             $position->getProgrammeYears()->toArray()
         );
+        $currentWorkcenterId = $position->getWorkcenter()->getId()->toRfc4122() ?? '';
+        $currentStudentId = $position->getStudent()?->getId()->toRfc4122() ?? '';
+        $currentTutorId = $position->getAcademicTutor()?->getId()->toRfc4122() ?? '';
+        $currentMentorId = $position->getWorkplaceMentor()?->getId()->toRfc4122() ?? '';
+        $isAssignmentLocked = $position->getState() !== TrainingPositionState::DRAFT;
 
         $errors = [];
         $values = [
             'workcenter_id'       => $position->getWorkcenter()?->getId()->toRfc4122() ?? '',
             'programme_year_ids'  => $currentPyIds,
             'details'             => $position->getDetails() ?? '',
-            'student_id'          => $position->getStudent()?->getId()->toRfc4122() ?? '',
-            'academic_tutor_id'   => $position->getAcademicTutor()?->getId()->toRfc4122() ?? '',
-            'workplace_mentor_id' => $position->getWorkplaceMentor()?->getId()->toRfc4122() ?? '',
+            'student_id'          => $currentStudentId,
+            'academic_tutor_id'   => $currentTutorId,
+            'workplace_mentor_id' => $currentMentorId,
             'state'               => $position->getState()->value,
             'signed'              => $position->isSigned(),
         ];
@@ -683,6 +688,14 @@ class StayController extends AbstractController
                 'state'               => trim($request->request->getString('state')),
                 'signed'              => $request->request->has('signed'),
             ];
+
+            if ($isAssignmentLocked) {
+                $values['workcenter_id'] = $currentWorkcenterId;
+                $values['student_id'] = $currentStudentId;
+                $values['academic_tutor_id'] = $currentTutorId;
+                $values['workplace_mentor_id'] = $currentMentorId;
+                $values['programme_year_ids'] = $currentPyIds;
+            }
 
             // Validate workcenter
             $workcenter = null;
@@ -750,6 +763,13 @@ class StayController extends AbstractController
 
             $state = TrainingPositionState::tryFrom($values['state']) ?? TrainingPositionState::DRAFT;
 
+            if ($state !== TrainingPositionState::DRAFT
+                && ($academicTutor === null || $workplaceMentor === null)
+                && !isset($errors['academic_tutor_id'], $errors['workplace_mentor_id'])
+            ) {
+                $errors['state'] = $this->t('stays.error.state_requires_tutors');
+            }
+
             if ($values['signed'] && $state !== TrainingPositionState::DONE) {
                 $errors['signed'] = $this->t('stays.error.signed_requires_done');
             }
@@ -783,6 +803,7 @@ class StayController extends AbstractController
             'centre'              => $centre,
             'stay'                => $stay,
             'position'            => $position,
+            'is_assignment_locked'=> $isAssignmentLocked,
             'by_company'          => $byCompany,
             'workers_by_company'  => $workersByCompany,
             'programme_years'     => $programmeYears,
