@@ -2,6 +2,16 @@
 
 {% block title %}{{ 'stays.students.title'|trans({}, 'stays') }} · {{ stay.name }} · {{ app_name }}{% endblock %}
 
+{% block stylesheets %}{{ parent() }}
+<style>
+/* Estado de cada tarjeta de estudiante gestionado por JS via data-attrs */
+.js-student-card                                { border-color: #e5e7eb; background: white; cursor: pointer; }
+.js-student-card:not([data-locked]):not([data-enrolled]):hover { border-color: var(--color-plum-200); background: color-mix(in srgb, var(--color-plum-50) 40%, white); }
+.js-student-card[data-enrolled]:not([data-locked]) { border-color: var(--color-plum-300); background: var(--color-plum-50); }
+.js-student-card[data-locked]                   { opacity: .7; cursor: not-allowed; border-color: #e5e7eb; background: #f9fafb; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="px-6 py-8 max-w-4xl mx-auto">
 
@@ -66,9 +76,13 @@
                                     <div class="px-5 pt-3 pb-1.5 flex items-center gap-2">
                                         {{ ux_icon('heroicons:users', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
                                         <span class="text-xs font-medium text-gray-500">{{ group.name }}</span>
-                                        <span class="ml-auto text-xs text-gray-400 tabular-nums js-group-count">
-                                            {{ group.students|length }}
-                                        </span>
+                                        {% if group.students is not empty %}
+                                            <button type="button"
+                                                    class="js-group-toggle ml-auto text-xs font-medium text-plum-500
+                                                           hover:text-plum-700 transition-colors">
+                                                {{ 'stays.students.select_all'|trans({}, 'stays') }}
+                                            </button>
+                                        {% endif %}
                                     </div>
 
                                     {% if group.students is empty %}
@@ -79,17 +93,12 @@
                                         <div class="px-4 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                             {% for student in group.students %}
                                                 {% set sid = student.id.toRfc4122 %}
-                                                {% set is_enrolled = enrolled_ids[sid] is defined %}
+                                                {% set is_enrolled  = enrolled_ids[sid] is defined %}
                                                 {% set has_position = position_ids[sid] is defined %}
                                                 <label
-                                                    class="js-student-card relative flex items-center gap-3 rounded-xl border px-3.5 py-2.5 cursor-pointer select-none transition-colors
-                                                           {% if has_position %}
-                                                               opacity-70 cursor-not-allowed border-gray-200 bg-gray-50
-                                                           {% elseif is_enrolled %}
-                                                               border-plum-300 bg-plum-50
-                                                           {% else %}
-                                                               border-gray-200 bg-white hover:border-plum-200 hover:bg-plum-50/40
-                                                           {% endif %}"
+                                                    class="js-student-card relative flex items-center gap-3 rounded-xl border px-3.5 py-2.5 select-none transition-colors"
+                                                    {{ is_enrolled and not has_position ? 'data-enrolled' : '' }}
+                                                    {{ has_position ? 'data-locked' : '' }}
                                                     data-name="{{ (student.name.lastName ~ ' ' ~ student.name.firstName)|lower }}"
                                                     data-id="{{ student.studentId|lower }}"
                                                     title="{{ has_position ? 'stays.students.has_position_hint'|trans({}, 'stays') : '' }}">
@@ -100,7 +109,7 @@
                                                            {{ is_enrolled ? 'checked' : '' }}
                                                            {{ has_position ? 'disabled' : '' }}
                                                            class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500 shrink-0
-                                                                  {% if has_position %}cursor-not-allowed{% endif %}">
+                                                                  {{ has_position ? 'cursor-not-allowed' : '' }}">
 
                                                     {# Disabled+checked → hidden input to keep the value submitted #}
                                                     {% if has_position and is_enrolled %}
@@ -151,24 +160,87 @@
 
 <script>
 (function () {
-    const search = document.getElementById('student-search');
-    const countEl = document.getElementById('selection-count');
-    const form = document.getElementById('manage-students-form');
+    const T_SELECT_ALL   = '{{ 'stays.students.select_all'|trans({}, 'stays')|e('js') }}';
+    const T_DESELECT_ALL = '{{ 'stays.students.deselect_all'|trans({}, 'stays')|e('js') }}';
+    const T_NONE  = '{{ 'stays.students.selected_none'|trans({}, 'stays')|e('js') }}';
+    const T_ONE   = '{{ 'stays.students.selected_one'|trans({}, 'stays')|e('js') }}';
+    const T_MANY  = '{{ 'stays.students.selected_many'|trans({}, 'stays')|e('js') }}';
 
-    function updateCount() {
-        if (!form || !countEl) return;
-        const checked = form.querySelectorAll('input[type="checkbox"]:checked').length;
-        countEl.textContent = checked === 0
-            ? '{{ 'stays.students.selected_none'|trans({}, 'stays')|e('js') }}'
-            : checked === 1
-                ? '{{ 'stays.students.selected_one'|trans({}, 'stays')|e('js') }}'
-                : '{{ 'stays.students.selected_many'|trans({}, 'stays')|e('js') }}'.replace('%count%', checked);
+    const search  = document.getElementById('student-search');
+    const countEl = document.getElementById('selection-count');
+    const form    = document.getElementById('manage-students-form');
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /** Sets the visual state of a student card based on its checkbox. */
+    function syncCardStyle(card) {
+        if (card.dataset.locked !== undefined) return;
+        const cb = card.querySelector('input[type="checkbox"]');
+        if (cb && cb.checked) {
+            card.setAttribute('data-enrolled', '');
+        } else {
+            card.removeAttribute('data-enrolled');
+        }
     }
+
+    /** Returns the visible, non-locked checkboxes inside a group block. */
+    function getToggleable(groupBlock) {
+        return Array.from(
+            groupBlock.querySelectorAll('.js-student-card:not([data-locked]) input[type="checkbox"]')
+        ).filter(cb => cb.closest('.js-student-card').style.display !== 'none');
+    }
+
+    /** Updates the "select all / deselect all" toggle button text for a group. */
+    function syncGroupToggle(groupBlock) {
+        const btn = groupBlock.querySelector('.js-group-toggle');
+        if (!btn) return;
+        const cbs = getToggleable(groupBlock);
+        const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+        btn.textContent = allChecked ? T_DESELECT_ALL : T_SELECT_ALL;
+    }
+
+    /** Updates the global selection counter. */
+    function updateCount() {
+        if (!countEl) return;
+        const n = form ? form.querySelectorAll('input[type="checkbox"]:checked').length : 0;
+        countEl.textContent = n === 0 ? T_NONE : n === 1 ? T_ONE : T_MANY.replace('%count%', n);
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+
+    document.querySelectorAll('.js-group-block').forEach(syncGroupToggle);
+    updateCount();
+
+    // ── Group toggle clicks ───────────────────────────────────────────────────
+
+    document.querySelectorAll('.js-group-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const groupBlock = btn.closest('.js-group-block');
+            const cbs = getToggleable(groupBlock);
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            cbs.forEach(function (cb) {
+                cb.checked = !allChecked;
+                syncCardStyle(cb.closest('.js-student-card'));
+            });
+            syncGroupToggle(groupBlock);
+            updateCount();
+        });
+    });
+
+    // ── Individual checkbox changes ───────────────────────────────────────────
 
     if (form) {
-        form.addEventListener('change', updateCount);
-        updateCount();
+        form.addEventListener('change', function (e) {
+            if (e.target.type !== 'checkbox') return;
+            const card = e.target.closest('.js-student-card');
+            if (card) syncCardStyle(card);
+            const groupBlock = e.target.closest('.js-group-block');
+            if (groupBlock) syncGroupToggle(groupBlock);
+            updateCount();
+        });
     }
+
+    // ── Search filter ─────────────────────────────────────────────────────────
 
     if (!search) return;
 
@@ -176,22 +248,19 @@
         const q = this.value.trim().toLowerCase();
 
         document.querySelectorAll('.js-student-card').forEach(function (card) {
-            const name = card.dataset.name || '';
-            const id   = card.dataset.id   || '';
-            const match = q === '' || name.includes(q) || id.includes(q);
+            const match = q === '' || (card.dataset.name || '').includes(q) || (card.dataset.id || '').includes(q);
             card.style.display = match ? '' : 'none';
         });
 
-        // Hide group blocks that have no visible students
         document.querySelectorAll('.js-group-block').forEach(function (block) {
-            const visibleCards = block.querySelectorAll('.js-student-card:not([style*="display: none"])').length;
-            block.style.display = visibleCards === 0 && q !== '' ? 'none' : '';
+            const visible = block.querySelectorAll('.js-student-card:not([style*="display: none"])').length;
+            block.style.display = visible === 0 && q !== '' ? 'none' : '';
+            syncGroupToggle(block);
         });
 
-        // Hide level blocks that have no visible groups
         document.querySelectorAll('.js-level-block').forEach(function (block) {
-            const visibleGroups = block.querySelectorAll('.js-group-block:not([style*="display: none"])').length;
-            block.style.display = visibleGroups === 0 && q !== '' ? 'none' : '';
+            const visible = block.querySelectorAll('.js-group-block:not([style*="display: none"])').length;
+            block.style.display = visible === 0 && q !== '' ? 'none' : '';
         });
     });
 }());
