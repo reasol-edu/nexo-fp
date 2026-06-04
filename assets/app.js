@@ -1,10 +1,18 @@
 import './stimulus_bootstrap.js';
-/*
- * Welcome to your app's main JavaScript file!
- *
- * This file will be included onto the page via the importmap() Twig function,
- * which should already be in your base.html.twig.
- */
 import './styles/app.css';
 
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
+// When the user types in a remote autocomplete (ux-autocomplete), clear the existing
+// options and the search cache so that new results replace the previous ones instead
+// of being appended. This runs after Stimulus has connected all controllers.
+document.addEventListener('DOMContentLoaded', () => {
+    requestAnimationFrame(() => {
+        document.querySelectorAll('[data-controller~="symfony--ux-autocomplete--autocomplete"]').forEach(el => {
+            const ts = el.tomselect;
+            if (!ts) return;
+            ts.on('type', () => {
+                ts.clearOptions();
+                ts.loadedSearches = {};
+            });
+        });
+    });
+});
