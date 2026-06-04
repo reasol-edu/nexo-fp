@@ -739,6 +739,10 @@ class StayController extends AbstractController
 
             $state = TrainingPositionState::tryFrom($values['state']) ?? TrainingPositionState::DRAFT;
 
+            if ($values['signed'] && $state !== TrainingPositionState::DONE) {
+                $errors['signed'] = $this->t('stays.error.signed_requires_done');
+            }
+
             if (empty($errors)) {
                 // Sync programme years
                 foreach ($position->getProgrammeYears()->toArray() as $py) {
