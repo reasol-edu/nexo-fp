@@ -47,11 +47,8 @@
                     {{ 'stays.field.programme'|trans({}, 'stays') }}
                 </label>
                 <select id="programme_id" name="programme_id"
-                        class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900
-                               transition-colors focus:outline-none focus:ring-3
-                               {{ errors.programme_id is defined
-                                   ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
-                                   : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                        data-ts-has-error="{{ errors.programme_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
                     <option value="">{{ 'stays.field.programme_placeholder'|trans({}, 'stays') }}</option>
                     {% for group in by_family %}
                         <optgroup label="{{ group.family.name }}">
@@ -118,4 +115,59 @@
     </div>
 
 </div>
+
+<script type="module">
+import TomSelect from 'tom-select';
+
+const el = document.getElementById('programme_id');
+if (el) {
+
+const currentValue = el.value;
+const placeholder   = el.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+// Build options+optgroups so searching matches both programme name and family name
+const options   = [{ value: '', text: placeholder, optgroup: '' }];
+const optgroups = [];
+
+el.querySelectorAll('optgroup').forEach((og, i) => {
+    const gid = String(i);
+    optgroups.push({ id: gid, label: og.label });
+    og.querySelectorAll('option').forEach(opt => {
+        options.push({
+            value: opt.value,
+            text:  opt.textContent.trim(),
+            optgroup: gid,
+            search: og.label + ' ' + opt.textContent.trim(),
+        });
+    });
+});
+
+const ts = new TomSelect(el, {
+    options,
+    items:            currentValue ? [currentValue] : [],
+    optgroups,
+    valueField:       'value',
+    labelField:       'text',
+    optgroupField:    'optgroup',
+    optgroupValueField: 'id',
+    optgroupLabelField: 'label',
+    searchField:      ['text', 'search'],
+    allowEmptyOption: true,
+    create:           false,
+    maxOptions:       null,
+    placeholder,
+    plugins:          ['clear_button'],
+    render: {
+        option: (d, esc) => `<div class="py-0.5">${esc(d.text)}</div>`,
+        item:   (d, esc) => `<div>${esc(d.text)}</div>`,
+        no_results: () => `<div class="no-results px-3 py-2 text-sm">{{ 'stays.field.programme_no_results'|trans({}, 'stays') }}</div>`,
+    },
+});
+
+if (el.dataset.tsHasError) {
+    ts.wrapper.classList.add('has-error');
+}
+
+} // end if (el)
+</script>
 {% endblock %}

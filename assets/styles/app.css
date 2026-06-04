@@ -23,17 +23,35 @@
    overrides prevalezcan sobre el CSS de tom-select.default.css. */
 :root .ts-wrapper .ts-control {
     border: 1px solid var(--color-plum-200);
-    border-radius: 0.5rem;
-    background: white;
+    border-radius: 0.75rem;
+    background: #f9fafb; /* bg-gray-50 */
     box-shadow: none;
+    padding: 0.5rem 0.875rem;
+    min-height: unset;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 :root .ts-wrapper.focus .ts-control,
 :root .ts-wrapper.dropdown-active .ts-control {
     border-color: var(--color-plum-500);
+    background: white;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-plum-500) 18%, transparent);
     outline: none;
+}
+
+:root .ts-wrapper.dropdown-active .ts-control {
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+:root .ts-wrapper.has-error .ts-control {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+:root .ts-wrapper.has-error.focus .ts-control,
+:root .ts-wrapper.has-error.dropdown-active .ts-control {
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
 }
 
 :root .ts-wrapper .ts-control > input {
@@ -62,7 +80,7 @@
 :root .ts-dropdown {
     border: 1px solid var(--color-plum-200);
     border-top: 0;
-    border-radius: 0 0 0.5rem 0.5rem;
+    border-radius: 0 0 0.75rem 0.75rem;
     box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--color-plum-950) 45%, transparent);
     background: white;
 }
