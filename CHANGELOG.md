@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Autocompletar con jerarquía visual empresa/centro de trabajo en el formulario de nuevo puesto formativo: empresa en primer plano (negrita) y centro de trabajo con localidad como subtítulo; la búsqueda indexa empresa, nombre del centro y localidad; el punto indicador de nivel seleccionado cambia a verde con `peer-checked`
 - `feat`: Eliminación de estancia con confirmación; se borran primero los puestos formativos (y sus niveles asociados) y luego la inscripción de estudiantes antes de eliminar la estancia
 - `feat`: Edición de estancia (nombre, fechas de inicio y fin) para usuarios con permiso de gestión; la enseñanza se muestra como campo de solo lectura y no puede modificarse una vez creada la estancia
 - `feat`: Gestión de estudiantes inscritos en una estancia: alta y baja masiva desde una página dedicada, con búsqueda en tiempo real y agrupación por nivel y grupo; solo se pueden inscribir estudiantes de los grupos del programa de la estancia; los estudiantes con puesto formativo asignado no pueden darse de baja
