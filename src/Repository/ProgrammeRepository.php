@@ -22,6 +22,24 @@ class ProgrammeRepository extends ServiceEntityRepository
     }
 
     /** @return Programme[] */
+    public function findByAcademicYearFilteredByFamily(AcademicYear $year, string $familyId = ''): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->join('p.professionalFamily', 'f')
+            ->where('p.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->orderBy('f.name', 'ASC')
+            ->addOrderBy('p.name', 'ASC');
+
+        if ($familyId !== '') {
+            $qb->andWhere('f.id = :family')
+               ->setParameter('family', $familyId, 'uuid');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /** @return Programme[] */
     /** @return Programme[] */
     public function findByAcademicYearOrderedByFamilyAndName(AcademicYear $year): array
     {

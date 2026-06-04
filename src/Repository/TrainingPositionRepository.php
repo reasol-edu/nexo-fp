@@ -25,6 +25,18 @@ class TrainingPositionRepository extends ServiceEntityRepository
      *
      * @return TrainingPosition[]
      */
+    public function findByIdAndStay(string $id, Stay $stay): ?TrainingPosition
+    {
+        return $this->createQueryBuilder('tp')
+            ->leftJoin('tp.programmeYears', 'py')->addSelect('py')
+            ->where('tp.id = :id')
+            ->andWhere('tp.stay = :stay')
+            ->setParameter('id', $id, 'uuid')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function findByStayOrdered(Stay $stay): array
     {
         return $this->createQueryBuilder('tp')

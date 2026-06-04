@@ -1,0 +1,430 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'stays.position.edit.title'|trans({}, 'stays') }} · {{ stay.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_stays_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'stays.title'|trans({}, 'stays') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}" class="hover:text-plum-600 transition-colors truncate max-w-48">
+                {{ stay.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.position.edit.title'|trans({}, 'stays') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ stay.name }} · {{ stay.programme.name }}</p>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
+        <form method="post" class="px-6 py-6 space-y-5">
+            <input type="hidden" name="_token" value="{{ csrf_token('edit_position_' ~ position.id.toRfc4122) }}">
+
+            {# ── Centro de trabajo ────────────────────────────────────────────── #}
+            <div>
+                <label for="workcenter_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.workcenter'|trans({}, 'stays') }}
+                    <span class="text-red-400 ml-0.5">*</span>
+                </label>
+                <select id="workcenter_id" name="workcenter_id"
+                        data-ts-has-error="{{ errors.workcenter_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
+                    <option value="">{{ 'stays.position.field.workcenter_placeholder'|trans({}, 'stays') }}</option>
+                    {% for group in by_company %}
+                        {% for wc in group.workcenters %}
+                            <option value="{{ wc.id.toRfc4122 }}"
+                                    data-company="{{ group.company.name|e('html_attr') }}"
+                                    data-company-id="{{ group.company.id.toRfc4122 }}"
+                                    data-city="{{ wc.city ? wc.city|e('html_attr') : '' }}"
+                                    {{ values.workcenter_id == wc.id.toRfc4122 ? 'selected' : '' }}>
+                                {{ wc.name }}
+                            </option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+                {% if errors.workcenter_id is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.workcenter_id }}</p>
+                {% endif %}
+            </div>
+
+            {# ── Niveles ──────────────────────────────────────────────────────── #}
+            {% if programme_years is not empty %}
+            <div>
+                <span class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ 'stays.position.field.programme_years'|trans({}, 'stays') }}
+                    <span class="text-red-400 ml-0.5">*</span>
+                </span>
+                {% if errors.programme_year_ids is defined %}
+                    <p class="mb-2 text-xs text-red-600">{{ errors.programme_year_ids }}</p>
+                {% endif %}
+                <div class="flex flex-wrap gap-2">
+                    {% for py in programme_years %}
+                        <label class="inline-flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer
+                                       text-sm transition-colors
+                                       border-gray-200 bg-gray-50 text-gray-700
+                                       hover:border-plum-300 hover:bg-plum-50
+                                       has-[:checked]:border-plum-400 has-[:checked]:bg-plum-50 has-[:checked]:text-plum-700">
+                            <input type="checkbox"
+                                   name="programme_year_ids[]"
+                                   value="{{ py.id.toRfc4122 }}"
+                                   class="sr-only peer"
+                                   {{ py.id.toRfc4122 in values.programme_year_ids ? 'checked' : '' }}>
+                            <span class="h-1.5 w-1.5 rounded-full shrink-0 bg-gray-300 peer-checked:bg-green-500"></span>
+                            {{ py.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Estudiante ───────────────────────────────────────────────────── #}
+            <div>
+                <label for="student_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.student'|trans({}, 'stays') }}
+                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
+                </label>
+                <select id="student_id" name="student_id"
+                        data-ts-has-error="{{ errors.student_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
+                    <option value="">{{ 'stays.position.field.student_unassigned'|trans({}, 'stays') }}</option>
+                    {% for sid, student in enrolled_students %}
+                        <option value="{{ sid }}"
+                                data-group="{{ student_group_map[sid] is defined ? student_group_map[sid].name|e('html_attr') : '' }}"
+                                data-nie="{{ student.studentId|e('html_attr') }}"
+                                data-disabled="{{ other_assigned_ids[sid] is defined ? '1' : '' }}"
+                                {{ values.student_id == sid ? 'selected' : '' }}>
+                            {{ student.name.lastName }} {{ student.name.firstName }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if errors.student_id is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.student_id }}</p>
+                {% endif %}
+            </div>
+
+            {# ── Tutor dual docente ────────────────────────────────────────────── #}
+            <div>
+                <label for="academic_tutor_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.academic_tutor'|trans({}, 'stays') }}
+                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
+                </label>
+                <select id="academic_tutor_id" name="academic_tutor_id"
+                        data-ts-has-error="{{ errors.academic_tutor_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
+                    <option value="">{{ 'stays.position.field.academic_tutor_placeholder'|trans({}, 'stays') }}</option>
+                    {% for teacher in teachers %}
+                        <option value="{{ teacher.id.toRfc4122 }}"
+                                {{ values.academic_tutor_id == teacher.id.toRfc4122 ? 'selected' : '' }}>
+                            {{ teacher.name.lastName }} {{ teacher.name.firstName }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if errors.academic_tutor_id is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.academic_tutor_id }}</p>
+                {% endif %}
+            </div>
+
+            {# ── Tutor dual de empresa ─────────────────────────────────────────── #}
+            <div>
+                <label for="workplace_mentor_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.workplace_mentor'|trans({}, 'stays') }}
+                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
+                </label>
+                <select id="workplace_mentor_id" name="workplace_mentor_id"
+                        data-ts-has-error="{{ errors.workplace_mentor_id is defined ? '1' : '' }}"
+                        class="w-full text-sm">
+                    <option value="">{{ 'stays.position.field.workplace_mentor_placeholder'|trans({}, 'stays') }}</option>
+                    {% for cid, workers in workers_by_company %}
+                        {% for w in workers %}
+                            <option value="{{ w.id.toRfc4122 }}"
+                                    data-company-id="{{ cid }}"
+                                    {{ values.workplace_mentor_id == w.id.toRfc4122 ? 'selected' : '' }}>
+                                {{ w.name.lastName }} {{ w.name.firstName }}
+                            </option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+                {% if errors.workplace_mentor_id is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.workplace_mentor_id }}</p>
+                {% endif %}
+            </div>
+
+            {# ── Observaciones ────────────────────────────────────────────────── #}
+            <div>
+                <label for="details" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'stays.position.field.details'|trans({}, 'stays') }}
+                    <span class="text-gray-400 font-normal">({{ 'stays.position.optional'|trans({}, 'stays') }})</span>
+                </label>
+                <textarea id="details" name="details" rows="3"
+                          placeholder="{{ 'stays.position.field.details_placeholder'|trans({}, 'stays') }}"
+                          class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900 resize-none
+                                 border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20
+                                 transition-colors focus:outline-none focus:ring-3">{{ values.details }}</textarea>
+            </div>
+
+            {# ── Estado + Firmado ─────────────────────────────────────────────── #}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div>
+                    <label for="state" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'stays.position.field.state'|trans({}, 'stays') }}
+                    </label>
+                    <select id="state" name="state"
+                            class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-3.5 text-sm
+                                   text-gray-900 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20
+                                   focus:outline-none focus:ring-3 transition-colors">
+                        <option value="DRAFT"      {{ values.state == 'DRAFT'      ? 'selected' : '' }}>{{ 'stays.state.draft'|trans({}, 'stays') }}</option>
+                        <option value="REGISTERED" {{ values.state == 'REGISTERED' ? 'selected' : '' }}>{{ 'stays.state.registered'|trans({}, 'stays') }}</option>
+                        <option value="PENDING"    {{ values.state == 'PENDING'    ? 'selected' : '' }}>{{ 'stays.state.pending'|trans({}, 'stays') }}</option>
+                        <option value="DONE"       {{ values.state == 'DONE'       ? 'selected' : '' }}>{{ 'stays.state.done'|trans({}, 'stays') }}</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col justify-end">
+                    <label class="inline-flex items-start gap-3 rounded-xl border px-4 py-3 cursor-pointer
+                                  transition-colors border-gray-200 bg-gray-50
+                                  hover:border-plum-200 hover:bg-plum-50/40
+                                  has-[:checked]:border-green-300 has-[:checked]:bg-green-50">
+                        <input type="checkbox" name="signed" value="1"
+                               {{ values.signed ? 'checked' : '' }}
+                               class="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 shrink-0">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ 'stays.position.field.signed'|trans({}, 'stays') }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ 'stays.position.field.signed_hint'|trans({}, 'stays') }}</p>
+                        </div>
+                    </label>
+                </div>
+
+            </div>
+
+            {# ── Acciones ─────────────────────────────────────────────────────── #}
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}"
+                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
+                          hover:bg-gray-50 transition-colors">
+                    {{ 'stays.cancel'|trans({}, 'stays') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'stays.position.edit.save'|trans({}, 'stays') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script type="module">
+import TomSelect from 'tom-select';
+
+const elWc      = document.getElementById('workcenter_id');
+const elMentor  = document.getElementById('workplace_mentor_id');
+const elTutor   = document.getElementById('academic_tutor_id');
+const elStudent = document.getElementById('student_id');
+
+// ── Workers by company for dynamic mentor filtering ───────────────────────
+const WORKERS_BY_COMPANY = {
+    {% for cid, workers in workers_by_company %}
+    {{ cid|json_encode|raw }}: [
+        {% for w in workers %}
+        { value: {{ w.id.toRfc4122|json_encode|raw }}, text: {{ (w.name.lastName ~ ' ' ~ w.name.firstName)|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }} },
+        {% endfor %}
+    ],
+    {% endfor %}
+};
+
+// ── Shared render helpers ─────────────────────────────────────────────────
+function renderTwoLineOption(esc, main, sub) {
+    return `<div class="ts-wc-option">
+                <p class="ts-wc-company">${esc(main)}</p>
+                <p class="ts-wc-sub">${esc(sub)}</p>
+            </div>`;
+}
+function renderTwoLineItem(esc, main, sub) {
+    return `<div class="ts-wc-item">
+                <span class="ts-wc-company">${esc(main)}</span>
+                <span class="ts-wc-sep">·</span>
+                <span class="ts-wc-sub">${esc(sub)}</span>
+            </div>`;
+}
+
+// ── Mentor Tom Select (init before workcenter so onChange can reference it) ──
+let tsMentor = null;
+let getMentorOpts = null;
+
+if (elMentor) {
+    const currentMentor = elMentor.value;
+    const mentorPH = elMentor.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+    getMentorOpts = function(companyId) {
+        const base = [{ value: '', text: mentorPH }];
+        if (!companyId) {
+            return base.concat(Object.values(WORKERS_BY_COMPANY).flat());
+        }
+        return base.concat(WORKERS_BY_COMPANY[companyId] ?? []);
+    };
+
+    const initialCompanyId = elWc?.querySelector(`option[value="${CSS.escape(elWc.value)}"]`)?.dataset.companyId ?? '';
+
+    tsMentor = new TomSelect(elMentor, {
+        options:          getMentorOpts(initialCompanyId),
+        items:            currentMentor ? [currentMentor] : [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['text'],
+        allowEmptyOption: true,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      mentorPH,
+        wrapperClass:     'ts-wrapper ts-local',
+        plugins:          ['clear_button'],
+    });
+
+    if (elMentor.dataset.tsHasError) tsMentor.wrapper.classList.add('has-error');
+}
+
+// ── Workcenter Tom Select ─────────────────────────────────────────────────
+if (elWc) {
+    const currentWc = elWc.value;
+    const wcPH = elWc.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+    const wcOptions = [{ value: '', text: wcPH, company: '', company_id: '', name: '', city: '', search: '' }];
+    elWc.querySelectorAll('option[data-company]').forEach(opt => {
+        wcOptions.push({
+            value:      opt.value,
+            text:       opt.textContent.trim(),
+            company:    opt.dataset.company ?? '',
+            company_id: opt.dataset.companyId ?? '',
+            name:       opt.textContent.trim(),
+            city:       opt.dataset.city ?? '',
+            search:     `${opt.dataset.company} ${opt.textContent.trim()} ${opt.dataset.city ?? ''}`,
+        });
+    });
+
+    const tsWc = new TomSelect(elWc, {
+        options:          wcOptions,
+        items:            currentWc ? [currentWc] : [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['search'],
+        allowEmptyOption: true,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      wcPH,
+        wrapperClass:     'ts-wrapper ts-local',
+        plugins:          ['clear_button'],
+        render: {
+            option: (d, esc) => {
+                if (!d.company) return `<div class="py-0.5 text-gray-400 italic">${esc(d.text)}</div>`;
+                const city = d.city ? ` <span class="ts-wc-city">· ${esc(d.city)}</span>` : '';
+                return `<div class="ts-wc-option">
+                            <p class="ts-wc-company">${esc(d.company)}</p>
+                            <p class="ts-wc-sub">${esc(d.name)}${city}</p>
+                        </div>`;
+            },
+            item: (d, esc) => {
+                if (!d.company) return `<div>${esc(d.text)}</div>`;
+                return renderTwoLineItem(esc, d.company, d.name);
+            },
+            no_results: () =>
+                `<div class="no-results px-3 py-2 text-sm">{{ 'stays.position.field.workcenter_no_results'|trans({}, 'stays') }}</div>`,
+        },
+        onChange(value) {
+            if (!tsMentor || !getMentorOpts) return;
+            const companyId = value ? (tsWc.options[value]?.company_id ?? '') : '';
+            const prevMentor = tsMentor.getValue();
+            tsMentor.clearOptions();
+            const newOpts = getMentorOpts(companyId);
+            tsMentor.addOptions(newOpts);
+            if (prevMentor && newOpts.some(o => o.value === prevMentor)) {
+                tsMentor.setValue(prevMentor, true);
+            } else {
+                tsMentor.clear(true);
+            }
+        },
+    });
+
+    if (elWc.dataset.tsHasError) tsWc.wrapper.classList.add('has-error');
+}
+
+// ── Tutor docente Tom Select ──────────────────────────────────────────────
+if (elTutor) {
+    const currentTutor = elTutor.value;
+    const tutorPH = elTutor.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+    const tutorOpts = [{ value: '', text: tutorPH }];
+    elTutor.querySelectorAll('option:not([value=""])').forEach(opt => {
+        tutorOpts.push({ value: opt.value, text: opt.textContent.trim() });
+    });
+
+    const ts = new TomSelect(elTutor, {
+        options:          tutorOpts,
+        items:            currentTutor ? [currentTutor] : [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['text'],
+        allowEmptyOption: true,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      tutorPH,
+        wrapperClass:     'ts-wrapper ts-local',
+        plugins:          ['clear_button'],
+    });
+
+    if (elTutor.dataset.tsHasError) ts.wrapper.classList.add('has-error');
+}
+
+// ── Estudiante Tom Select ─────────────────────────────────────────────────
+if (elStudent) {
+    const currentStudent = elStudent.value;
+    const studentPH = elStudent.querySelector('option[value=""]')?.textContent.trim() ?? '';
+
+    const studentOpts = [{ value: '', text: studentPH }];
+    elStudent.querySelectorAll('option:not([value=""])').forEach(opt => {
+        studentOpts.push({
+            value:    opt.value,
+            text:     opt.textContent.trim(),
+            group:    opt.dataset.group ?? '',
+            nie:      opt.dataset.nie   ?? '',
+            search:   `${opt.textContent.trim()} ${opt.dataset.nie ?? ''} ${opt.dataset.group ?? ''}`,
+            disabled: opt.dataset.disabled === '1',
+        });
+    });
+
+    new TomSelect(elStudent, {
+        options:          studentOpts,
+        items:            currentStudent ? [currentStudent] : [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['search'],
+        disabledField:    'disabled',
+        allowEmptyOption: true,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      studentPH,
+        wrapperClass:     'ts-wrapper ts-local',
+        plugins:          ['clear_button'],
+        render: {
+            option: (d, esc) => {
+                if (!d.value) return `<div class="py-0.5 text-gray-400 italic">${esc(d.text)}</div>`;
+                const sub = [d.nie, d.group].filter(Boolean).join(' · ');
+                return sub
+                    ? renderTwoLineOption(esc, d.text, sub)
+                    : `<div class="py-0.5">${esc(d.text)}</div>`;
+            },
+            item: (d, esc) => {
+                if (!d.value) return `<div>${esc(d.text)}</div>`;
+                return d.group
+                    ? renderTwoLineItem(esc, d.text, d.group)
+                    : `<div>${esc(d.text)}</div>`;
+            },
+        },
+    });
+}
+</script>
+{% endblock %}

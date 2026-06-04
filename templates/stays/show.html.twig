@@ -202,6 +202,7 @@
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
                                 {{ 'stays.show.col.signed'|trans({}, 'stays') }}
                             </th>
+                            {% if can_manage %}<th class="px-3 py-3"></th>{% endif %}
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -261,6 +262,18 @@
                                         {{ ux_icon('heroicons:minus', {class: 'h-4 w-4 text-gray-300 mx-auto'}) }}
                                     {% endif %}
                                 </td>
+
+                                {# Editar #}
+                                {% if can_manage %}
+                                <td class="px-3 py-3.5 text-right">
+                                    <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                       class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                              text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                       title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+                                    </a>
+                                </td>
+                                {% endif %}
 
                             </tr>
                         {% endfor %}
