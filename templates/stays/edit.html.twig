@@ -31,6 +31,7 @@
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
                     {{ 'stays.field.name'|trans({}, 'stays') }}
+                    <span class="text-red-400 ml-0.5">*</span>
                 </label>
                 <input id="name" type="text" name="name"
                        value="{{ values.name }}"
@@ -63,6 +64,7 @@
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1.5">
                         {{ 'stays.field.start_date'|trans({}, 'stays') }}
+                        <span class="text-red-400 ml-0.5">*</span>
                     </label>
                     <input id="start_date" type="date" name="start_date"
                            value="{{ values.start_date }}"
@@ -78,6 +80,7 @@
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1.5">
                         {{ 'stays.field.end_date'|trans({}, 'stays') }}
+                        <span class="text-red-400 ml-0.5">*</span>
                     </label>
                     <input id="end_date" type="date" name="end_date"
                            value="{{ values.end_date }}"

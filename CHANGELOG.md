@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `fix`: Añadir indicador `*` de campo obligatorio en nombre y fechas de los formularios de estancia, para consistencia con el campo de enseñanza
 - `fix`: Restricción dinámica de la fecha de fin: su `min` se sincroniza con la fecha de inicio seleccionada en los formularios de nueva y edición de estancia
 - `feat`: Eliminación de puesto formativo individual desde la tabla de puestos, con confirmación y protección CSRF
 - `fix`: Eliminar `overflow-hidden` de las tarjetas de formulario en alta de estancia y alta de puesto; el atributo recortaba los dropdowns de Tom Select que usan `position: absolute`
