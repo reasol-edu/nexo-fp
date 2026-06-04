@@ -144,3 +144,10 @@
 .ts-wc-item .ts-wc-company      { font-weight: 500; color: inherit; font-size: 0.875rem; }
 .ts-wc-item .ts-wc-sep          { color: #d1d5db; margin: 0 0.3rem; font-size: 0.875rem; }
 .ts-wc-item .ts-wc-sub          { font-size: 0.8125rem; color: #9ca3af; }
+
+/* Asignación rápida de puesto: opción con empresa / centro / observaciones */
+.ts-pos-option                  { padding: 0.125rem 0; line-height: 1.35; }
+.ts-pos-option .ts-pos-company  { font-size: 0.8125rem; font-weight: 500; color: #111827; }
+.ts-pos-option .ts-pos-sub      { font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem; }
+.ts-pos-option .ts-pos-details  { font-size: 0.7rem; color: #6b7280; font-style: italic; margin-top: 0.2rem;
+                                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
