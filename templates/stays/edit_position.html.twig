@@ -166,7 +166,6 @@
                                    text-gray-900 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20
                                    focus:outline-none focus:ring-3 transition-colors">
                         <option value="DRAFT"      {{ values.state == 'DRAFT'      ? 'selected' : '' }}>{{ 'stays.state.draft'|trans({}, 'stays') }}</option>
-                        <option value="REGISTERED" {{ values.state == 'REGISTERED' ? 'selected' : '' }}>{{ 'stays.state.registered'|trans({}, 'stays') }}</option>
                         <option value="PENDING"    {{ values.state == 'PENDING'    ? 'selected' : '' }}>{{ 'stays.state.pending'|trans({}, 'stays') }}</option>
                         <option value="DONE"       {{ values.state == 'DONE'       ? 'selected' : '' }}>{{ 'stays.state.done'|trans({}, 'stays') }}</option>
                     </select>
