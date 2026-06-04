@@ -138,6 +138,7 @@
                 {% for stay in items %}
                     {% set sid = stay.id.toRfc4122 %}
                     {% set s = stats[sid] ?? {students: 0, students_with_position: 0, total_positions: 0, occupied: 0, free: 0, companies: 0} %}
+                    {% set unassigned   = s.students - s.students_with_position %}
                     {% set pct_students = s.students > 0 ? ((s.students_with_position / s.students) * 100)|round : 0 %}
                     {% set pct_occupied = s.total_positions > 0 ? ((s.occupied / s.total_positions) * 100)|round : 0 %}
                     {% set pct_free     = s.total_positions > 0 ? ((s.free / s.total_positions) * 100)|round : 0 %}
@@ -177,7 +178,16 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ stay.name }}</h3>
+                            <div class="flex items-center justify-between gap-2">
+                                <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ stay.name }}</h3>
+                                {% if unassigned > 0 %}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-medium text-amber-700 shrink-0"
+                                          title="{{ 'stays.card.unassigned_hint'|trans({'%count%': unassigned}, 'stays') }}">
+                                        {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3 w-3 shrink-0'}) }}
+                                        {{ unassigned }}
+                                    </span>
+                                {% endif %}
+                            </div>
                             <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ stay.programme.name }}</p>
 
                             {# Fechas #}

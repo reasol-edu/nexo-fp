@@ -9,6 +9,7 @@ stays.filter.all_programmes: 'Todas las enseñanzas'
 stays.filter.clear: 'Limpiar filtros'
 
 stays.card.students_with_position: 'Estudiantes con puesto asignado'
+stays.card.unassigned_hint: '{1} 1 estudiante inscrito sin puesto asignado|]1,Inf[ %count% estudiantes inscritos sin puesto asignado'
 stays.card.companies: 'Empresas con puestos'
 stays.card.occupied: 'Puestos asignados'
 stays.card.free: 'Puestos sin asignar'
