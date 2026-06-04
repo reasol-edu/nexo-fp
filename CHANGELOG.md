@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `fix`: Añadir `autofocus` al campo centro de trabajo en el formulario de edición de puesto, igual que en los formularios de alta
 - `fix`: Pasar la etiqueta «Mostrar:» del filtro de período por el sistema de traducciones
 - `feat`: Confirmación de borrado inline (panel con «Sí, eliminar» / «Cancelar») en lugar del diálogo nativo `confirm()` del navegador, tanto para eliminar estancia como para eliminar puesto
 - `refactor`: Reordenar campos en el formulario de edición de puesto: estado y firmado suben antes de observaciones para reflejar su mayor frecuencia de uso operativo
