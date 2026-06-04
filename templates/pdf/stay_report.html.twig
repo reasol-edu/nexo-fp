@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    {% include 'pdf/_styles.html.twig' %}
+</head>
+<body>
+
+    <htmlpageheader name="stayReportHeader">
+        <div class="page-header">
+            <div class="centre-info">{{ app_name }} · {{ centre.name }} · {{ academic_year.name }}</div>
+            <h1>{{ stay.name }}</h1>
+            <div class="subtitle">{{ stay.programme.professionalFamily.name }} · {{ stay.programme.name }}</div>
+            <div class="meta">
+                {{ stay.startDate|date('d/m/Y') }} – {{ stay.endDate|date('d/m/Y') }}
+                &nbsp;·&nbsp;
+                {{ 'stays.report.generated_at'|trans({}, 'stays') }}: {{ 'now'|date('d/m/Y H:i') }}
+            </div>
+        </div>
+    </htmlpageheader>
+    <sethtmlpageheader name="stayReportHeader" value="on" show-this-page="1" />
+
+    <htmlpagefooter name="stayReportFooter">
+        <div class="pdf-footer">Página {PAGENO} de {nbpg}</div>
+    </htmlpagefooter>
+    <sethtmlpagefooter name="stayReportFooter" value="on" />
+
+    {# ── Estadísticas ── #}
+    <h2>{{ 'stays.report.summary'|trans({}, 'stays') }}</h2>
+    <table class="stats-grid">
+        <tr>
+            <td>
+                <span class="stat-value">{{ stats.students ?? 0 }}</span>
+                <span class="stat-label">{{ 'stays.report.stat.students'|trans({}, 'stays') }}</span>
+            </td>
+            <td>
+                <span class="stat-value">{{ stats.students_with_position ?? 0 }}</span>
+                <span class="stat-label">{{ 'stays.report.stat.with_position'|trans({}, 'stays') }}</span>
+            </td>
+            <td>
+                <span class="stat-value">{{ stats.companies ?? 0 }}</span>
+                <span class="stat-label">{{ 'stays.report.stat.companies'|trans({}, 'stays') }}</span>
+            </td>
+            <td>
+                <span class="stat-value">{{ stats.signed_count ?? 0 }}</span>
+                <span class="stat-label">{{ 'stays.report.stat.signed'|trans({}, 'stays') }}</span>
+            </td>
+        </tr>
+    </table>
+
+    {# ── Alumnado por grupo ── #}
+    <h2>{{ 'stays.report.students'|trans({}, 'stays') }}</h2>
+
+    {% for entry in by_group %}
+        {% set group = entry.group %}
+        <h3>{{ group.name }}</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:22%">{{ 'stays.report.col.student'|trans({}, 'stays') }}</th>
+                    <th style="width:20%">{{ 'stays.report.col.workcenter'|trans({}, 'stays') }}</th>
+                    <th style="width:18%">{{ 'stays.report.col.academic_tutor'|trans({}, 'stays') }}</th>
+                    <th style="width:18%">{{ 'stays.report.col.workplace_mentor'|trans({}, 'stays') }}</th>
+                    <th style="width:12%">{{ 'stays.report.col.state'|trans({}, 'stays') }}</th>
+                    <th style="width:10%">{{ 'stays.report.col.signed'|trans({}, 'stays') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in entry.students %}
+                    {% set sid = student.id.toRfc4122 %}
+                    {% set tp  = student_position_map[sid] ?? null %}
+                    {% if tp %}
+                        {% if tp.signed %}
+                            {% set row_class = 'row-signed' %}
+                        {% else %}
+                            {% set row_class = 'row-unsigned' %}
+                        {% endif %}
+                    {% else %}
+                        {% set row_class = 'row-nopos' %}
+                    {% endif %}
+                    <tr class="{{ row_class }}">
+                        <td>{{ student.name.lastName }}, {{ student.name.firstName }}</td>
+                        <td>
+                            {% if tp and tp.workcenter %}
+                                {{ tp.workcenter.company.name }}<br>
+                                <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+                            {% else %}
+                                <span style="color:#9ca3af">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tp and tp.academicTutor %}
+                                {{ tp.academicTutor.name.lastName }}, {{ tp.academicTutor.name.firstName }}
+                            {% else %}
+                                <span style="color:#9ca3af">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tp and tp.workplaceMentor %}
+                                {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}
+                            {% else %}
+                                <span style="color:#9ca3af">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tp %}
+                                {% if tp.state.value == 'DONE' %}
+                                    <span class="badge badge-green">{{ 'stays.state.done'|trans({}, 'stays') }}</span>
+                                {% elseif tp.state.value == 'PENDING' %}
+                                    <span class="badge badge-amber">{{ 'stays.state.pending'|trans({}, 'stays') }}</span>
+                                {% elseif tp.state.value == 'REGISTERED' %}
+                                    <span class="badge badge-blue">{{ 'stays.state.registered'|trans({}, 'stays') }}</span>
+                                {% else %}
+                                    <span class="badge badge-gray">{{ 'stays.state.draft'|trans({}, 'stays') }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-red">{{ 'stays.report.no_position'|trans({}, 'stays') }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align:center">
+                            {% if tp and tp.signed %}
+                                <span class="badge badge-green">{{ 'ui.yes'|trans }}</span>
+                            {% else %}
+                                <span style="color:#9ca3af">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+    {% if ungrouped_students is not empty %}
+        <h3>{{ 'stays.report.ungrouped'|trans({}, 'stays') }}</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:22%">{{ 'stays.report.col.student'|trans({}, 'stays') }}</th>
+                    <th style="width:20%">{{ 'stays.report.col.workcenter'|trans({}, 'stays') }}</th>
+                    <th style="width:18%">{{ 'stays.report.col.academic_tutor'|trans({}, 'stays') }}</th>
+                    <th style="width:18%">{{ 'stays.report.col.workplace_mentor'|trans({}, 'stays') }}</th>
+                    <th style="width:12%">{{ 'stays.report.col.state'|trans({}, 'stays') }}</th>
+                    <th style="width:10%">{{ 'stays.report.col.signed'|trans({}, 'stays') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in ungrouped_students %}
+                    {% set sid = student.id.toRfc4122 %}
+                    {% set tp  = student_position_map[sid] ?? null %}
+                    {% set row_class = tp ? (tp.signed ? 'row-signed' : 'row-unsigned') : 'row-nopos' %}
+                    <tr class="{{ row_class }}">
+                        <td>{{ student.name.lastName }}, {{ student.name.firstName }}</td>
+                        <td>
+                            {% if tp and tp.workcenter %}
+                                {{ tp.workcenter.company.name }}<br>
+                                <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+                            {% else %}<span style="color:#9ca3af">—</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if tp and tp.academicTutor %}
+                                {{ tp.academicTutor.name.lastName }}, {{ tp.academicTutor.name.firstName }}
+                            {% else %}<span style="color:#9ca3af">—</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if tp and tp.workplaceMentor %}
+                                {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}
+                            {% else %}<span style="color:#9ca3af">—</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if tp %}
+                                {% if tp.state.value == 'DONE' %}
+                                    <span class="badge badge-green">{{ 'stays.state.done'|trans({}, 'stays') }}</span>
+                                {% elseif tp.state.value == 'PENDING' %}
+                                    <span class="badge badge-amber">{{ 'stays.state.pending'|trans({}, 'stays') }}</span>
+                                {% elseif tp.state.value == 'REGISTERED' %}
+                                    <span class="badge badge-blue">{{ 'stays.state.registered'|trans({}, 'stays') }}</span>
+                                {% else %}
+                                    <span class="badge badge-gray">{{ 'stays.state.draft'|trans({}, 'stays') }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-red">{{ 'stays.report.no_position'|trans({}, 'stays') }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align:center">
+                            {% if tp and tp.signed %}
+                                <span class="badge badge-green">{{ 'ui.yes'|trans }}</span>
+                            {% else %}<span style="color:#9ca3af">—</span>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# ── Puestos sin asignar ── #}
+    {% if unassigned_positions is not empty %}
+        <h2>{{ 'stays.report.unassigned_positions'|trans({}, 'stays') }}</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:28%">{{ 'stays.report.col.company'|trans({}, 'stays') }}</th>
+                    <th style="width:25%">{{ 'stays.report.col.workcenter_name'|trans({}, 'stays') }}</th>
+                    <th style="width:20%">{{ 'stays.report.col.levels'|trans({}, 'stays') }}</th>
+                    <th style="width:27%">{{ 'stays.report.col.notes'|trans({}, 'stays') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tp in unassigned_positions %}
+                    <tr>
+                        <td>{{ tp.workcenter.company.name }}</td>
+                        <td>{{ tp.workcenter.name }}<br><span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.city }}</span></td>
+                        <td>
+                            {% for py in tp.programmeYears %}
+                                <span class="badge badge-purple">{{ py.name }}</span>
+                            {% endfor %}
+                        </td>
+                        <td style="color:#6b7280">{{ tp.notes ?? '' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+
+</body>
+</html>

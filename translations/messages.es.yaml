@@ -4,6 +4,7 @@ app:
 # Acciones globales
 ui.cancel: 'Cancelar'
 ui.confirm_delete: 'Sí, eliminar'
+ui.yes: 'Sí'
 
 # Paginación
 pagination.summary: 'Mostrando %from%–%to% de %total%'

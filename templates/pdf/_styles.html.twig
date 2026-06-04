@@ -1,0 +1,145 @@
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'DejaVu Sans', Arial, sans-serif;
+        font-size: 9pt;
+        color: #111827;
+        line-height: 1.4;
+    }
+
+    /* ── Cabecera de página ── */
+    .page-header {
+        border-bottom: 2px solid #5b21b6;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+    }
+    .page-header h1 {
+        font-size: 15pt;
+        font-weight: bold;
+        color: #111827;
+    }
+    .page-header .subtitle {
+        font-size: 9pt;
+        color: #374151;
+        margin-top: 3px;
+    }
+    .page-header .meta {
+        font-size: 8pt;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+    .page-header .centre-info {
+        font-size: 8.5pt;
+        color: #374151;
+        margin-top: 4px;
+        font-weight: bold;
+    }
+
+    /* ── Secciones ── */
+    h2 {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #3b0764;
+        border-bottom: 1px solid #d1d5db;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        margin-top: 14px;
+    }
+    h3 {
+        font-size: 9pt;
+        font-weight: bold;
+        color: #1f2937;
+        background-color: #e5e7eb;
+        padding: 4px 8px;
+        margin-bottom: 6px;
+        margin-top: 10px;
+    }
+
+    /* ── Grid de estadísticas ── */
+    .stats-grid {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 14px;
+    }
+    .stats-grid td {
+        width: 25%;
+        border: 1px solid #d1d5db;
+        padding: 8px 10px;
+        text-align: center;
+        vertical-align: middle;
+        background-color: #f9fafb;
+    }
+    .stats-grid .stat-value {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #111827;
+        display: block;
+    }
+    .stats-grid .stat-label {
+        font-size: 7.5pt;
+        color: #374151;
+        display: block;
+        margin-top: 2px;
+    }
+
+    /* ── Tablas de datos ── */
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+        font-size: 8pt;
+    }
+    table.data-table thead tr {
+        background-color: #4c1d95;
+    }
+    table.data-table thead th {
+        padding: 6px 7px;
+        text-align: left;
+        vertical-align: middle;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    table.data-table tbody tr:nth-child(even) {
+        background-color: #f3f4f6;
+    }
+    table.data-table tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+    table.data-table tbody td {
+        padding: 7px 7px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+        color: #111827;
+    }
+
+    /* ── Estados de fila (fondo claro, texto negro legible) ── */
+    tr.row-signed td   { background-color: #d0f3d9 !important; color: #111827 !important; }
+    tr.row-unsigned td { background-color: #fdfbc9 !important; color: #111827 !important; }
+    tr.row-nopos td    { background-color: #fefefe !important; color: #111827 !important; }
+
+    /* ── Badges ── */
+    .badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 7pt;
+        font-weight: bold;
+        color: #111827;
+    }
+    .badge-green  { background-color: #86efac; }
+    .badge-amber  { background-color: #fcd34d; }
+    .badge-red    { background-color: #fca5a5; }
+    .badge-blue   { background-color: #93c5fd; }
+    .badge-gray   { background-color: #d1d5db; }
+    .badge-purple { background-color: #c4b5fd; }
+
+    /* ── Pie de página ── */
+    .pdf-footer {
+        font-size: 7.5pt;
+        color: #6b7280;
+        text-align: right;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 4px;
+    }
+</style>

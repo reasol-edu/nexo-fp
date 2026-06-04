@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Generación de informe PDF de estancias
 - `feat`: Vista de detalle de estancia como SPA con Symfony UX Live Components: asignar/desasignar puesto y tutores duales actualiza la página sin recarga completa; los diálogos de confirmación de borrado también funcionan tras cada rerender del componente
 - `feat`: Asignación rápida de tutores duales desde la fila del alumno: al hacer hover sobre una fila con puesto asignado pero sin tutor dual docente o de empresa, aparecen selectores con autocompletar que asignan el tutor y recargan la página
 - `feat`: Asignación rápida de puesto desde la fila del alumno: al hacer clic en «Sin puesto asignado» se despliega un selector filtrado por nivel del alumno con empresa, centro de trabajo y observaciones; al seleccionar, se asigna el puesto y se recarga la página

@@ -17,6 +17,7 @@ use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
+use App\Service\PdfService;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,6 +44,7 @@ class StayController extends AbstractController
         private readonly ProgrammeRepository $programmes,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
+        private readonly PdfService $pdf,
     ) {}
 
     #[Route('', name: 'app_stays_index')]
@@ -312,6 +314,86 @@ class StayController extends AbstractController
             'centre' => $centre,
             'stay'   => $stay,
         ]);
+    }
+
+    #[Route('/{id}/informe', name: 'app_stays_report')]
+    public function report(string $id): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $allPositions = $this->positions->findByStayOrdered($stay);
+
+        $studentPositionMap  = [];
+        $unassignedPositions = [];
+        foreach ($allPositions as $tp) {
+            if ($tp->getStudent() !== null) {
+                $studentPositionMap[$tp->getStudent()->getId()->toRfc4122()] = $tp;
+            } else {
+                $unassignedPositions[] = $tp;
+            }
+        }
+
+        $enrolledStudents = [];
+        foreach ($stay->getStudents() as $s) {
+            $enrolledStudents[$s->getId()->toRfc4122()] = $s;
+        }
+
+        $byGroup          = [];
+        $placedStudentIds = [];
+        foreach ($this->groups->findByProgrammeWithStudents($stay->getProgramme()) as $group) {
+            $groupStudents = [];
+            foreach ($group->getStudents() as $student) {
+                $sid = $student->getId()->toRfc4122();
+                if (isset($enrolledStudents[$sid])) {
+                    $groupStudents[]        = $student;
+                    $placedStudentIds[$sid] = true;
+                }
+            }
+            if ($groupStudents !== []) {
+                $byGroup[] = ['group' => $group, 'students' => $groupStudents];
+            }
+        }
+
+        $ungroupedStudents = [];
+        foreach ($enrolledStudents as $sid => $student) {
+            if (!isset($placedStudentIds[$sid])) {
+                $ungroupedStudents[] = $student;
+            }
+        }
+        usort($ungroupedStudents, fn ($a, $b) =>
+            $a->getName()->getLastName() <=> $b->getName()->getLastName()
+            ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
+        );
+
+        $statsMap = $this->stays->findStatsForStays([$stay]);
+        $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
+
+        $reportFilenameBase = $this->t('stays.report.filename_base');
+        $slug               = preg_replace('/[^a-z0-9]+/i', '-', $stay->getName()) ?? $reportFilenameBase;
+        $filename           = $reportFilenameBase . '-' . strtolower($slug) . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.pdf';
+
+        return $this->pdf->renderPdf('pdf/stay_report.html.twig', [
+            'stay'                 => $stay,
+            'centre'               => $centre,
+            'academic_year'        => $year,
+            'stats'                => $stats,
+            'by_group'             => $byGroup,
+            'ungrouped_students'   => $ungroupedStudents,
+            'student_position_map' => $studentPositionMap,
+            'unassigned_positions' => $unassignedPositions,
+        ], $filename);
     }
 
     #[Route('/{id}/nuevo-puesto', name: 'app_stays_new_position')]
