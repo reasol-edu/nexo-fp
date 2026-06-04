@@ -116,6 +116,24 @@
 
 </div>
 
+<script>
+(function () {
+    const start = document.getElementById('start_date');
+    const end   = document.getElementById('end_date');
+    if (!start || !end) return;
+    function syncMin() {
+        if (start.value) {
+            end.min = start.value;
+            if (end.value && end.value < start.value) end.value = start.value;
+        } else {
+            end.removeAttribute('min');
+        }
+    }
+    start.addEventListener('change', syncMin);
+    syncMin();
+}());
+</script>
+
 <script type="module">
 import TomSelect from 'tom-select';
 
