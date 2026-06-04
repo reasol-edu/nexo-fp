@@ -25,6 +25,9 @@ stays.state.registered: 'Registrado'
 stays.state.pending: 'Pendiente'
 stays.state.done: 'Completado'
 
+stays.edit.title: 'Editar estancia'
+stays.edit.save: 'Guardar cambios'
+
 stays.new.title: 'Nueva estancia'
 stays.field.name: 'Nombre de la estancia'
 stays.field.name_placeholder: 'ej: FFEOE GS 2026-2027'
@@ -61,6 +64,7 @@ stays.flash.created: 'Estancia creada correctamente.'
 stays.flash.no_active_year: 'Este centro no tiene un curso académico activo.'
 stays.flash.positions_created: '{1} Puesto formativo creado correctamente.|]1,Inf[ %count% puestos formativos creados correctamente.'
 stays.flash.students_saved: 'Lista de estudiantes actualizada correctamente.'
+stays.flash.updated: 'Estancia actualizada correctamente.'
 
 stays.position.new_title: 'Nuevo puesto formativo'
 stays.position.new_btn: 'Añadir puesto'

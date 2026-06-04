@@ -76,12 +76,22 @@
                     <p class="mt-0.5 text-sm text-gray-500">{{ stay.programme.name }}</p>
                 </div>
 
-                {# Fechas #}
-                <div class="flex items-center gap-1.5 text-sm text-gray-500 rounded-xl border border-gray-200 px-3 py-2 shrink-0">
-                    {{ ux_icon('heroicons:calendar-days', {class: 'h-4 w-4 shrink-0 text-gray-400'}) }}
-                    <span>{{ stay.startDate|date('d/m/Y') }}</span>
-                    <span class="text-gray-300">→</span>
-                    <span>{{ stay.endDate|date('d/m/Y') }}</span>
+                {# Fechas + editar #}
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 text-sm text-gray-500 rounded-xl border border-gray-200 px-3 py-2">
+                        {{ ux_icon('heroicons:calendar-days', {class: 'h-4 w-4 shrink-0 text-gray-400'}) }}
+                        <span>{{ stay.startDate|date('d/m/Y') }}</span>
+                        <span class="text-gray-300">→</span>
+                        <span>{{ stay.endDate|date('d/m/Y') }}</span>
+                    </div>
+                    {% if can_manage %}
+                        <a href="{{ path('app_stays_edit', {id: stay.id.toRfc4122}) }}"
+                           class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
+                                  text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                           title="{{ 'stays.edit.title'|trans({}, 'stays') }}">
+                            {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
