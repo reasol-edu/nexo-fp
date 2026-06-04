@@ -187,6 +187,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 {{ 'stays.show.col.workcenter'|trans({}, 'stays') }}
                             </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden md:table-cell">
+                                {{ 'stays.show.col.levels'|trans({}, 'stays') }}
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 {{ 'stays.show.col.student'|trans({}, 'stays') }}
                             </th>
@@ -216,6 +219,21 @@
                                         <p class="text-xs text-gray-500 mt-0.5">{{ position.workcenter.name }}{% if position.workcenter.city %} · {{ position.workcenter.city }}{% endif %}</p>
                                     {% else %}
                                         <span class="text-xs text-gray-400 italic">{{ 'stays.show.no_workcenter'|trans({}, 'stays') }}</span>
+                                    {% endif %}
+                                </td>
+
+                                {# Niveles #}
+                                <td class="px-4 py-3.5 hidden md:table-cell">
+                                    {% if position.programmeYears is not empty %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for py in position.programmeYears %}
+                                                <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700">
+                                                    {{ py.name }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-gray-300">—</span>
                                     {% endif %}
                                 </td>
 
