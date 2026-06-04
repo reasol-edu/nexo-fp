@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Badge de alerta en las cards del índice cuando hay estudiantes inscritos en la estancia sin puesto formativo asignado
 - `feat`: Columna «Niveles» en la tabla de puestos formativos de la vista de detalle, con badges por nivel; oculta en pantallas pequeñas
 - `feat`: Botón «Limpiar filtros» en el índice de estancias, visible solo cuando hay algún filtro activo (texto, familia, enseñanza o período); resetea todos los filtros en una sola acción
 - `fix`: Añadir indicador `*` de campo obligatorio en nombre y fechas de los formularios de estancia, para consistencia con el campo de enseñanza
