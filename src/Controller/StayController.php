@@ -159,6 +159,44 @@ class StayController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/eliminar', name: 'app_stays_delete', methods: ['POST'])]
+    public function delete(string $id, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('delete_stay_' . $id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        // Remove training positions first so Doctrine cleans their programmeYears join table.
+        // Then remove the stay; Doctrine clears stay_students (Stay is the owning side).
+        foreach ($this->positions->findByStayOrdered($stay) as $tp) {
+            $this->em->remove($tp);
+        }
+        $this->em->remove($stay);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.deleted'));
+
+        return $this->redirectToRoute('app_stays_index');
+    }
+
     #[Route('/{id}/editar', name: 'app_stays_edit')]
     public function edit(string $id, Request $request): Response
     {
