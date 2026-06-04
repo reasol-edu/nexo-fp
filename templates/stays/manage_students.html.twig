@@ -1,0 +1,199 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'stays.students.title'|trans({}, 'stays') }} · {{ stay.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-4xl mx-auto">
+
+    {# ── Breadcrumb + cabecera ────────────────────────────────────────────── #}
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_stays_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'stays.title'|trans({}, 'stays') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}"
+               class="hover:text-plum-600 transition-colors truncate max-w-48">
+                {{ stay.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.students.title'|trans({}, 'stays') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ stay.name }} · {{ stay.programme.name }}</p>
+    </div>
+
+    {# ── Buscador ─────────────────────────────────────────────────────────── #}
+    <div class="mb-4">
+        <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
+            </span>
+            <input id="student-search" type="text"
+                   placeholder="{{ 'stays.students.search_placeholder'|trans({}, 'stays') }}"
+                   class="block w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-4
+                          text-sm text-gray-900 placeholder:text-gray-400
+                          focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20
+                          transition-colors">
+        </div>
+    </div>
+
+    {# ── Formulario ───────────────────────────────────────────────────────── #}
+    {% if by_level is empty %}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-14 text-center">
+            {{ ux_icon('heroicons:user-group', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+            <p class="text-sm text-gray-500">{{ 'stays.students.no_eligible'|trans({}, 'stays') }}</p>
+        </div>
+    {% else %}
+        <form method="post" id="manage-students-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('manage_students_' ~ stay.id.toRfc4122) }}">
+
+            <div class="space-y-4">
+                {% for entry in by_level %}
+                    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden js-level-block">
+
+                        {# Cabecera nivel #}
+                        <div class="px-5 py-3 bg-gray-50/70 border-b border-gray-100 flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-plum-400 shrink-0"></span>
+                            <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                {{ entry.level.name }}
+                            </span>
+                        </div>
+
+                        <div class="divide-y divide-gray-50">
+                            {% for group in entry.groups %}
+                                <div class="js-group-block">
+                                    {# Cabecera grupo #}
+                                    <div class="px-5 pt-3 pb-1.5 flex items-center gap-2">
+                                        {{ ux_icon('heroicons:users', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
+                                        <span class="text-xs font-medium text-gray-500">{{ group.name }}</span>
+                                        <span class="ml-auto text-xs text-gray-400 tabular-nums js-group-count">
+                                            {{ group.students|length }}
+                                        </span>
+                                    </div>
+
+                                    {% if group.students is empty %}
+                                        <p class="px-5 pb-3 text-xs text-gray-400 italic">
+                                            {{ 'stays.students.group_empty'|trans({}, 'stays') }}
+                                        </p>
+                                    {% else %}
+                                        <div class="px-4 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                            {% for student in group.students %}
+                                                {% set sid = student.id.toRfc4122 %}
+                                                {% set is_enrolled = enrolled_ids[sid] is defined %}
+                                                {% set has_position = position_ids[sid] is defined %}
+                                                <label
+                                                    class="js-student-card relative flex items-center gap-3 rounded-xl border px-3.5 py-2.5 cursor-pointer select-none transition-colors
+                                                           {% if has_position %}
+                                                               opacity-70 cursor-not-allowed border-gray-200 bg-gray-50
+                                                           {% elseif is_enrolled %}
+                                                               border-plum-300 bg-plum-50
+                                                           {% else %}
+                                                               border-gray-200 bg-white hover:border-plum-200 hover:bg-plum-50/40
+                                                           {% endif %}"
+                                                    data-name="{{ (student.name.lastName ~ ' ' ~ student.name.firstName)|lower }}"
+                                                    data-id="{{ student.studentId|lower }}"
+                                                    title="{{ has_position ? 'stays.students.has_position_hint'|trans({}, 'stays') : '' }}">
+
+                                                    <input type="checkbox"
+                                                           name="student_ids[]"
+                                                           value="{{ sid }}"
+                                                           {{ is_enrolled ? 'checked' : '' }}
+                                                           {{ has_position ? 'disabled' : '' }}
+                                                           class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500 shrink-0
+                                                                  {% if has_position %}cursor-not-allowed{% endif %}">
+
+                                                    {# Disabled+checked → hidden input to keep the value submitted #}
+                                                    {% if has_position and is_enrolled %}
+                                                        <input type="hidden" name="student_ids[]" value="{{ sid }}">
+                                                    {% endif %}
+
+                                                    <div class="min-w-0 flex-1">
+                                                        <p class="text-sm font-medium text-gray-900 leading-snug truncate">
+                                                            {{ student.name.full() }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-400 font-mono">{{ student.studentId }}</p>
+                                                    </div>
+
+                                                    {% if has_position %}
+                                                        {{ ux_icon('heroicons:lock-closed', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
+                                                    {% endif %}
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {# ── Acciones ─────────────────────────────────────────────────────── #}
+            <div class="mt-6 flex items-center justify-between gap-3">
+                <p id="selection-count" class="text-sm text-gray-500"></p>
+                <div class="flex items-center gap-3">
+                    <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}"
+                       class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
+                              hover:bg-gray-50 transition-colors">
+                        {{ 'stays.cancel'|trans({}, 'stays') }}
+                    </a>
+                    <button type="submit"
+                            class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
+                                   hover:bg-plum-700 transition-colors shadow-xs">
+                        {{ 'stays.students.save'|trans({}, 'stays') }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    {% endif %}
+
+</div>
+
+<script>
+(function () {
+    const search = document.getElementById('student-search');
+    const countEl = document.getElementById('selection-count');
+    const form = document.getElementById('manage-students-form');
+
+    function updateCount() {
+        if (!form || !countEl) return;
+        const checked = form.querySelectorAll('input[type="checkbox"]:checked').length;
+        countEl.textContent = checked === 0
+            ? '{{ 'stays.students.selected_none'|trans({}, 'stays')|e('js') }}'
+            : checked === 1
+                ? '{{ 'stays.students.selected_one'|trans({}, 'stays')|e('js') }}'
+                : '{{ 'stays.students.selected_many'|trans({}, 'stays')|e('js') }}'.replace('%count%', checked);
+    }
+
+    if (form) {
+        form.addEventListener('change', updateCount);
+        updateCount();
+    }
+
+    if (!search) return;
+
+    search.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+
+        document.querySelectorAll('.js-student-card').forEach(function (card) {
+            const name = card.dataset.name || '';
+            const id   = card.dataset.id   || '';
+            const match = q === '' || name.includes(q) || id.includes(q);
+            card.style.display = match ? '' : 'none';
+        });
+
+        // Hide group blocks that have no visible students
+        document.querySelectorAll('.js-group-block').forEach(function (block) {
+            const visibleCards = block.querySelectorAll('.js-student-card:not([style*="display: none"])').length;
+            block.style.display = visibleCards === 0 && q !== '' ? 'none' : '';
+        });
+
+        // Hide level blocks that have no visible groups
+        document.querySelectorAll('.js-level-block').forEach(function (block) {
+            const visibleGroups = block.querySelectorAll('.js-group-block:not([style*="display: none"])').length;
+            block.style.display = visibleGroups === 0 && q !== '' ? 'none' : '';
+        });
+    });
+}());
+</script>
+{% endblock %}

@@ -8,6 +8,7 @@ use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Repository\CompanyRepository;
+use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
@@ -35,6 +36,7 @@ class StayController extends AbstractController
         private readonly CompanyRepository $companies,
         private readonly WorkcenterRepository $workcenters,
         private readonly ProgrammeYearRepository $programmeYears,
+        private readonly GroupRepository $groups,
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
         private readonly TranslatorInterface $translator,
@@ -311,6 +313,106 @@ class StayController extends AbstractController
             'programme_years' => $programmeYears,
             'errors'          => $errors,
             'values'          => $values,
+        ]);
+    }
+
+    #[Route('/{id}/estudiantes', name: 'app_stays_manage_students')]
+    public function manageStudents(string $id, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        // Groups with students, eager-loaded, for the stay's programme
+        $groupList = $this->groups->findByProgrammeWithStudents($stay->getProgramme());
+
+        // Organize by ProgrammeYear for template
+        $byLevel = [];
+        $eligibleStudents = [];
+        foreach ($groupList as $group) {
+            $pyId = $group->getProgrammeYear()->getId()->toRfc4122();
+            if (!isset($byLevel[$pyId])) {
+                $byLevel[$pyId] = ['level' => $group->getProgrammeYear(), 'groups' => []];
+            }
+            $byLevel[$pyId]['groups'][] = $group;
+            foreach ($group->getStudents() as $student) {
+                $eligibleStudents[$student->getId()->toRfc4122()] = $student;
+            }
+        }
+
+        // Currently enrolled students
+        $enrolledStudents = [];
+        foreach ($stay->getStudents() as $student) {
+            $enrolledStudents[$student->getId()->toRfc4122()] = $student;
+        }
+
+        // Students who have a training position in this stay → cannot be removed
+        $hasPositionIds = [];
+        foreach ($this->positions->findByStayOrdered($stay) as $tp) {
+            if ($tp->getStudent() !== null) {
+                $hasPositionIds[$tp->getStudent()->getId()->toRfc4122()] = true;
+            }
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('manage_students_' . $id, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $submittedIds = [];
+            foreach ($request->request->all('student_ids') as $sid) {
+                $sid = (string) $sid;
+                if (isset($eligibleStudents[$sid])) {
+                    $submittedIds[$sid] = true;
+                }
+            }
+
+            // Students with positions are always kept regardless of form submission
+            foreach (array_keys($hasPositionIds) as $sid) {
+                if (isset($enrolledStudents[$sid])) {
+                    $submittedIds[$sid] = true;
+                }
+            }
+
+            foreach (array_keys($submittedIds) as $sid) {
+                if (!isset($enrolledStudents[$sid]) && isset($eligibleStudents[$sid])) {
+                    $stay->addStudent($eligibleStudents[$sid]);
+                }
+            }
+
+            foreach (array_keys($enrolledStudents) as $sid) {
+                if (!isset($submittedIds[$sid])) {
+                    $stay->removeStudent($enrolledStudents[$sid]);
+                }
+            }
+
+            $this->em->flush();
+
+            $this->addFlash('success', $this->t('stays.flash.students_saved'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+        }
+
+        return $this->render('stays/manage_students.html.twig', [
+            'centre'          => $centre,
+            'stay'            => $stay,
+            'by_level'        => $byLevel,
+            'enrolled_ids'    => $enrolledStudents,
+            'position_ids'    => $hasPositionIds,
         ]);
     }
 
