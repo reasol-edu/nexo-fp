@@ -90,6 +90,13 @@
                         <span class="text-gray-300">→</span>
                         <span>{{ stay.endDate|date('d/m/Y') }}</span>
                     </div>
+                    <a href="{{ path('app_stays_report', {id: stay.id.toRfc4122}) }}"
+                       target="_blank"
+                       class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
+                              text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                       title="{{ 'stays.report.btn'|trans({}, 'stays') }}">
+                        {{ ux_icon('heroicons:document-arrow-down', {class: 'h-4 w-4'}) }}
+                    </a>
                     {% if can_manage %}
                         <a href="{{ path('app_stays_edit', {id: stay.id.toRfc4122}) }}"
                            class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
@@ -318,7 +325,6 @@
                                                       data-live-arg-name="workerId">
                                                     <button type="button"
                                                             class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
-                                                        {{ ux_icon('heroicons:building-office', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                         {{ 'stays.show.mentor_none'|trans({}, 'stays') }}
                                                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
                                                     </button>
