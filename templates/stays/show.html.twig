@@ -91,6 +91,17 @@
                            title="{{ 'stays.edit.title'|trans({}, 'stays') }}">
                             {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                         </a>
+                        <form method="post"
+                              action="{{ path('app_stays_delete', {id: stay.id.toRfc4122}) }}"
+                              onsubmit="return confirm('{{ 'stays.delete.confirm'|trans({}, 'stays')|e('js') }}')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_stay_' ~ stay.id.toRfc4122) }}">
+                            <button type="submit"
+                                    class="inline-flex items-center gap-1 rounded-xl border border-red-200 px-3 py-2
+                                           text-sm text-red-500 hover:border-red-300 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                    title="{{ 'stays.delete.btn'|trans({}, 'stays') }}">
+                                {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
             </div>
