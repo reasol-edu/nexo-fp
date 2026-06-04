@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `feat`: Asignación rápida de tutores duales desde la fila del alumno: al hacer hover sobre una fila con puesto asignado pero sin tutor dual docente o de empresa, aparecen selectores con autocompletar que asignan el tutor y recargan la página
 - `feat`: Asignación rápida de puesto desde la fila del alumno: al hacer clic en «Sin puesto asignado» se despliega un selector filtrado por nivel del alumno con empresa, centro de trabajo y observaciones; al seleccionar, se asigna el puesto y se recarga la página
 - `fix`: Añadir `autofocus` al campo centro de trabajo en el formulario de edición de puesto, igual que en los formularios de alta
 - `fix`: Pasar la etiqueta «Mostrar:» del filtro de período por el sistema de traducciones

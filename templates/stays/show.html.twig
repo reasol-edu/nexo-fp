@@ -196,7 +196,7 @@
                             <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
                                 {{ 'stays.show.col.state'|trans({}, 'stays') }}
                             </th>
-                            {% if can_manage %}<th class="px-3 py-3"></th>{% endif %}
+                            {% if can_manage %}<th class="px-3 py-3 w-24"></th>{% endif %}
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -224,7 +224,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors">
+                                <tr class="{{ row_bg }} transition-colors js-student-row">
 
                                     {# Estudiante #}
                                     <td class="px-5 py-3">
@@ -248,7 +248,7 @@
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
                                                     </button>
-                                                    <div class="js-assign-select hidden mt-1.5 min-w-[220px]">
+                                                    <div class="js-assign-select hidden mt-1.5">
                                                         <select name="position_id"
                                                                 class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
                                                             <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
@@ -282,6 +282,25 @@
                                     <td class="px-5 py-3 hidden lg:table-cell">
                                         {% if position and position.academicTutor %}
                                             <p class="text-gray-700 leading-snug">{{ position.academicTutor.name.full() }}</p>
+                                        {% elseif position is not null and can_manage %}
+                                            <form method="post"
+                                                  action="{{ path('app_stays_set_academic_tutor', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                  class="js-inline-assign-form">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('set_tutor_' ~ position.id.toRfc4122) }}">
+                                                <button type="button"
+                                                        class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                                                    {{ 'stays.show.tutor_none'|trans({}, 'stays') }}
+                                                    {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                </button>
+                                                <div class="js-inline-select-wrap hidden mt-1.5">
+                                                    <select name="teacher_id" class="js-inline-select w-full">
+                                                        <option value="">{{ 'stays.show.assign_tutor_placeholder'|trans({}, 'stays') }}</option>
+                                                        {% for teacher in programme_teachers %}
+                                                            <option value="{{ teacher.id.toRfc4122 }}">{{ teacher.name.lastName }} {{ teacher.name.firstName }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </form>
                                         {% else %}
                                             <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
                                         {% endif %}
@@ -291,6 +310,31 @@
                                     <td class="px-5 py-3 hidden lg:table-cell">
                                         {% if position and position.workplaceMentor %}
                                             <p class="text-gray-700 leading-snug">{{ position.workplaceMentor.name.full() }}</p>
+                                        {% elseif position is not null and position.workcenter and can_manage %}
+                                            {% set cid = position.workcenter.company.id.toRfc4122 %}
+                                            {% set mentorOpts = workers_by_company_id[cid] ?? [] %}
+                                            {% if mentorOpts is not empty %}
+                                                <form method="post"
+                                                      action="{{ path('app_stays_set_workplace_mentor', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                      class="js-inline-assign-form">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('set_mentor_' ~ position.id.toRfc4122) }}">
+                                                    <button type="button"
+                                                            class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                                                        {{ 'stays.show.mentor_none'|trans({}, 'stays') }}
+                                                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                    </button>
+                                                    <div class="js-inline-select-wrap hidden mt-1.5">
+                                                        <select name="worker_id" class="js-inline-select w-full">
+                                                            <option value="">{{ 'stays.show.assign_mentor_placeholder'|trans({}, 'stays') }}</option>
+                                                            {% for w in mentorOpts %}
+                                                                <option value="{{ w.id.toRfc4122 }}">{{ w.name.lastName }} {{ w.name.firstName }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
+                                            {% endif %}
                                         {% else %}
                                             <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
                                         {% endif %}
@@ -365,7 +409,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors">
+                                <tr class="{{ row_bg }} transition-colors js-student-row">
                                     <td class="px-5 py-3">
                                         <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}</p>
                                         <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
@@ -385,7 +429,7 @@
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
                                                     </button>
-                                                    <div class="js-assign-select hidden mt-1.5 min-w-[220px]">
+                                                    <div class="js-assign-select hidden mt-1.5">
                                                         <select name="position_id"
                                                                 class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
                                                             <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
@@ -417,6 +461,26 @@
                                     <td class="px-5 py-3 hidden lg:table-cell">
                                         {% if position and position.academicTutor %}
                                             <p class="text-gray-700 leading-snug">{{ position.academicTutor.name.full() }}</p>
+                                        {% elseif position is not null and can_manage %}
+                                            <form method="post"
+                                                  action="{{ path('app_stays_set_academic_tutor', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                  class="js-inline-assign-form">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('set_tutor_' ~ position.id.toRfc4122) }}">
+                                                <button type="button"
+                                                        class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                                                    {{ ux_icon('heroicons:user', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                    {{ 'stays.show.tutor_none'|trans({}, 'stays') }}
+                                                    {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                </button>
+                                                <div class="js-inline-select-wrap hidden mt-1.5">
+                                                    <select name="teacher_id" class="js-inline-select w-full">
+                                                        <option value="">{{ 'stays.show.assign_tutor_placeholder'|trans({}, 'stays') }}</option>
+                                                        {% for teacher in programme_teachers %}
+                                                            <option value="{{ teacher.id.toRfc4122 }}">{{ teacher.name.lastName }} {{ teacher.name.firstName }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </form>
                                         {% else %}
                                             <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
                                         {% endif %}
@@ -424,6 +488,32 @@
                                     <td class="px-5 py-3 hidden lg:table-cell">
                                         {% if position and position.workplaceMentor %}
                                             <p class="text-gray-700 leading-snug">{{ position.workplaceMentor.name.full() }}</p>
+                                        {% elseif position is not null and position.workcenter and can_manage %}
+                                            {% set cid = position.workcenter.company.id.toRfc4122 %}
+                                            {% set mentorOpts = workers_by_company_id[cid] ?? [] %}
+                                            {% if mentorOpts is not empty %}
+                                                <form method="post"
+                                                      action="{{ path('app_stays_set_workplace_mentor', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                      class="js-inline-assign-form">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('set_mentor_' ~ position.id.toRfc4122) }}">
+                                                    <button type="button"
+                                                            class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                                                        {{ ux_icon('heroicons:building-office', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                                        {{ 'stays.show.mentor_none'|trans({}, 'stays') }}
+                                                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                                                    </button>
+                                                    <div class="js-inline-select-wrap hidden mt-1.5">
+                                                        <select name="worker_id" class="js-inline-select w-full">
+                                                            <option value="">{{ 'stays.show.assign_mentor_placeholder'|trans({}, 'stays') }}</option>
+                                                            {% for w in mentorOpts %}
+                                                                <option value="{{ w.id.toRfc4122 }}">{{ w.name.lastName }} {{ w.name.firstName }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
+                                            {% endif %}
                                         {% else %}
                                             <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
                                         {% endif %}
@@ -707,6 +797,44 @@ document.querySelectorAll('.js-assign-form').forEach(function (form) {
         onChange: function (value) {
             if (value) form.submit();
         },
+        onDropdownClose: function () {
+            wrap.classList.add('hidden');
+            trigger.classList.remove('hidden');
+        },
+    });
+
+    trigger.addEventListener('click', function () {
+        wrap.classList.remove('hidden');
+        trigger.classList.add('hidden');
+        requestAnimationFrame(function () { ts.open(); });
+    });
+});
+
+// ── Inline tutor / mentor assignment (click trigger) ─────────────────────
+document.querySelectorAll('.js-inline-assign-form').forEach(function (form) {
+    const trigger  = form.querySelector('.js-inline-trigger');
+    const wrap     = form.querySelector('.js-inline-select-wrap');
+    const dropdown = form.querySelector('.js-inline-select');
+    if (!trigger || !wrap || !dropdown) return;
+
+    const ph   = dropdown.querySelector('option[value=""]')?.textContent.trim() ?? '';
+    const opts = [{ value: '', text: ph }];
+    dropdown.querySelectorAll('option:not([value=""])').forEach(function (opt) {
+        opts.push({ value: opt.value, text: opt.textContent.trim() });
+    });
+
+    const ts = new TomSelect(dropdown, {
+        options:          opts,
+        items:            [],
+        valueField:       'value',
+        labelField:       'text',
+        searchField:      ['text'],
+        allowEmptyOption: false,
+        create:           false,
+        maxOptions:       null,
+        placeholder:      ph,
+        wrapperClass:     'ts-wrapper ts-local',
+        onChange:        function (value) { if (value) form.submit(); },
         onDropdownClose: function () {
             wrap.classList.add('hidden');
             trigger.classList.remove('hidden');
