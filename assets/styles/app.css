@@ -26,9 +26,13 @@
     border-radius: 0.75rem;
     background: #f9fafb; /* bg-gray-50 */
     box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Variante de control ajustada para selects locales (formulario de estancia) */
+:root .ts-wrapper.ts-local .ts-control {
     padding: 0.5rem 0.875rem;
     min-height: unset;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 :root .ts-wrapper.focus .ts-control,
