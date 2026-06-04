@@ -180,24 +180,11 @@ class StayController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $allProgrammes = $this->programmes->findByAcademicYearOrderedByFamilyAndName($year);
-
-        /** @var array<string, array{family: \App\Entity\ProfessionalFamily, programmes: \App\Entity\Programme[]}> $byFamily */
-        $byFamily = [];
-        foreach ($allProgrammes as $p) {
-            $fid = $p->getProfessionalFamily()->getId()->toRfc4122();
-            if (!isset($byFamily[$fid])) {
-                $byFamily[$fid] = ['family' => $p->getProfessionalFamily(), 'programmes' => []];
-            }
-            $byFamily[$fid]['programmes'][] = $p;
-        }
-
         $errors = [];
         $values = [
-            'name'         => $stay->getName(),
-            'programme_id' => $stay->getProgramme()->getId()->toRfc4122(),
-            'start_date'   => $stay->getStartDate()->format('Y-m-d'),
-            'end_date'     => $stay->getEndDate()->format('Y-m-d'),
+            'name'       => $stay->getName(),
+            'start_date' => $stay->getStartDate()->format('Y-m-d'),
+            'end_date'   => $stay->getEndDate()->format('Y-m-d'),
         ];
 
         if ($request->isMethod('POST')) {
@@ -206,24 +193,15 @@ class StayController extends AbstractController
             }
 
             $values = [
-                'name'         => trim($request->request->getString('name')),
-                'programme_id' => trim($request->request->getString('programme_id')),
-                'start_date'   => trim($request->request->getString('start_date')),
-                'end_date'     => trim($request->request->getString('end_date')),
+                'name'       => trim($request->request->getString('name')),
+                'start_date' => trim($request->request->getString('start_date')),
+                'end_date'   => trim($request->request->getString('end_date')),
             ];
 
             if ($values['name'] === '') {
                 $errors['name'] = $this->t('stays.error.name_required');
             } elseif ($this->stays->existsByNameAndYear($values['name'], $year, $stay)) {
                 $errors['name'] = $this->t('stays.error.name_duplicate');
-            }
-
-            $programme = null;
-            if ($values['programme_id'] !== '') {
-                $programme = $this->programmes->findByAcademicYearAndId($year, $values['programme_id']);
-            }
-            if ($programme === null) {
-                $errors['programme_id'] = $this->t('stays.error.programme_required');
             }
 
             $startDate = null;
@@ -251,9 +229,8 @@ class StayController extends AbstractController
                 }
             }
 
-            if (empty($errors) && $programme !== null && $startDate !== null && $endDate !== null) {
+            if (empty($errors) && $startDate !== null && $endDate !== null) {
                 $stay->setName($values['name'])
-                     ->setProgramme($programme)
                      ->setStartDate($startDate)
                      ->setEndDate($endDate);
 
@@ -266,11 +243,10 @@ class StayController extends AbstractController
         }
 
         return $this->render('stays/edit.html.twig', [
-            'centre'    => $centre,
-            'stay'      => $stay,
-            'by_family' => $byFamily,
-            'errors'    => $errors,
-            'values'    => $values,
+            'centre' => $centre,
+            'stay'   => $stay,
+            'errors' => $errors,
+            'values' => $values,
         ]);
     }
 
