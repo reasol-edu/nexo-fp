@@ -448,6 +448,44 @@ class StayController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/puesto/{positionId}/eliminar', name: 'app_stays_delete_position', methods: ['POST'])]
+    public function deletePosition(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('delete_position_' . $positionId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $this->em->remove($position);
+        $this->em->flush();
+
+        $this->addFlash('success', $this->t('stays.flash.position_deleted'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+    }
+
     #[Route('/{id}/puesto/{positionId}/editar', name: 'app_stays_edit_position')]
     public function editPosition(string $id, string $positionId, Request $request): Response
     {
