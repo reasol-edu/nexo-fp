@@ -173,11 +173,11 @@
                 </div>
 
                 <div class="flex flex-col justify-end">
-                    <label class="inline-flex items-start gap-3 rounded-xl border px-4 py-3 cursor-pointer
-                                  transition-colors border-gray-200 bg-gray-50
-                                  hover:border-plum-200 hover:bg-plum-50/40
+                    <label id="signed-label"
+                           class="inline-flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors
+                                  border-gray-200 bg-gray-50
                                   has-[:checked]:border-green-300 has-[:checked]:bg-green-50">
-                        <input type="checkbox" name="signed" value="1"
+                        <input type="checkbox" id="signed-checkbox" name="signed" value="1"
                                {{ values.signed ? 'checked' : '' }}
                                class="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 shrink-0">
                         <div>
@@ -185,6 +185,9 @@
                             <p class="text-xs text-gray-500 mt-0.5">{{ 'stays.position.field.signed_hint'|trans({}, 'stays') }}</p>
                         </div>
                     </label>
+                    {% if errors.signed is defined %}
+                        <p class="mt-1.5 text-xs text-red-600">{{ errors.signed }}</p>
+                    {% endif %}
                 </div>
 
             </div>
@@ -379,6 +382,28 @@ if (elTutor) {
 
     if (elTutor.dataset.tsHasError) ts.wrapper.classList.add('has-error');
 }
+
+// ── Firmado: solo disponible en estado DONE ───────────────────────────────
+(function () {
+    const stateEl  = document.getElementById('state');
+    const signedCb = document.getElementById('signed-checkbox');
+    const signedLbl= document.getElementById('signed-label');
+    if (!stateEl || !signedCb) return;
+
+    function syncSigned() {
+        const isDone = stateEl.value === 'DONE';
+        signedCb.disabled = !isDone;
+        if (!isDone) signedCb.checked = false;
+        signedLbl.classList.toggle('opacity-50', !isDone);
+        signedLbl.classList.toggle('cursor-not-allowed', !isDone);
+        signedLbl.classList.toggle('cursor-pointer', isDone);
+        signedLbl.classList.toggle('hover:border-plum-200', isDone);
+        signedLbl.classList.toggle('hover:bg-plum-50/40', isDone);
+    }
+
+    stateEl.addEventListener('change', syncSigned);
+    syncSigned();
+}());
 
 // ── Estudiante Tom Select ─────────────────────────────────────────────────
 if (elStudent) {
