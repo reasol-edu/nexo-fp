@@ -32,6 +32,7 @@
                 </label>
                 <select id="workcenter_id" name="workcenter_id"
                         data-ts-has-error="{{ errors.workcenter_id is defined ? '1' : '' }}"
+                        autofocus
                         class="w-full text-sm">
                     <option value="">{{ 'stays.position.field.workcenter_placeholder'|trans({}, 'stays') }}</option>
                     {% for group in by_company %}
