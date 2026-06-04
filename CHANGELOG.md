@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `fix`: Eliminar `overflow-hidden` de las tarjetas de formulario en alta de estancia y alta de puesto; el atributo recortaba los dropdowns de Tom Select que usan `position: absolute`
 - `feat`: Edición de puesto formativo dentro de una estancia: empresa/centro de trabajo (autocompletar con jerarquía empresa/centro), niveles, estudiante (autocompletar con nombre, NIE y grupo), tutor dual docente (autocompletar restringido a docentes que imparten en algún grupo de la enseñanza), tutor dual de empresa (autocompletar filtrado dinámicamente por la empresa del centro de trabajo seleccionado), observaciones, estado y firma
 - `feat`: Autocompletar con jerarquía visual empresa/centro de trabajo en el formulario de nuevo puesto formativo: empresa en primer plano (negrita) y centro de trabajo con localidad como subtítulo; la búsqueda indexa empresa, nombre del centro y localidad; el punto indicador de nivel seleccionado cambia a verde con `peer-checked`
 - `feat`: Eliminación de estancia con confirmación; se borran primero los puestos formativos (y sus niveles asociados) y luego la inscripción de estudiantes antes de eliminar la estancia
