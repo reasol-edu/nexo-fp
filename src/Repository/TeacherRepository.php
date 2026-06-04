@@ -31,6 +31,32 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
     }
 
     /** @return Teacher[] */
+    public function findByAcademicYearOrderedByName(AcademicYear $year): array
+    {
+        return $this->createByAcademicYearFilteredQuery($year)->getResult();
+    }
+
+    /**
+     * Returns teachers who teach (group.teachers or group.tutor) in any group
+     * that belongs to the given programme, ordered by name.
+     *
+     * @return Teacher[]
+     */
+    public function findByProgrammeOrderedByName(\App\Entity\Programme $programme): array
+    {
+        return $this->getEntityManager()->createQuery('
+            SELECT DISTINCT t
+            FROM App\Entity\Teacher t, App\Entity\Group g
+            JOIN g.programmeYear py
+            WHERE py.programme = :programme
+              AND (g.tutor = t OR t MEMBER OF g.teachers)
+            ORDER BY t.name.lastName ASC, t.name.firstName ASC
+        ')
+        ->setParameter('programme', $programme->getId(), 'uuid')
+        ->getResult();
+    }
+
+    /** @return Teacher[] */
     public function findAllOrderedByName(): array
     {
         return $this->createQueryBuilder('t')

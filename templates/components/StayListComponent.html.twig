@@ -30,7 +30,7 @@
                 {# Familia profesional #}
                 <select data-model="norender|familyId"
                         data-action="change->live#action"
-                        data-live-action-param="resetPage"
+                        data-live-action-param="changeFamilyFilter"
                         class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">{{ 'stays.filter.all_families'|trans({}, 'stays') }}</option>
@@ -50,7 +50,7 @@
                     <option value="">{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}</option>
                     {% for p in this.availableProgrammes %}
                         <option value="{{ p.id }}" {{ programmeId == p.id.toRfc4122 ? 'selected' : '' }}>
-                            {{ p.professionalFamily.name }} — {{ p.name }}
+                            {{ p.name }}
                         </option>
                     {% endfor %}
                 </select>

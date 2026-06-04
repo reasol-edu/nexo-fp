@@ -7,12 +7,14 @@ namespace App\Controller;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
+use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
 use App\Service\TenantContext;
@@ -39,6 +41,7 @@ class StayController extends AbstractController
         private readonly GroupRepository $groups,
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
+        private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
     ) {}
 
@@ -442,6 +445,255 @@ class StayController extends AbstractController
             'programme_years' => $programmeYears,
             'errors'          => $errors,
             'values'          => $values,
+        ]);
+    }
+
+    #[Route('/{id}/puesto/{positionId}/editar', name: 'app_stays_edit_position')]
+    public function editPosition(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->canManagePositions($stay, $centre)) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null) {
+            throw $this->createNotFoundException();
+        }
+
+        // Workcenters for autocomplete
+        $allWorkcenters = $this->workcenters->findByCentreOrdered($centre);
+        $byCompany = [];
+        foreach ($allWorkcenters as $wc) {
+            $cid = $wc->getCompany()->getId()->toRfc4122();
+            if (!isset($byCompany[$cid])) {
+                $byCompany[$cid] = ['company' => $wc->getCompany(), 'workcenters' => []];
+            }
+            $byCompany[$cid]['workcenters'][] = $wc;
+        }
+
+        // Workers by company for the mentor select
+        $workersByCompany = [];
+        foreach ($byCompany as $cid => $entry) {
+            $workers = $entry['company']->getWorkers()->toArray();
+            usort($workers, fn ($a, $b) =>
+                $a->getName()->getLastName() <=> $b->getName()->getLastName()
+                ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
+            );
+            $workersByCompany[$cid] = $workers;
+        }
+
+        // Ensure the current mentor is available even if their company has no workcenters in this centre
+        $currentMentor = $position->getWorkplaceMentor();
+        if ($currentMentor !== null) {
+            $found = false;
+            foreach ($workersByCompany as $workers) {
+                foreach ($workers as $w) {
+                    if ($w->getId()->toRfc4122() === $currentMentor->getId()->toRfc4122()) {
+                        $found = true;
+                        break 2;
+                    }
+                }
+            }
+            if (!$found) {
+                $workersByCompany['__extra'] = [$currentMentor];
+            }
+        }
+
+        $programmeYears = $this->programmeYears->findByProgrammeOrderedByName($stay->getProgramme());
+
+        // Only teachers who teach in the programme's groups
+        $teachers = $this->teachers->findByProgrammeOrderedByName($stay->getProgramme());
+        // Ensure the current tutor is in the list even if they no longer teach in the programme
+        $currentTutor = $position->getAcademicTutor();
+        if ($currentTutor !== null) {
+            $teacherIds = array_map(fn ($t) => $t->getId()->toRfc4122(), $teachers);
+            if (!\in_array($currentTutor->getId()->toRfc4122(), $teacherIds, true)) {
+                array_unshift($teachers, $currentTutor);
+            }
+        }
+
+        // Enrolled students in the stay
+        $enrolledStudents = [];
+        foreach ($stay->getStudents() as $s) {
+            $enrolledStudents[$s->getId()->toRfc4122()] = $s;
+        }
+        uasort($enrolledStudents, fn ($a, $b) =>
+            $a->getName()->getLastName() <=> $b->getName()->getLastName()
+            ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
+        );
+
+        // Student → group map (group within the programme)
+        $studentGroupMap = [];
+        foreach ($this->groups->findByProgrammeWithStudents($stay->getProgramme()) as $group) {
+            foreach ($group->getStudents() as $s) {
+                $sid = $s->getId()->toRfc4122();
+                if (isset($enrolledStudents[$sid]) && !isset($studentGroupMap[$sid])) {
+                    $studentGroupMap[$sid] = $group;
+                }
+            }
+        }
+
+        // Students assigned to another position in this stay
+        $otherAssignedIds = [];
+        foreach ($this->positions->findByStayOrdered($stay) as $tp) {
+            if ($tp->getStudent() !== null
+                && $tp->getId()->toRfc4122() !== $position->getId()->toRfc4122()
+            ) {
+                $otherAssignedIds[$tp->getStudent()->getId()->toRfc4122()] = true;
+            }
+        }
+
+        $currentPyIds = array_map(
+            fn ($py) => $py->getId()->toRfc4122(),
+            $position->getProgrammeYears()->toArray()
+        );
+
+        $errors = [];
+        $values = [
+            'workcenter_id'       => $position->getWorkcenter()?->getId()->toRfc4122() ?? '',
+            'programme_year_ids'  => $currentPyIds,
+            'details'             => $position->getDetails() ?? '',
+            'student_id'          => $position->getStudent()?->getId()->toRfc4122() ?? '',
+            'academic_tutor_id'   => $position->getAcademicTutor()?->getId()->toRfc4122() ?? '',
+            'workplace_mentor_id' => $position->getWorkplaceMentor()?->getId()->toRfc4122() ?? '',
+            'state'               => $position->getState()->value,
+            'signed'              => $position->isSigned(),
+        ];
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('edit_position_' . $positionId, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $values = [
+                'workcenter_id'       => trim($request->request->getString('workcenter_id')),
+                'programme_year_ids'  => $request->request->all('programme_year_ids'),
+                'details'             => trim($request->request->getString('details')),
+                'student_id'          => trim($request->request->getString('student_id')),
+                'academic_tutor_id'   => trim($request->request->getString('academic_tutor_id')),
+                'workplace_mentor_id' => trim($request->request->getString('workplace_mentor_id')),
+                'state'               => trim($request->request->getString('state')),
+                'signed'              => $request->request->has('signed'),
+            ];
+
+            // Validate workcenter
+            $workcenter = null;
+            if ($values['workcenter_id'] === '') {
+                $errors['workcenter_id'] = $this->t('stays.error.workcenter_required');
+            } else {
+                $workcenter = $this->workcenters->findByCentreAndId($centre, $values['workcenter_id']);
+                if ($workcenter === null) {
+                    $errors['workcenter_id'] = $this->t('stays.error.workcenter_invalid');
+                }
+            }
+
+            // Validate programme years
+            $selectedYears = [];
+            foreach ($values['programme_year_ids'] as $pyId) {
+                $py = $this->programmeYears->findByProgrammeAndId($stay->getProgramme(), (string) $pyId);
+                if ($py !== null) {
+                    $selectedYears[] = $py;
+                }
+            }
+            if ($programmeYears !== [] && $selectedYears === []) {
+                $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
+            }
+
+            // Validate student (optional)
+            $student = null;
+            if ($values['student_id'] !== '') {
+                if (isset($enrolledStudents[$values['student_id']])) {
+                    if (isset($otherAssignedIds[$values['student_id']])) {
+                        $errors['student_id'] = $this->t('stays.error.student_already_assigned');
+                    } else {
+                        $student = $enrolledStudents[$values['student_id']];
+                    }
+                } else {
+                    $errors['student_id'] = $this->t('stays.error.student_invalid');
+                }
+            }
+
+            // Validate academic tutor (optional)
+            $academicTutor = null;
+            if ($values['academic_tutor_id'] !== '') {
+                $academicTutor = $this->teachers->findById($values['academic_tutor_id']);
+                if ($academicTutor === null) {
+                    $errors['academic_tutor_id'] = $this->t('stays.error.tutor_invalid');
+                }
+            }
+
+            // Validate workplace mentor (optional)
+            $workplaceMentor = null;
+            if ($values['workplace_mentor_id'] !== '') {
+                $found = false;
+                foreach ($workersByCompany as $workers) {
+                    foreach ($workers as $w) {
+                        if ($w->getId()->toRfc4122() === $values['workplace_mentor_id']) {
+                            $workplaceMentor = $w;
+                            $found = true;
+                            break 2;
+                        }
+                    }
+                }
+                if (!$found) {
+                    $errors['workplace_mentor_id'] = $this->t('stays.error.mentor_invalid');
+                }
+            }
+
+            $state = TrainingPositionState::tryFrom($values['state']) ?? TrainingPositionState::DRAFT;
+
+            if (empty($errors)) {
+                // Sync programme years
+                foreach ($position->getProgrammeYears()->toArray() as $py) {
+                    $position->removeProgrammeYear($py);
+                }
+                foreach ($selectedYears as $py) {
+                    $position->addProgrammeYear($py);
+                }
+
+                $position->setWorkcenter($workcenter)
+                         ->setDetails($values['details'] !== '' ? $values['details'] : null)
+                         ->setStudent($student)
+                         ->setAcademicTutor($academicTutor)
+                         ->setWorkplaceMentor($workplaceMentor)
+                         ->setState($state)
+                         ->setSigned($values['signed']);
+
+                $this->em->flush();
+
+                $this->addFlash('success', $this->t('stays.flash.position_updated'));
+
+                return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+            }
+        }
+
+        return $this->render('stays/edit_position.html.twig', [
+            'centre'              => $centre,
+            'stay'                => $stay,
+            'position'            => $position,
+            'by_company'          => $byCompany,
+            'workers_by_company'  => $workersByCompany,
+            'programme_years'     => $programmeYears,
+            'teachers'            => $teachers,
+            'enrolled_students'   => $enrolledStudents,
+            'student_group_map'   => $studentGroupMap,
+            'other_assigned_ids'  => $otherAssignedIds,
+            'errors'              => $errors,
+            'values'              => $values,
         ]);
     }
 

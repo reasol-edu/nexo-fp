@@ -127,12 +127,19 @@ class StayListComponent extends AbstractController
             return [];
         }
 
-        return $this->programmes->findByAcademicYearOrderedByFamilyAndName($year);
+        return $this->programmes->findByAcademicYearFilteredByFamily($year, $this->familyId);
     }
 
     #[LiveAction]
     public function resetPage(): void
     {
+        $this->page = 1;
+    }
+
+    #[LiveAction]
+    public function changeFamilyFilter(): void
+    {
+        $this->programmeId = '';
         $this->page = 1;
     }
 
