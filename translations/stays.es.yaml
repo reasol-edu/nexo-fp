@@ -7,6 +7,7 @@ stays.search: 'Buscar por nombre o enseñanza…'
 stays.filter.all_families: 'Todas las familias'
 stays.filter.all_programmes: 'Todas las enseñanzas'
 stays.filter.clear: 'Limpiar filtros'
+stays.filter.show_label: 'Mostrar:'
 
 stays.card.students_with_position: 'Estudiantes con puesto asignado'
 stays.card.unassigned_hint: '{1} 1 estudiante inscrito sin puesto asignado|]1,Inf[ %count% estudiantes inscritos sin puesto asignado'
