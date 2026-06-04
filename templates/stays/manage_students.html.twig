@@ -47,6 +47,16 @@
         </div>
     </div>
 
+    {# ── Acción global ───────────────────────────────────────────────────── #}
+    {% if by_level is not empty %}
+    <div class="mb-3 flex items-center justify-end">
+        <button type="button" id="js-global-toggle"
+                class="text-xs font-medium text-plum-500 hover:text-plum-700 transition-colors">
+            {{ 'stays.students.select_all'|trans({}, 'stays') }}
+        </button>
+    </div>
+    {% endif %}
+
     {# ── Formulario ───────────────────────────────────────────────────────── #}
     {% if by_level is empty %}
         <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-14 text-center">
@@ -211,6 +221,39 @@
     document.querySelectorAll('.js-group-block').forEach(syncGroupToggle);
     updateCount();
 
+    // ── Global toggle ─────────────────────────────────────────────────────────
+
+    function getAllToggleable() {
+        return Array.from(
+            document.querySelectorAll('.js-student-card:not([data-locked]) input[type="checkbox"]')
+        ).filter(cb => cb.closest('.js-student-card').style.display !== 'none');
+    }
+
+    function syncGlobalToggle() {
+        const btn = document.getElementById('js-global-toggle');
+        if (!btn) return;
+        const cbs = getAllToggleable();
+        const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+        btn.textContent = allChecked ? T_DESELECT_ALL : T_SELECT_ALL;
+    }
+
+    syncGlobalToggle();
+
+    const globalBtn = document.getElementById('js-global-toggle');
+    if (globalBtn) {
+        globalBtn.addEventListener('click', function () {
+            const cbs = getAllToggleable();
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            cbs.forEach(function (cb) {
+                cb.checked = !allChecked;
+                syncCardStyle(cb.closest('.js-student-card'));
+            });
+            document.querySelectorAll('.js-group-block').forEach(syncGroupToggle);
+            syncGlobalToggle();
+            updateCount();
+        });
+    }
+
     // ── Group toggle clicks ───────────────────────────────────────────────────
 
     document.querySelectorAll('.js-group-toggle').forEach(function (btn) {
@@ -223,6 +266,7 @@
                 syncCardStyle(cb.closest('.js-student-card'));
             });
             syncGroupToggle(groupBlock);
+            syncGlobalToggle();
             updateCount();
         });
     });
@@ -236,6 +280,7 @@
             if (card) syncCardStyle(card);
             const groupBlock = e.target.closest('.js-group-block');
             if (groupBlock) syncGroupToggle(groupBlock);
+            syncGlobalToggle();
             updateCount();
         });
     }
@@ -262,6 +307,8 @@
             const visible = block.querySelectorAll('.js-group-block:not([style*="display: none"])').length;
             block.style.display = visible === 0 && q !== '' ? 'none' : '';
         });
+
+        syncGlobalToggle();
     });
 }());
 </script>
