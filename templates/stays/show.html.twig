@@ -263,15 +263,28 @@
                                     {% endif %}
                                 </td>
 
-                                {# Editar #}
+                                {# Acciones #}
                                 {% if can_manage %}
                                 <td class="px-3 py-3.5 text-right">
-                                    <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
-                                       class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
-                                              text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                       title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
-                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
-                                    </a>
+                                    <div class="inline-flex items-center gap-1">
+                                        <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                           class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                  text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                           title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                            {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+                                        </a>
+                                        <form method="post"
+                                              action="{{ path('app_stays_delete_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                              onsubmit="return confirm('{{ 'stays.position.delete.confirm'|trans({}, 'stays')|e('js') }}')">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_position_' ~ position.id.toRfc4122) }}">
+                                            <button type="submit"
+                                                    class="inline-flex items-center rounded-lg border border-red-200 p-1.5
+                                                           text-red-400 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                    title="{{ 'stays.position.delete.btn'|trans({}, 'stays') }}">
+                                                {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                                 {% endif %}
 
