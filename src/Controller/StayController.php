@@ -308,35 +308,80 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $trainingPositions = $this->positions->findByStayOrdered($stay);
+        $allPositions = $this->positions->findByStayOrdered($stay);
 
-        $assignedIds = [];
-        foreach ($trainingPositions as $tp) {
+        // Separate assigned from unassigned; build student→position lookup
+        $studentPositionMap  = [];
+        $unassignedPositions = [];
+        foreach ($allPositions as $tp) {
             if ($tp->getStudent() !== null) {
-                $assignedIds[$tp->getStudent()->getId()->toRfc4122()] = true;
+                $studentPositionMap[$tp->getStudent()->getId()->toRfc4122()] = $tp;
+            } else {
+                $unassignedPositions[] = $tp;
             }
         }
 
-        $unassigned = array_values(
-            $stay->getStudents()
-                 ->filter(fn ($s) => !isset($assignedIds[$s->getId()->toRfc4122()]))
-                 ->toArray()
-        );
-        usort($unassigned, static fn ($a, $b) =>
+        // Enrolled students keyed by UUID
+        $enrolledStudents = [];
+        foreach ($stay->getStudents() as $s) {
+            $enrolledStudents[$s->getId()->toRfc4122()] = $s;
+        }
+
+        // Build groups → [enrolled students] using the programme's groups
+        $byGroup          = [];
+        $placedStudentIds = [];
+        foreach ($this->groups->findByProgrammeWithStudents($stay->getProgramme()) as $group) {
+            $groupStudents = [];
+            foreach ($group->getStudents() as $student) {
+                $sid = $student->getId()->toRfc4122();
+                if (isset($enrolledStudents[$sid])) {
+                    $groupStudents[]        = $student;
+                    $placedStudentIds[$sid] = true;
+                }
+            }
+            if ($groupStudents !== []) {
+                $byGroup[] = ['group' => $group, 'students' => $groupStudents];
+            }
+        }
+
+        // Students enrolled but not placed in any programme group
+        $ungroupedStudents = [];
+        foreach ($enrolledStudents as $sid => $student) {
+            if (!isset($placedStudentIds[$sid])) {
+                $ungroupedStudents[] = $student;
+            }
+        }
+        usort($ungroupedStudents, fn ($a, $b) =>
             $a->getName()->getLastName() <=> $b->getName()->getLastName()
             ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
         );
+
+        // Warning counts for the header badges
+        $countWithoutPosition = 0;
+        $countUnsigned        = 0;
+        foreach ($enrolledStudents as $sid => $student) {
+            $tp = $studentPositionMap[$sid] ?? null;
+            if ($tp === null) {
+                $countWithoutPosition++;
+            } elseif (!$tp->isSigned()) {
+                $countUnsigned++;
+            }
+        }
 
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
 
         return $this->render('stays/show.html.twig', [
-            'centre'     => $centre,
-            'stay'       => $stay,
-            'positions'  => $trainingPositions,
-            'unassigned' => $unassigned,
-            'stats'      => $stats,
-            'can_manage' => $this->canManagePositions($stay, $centre),
+            'centre'                 => $centre,
+            'stay'                   => $stay,
+            'by_group'               => $byGroup,
+            'ungrouped_students'     => $ungroupedStudents,
+            'student_position_map'   => $studentPositionMap,
+            'unassigned_positions'   => $unassignedPositions,
+            'count_without_position' => $countWithoutPosition,
+            'count_unsigned'         => $countUnsigned,
+            'stats'                  => $stats,
+            'can_manage'             => $this->canManagePositions($stay, $centre),
         ]);
     }
 
