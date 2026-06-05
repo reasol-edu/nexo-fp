@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Twig\Components;
 
 use App\Entity\EducationalCentre;
+use App\Entity\Stay;
 use App\Pagination\Paginator;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
@@ -46,6 +47,7 @@ class StayListComponent extends AbstractController
     #[LiveProp(writable: true)]
     public int $page = 1;
 
+    /** @var Paginator<Stay>|null */
     private ?Paginator $paginationCache = null;
     /** @var \App\Entity\Stay[]|null */
     private ?array $itemsCache = null;
@@ -59,6 +61,7 @@ class StayListComponent extends AbstractController
         #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
+    /** @return Paginator<Stay> */
     public function getPagination(): Paginator
     {
         if ($this->paginationCache !== null) {

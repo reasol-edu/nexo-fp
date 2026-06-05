@@ -164,24 +164,24 @@ class StayRepository extends ServiceEntityRepository
             ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
             ->setParameter('s_pending', TrainingPositionState::PENDING->value)
             ->setParameter('s_done', TrainingPositionState::DONE->value);
-        $orPos = $posQb->expr()->orX();
+        $posConds = [];
         foreach ($stays as $i => $stay) {
-            $orPos->add("s.id = :sid_{$i}");
+            $posConds[] = "s.id = :sid_{$i}";
             $posQb->setParameter("sid_{$i}", $stay->getId(), 'uuid');
         }
-        $positionRows = $posQb->where($orPos)->getQuery()->getScalarResult();
+        $positionRows = $posQb->where(implode(' OR ', $posConds))->getQuery()->getScalarResult();
 
         $stQb = $em->createQueryBuilder()
             ->select('s.id AS stayId', 'COUNT(st.id) AS cnt')
             ->from(Stay::class, 's')
             ->leftJoin('s.students', 'st')
             ->groupBy('s.id');
-        $orSt = $stQb->expr()->orX();
+        $stConds = [];
         foreach ($stays as $i => $stay) {
-            $orSt->add("s.id = :sid_{$i}");
+            $stConds[] = "s.id = :sid_{$i}";
             $stQb->setParameter("sid_{$i}", $stay->getId(), 'uuid');
         }
-        $studentRows = $stQb->where($orSt)->getQuery()->getScalarResult();
+        $studentRows = $stQb->where(implode(' OR ', $stConds))->getQuery()->getScalarResult();
 
         // getScalarResult() returns UUIDs in binary form on MySQL.
         // Build a lookup map so any representation normalises to RFC4122.

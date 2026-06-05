@@ -9,6 +9,9 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\UX\Autocomplete\EntityAutocompleterInterface;
 
+/**
+ * @implements EntityAutocompleterInterface<Teacher>
+ */
 #[AutoconfigureTag('ux.entity_autocompleter', ['alias' => 'teacher_admin'])]
 class TeacherAutocompleter implements EntityAutocompleterInterface
 {
@@ -32,15 +35,11 @@ class TeacherAutocompleter implements EntityAutocompleterInterface
 
     public function getLabel(object $entity): string
     {
-        assert($entity instanceof Teacher);
-
         return $entity->getName()->getLastName() . ', ' . $entity->getName()->getFirstName();
     }
 
     public function getValue(object $entity): mixed
     {
-        assert($entity instanceof Teacher);
-
         return $entity->getId()->toRfc4122();
     }
 

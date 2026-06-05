@@ -216,9 +216,8 @@ class StudentController extends AbstractController
         fwrite($stream, $content);
         rewind($stream);
 
-        /** @var list<string>|false $headers */
         $headers = fgetcsv($stream);
-        if ($headers === false || $headers === [null]) {
+        if ($headers === false || $headers[0] === null) {
             fclose($stream);
             $this->addFlash('error', $this->t('students.import.error.empty_file'));
             return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);

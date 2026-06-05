@@ -19,12 +19,6 @@ class TrainingPositionRepository extends ServiceEntityRepository
         parent::__construct($registry, TrainingPosition::class);
     }
 
-    /**
-     * Returns all positions for a stay, eager-loading student, workcenter,
-     * company and academic tutor to avoid N+1 queries in the detail view.
-     *
-     * @return TrainingPosition[]
-     */
     public function findByIdAndStay(string $id, Stay $stay): ?TrainingPosition
     {
         return $this->createQueryBuilder('tp')
@@ -37,6 +31,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /** @return array<int, TrainingPosition> */
     public function findByStayOrdered(Stay $stay): array
     {
         return $this->createQueryBuilder('tp')

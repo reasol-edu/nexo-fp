@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig\Components\Company;
 
+use App\Entity\Company;
 use App\Pagination\Paginator;
 use App\Repository\CompanyRepository;
 use App\Security\Voter\CompanyVoter;
@@ -47,6 +48,7 @@ class CompanyListComponent extends AbstractController
         $this->page = 1;
     }
 
+    /** @return Paginator<Company> */
     public function getPagination(): Paginator
     {
         $centre = $this->tenantContext->getSelectedCentre();

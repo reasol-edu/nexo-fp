@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
@@ -99,9 +100,8 @@ class CentreTeacherController extends AbstractController
         fwrite($stream, $content);
         rewind($stream);
 
-        /** @var list<string>|false $headers */
         $headers = fgetcsv($stream);
-        if ($headers === false || $headers === [null]) {
+        if ($headers === false || $headers[0] === null) {
             fclose($stream);
             $this->addFlash('error', $this->t('centre_teachers.import.error.empty_file'));
 
@@ -199,9 +199,8 @@ class CentreTeacherController extends AbstractController
         fwrite($stream, $content);
         rewind($stream);
 
-        /** @var list<string>|false $headers */
         $headers = fgetcsv($stream);
-        if ($headers === false || $headers === [null]) {
+        if ($headers === false || $headers[0] === null) {
             fclose($stream);
             $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.empty_file'));
 

@@ -25,7 +25,6 @@ class TeacherController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
     #[Route('', name: 'app_admin_teachers_index')]

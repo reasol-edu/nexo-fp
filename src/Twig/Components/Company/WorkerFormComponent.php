@@ -39,6 +39,7 @@ class WorkerFormComponent extends AbstractController
     #[LiveProp(writable: true)]
     public string $workPhone = '';
 
+    /** @var array<string, string> */
     #[LiveProp]
     public array $errors = [];
 

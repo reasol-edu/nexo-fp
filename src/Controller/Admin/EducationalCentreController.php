@@ -28,7 +28,6 @@ class EducationalCentreController extends AbstractController
         private readonly AcademicYearRepository $years,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]

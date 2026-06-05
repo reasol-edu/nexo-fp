@@ -35,6 +35,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->getSingleScalarResult() > 0;
     }
 
+    /** @return Query<null, ProfessionalFamily> */
     public function createByAcademicYearFilteredQuery(AcademicYear $year, string $search = ''): Query
     {
         $qb = $this->createQueryBuilder('pf')
@@ -77,6 +78,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /** @return Query<null, ProfessionalFamily> */
     public function findNoneQuery(): Query
     {
         return $this->createQueryBuilder('pf')->where('1 = 0')->getQuery();
