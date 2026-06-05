@@ -1,7 +1,19 @@
+###> Overrides de DESARROLLO ─────────────────────────────────────────────────
+# Este fichero se carga automáticamente por Docker Compose en desarrollo.
+# En producción NO debe existir (o renombrarlo).
+#
+# En desarrollo solo se arranca la base de datos; la aplicación PHP
+# se sirve con:  symfony server:start
+##############################################################################
 
 services:
-###> doctrine/doctrine-bundle ###
+
+  # En desarrollo el servicio app está deshabilitado (usa Symfony CLI).
+  # Para arrancarlo igualmente: docker compose --profile production up -d
+  app:
+    profiles:
+      - production
+
   database:
     ports:
-      - "5432"
-###< doctrine/doctrine-bundle ###
+      - "5432:5432"

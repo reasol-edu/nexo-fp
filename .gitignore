@@ -1,4 +1,9 @@
 
+###> nexo-fp ###
+# Datos persistentes (DB, caché, logs). Se crea en tiempo de ejecución.
+/data/
+###< nexo-fp ###
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php

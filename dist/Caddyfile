@@ -1,0 +1,19 @@
+{
+    frankenphp
+    admin off
+
+    log {
+        output stderr
+        level WARN
+    }
+}
+
+# SERVER_ADDR se inyecta desde el script de arranque, p.ej. ":8080"
+{$SERVER_ADDR} {
+    root * {$DOCUMENT_ROOT}
+
+    encode gzip
+
+    # FrankenPHP gestiona tanto PHP como ficheros estáticos
+    php_server
+}
