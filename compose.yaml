@@ -1,25 +1,56 @@
+###> nexo-fp production stack ################################################
+# Uso:
+#   Producción  →  docker compose up -d
+#   Desarrollo  →  docker compose up database -d   (usa Symfony CLI para PHP)
+#
+# Variables de entorno: copia .env.example a .env y ajusta los valores.
+##############################################################################
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+
+  # ── Aplicación (FrankenPHP) ───────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nexo-fp:latest
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+      SERVER_NAME:                  "${SERVER_NAME:-:80}"
+      APP_ENV:                      prod
+      APP_DEBUG:                    "0"
+      APP_SECRET:                   "${APP_SECRET:?Crea un .env con APP_SECRET definido}"
+      DATABASE_URL:                 "postgresql://nexo:${DB_PASSWORD:-changeme}@database:5432/nexo?serverVersion=16&charset=utf8"
+      DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
+      APP_PAGE_SIZE:                "${APP_PAGE_SIZE:-20}"
+      APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
+      APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
+      APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+    volumes:
+      # Datos persistentes de Symfony (caché, logs, sesiones) → ./data/var
+      - ./data/var:/app/var
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # ── Base de datos (PostgreSQL) ────────────────────────────────────────────
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       nexo
+      POSTGRES_USER:     nexo
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-changeme}"
+    volumes:
+      # Datos persistentes de PostgreSQL → ./data/postgres
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      test: ["CMD", "pg_isready", "-d", "nexo", "-U", "nexo"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
-    volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
-
-volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+      start_period: 30s

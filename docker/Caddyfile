@@ -1,0 +1,18 @@
+{
+    frankenphp
+    admin off
+
+    log {
+        output stderr
+        level WARN
+    }
+}
+
+{$SERVER_NAME} {
+    root * /app/public
+
+    encode zstd br gzip
+
+    # FrankenPHP gestiona tanto PHP como ficheros estáticos
+    php_server
+}
