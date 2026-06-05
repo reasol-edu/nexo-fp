@@ -321,6 +321,131 @@ class CompanyVoterTest extends RepositoryTestCase
         );
     }
 
+    // ── Usuario no autenticado ────────────────────────────────────────────────
+
+    public function testAnonymousUserIsDeniedSection(): void
+    {
+        $centre = $this->makeCentre('41000021');
+        $this->persist($centre);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->anonymousToken(), $centre, [CompanyVoter::SECTION])
+        );
+    }
+
+    public function testAnonymousUserIsDeniedEdit(): void
+    {
+        $centre  = $this->makeCentre('41000022');
+        $company = $this->makeCompany($centre, 'Empresa S.L.');
+        $this->persist($centre, $company);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->anonymousToken(), $company, [CompanyVoter::EDIT])
+        );
+    }
+
+    public function testAnonymousUserIsDeniedDelete(): void
+    {
+        $centre  = $this->makeCentre('41000023');
+        $company = $this->makeCompany($centre, 'Empresa S.L.');
+        $this->persist($centre, $company);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->anonymousToken(), $company, [CompanyVoter::DELETE])
+        );
+    }
+
+    // ── Aislamiento de tenant (cross-centre) ─────────────────────────────────
+
+    public function testSectionDeniedToCentreAdminOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('t17');
+        $centreA  = $this->makeCentre('41000024');
+        $centreB  = $this->makeCentre('41000025');
+        $this->persist($centreA, $centreB, $teacher);
+
+        $centreA->addAdmin($teacher);
+        $this->flush();
+
+        // Admin de centreA intenta acceder a la sección de centreB
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centreB, [CompanyVoter::SECTION])
+        );
+    }
+
+    public function testEditDeniedToCentreAdminOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('t18');
+        $centreA  = $this->makeCentre('41000026');
+        $centreB  = $this->makeCentre('41000027');
+        $companyB = $this->makeCompany($centreB, 'Empresa en B S.L.');
+        $this->persist($centreA, $centreB, $companyB, $teacher);
+
+        $centreA->addAdmin($teacher);
+        $this->flush();
+
+        // Admin de centreA intenta editar una empresa de centreB
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $companyB, [CompanyVoter::EDIT])
+        );
+    }
+
+    public function testDeleteDeniedToCentreAdminOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('t19');
+        $centreA  = $this->makeCentre('41000028');
+        $centreB  = $this->makeCentre('41000029');
+        $companyB = $this->makeCompany($centreB, 'Empresa en B S.L.');
+        $this->persist($centreA, $centreB, $companyB, $teacher);
+
+        $centreA->addAdmin($teacher);
+        $this->flush();
+
+        // Admin de centreA intenta eliminar una empresa de centreB
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $companyB, [CompanyVoter::DELETE])
+        );
+    }
+
+    public function testSectionDeniedToFamilyHeadOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('t20');
+        $centreA  = $this->makeCentre('41000030');
+        $centreB  = $this->makeCentre('41000031');
+        $yearA    = $this->makeYear($centreA);
+        $familyA  = $this->makeFamily($yearA, $teacher);
+        $this->persist($centreA, $centreB, $yearA, $familyA, $teacher);
+
+        // Jefe de familia en centreA intenta acceder a la sección de centreB
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centreB, [CompanyVoter::SECTION])
+        );
+    }
+
+    public function testEditDeniedToFamilyHeadOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('t21');
+        $centreA  = $this->makeCentre('41000032');
+        $centreB  = $this->makeCentre('41000033');
+        $yearA    = $this->makeYear($centreA);
+        $familyA  = $this->makeFamily($yearA, $teacher);
+        $companyB = $this->makeCompany($centreB, 'Empresa en B S.L.');
+        $this->persist($centreA, $centreB, $yearA, $familyA, $teacher, $companyB);
+
+        // Jefe de familia en centreA intenta editar empresa de centreB
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $companyB, [CompanyVoter::EDIT])
+        );
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username, bool $admin = false): Teacher
@@ -366,6 +491,13 @@ class CompanyVoterTest extends RepositoryTestCase
     {
         $stub = $this->createStub(TokenInterface::class);
         $stub->method('getUser')->willReturn($teacher);
+        return $stub;
+    }
+
+    private function anonymousToken(): TokenInterface
+    {
+        $stub = $this->createStub(TokenInterface::class);
+        $stub->method('getUser')->willReturn(null);
         return $stub;
     }
 }
