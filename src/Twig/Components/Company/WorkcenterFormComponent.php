@@ -29,6 +29,7 @@ class WorkcenterFormComponent extends AbstractController
     #[LiveProp(writable: true)]
     public string $city = '';
 
+    /** @var array<string, string> */
     #[LiveProp]
     public array $errors = [];
 

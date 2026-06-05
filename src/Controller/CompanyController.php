@@ -34,7 +34,6 @@ class CompanyController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
     ) {}
 
     #[Route('', name: 'app_companies_index')]

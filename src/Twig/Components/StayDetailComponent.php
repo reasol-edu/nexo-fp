@@ -32,6 +32,7 @@ class StayDetailComponent extends AbstractController
     #[LiveProp]
     public string $stayId = '';
 
+    /** @var array<string, mixed>|null */
     private ?array $cache = null;
 
     public function __construct(
@@ -45,6 +46,7 @@ class StayDetailComponent extends AbstractController
         private readonly ProgrammeRepository $programmes,
     ) {}
 
+    /** @return array<string, mixed> */
     public function getData(): array
     {
         if ($this->cache !== null) {

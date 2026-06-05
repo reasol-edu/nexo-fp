@@ -13,6 +13,9 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+/**
+ * @extends Voter<string, Company|EducationalCentre>
+ */
 final class CompanyVoter extends Voter
 {
     /** Acceso a la sección Empresas (lista + creación). Sujeto: EducationalCentre */

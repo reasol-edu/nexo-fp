@@ -15,6 +15,7 @@ class PdfService
 
     /**
      * @param array<string, mixed> $context
+     * @param array<string, mixed> $options
      * @throws MpdfException
      */
     public function renderPdf(string $template, array $context, string $filename, array $options = []): Response

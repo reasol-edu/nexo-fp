@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Twig\Components\Admin;
 
 use App\Entity\EducationalCentre;
+use App\Entity\Teacher;
 use App\Pagination\Paginator;
 use App\Repository\TeacherRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,6 +41,7 @@ class TeacherCentreListComponent extends AbstractController
         $this->centre = $centre;
     }
 
+    /** @return Paginator<Teacher> */
     public function getPagination(): Paginator
     {
         if ($this->centre->getActiveAcademicYear() === null) {

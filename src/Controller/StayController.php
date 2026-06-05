@@ -10,7 +10,6 @@ use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
-use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
@@ -40,7 +39,6 @@ class StayController extends AbstractController
         private readonly WorkcenterRepository $workcenters,
         private readonly ProgrammeYearRepository $programmeYears,
         private readonly GroupRepository $groups,
-        private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
@@ -655,7 +653,7 @@ class StayController extends AbstractController
             fn ($py) => $py->getId()->toRfc4122(),
             $position->getProgrammeYears()->toArray()
         );
-        $currentWorkcenterId = $position->getWorkcenter()->getId()->toRfc4122() ?? '';
+        $currentWorkcenterId = $position->getWorkcenter()->getId()->toRfc4122();
         $currentStudentId = $position->getStudent()?->getId()->toRfc4122() ?? '';
         $currentTutorId = $position->getAcademicTutor()?->getId()->toRfc4122() ?? '';
         $currentMentorId = $position->getWorkplaceMentor()?->getId()->toRfc4122() ?? '';

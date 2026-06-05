@@ -6,6 +6,7 @@ namespace App\Twig\Components\Admin;
 
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
+use App\Entity\Student;
 use App\Pagination\Paginator;
 use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
@@ -52,6 +53,7 @@ class StudentListComponent extends AbstractController
         return $this->groups->findByActiveYearOfCentreOrderedByName($this->centre);
     }
 
+    /** @return Paginator<Student> */
     public function getPagination(): Paginator
     {
         if ($this->centre->getActiveAcademicYear() === null) {
