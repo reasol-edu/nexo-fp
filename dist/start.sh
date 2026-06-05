@@ -22,6 +22,7 @@ export APP_DEBUG=0
 export DOCUMENT_ROOT="${APP}/public"
 export SERVER_ADDR=":${PORT}"
 export DATABASE_URL="sqlite:///${DATA}/nexo-fp.db"
+export MIGRATIONS_PATH=migrations/sqlite
 export DEFAULT_URI="http://localhost:${PORT}"
 export APP_PAGE_SIZE="${APP_PAGE_SIZE:-20}"
 export APP_EXTERNAL_ENABLED="${APP_EXTERNAL_ENABLED:-true}"
@@ -40,13 +41,8 @@ export APP_SECRET="$(cat "${DATA}/.secret")"
 
 # ── Base de datos SQLite ──────────────────────────────────────────────────────
 cd "${APP}"
-if [[ ! -f "${DATA}/nexo-fp.db" ]]; then
-    echo "Creando esquema de base de datos..."
-    "${FP}" php-cli bin/console doctrine:schema:create --env=prod --no-interaction
-else
-    echo "Actualizando esquema de base de datos..."
-    "${FP}" php-cli bin/console doctrine:schema:update --force --env=prod --no-interaction 2>/dev/null || true
-fi
+echo "Aplicando migraciones..."
+"${FP}" php-cli bin/console doctrine:migrations:migrate --no-interaction 2>/dev/null
 
 # ── Caché de Symfony ──────────────────────────────────────────────────────────
 echo "Precalentando caché..."

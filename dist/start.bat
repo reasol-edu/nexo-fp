@@ -23,6 +23,7 @@ set SERVER_ADDR=:%PORT%
 set "DATA_FWD=%DATA:\=/%"
 set DATABASE_URL=sqlite:///%DATA_FWD%/nexo-fp.db
 
+set MIGRATIONS_PATH=migrations/sqlite
 set DEFAULT_URI=http://localhost:%PORT%
 if "%APP_PAGE_SIZE%"==""               set APP_PAGE_SIZE=20
 if "%APP_EXTERNAL_ENABLED%"==""        set APP_EXTERNAL_ENABLED=true
@@ -45,13 +46,8 @@ set APP_SECRET=%APP_SECRET: =%
 
 :: ── Base de datos SQLite ─────────────────────────────────────────────────────
 cd /d "%APP%"
-if not exist "%DATA%\nexo-fp.db" (
-    echo Creando esquema de base de datos...
-    "%FP%" php-cli bin\console doctrine:schema:create --env=prod --no-interaction
-) else (
-    echo Actualizando esquema de base de datos...
-    "%FP%" php-cli bin\console doctrine:schema:update --force --env=prod --no-interaction 2>nul
-)
+echo Aplicando migraciones...
+"%FP%" php-cli bin\console doctrine:migrations:migrate --no-interaction 2>nul
 
 :: ── Caché de Symfony ─────────────────────────────────────────────────────────
 echo Precalentando cache...
