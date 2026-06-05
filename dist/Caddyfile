@@ -8,7 +8,7 @@
     }
 }
 
-# SERVER_ADDR se inyecta desde el script de arranque, p.ej. ":8080"
+# SERVER_ADDR se inyecta desde el script de arranque, p.ej. ":8180"
 {$SERVER_ADDR} {
     root * {$DOCUMENT_ROOT}
 

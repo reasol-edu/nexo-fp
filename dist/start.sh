@@ -3,7 +3,7 @@
 # Uso: ./start.sh [puerto]          (por defecto: 8080)
 set -euo pipefail
 
-PORT="${1:-${PORT:-8080}}"
+PORT="${1:-${PORT:-8180}}"
 
 # ── Rutas absolutas ───────────────────────────────────────────────────────────
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,7 +51,7 @@ echo "Precalentando caché..."
 # ── Arrancar servidor ─────────────────────────────────────────────────────────
 cd "${ROOT}"
 echo ""
-echo "  Nexo FP disponible en → http://localhost:${PORT}"
+echo "  Nexo FP disponible en → http://localhost:${PORT} (red local: http://$(hostname -I | awk '{print $1}'):${PORT})"
 echo "  Pulsa Ctrl+C para detener."
 echo ""
 exec "${FP}" run --config Caddyfile

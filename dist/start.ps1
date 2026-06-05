@@ -2,7 +2,7 @@
 # Nexo FP — script de arranque (Windows PowerShell)
 # Uso: .\start.ps1 [-Port 8080]
 param(
-    [int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 8080 })
+    [int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 8180 })
 )
 
 $ErrorActionPreference = "Stop"

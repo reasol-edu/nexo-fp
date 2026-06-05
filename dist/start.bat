@@ -3,7 +3,7 @@
 :: Uso: start.bat [puerto]          (por defecto: 8080)
 setlocal enabledelayedexpansion
 
-if "%~1"=="" ( set PORT=8080 ) else ( set PORT=%~1 )
+if "%~1"=="" ( set PORT=8180 ) else ( set PORT=%~1 )
 if not "%PORT_ENV%"=="" set PORT=%PORT_ENV%
 
 :: ── Rutas ──────────────────────────────────────────────────────────────────

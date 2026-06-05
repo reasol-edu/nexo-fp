@@ -1,0 +1,15 @@
+# Construye el binario embebido estático de FrankenPHP para Linux.
+# Contexto de build: raíz del repositorio (después de descargar embed-app/).
+#
+# Uso:
+#   docker buildx build --platform linux/amd64 -f dist/Dockerfile.embed.linux -t nexo-embed .
+#   CID=$(docker create nexo-embed)
+#   docker cp "${CID}:/go/src/app/dist/frankenphp-linux-x86_64" nexo-fp
+#   docker rm "${CID}"
+FROM dunglas/frankenphp:static-builder-gnu
+
+WORKDIR /go/src/app/dist/app
+COPY embed-app/ .
+
+WORKDIR /go/src/app/
+RUN EMBED=dist/app/ ./build-static.sh

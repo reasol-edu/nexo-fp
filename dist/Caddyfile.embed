@@ -1,0 +1,30 @@
+{
+    frankenphp
+    admin off
+
+    # Variables de entorno inyectadas en todos los workers PHP
+    env NEXO_EMBEDDED 1
+    env APP_ENV prod
+    env APP_DEBUG 0
+    env MIGRATIONS_PATH migrations/sqlite
+    env APP_PAGE_SIZE 20
+    env APP_EXTERNAL_ENABLED true
+    env APP_EXTERNAL_URL https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp
+    env APP_EXTERNAL_URL_FORCE_SECURITY true
+
+    log {
+        output stderr
+        level WARN
+    }
+}
+
+# Escucha en todas las interfaces del equipo en el puerto 8180.
+# Para usar otro puerto o configuración avanzada, coloca un fichero
+# Caddyfile propio en el mismo directorio que el binario: tendrá prioridad.
+:8180 {
+    root * public
+
+    encode zstd br gzip
+
+    php_server
+}
