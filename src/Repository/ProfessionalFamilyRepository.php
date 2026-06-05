@@ -29,7 +29,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->join('pf.academicYear', 'ay')
             ->where('pf.head = :teacher')
             ->andWhere('ay.educationalCentre = :centre')
-            ->setParameter('teacher', $teacher)
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->getQuery()
             ->getSingleScalarResult() > 0;

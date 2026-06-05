@@ -74,9 +74,9 @@ class CompanyRepository extends ServiceEntityRepository
         return (int) $this->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->join('c.liaisons', 'l')
-            ->where('l = :teacher')
+            ->where('l.id = :teacher')
             ->andWhere('c.educationalCentre = :centre')
-            ->setParameter('teacher', $teacher)
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->getQuery()
             ->getSingleScalarResult() > 0;
