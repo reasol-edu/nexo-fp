@@ -216,7 +216,7 @@ class StudentController extends AbstractController
         fwrite($stream, $content);
         rewind($stream);
 
-        $headers = fgetcsv($stream);
+        $headers = fgetcsv($stream, escape: '');
         if ($headers === false || $headers[0] === null) {
             fclose($stream);
             $this->addFlash('error', $this->t('students.import.error.empty_file'));
@@ -247,7 +247,7 @@ class StudentController extends AbstractController
         /** @var array<string, true> $unknownGroups */
         $unknownGroups = [];
 
-        while (($row = fgetcsv($stream)) !== false) {
+        while (($row = fgetcsv($stream, escape: '')) !== false) {
             if (count(array_filter($row, static fn($v) => trim((string) $v) !== '')) === 0) {
                 continue;
             }
