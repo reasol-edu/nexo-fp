@@ -111,11 +111,13 @@ class EducationalCentreRepository extends ServiceEntityRepository
 
         $merged = [];
 
+        $tid = $teacher->getId();
+
         // Centres where teacher is listed as admin
         foreach ($this->createQueryBuilder('ec')
             ->join('ec.admins', 'a')
-            ->where('a = :teacher')
-            ->setParameter('teacher', $teacher)
+            ->where('a.id = :tid')
+            ->setParameter('tid', $tid, 'uuid')
             ->getQuery()
             ->getResult() as $centre) {
             $merged[$centre->getId()->toRfc4122()] = $centre;
@@ -128,8 +130,10 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->join('g.programmeYear', 'py')
             ->join('py.programme', 'prog')
             ->join('prog.academicYear', 'ay')
-            ->where(':teacher MEMBER OF g.teachers OR g.tutor = :teacher')
-            ->setParameter('teacher', $teacher)
+            ->leftJoin('g.teachers', 'gt')
+            ->where('gt.id = :tid OR g.tutor = :tid')
+            ->setParameter('tid', $tid, 'uuid')
+            ->distinct()
             ->getQuery()
             ->getResult() as $group) {
             $ec = $group->getProgrammeYear()->getProgramme()->getAcademicYear()->getEducationalCentre();
@@ -141,8 +145,8 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->select('co')
             ->from(Company::class, 'co')
             ->join('co.liaisons', 'l')
-            ->where('l = :teacher')
-            ->setParameter('teacher', $teacher)
+            ->where('l.id = :tid')
+            ->setParameter('tid', $tid, 'uuid')
             ->getQuery()
             ->getResult() as $company) {
             $ec = $company->getEducationalCentre();
@@ -154,8 +158,8 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->select('pf')
             ->from(ProfessionalFamily::class, 'pf')
             ->join('pf.academicYear', 'ay')
-            ->where('pf.head = :teacher')
-            ->setParameter('teacher', $teacher)
+            ->where('pf.head = :tid')
+            ->setParameter('tid', $tid, 'uuid')
             ->getQuery()
             ->getResult() as $family) {
             $ec = $family->getAcademicYear()->getEducationalCentre();
