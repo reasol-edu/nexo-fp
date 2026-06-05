@@ -24,7 +24,7 @@ class CompanyAuditRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
             ->where('a.company = :company')
-            ->setParameter('company', $company)
+            ->setParameter('company', $company->getId(), 'uuid')
             ->orderBy('a.changedAt', 'DESC')
             ->getQuery()
             ->getResult();
