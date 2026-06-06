@@ -39,6 +39,20 @@ if [[ ! -f "${DATA}/.secret" ]]; then
 fi
 export APP_SECRET="$(cat "${DATA}/.secret")"
 
+# ── .env.local: exponer variables a PHP (bootEnv no lee $ENV por defecto) ─────
+cat > "${APP}/.env.local" <<EOF
+APP_ENV=prod
+APP_DEBUG=0
+APP_SECRET=${APP_SECRET}
+DATABASE_URL=${DATABASE_URL}
+MIGRATIONS_PATH=${MIGRATIONS_PATH}
+DEFAULT_URI=${DEFAULT_URI}
+APP_PAGE_SIZE=${APP_PAGE_SIZE}
+APP_EXTERNAL_ENABLED=${APP_EXTERNAL_ENABLED}
+APP_EXTERNAL_URL=${APP_EXTERNAL_URL}
+APP_EXTERNAL_URL_FORCE_SECURITY=${APP_EXTERNAL_URL_FORCE_SECURITY}
+EOF
+
 # ── Base de datos SQLite ──────────────────────────────────────────────────────
 cd "${APP}"
 echo "Aplicando migraciones..."

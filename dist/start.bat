@@ -44,6 +44,20 @@ set /p APP_SECRET=<"%DATA%\.secret"
 :: Eliminar posible retorno de carro
 set APP_SECRET=%APP_SECRET: =%
 
+:: ── .env.local: exponer variables a PHP ─────────────────────────────────────
+(
+    echo APP_ENV=prod
+    echo APP_DEBUG=0
+    echo APP_SECRET=%APP_SECRET%
+    echo DATABASE_URL=%DATABASE_URL%
+    echo MIGRATIONS_PATH=%MIGRATIONS_PATH%
+    echo DEFAULT_URI=%DEFAULT_URI%
+    echo APP_PAGE_SIZE=%APP_PAGE_SIZE%
+    echo APP_EXTERNAL_ENABLED=%APP_EXTERNAL_ENABLED%
+    echo APP_EXTERNAL_URL=%APP_EXTERNAL_URL%
+    echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%
+) > "%APP%\.env.local"
+
 :: ── Base de datos SQLite ─────────────────────────────────────────────────────
 cd /d "%APP%"
 echo Aplicando migraciones...

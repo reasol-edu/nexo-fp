@@ -43,6 +43,20 @@ if (-not (Test-Path $SecretFile)) {
 $env:APP_SECRET = (Get-Content $SecretFile -Raw -Encoding ascii).Trim()
 
 # ── Base de datos SQLite ───────────────────────────────────────────────────────
+# ── .env.local: exponer variables a PHP (bootEnv no lee $ENV por defecto) ─────
+@"
+APP_ENV=prod
+APP_DEBUG=0
+APP_SECRET=$($env:APP_SECRET)
+DATABASE_URL=$($env:DATABASE_URL)
+MIGRATIONS_PATH=$($env:MIGRATIONS_PATH)
+DEFAULT_URI=$($env:DEFAULT_URI)
+APP_PAGE_SIZE=$($env:APP_PAGE_SIZE)
+APP_EXTERNAL_ENABLED=$($env:APP_EXTERNAL_ENABLED)
+APP_EXTERNAL_URL=$($env:APP_EXTERNAL_URL)
+APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
+"@ | Set-Content -Path (Join-Path $App ".env.local") -Encoding utf8
+
 Push-Location $App
 try {
     Write-Host "Aplicando migraciones..."
