@@ -82,4 +82,22 @@ class StudentRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['studentId' => $studentId]);
     }
+
+    public function countByActiveYear(EducationalCentre $centre): int
+    {
+        if ($centre->getActiveAcademicYear() === null) {
+            return 0;
+        }
+
+        return (int) $this->createQueryBuilder('s')
+            ->select('COUNT(DISTINCT s.id)')
+            ->join('s.groups', 'g')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'prog')
+            ->join('prog.professionalFamily', 'f')
+            ->where('f.academicYear = :year')
+            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

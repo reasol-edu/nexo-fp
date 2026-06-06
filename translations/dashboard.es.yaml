@@ -1,3 +1,36 @@
 page_title: 'Inicio'
 welcome_message: 'Te damos la bienvenida a la aplicación.'
 logout: 'Cerrar sesión'
+
+greeting: 'Buenos días, %name%'
+summary_for: 'Resumen del curso %year%'
+no_academic_year: 'No hay un curso académico activo configurado.'
+
+students: 'Alumnos'
+students_enrolled: 'matriculados este curso'
+
+stays: 'Estancias'
+stays_current: 'en curso'
+stays_upcoming: 'próximas'
+stays_past: 'finalizadas'
+
+positions: 'Plazas'
+positions_occupied: 'ocupadas'
+positions_free: 'libres'
+positions_signed: 'firmadas'
+
+companies: 'Empresas'
+companies_participating: 'participantes en estancias'
+
+positions_by_state: 'Estado de las plazas'
+state_draft: 'Borrador'
+state_pending: 'Pendiente'
+state_done: 'Completada'
+no_positions: 'No hay plazas registradas'
+total_positions: 'plazas totales'
+
+upcoming_stays: 'Estancias activas y próximas'
+no_upcoming_stays: 'No hay estancias activas ni próximas'
+stay_current: 'En curso'
+stay_upcoming: 'Próxima'
+view_all_stays: 'Ver todas las estancias'

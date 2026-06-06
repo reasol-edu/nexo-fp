@@ -3,24 +3,330 @@
 {% block title %}{{ 'page_title'|trans({}, 'dashboard') }}{% endblock %}
 
 {% block content %}
-<div class="px-6 py-8 max-w-7xl mx-auto">
+{% set active_centre = active_centre() %}
+{% set active_year   = active_centre ? active_centre.activeAcademicYear : null %}
+{% set today = "now"|date("Y-m-d") %}
 
-    {# Encabezado de página #}
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ 'page_title'|trans({}, 'dashboard') }}</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ 'welcome_message'|trans({}, 'dashboard') }}</p>
+<div class="px-6 py-8 max-w-7xl mx-auto space-y-8">
+
+    {# ── Encabezado ─────────────────────────────────────────────────────────── #}
+    <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">
+                {{ 'greeting'|trans({'%name%': app.user.name.firstName}, 'dashboard') }}
+            </h1>
+            {% if active_year %}
+                <p class="mt-1 text-sm text-gray-500">
+                    {{ 'summary_for'|trans({'%year%': active_year.name}, 'dashboard') }}
+                </p>
+            {% else %}
+                <p class="mt-1 text-sm text-amber-600">
+                    {{ 'no_academic_year'|trans({}, 'dashboard') }}
+                </p>
+            {% endif %}
+        </div>
+        {% if active_year %}
+            <a href="{{ path('app_stays_index') }}"
+               class="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-lg bg-plum-600 px-3.5 py-2 text-sm font-medium text-white shadow-xs hover:bg-plum-700 transition-colors">
+                {{ ux_icon('heroicons:briefcase', {class: 'h-4 w-4'}) }}
+                {{ 'view_all_stays'|trans({}, 'dashboard') }}
+            </a>
+        {% endif %}
     </div>
 
-    {# Tarjetas de estadísticas — pendientes de definir #}
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {% for i in 1..4 %}
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-                <div class="h-4 w-24 rounded bg-gray-100 animate-pulse"></div>
-                <div class="mt-4 h-8 w-16 rounded bg-gray-100 animate-pulse"></div>
-                <div class="mt-2 h-3 w-32 rounded bg-gray-100 animate-pulse"></div>
+    {% if stats is not null %}
+
+    {# ── Tarjetas de métricas ──────────────────────────────────────────────── #}
+    <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+
+        {# Alumnos #}
+        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ 'students'|trans({}, 'dashboard') }}
+                </p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-plum-50 text-plum-600">
+                    {{ ux_icon('heroicons:academic-cap', {class: 'h-4.5 w-4.5'}) }}
+                </span>
             </div>
-        {% endfor %}
+            <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ studentCount }}</p>
+            <p class="mt-1 text-xs text-gray-500">{{ 'students_enrolled'|trans({}, 'dashboard') }}</p>
+        </div>
+
+        {# Estancias #}
+        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ 'stays'|trans({}, 'dashboard') }}
+                </p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    {{ ux_icon('heroicons:briefcase', {class: 'h-4.5 w-4.5'}) }}
+                </span>
+            </div>
+            <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ stats.total_stays }}</p>
+            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500">
+                <span class="flex items-center gap-1">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                    {{ stats.current_stays }} {{ 'stays_current'|trans({}, 'dashboard') }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-blue-400"></span>
+                    {{ stats.future_stays }} {{ 'stays_upcoming'|trans({}, 'dashboard') }}
+                </span>
+            </div>
+        </div>
+
+        {# Plazas #}
+        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ 'positions'|trans({}, 'dashboard') }}
+                </p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                    {{ ux_icon('heroicons:clipboard-document-list', {class: 'h-4.5 w-4.5'}) }}
+                </span>
+            </div>
+            <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ stats.total_positions }}</p>
+            {% if stats.total_positions > 0 %}
+                {% set occ_pct = (stats.occupied / stats.total_positions * 100)|round %}
+                <div class="mt-2 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-amber-400 transition-all"
+                         style="width: {{ occ_pct }}%"></div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                    {{ stats.occupied }} {{ 'positions_occupied'|trans({}, 'dashboard') }}
+                    · {{ stats.free }} {{ 'positions_free'|trans({}, 'dashboard') }}
+                </p>
+            {% else %}
+                <p class="mt-1 text-xs text-gray-400">—</p>
+            {% endif %}
+        </div>
+
+        {# Empresas #}
+        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ 'companies'|trans({}, 'dashboard') }}
+                </p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    {{ ux_icon('heroicons:building-office-2', {class: 'h-4.5 w-4.5'}) }}
+                </span>
+            </div>
+            <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ stats.companies }}</p>
+            <p class="mt-1 text-xs text-gray-500">{{ 'companies_participating'|trans({}, 'dashboard') }}</p>
+        </div>
+
     </div>
+
+    {# ── Fila inferior: gráfica + lista de estancias ─────────────────────── #}
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+
+        {# Gráfica de estado de plazas (donut SVG) #}
+        <div class="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
+            <h2 class="text-sm font-semibold text-gray-700 mb-5">
+                {{ 'positions_by_state'|trans({}, 'dashboard') }}
+            </h2>
+
+            {% set circum = 314.16 %}
+            {% set total_pos = stats.state_draft + stats.state_pending + stats.state_done %}
+
+            {% if total_pos > 0 %}
+                {% set draft_len   = (stats.state_draft   / total_pos) * circum %}
+                {% set pending_len = (stats.state_pending / total_pos) * circum %}
+                {% set done_len    = (stats.state_done    / total_pos) * circum %}
+
+                {% set draft_pct   = (stats.state_draft   / total_pos * 100)|round %}
+                {% set pending_pct = (stats.state_pending / total_pos * 100)|round %}
+                {% set done_pct    = (stats.state_done    / total_pos * 100)|round %}
+            {% endif %}
+
+            <div class="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-around">
+
+                {# SVG Donut #}
+                <div class="relative shrink-0">
+                    <svg width="140" height="140" viewBox="0 0 120 120" class="block">
+                        {# Fondo gris #}
+                        <circle cx="60" cy="60" r="50"
+                                fill="none"
+                                stroke="#f3f4f6"
+                                stroke-width="14"/>
+
+                        {% if total_pos > 0 %}
+                        <g transform="rotate(-90 60 60)">
+                            {# DONE — verde #}
+                            {% if done_len > 0 %}
+                            <circle cx="60" cy="60" r="50"
+                                    fill="none"
+                                    stroke="#10b981"
+                                    stroke-width="14"
+                                    stroke-dasharray="{{ done_len }} {{ circum - done_len }}"
+                                    stroke-dashoffset="{{ -(draft_len + pending_len) }}"
+                                    stroke-linecap="butt"/>
+                            {% endif %}
+                            {# PENDING — azul #}
+                            {% if pending_len > 0 %}
+                            <circle cx="60" cy="60" r="50"
+                                    fill="none"
+                                    stroke="#3b82f6"
+                                    stroke-width="14"
+                                    stroke-dasharray="{{ pending_len }} {{ circum - pending_len }}"
+                                    stroke-dashoffset="{{ -draft_len }}"
+                                    stroke-linecap="butt"/>
+                            {% endif %}
+                            {# DRAFT — ámbar #}
+                            {% if draft_len > 0 %}
+                            <circle cx="60" cy="60" r="50"
+                                    fill="none"
+                                    stroke="#f59e0b"
+                                    stroke-width="14"
+                                    stroke-dasharray="{{ draft_len }} {{ circum - draft_len }}"
+                                    stroke-dashoffset="0"
+                                    stroke-linecap="butt"/>
+                            {% endif %}
+                        </g>
+                        {% endif %}
+
+                        {# Centro: número total #}
+                        <text x="60" y="56" text-anchor="middle"
+                              font-size="22" font-weight="700" fill="#111827" font-family="Inter, sans-serif">
+                            {{ stats.total_positions }}
+                        </text>
+                        <text x="60" y="70" text-anchor="middle"
+                              font-size="8" fill="#6b7280" font-family="Inter, sans-serif">
+                            {{ 'total_positions'|trans({}, 'dashboard') }}
+                        </text>
+                    </svg>
+                </div>
+
+                {# Leyenda #}
+                <div class="flex flex-col gap-3 min-w-0">
+                    {% if total_pos > 0 %}
+                    <div class="flex items-center gap-3">
+                        <span class="h-3 w-3 shrink-0 rounded-sm bg-amber-400"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-700">{{ 'state_draft'|trans({}, 'dashboard') }}</p>
+                            <p class="text-xs text-gray-400">{{ stats.state_draft }} plazas · {{ draft_pct }}%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="h-3 w-3 shrink-0 rounded-sm bg-blue-500"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-700">{{ 'state_pending'|trans({}, 'dashboard') }}</p>
+                            <p class="text-xs text-gray-400">{{ stats.state_pending }} plazas · {{ pending_pct }}%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="h-3 w-3 shrink-0 rounded-sm bg-emerald-500"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-700">{{ 'state_done'|trans({}, 'dashboard') }}</p>
+                            <p class="text-xs text-gray-400">{{ stats.state_done }} plazas · {{ done_pct }}%</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-400 italic">{{ 'no_positions'|trans({}, 'dashboard') }}</p>
+                    {% endif %}
+
+                    {# Plazas firmadas #}
+                    {% if stats.total_positions > 0 %}
+                    <div class="pt-2 mt-1 border-t border-gray-100">
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5 text-plum-500'}) }}
+                            <span>
+                                <strong class="font-semibold text-gray-700">{{ stats.signed }}</strong>
+                                {{ 'positions_signed'|trans({}, 'dashboard') }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        {# Lista de estancias activas y próximas #}
+        <div class="lg:col-span-3 rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-700">
+                    {{ 'upcoming_stays'|trans({}, 'dashboard') }}
+                </h2>
+                <a href="{{ path('app_stays_index') }}"
+                   class="text-xs font-medium text-plum-600 hover:text-plum-800 transition-colors">
+                    {{ 'view_all_stays'|trans({}, 'dashboard') }} →
+                </a>
+            </div>
+
+            {% if upcomingStays is empty %}
+                <div class="flex flex-col items-center justify-center py-12 px-6 text-center">
+                    {{ ux_icon('heroicons:briefcase', {class: 'h-8 w-8 text-gray-300 mb-2'}) }}
+                    <p class="text-sm text-gray-400">{{ 'no_upcoming_stays'|trans({}, 'dashboard') }}</p>
+                </div>
+            {% else %}
+                <ul class="divide-y divide-gray-50">
+                {% for stay in upcomingStays %}
+                    {% set is_current = (stay.startDate is null or stay.startDate|date('Y-m-d') <= today)
+                                    and (stay.endDate is null or stay.endDate|date('Y-m-d') >= today) %}
+                    <li>
+                        <a href="{{ path('app_stays_show', {id: stay.id}) }}"
+                           class="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50 transition-colors group">
+
+                            {# Indicador de estado #}
+                            <span class="shrink-0 flex h-7 w-7 items-center justify-center rounded-full
+                                         {{ is_current ? 'bg-green-100' : 'bg-blue-50' }}">
+                                {{ ux_icon(is_current ? 'heroicons:play' : 'heroicons:clock',
+                                    {class: 'h-3.5 w-3.5 ' ~ (is_current ? 'text-green-600' : 'text-blue-500')}) }}
+                            </span>
+
+                            {# Info de la estancia #}
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-gray-900 group-hover:text-plum-700 transition-colors">
+                                    {{ stay.name }}
+                                </p>
+                                <p class="truncate text-xs text-gray-400 mt-0.5">
+                                    {{ stay.programme.name }}
+                                    <span class="mx-1">·</span>
+                                    {{ stay.programme.professionalFamily.name }}
+                                </p>
+                            </div>
+
+                            {# Fechas y badge #}
+                            <div class="shrink-0 text-right">
+                                {% if is_current %}
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                        {{ 'stay_current'|trans({}, 'dashboard') }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                                        {{ 'stay_upcoming'|trans({}, 'dashboard') }}
+                                    </span>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-400">
+                                    {% if stay.startDate %}
+                                        {{ stay.startDate|date('d/m/Y') }}
+                                    {% endif %}
+                                    {% if stay.startDate and stay.endDate %} – {% endif %}
+                                    {% if stay.endDate %}
+                                        {{ stay.endDate|date('d/m/Y') }}
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                        </a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% else %}
+    {# Sin curso académico activo #}
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-8 text-center">
+        {{ ux_icon('heroicons:exclamation-triangle', {class: 'mx-auto h-8 w-8 text-amber-400 mb-2'}) }}
+        <p class="text-sm font-medium text-amber-800">{{ 'no_academic_year'|trans({}, 'dashboard') }}</p>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}

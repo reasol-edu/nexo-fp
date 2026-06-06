@@ -128,6 +128,99 @@ class StayRepository extends ServiceEntityRepository
     }
 
     /**
+     * Aggregated dashboard stats for an academic year in two queries.
+     *
+     * @return array{
+     *     total_stays: int, current_stays: int, future_stays: int, past_stays: int,
+     *     total_positions: int, occupied: int, free: int, signed: int,
+     *     state_draft: int, state_pending: int, state_done: int, companies: int
+     * }
+     */
+    public function findDashboardStats(AcademicYear $year): array
+    {
+        $today = new \DateTimeImmutable('today');
+
+        /** @var array{total_stays: string, current_stays: string, future_stays: string, past_stays: string} $stayRow */
+        $stayRow = $this->createQueryBuilder('s')
+            ->select(
+                'COUNT(s.id) AS total_stays',
+                'SUM(CASE WHEN (s.startDate IS NULL OR s.startDate <= :today) AND (s.endDate IS NULL OR s.endDate >= :today) THEN 1 ELSE 0 END) AS current_stays',
+                'SUM(CASE WHEN s.startDate IS NOT NULL AND s.startDate > :today THEN 1 ELSE 0 END) AS future_stays',
+                'SUM(CASE WHEN s.endDate IS NOT NULL AND s.endDate < :today THEN 1 ELSE 0 END) AS past_stays',
+            )
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('today', $today)
+            ->getQuery()
+            ->getSingleResult();
+
+        $em = $this->getEntityManager();
+
+        /** @var array{total_positions: string, occupied: string, signed: string, state_draft: string, state_pending: string, state_done: string, companies: string} $posRow */
+        $posRow = $em->createQueryBuilder()
+            ->select(
+                'COUNT(tp.id) AS total_positions',
+                'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
+                'SUM(CASE WHEN tp.signed = :btrue THEN 1 ELSE 0 END) AS signed',
+                'SUM(CASE WHEN tp.state = :s_draft THEN 1 ELSE 0 END) AS state_draft',
+                'SUM(CASE WHEN tp.state = :s_pending THEN 1 ELSE 0 END) AS state_pending',
+                'SUM(CASE WHEN tp.state = :s_done THEN 1 ELSE 0 END) AS state_done',
+                'COUNT(DISTINCT IDENTITY(wc.company)) AS companies',
+            )
+            ->from(Stay::class, 's')
+            ->leftJoin('s.trainingPositions', 'tp')
+            ->leftJoin('tp.workcenter', 'wc')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('btrue', true)
+            ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
+            ->setParameter('s_pending', TrainingPositionState::PENDING->value)
+            ->setParameter('s_done', TrainingPositionState::DONE->value)
+            ->getQuery()
+            ->getSingleResult();
+
+        $total = (int) $posRow['total_positions'];
+        $occupied = (int) $posRow['occupied'];
+
+        return [
+            'total_stays'    => (int) $stayRow['total_stays'],
+            'current_stays'  => (int) $stayRow['current_stays'],
+            'future_stays'   => (int) $stayRow['future_stays'],
+            'past_stays'     => (int) $stayRow['past_stays'],
+            'total_positions'=> $total,
+            'occupied'       => $occupied,
+            'free'           => $total - $occupied,
+            'signed'         => (int) $posRow['signed'],
+            'state_draft'    => (int) $posRow['state_draft'],
+            'state_pending'  => (int) $posRow['state_pending'],
+            'state_done'     => (int) $posRow['state_done'],
+            'companies'      => (int) $posRow['companies'],
+        ];
+    }
+
+    /**
+     * Returns current and upcoming stays ordered by start date, limited to $limit results.
+     *
+     * @return Stay[]
+     */
+    public function findActiveAndUpcoming(AcademicYear $year, int $limit = 6): array
+    {
+        $today = new \DateTimeImmutable('today');
+
+        return $this->createQueryBuilder('s')
+            ->join('s.programme', 'p')->addSelect('p')
+            ->join('p.professionalFamily', 'f')->addSelect('f')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('today', $today)
+            ->orderBy('s.startDate', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Returns aggregated stats for a list of stays using two queries
      * (one for training position stats, one for student counts) to avoid N+1.
      *
