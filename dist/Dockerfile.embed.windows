@@ -1,0 +1,38 @@
+# Construye el binario embebido estático de FrankenPHP para Windows.
+# Contexto de build: raíz del repositorio (después de descargar embed-app/).
+#
+# Uso:
+#   docker build --platform linux/amd64 -f dist/Dockerfile.embed.windows -t nexo-embed-windows .
+#   CID=$(docker create nexo-embed-windows)
+#   docker cp "${CID}:/go/src/app/dist/frankenphp-windows-x86_64.exe" nexo-fp.exe
+#   docker rm "${CID}"
+FROM dunglas/frankenphp:static-builder-gnu
+
+# Token para la API autenticada de GitHub (evita el rate limit de 60 req/h)
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+
+# GCC 15 eliminó la opción -mthreads que Go añade al invocar el compilador
+# cruzado mingw-w64 al compilar CGO para Windows (ver golang/go#71154).
+# Se crean wrappers que sustituyen -mthreads por -pthread (equivalente moderno
+# y la propia sugerencia de GCC) para cada binario del compilador cruzado.
+RUN for bin in x86_64-w64-mingw32-gcc x86_64-w64-mingw32-g++; do \
+      real="$(command -v "$bin" 2>/dev/null)" || continue; \
+      mv "$real" "${real}-real"; \
+      { \
+        echo '#!/bin/sh'; \
+        echo 'args=""'; \
+        echo 'for a in "$@"; do'; \
+        echo '  [ "$a" = "-mthreads" ] && a="-pthread"'; \
+        echo '  args="$args $a"'; \
+        echo 'done'; \
+        printf 'exec "%s-real"$args\n' "$real"; \
+      } > "$real"; \
+      chmod +x "$real"; \
+    done
+
+WORKDIR /go/src/app/dist/app
+COPY embed-app/ .
+
+WORKDIR /go/src/app/
+RUN EMBED=dist/app/ GOOS=windows GOARCH=amd64 ./build-static.sh
