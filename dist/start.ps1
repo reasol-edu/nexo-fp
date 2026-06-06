@@ -43,7 +43,8 @@ if (-not (Test-Path $SecretFile)) {
 $env:APP_SECRET = (Get-Content $SecretFile -Raw -Encoding ascii).Trim()
 
 # ── .env: exponer variables a PHP ─────────────────────────────────────────────
-@"
+# Set-Content -Encoding utf8 escribe BOM en PS 5.x; Symfony no admite BOM.
+$envContent = @"
 APP_ENV=prod
 APP_DEBUG=0
 APP_SECRET=$($env:APP_SECRET)
@@ -54,7 +55,8 @@ APP_PAGE_SIZE=$($env:APP_PAGE_SIZE)
 APP_EXTERNAL_ENABLED=$($env:APP_EXTERNAL_ENABLED)
 APP_EXTERNAL_URL=$($env:APP_EXTERNAL_URL)
 APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
-"@ | Set-Content -Path (Join-Path $App ".env") -Encoding utf8
+"@
+[System.IO.File]::WriteAllText((Join-Path $App ".env"), $envContent, [System.Text.UTF8Encoding]::new($false))
 
 # ── Caché: limpiar posibles compilaciones parciales de arranques anteriores ────
 $CacheDir = Join-Path $App "var\cache"

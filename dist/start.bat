@@ -40,9 +40,7 @@ if not exist "%DATA%\.secret" (
         echo %%i> "%DATA%\.secret"
     )
 )
-set /p APP_SECRET=<"%DATA%\.secret"
-:: Eliminar posible retorno de carro
-set APP_SECRET=%APP_SECRET: =%
+for /f "usebackq delims=" %%a in ("%DATA%\.secret") do set APP_SECRET=%%a
 
 :: ── .env: exponer variables a PHP ────────────────────────────────────────────
 (
