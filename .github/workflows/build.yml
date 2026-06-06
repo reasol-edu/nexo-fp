@@ -129,11 +129,12 @@ jobs:
             "https://github.com/dunglas/frankenphp/releases/download/v${{ env.FRANKENPHP_VERSION }}/${{ matrix.fp_asset }}" \
             -o fp_asset_download
           if [[ "${{ matrix.fp_asset }}" == *.zip ]]; then
-            unzip -j fp_asset_download "*.exe" -d .
+            unzip fp_asset_download -d fp_extracted
           else
-            mv fp_asset_download "${{ matrix.binary }}"
+            mkdir -p fp_extracted
+            mv fp_asset_download "fp_extracted/${{ matrix.binary }}"
+            chmod +x "fp_extracted/${{ matrix.binary }}"
           fi
-          chmod +x "${{ matrix.binary }}"
 
       - name: Ensamblar paquete
         env:
@@ -141,18 +142,25 @@ jobs:
         run: |
           mkdir -p "${PKG}/data"
           cp -r _app "${PKG}/app"
-          cp "${{ matrix.binary }}" "${PKG}/${{ matrix.binary }}"
           cp dist/Caddyfile "${PKG}/Caddyfile"
+          echo "${{ steps.ver.outputs.version }}" > "${PKG}/.version"
 
           if [[ "${{ matrix.platform }}" == windows* ]]; then
+            # Copiar frankenphp.exe + todas las DLLs del raíz del ZIP
+            find fp_extracted -maxdepth 1 \( -name "frankenphp.exe" -o -name "*.dll" \) \
+              -exec cp {} "${PKG}/" \;
+            # Extensiones PHP (ext/) y soporte SSL (extras/)
+            cp -r fp_extracted/ext     "${PKG}/ext"
+            cp -r fp_extracted/extras  "${PKG}/extras"
             cp dist/start.bat "${PKG}/start.bat"
             cp dist/start.ps1 "${PKG}/start.ps1"
           else
+            cp "fp_extracted/${{ matrix.binary }}" "${PKG}/${{ matrix.binary }}"
+            chmod +x "${PKG}/${{ matrix.binary }}"
             cp dist/start.sh "${PKG}/start.sh"
             chmod +x "${PKG}/start.sh"
           fi
 
-          echo "${{ steps.ver.outputs.version }}" > "${PKG}/.version"
           echo "PKG=${PKG}" >> "$GITHUB_ENV"
 
       - name: Crear archivo tar.gz
