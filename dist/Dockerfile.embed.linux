@@ -8,6 +8,10 @@
 #   docker rm "${CID}"
 FROM dunglas/frankenphp:static-builder-gnu
 
+# Token para la API autenticada de GitHub (evita el rate limit de 60 req/h)
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+
 WORKDIR /go/src/app/dist/app
 COPY embed-app/ .
 

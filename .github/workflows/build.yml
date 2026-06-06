@@ -107,10 +107,13 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Compilar binario embebido (${{ matrix.arch }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker buildx build \
             --platform "${{ matrix.platform }}" \
             --file dist/Dockerfile.embed.linux \
+            --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
             --load \
             --tag nexo-embed-${{ matrix.arch }} \
             .
@@ -141,10 +144,14 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Compilar binario embebido (Windows x86_64)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # El static-builder-gnu incluye mingw-w64 para cross-compile a Windows
           cat > /tmp/Dockerfile.embed.windows << 'EOF'
           FROM dunglas/frankenphp:static-builder-gnu
+          ARG GITHUB_TOKEN
+          ENV GITHUB_TOKEN=${GITHUB_TOKEN}
           WORKDIR /go/src/app/dist/app
           COPY embed-app/ .
           WORKDIR /go/src/app/
@@ -154,6 +161,7 @@ jobs:
           docker build \
             --platform linux/amd64 \
             --file /tmp/Dockerfile.embed.windows \
+            --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
             --tag nexo-embed-windows \
             .
 
@@ -212,6 +220,10 @@ jobs:
           cp -r embed-app/. /tmp/frankenphp/dist/app/
 
       - name: Compilar binario embebido (macOS ${{ matrix.arch }})
+        env:
+          # Necesario para que static-php-cli use la API autenticada de GitHub
+          # (límite 5 000 req/h) en lugar de la anónima (60 req/h).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           which pkg-config  # confirmar que está en PATH antes de compilar
           cd /tmp/frankenphp
