@@ -48,6 +48,10 @@ try {
     Write-Host "Aplicando migraciones..."
     & $FP php-cli bin/console doctrine:migrations:migrate --no-interaction 2>$null
 
+    # ── Datos por defecto ─────────────────────────────────────────────────────
+    Write-Host "Inicializando datos por defecto..."
+    & $FP php-cli bin/console app:setup --no-interaction 2>$null
+
     # ── Caché de Symfony ──────────────────────────────────────────────────────
     Write-Host "Precalentando caché..."
     & $FP php-cli bin/console cache:warmup --env=prod --no-interaction 2>$null
