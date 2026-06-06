@@ -39,8 +39,8 @@ if [[ ! -f "${DATA}/.secret" ]]; then
 fi
 export APP_SECRET="$(cat "${DATA}/.secret")"
 
-# ── .env.local: exponer variables a PHP (bootEnv no lee $ENV por defecto) ─────
-cat > "${APP}/.env.local" <<EOF
+# ── .env: exponer variables a PHP (bootEnv requiere el fichero .env) ─────────
+cat > "${APP}/.env" <<EOF
 APP_ENV=prod
 APP_DEBUG=0
 APP_SECRET=${APP_SECRET}
@@ -53,17 +53,19 @@ APP_EXTERNAL_URL=${APP_EXTERNAL_URL}
 APP_EXTERNAL_URL_FORCE_SECURITY=${APP_EXTERNAL_URL_FORCE_SECURITY}
 EOF
 
+# ── Caché: limpiar posibles compilaciones parciales de arranques anteriores ────
+rm -rf "${APP}/var/cache/"
+
 # ── Base de datos SQLite ──────────────────────────────────────────────────────
 cd "${APP}"
-echo "Aplicando migraciones..."
-"${FP}" php-cli bin/console doctrine:migrations:migrate --no-interaction 2>/dev/null
-
-# ── Caché de Symfony ──────────────────────────────────────────────────────────
-echo "Inicializando datos por defecto..."
-"${FP}" php-cli bin/console app:setup --no-interaction 2>/dev/null || true
-
 echo "Precalentando caché..."
-"${FP}" php-cli bin/console cache:warmup --env=prod --no-interaction 2>/dev/null || true
+"${FP}" php-cli bin/console cache:warmup --no-interaction
+
+echo "Aplicando migraciones..."
+"${FP}" php-cli bin/console doctrine:migrations:migrate --no-interaction
+
+echo "Inicializando datos por defecto..."
+"${FP}" php-cli bin/console app:setup --no-interaction || true
 
 # ── Arrancar servidor ─────────────────────────────────────────────────────────
 cd "${ROOT}"

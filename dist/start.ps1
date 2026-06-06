@@ -42,8 +42,7 @@ if (-not (Test-Path $SecretFile)) {
 }
 $env:APP_SECRET = (Get-Content $SecretFile -Raw -Encoding ascii).Trim()
 
-# ── Base de datos SQLite ───────────────────────────────────────────────────────
-# ── .env.local: exponer variables a PHP (bootEnv no lee $ENV por defecto) ─────
+# ── .env: exponer variables a PHP ─────────────────────────────────────────────
 @"
 APP_ENV=prod
 APP_DEBUG=0
@@ -55,20 +54,25 @@ APP_PAGE_SIZE=$($env:APP_PAGE_SIZE)
 APP_EXTERNAL_ENABLED=$($env:APP_EXTERNAL_ENABLED)
 APP_EXTERNAL_URL=$($env:APP_EXTERNAL_URL)
 APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
-"@ | Set-Content -Path (Join-Path $App ".env.local") -Encoding utf8
+"@ | Set-Content -Path (Join-Path $App ".env") -Encoding utf8
+
+# ── Caché: limpiar posibles compilaciones parciales de arranques anteriores ────
+$CacheDir = Join-Path $App "var\cache"
+if (Test-Path $CacheDir) { Remove-Item -Recurse -Force $CacheDir }
 
 Push-Location $App
 try {
+    # ── Precalentar caché (compila el contenedor DI correctamente) ────────────
+    Write-Host "Precalentando caché..."
+    & $FP php-cli bin/console cache:warmup --no-interaction
+
+    # ── Base de datos SQLite ──────────────────────────────────────────────────
     Write-Host "Aplicando migraciones..."
-    & $FP php-cli bin/console doctrine:migrations:migrate --no-interaction 2>$null
+    & $FP php-cli bin/console doctrine:migrations:migrate --no-interaction
 
     # ── Datos por defecto ─────────────────────────────────────────────────────
     Write-Host "Inicializando datos por defecto..."
-    & $FP php-cli bin/console app:setup --no-interaction 2>$null
-
-    # ── Caché de Symfony ──────────────────────────────────────────────────────
-    Write-Host "Precalentando caché..."
-    & $FP php-cli bin/console cache:warmup --env=prod --no-interaction 2>$null
+    try { & $FP php-cli bin/console app:setup --no-interaction } catch {}
 } finally {
     Pop-Location
 }

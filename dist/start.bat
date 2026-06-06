@@ -44,7 +44,7 @@ set /p APP_SECRET=<"%DATA%\.secret"
 :: Eliminar posible retorno de carro
 set APP_SECRET=%APP_SECRET: =%
 
-:: ── .env.local: exponer variables a PHP ─────────────────────────────────────
+:: ── .env: exponer variables a PHP ────────────────────────────────────────────
 (
     echo APP_ENV=prod
     echo APP_DEBUG=0
@@ -56,20 +56,23 @@ set APP_SECRET=%APP_SECRET: =%
     echo APP_EXTERNAL_ENABLED=%APP_EXTERNAL_ENABLED%
     echo APP_EXTERNAL_URL=%APP_EXTERNAL_URL%
     echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%
-) > "%APP%\.env.local"
+) > "%APP%\.env"
+
+:: ── Caché: limpiar posibles compilaciones parciales de arranques anteriores ──
+if exist "%APP%\var\cache" rmdir /s /q "%APP%\var\cache"
+
+:: ── Precalentar caché (compila el contenedor DI correctamente) ───────────────
+cd /d "%APP%"
+echo Precalentando cache...
+"%FP%" php-cli bin\console cache:warmup --no-interaction
 
 :: ── Base de datos SQLite ─────────────────────────────────────────────────────
-cd /d "%APP%"
 echo Aplicando migraciones...
-"%FP%" php-cli bin\console doctrine:migrations:migrate --no-interaction 2>nul
+"%FP%" php-cli bin\console doctrine:migrations:migrate --no-interaction
 
 :: ── Datos por defecto ────────────────────────────────────────────────────────
 echo Inicializando datos por defecto...
-"%FP%" php-cli bin\console app:setup --no-interaction 2>nul
-
-:: ── Caché de Symfony ─────────────────────────────────────────────────────────
-echo Precalentando cache...
-"%FP%" php-cli bin\console cache:warmup --env=prod --no-interaction 2>nul
+"%FP%" php-cli bin\console app:setup --no-interaction
 
 :: ── Arrancar servidor ────────────────────────────────────────────────────────
 cd /d "%ROOT%"
