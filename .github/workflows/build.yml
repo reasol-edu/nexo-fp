@@ -191,7 +191,12 @@ jobs:
           path: embed-app
 
       - name: Instalar dependencias de compilación
-        run: brew install go brotli libiconv pkg-config
+        run: |
+          # pkgconf reemplaza a pkg-config en Homebrew moderno;
+          # static-php-cli (usado por build-static.sh) lo detecta por ambos nombres.
+          brew install go brotli libiconv pkgconf
+          # Añadir Homebrew al PATH para los steps siguientes
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
 
       - name: Clonar FrankenPHP v${{ env.FRANKENPHP_VERSION }}
         run: |
@@ -206,7 +211,11 @@ jobs:
           cp -r embed-app/. /tmp/frankenphp/dist/app/
 
       - name: Compilar binario embebido (macOS ${{ matrix.arch }})
+        env:
+          # Apuntar explícitamente al pkg-config de Homebrew por si SPC lo busca
+          PKG_CONFIG: "$(brew --prefix)/bin/pkg-config"
         run: |
+          export PKG_CONFIG="$(brew --prefix)/bin/pkg-config"
           cd /tmp/frankenphp
           EMBED=dist/app/ ./build-static.sh
 
