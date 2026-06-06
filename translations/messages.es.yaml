@@ -6,6 +6,34 @@ ui.cancel: 'Cancelar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
 
+# Perfil del usuario
+profile.title: 'Mi perfil'
+profile.section.personal: 'Datos personales'
+profile.section.password: 'Cambiar contraseña'
+profile.save: 'Guardar cambios'
+profile.badge.external: 'IdEA / Séneca'
+
+profile.field.first_name: 'Nombre'
+profile.field.last_name: 'Apellidos'
+profile.field.username: 'Nombre de usuario'
+profile.field.username_help: 'El nombre de usuario no se puede modificar.'
+profile.field.email: 'Correo electrónico'
+profile.field.current_password: 'Contraseña actual'
+profile.field.new_password: 'Nueva contraseña'
+profile.field.new_password_help: 'Dejar en blanco para no cambiar la contraseña'
+profile.field.new_password_confirm: 'Confirmar nueva contraseña'
+
+profile.password.external_notice: 'Tu contraseña está gestionada por el sistema IdEA (Séneca). Para cambiarla, accede al portal de la Junta de Andalucía.'
+
+profile.error.first_name_required: 'El nombre es obligatorio.'
+profile.error.last_name_required: 'Los apellidos son obligatorios.'
+profile.error.email_invalid: 'El correo electrónico no tiene un formato válido.'
+profile.error.current_password_required: 'Introduce tu contraseña actual para confirmar el cambio.'
+profile.error.current_password_invalid: 'La contraseña actual no es correcta.'
+profile.error.password_mismatch: 'Las contraseñas no coinciden.'
+
+profile.flash.saved: 'Perfil guardado correctamente.'
+
 # Paginación
 pagination.summary: 'Mostrando %from%–%to% de %total%'
 pagination.previous: 'Página anterior'

@@ -19,6 +19,7 @@ final class TenantContextSubscriber implements EventSubscriberInterface
         'app_logout',
         'app_select_centre',
         'app_select_centre_choose',
+        'app_profile',
     ];
 
     public function __construct(

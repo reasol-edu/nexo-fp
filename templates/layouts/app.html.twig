@@ -157,9 +157,9 @@
 
             {# Acciones del usuario #}
             <div class="space-y-0.5">
-                <a href="#"
-                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium
-                          text-plum-300 hover:bg-plum-900 hover:text-white transition-colors">
+                <a href="{{ path('app_profile') }}"
+                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors
+                          {{ current_route starts with 'app_profile' ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}">
                     {{ ux_icon('heroicons:user', {class: 'h-4 w-4 shrink-0'}) }}
                     {{ 'profile'|trans({}, 'navigation') }}
                 </a>
