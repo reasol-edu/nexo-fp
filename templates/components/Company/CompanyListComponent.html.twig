@@ -64,7 +64,7 @@
                                 <div class="flex flex-wrap gap-1">
                                     {% for liaison in liaisons|slice(0, 3) %}
                                         <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700 ring-1 ring-inset ring-plum-600/20">
-                                            {{ liaison.name.lastName }}
+                                            {{ liaison.name.lastName }}, {{ liaison.name.firstName }}
                                         </span>
                                     {% endfor %}
                                     {% if liaisons|length > 3 %}
