@@ -8,6 +8,10 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: test
+      APP_SECRET: test-secret-for-ci-only
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +29,12 @@ jobs:
 
       - name: Instalar dependencias
         run: composer install --prefer-dist --no-interaction
+
+      - name: Calentar caché de test
+        run: php bin/console cache:warmup
+
+      - name: Pre-compilar íconos para los tests
+        run: php bin/console ux:icons:warm-cache
 
       - name: Ejecutar tests
         run: php bin/phpunit
