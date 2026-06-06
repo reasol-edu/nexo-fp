@@ -18,3 +18,5 @@ when@prod:
     ux_icons:
         # Suppress exceptions for missing icons in production
         ignore_not_found: true
+        # All icons are bundled as local SVG files; no runtime fetches needed
+        iconify: false
