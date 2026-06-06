@@ -152,6 +152,7 @@ jobs:
             # Extensiones PHP (ext/) y soporte SSL (extras/)
             cp -r fp_extracted/ext     "${PKG}/ext"
             cp -r fp_extracted/extras  "${PKG}/extras"
+            cp dist/php.ini   "${PKG}/php.ini"
             cp dist/start.bat "${PKG}/start.bat"
             cp dist/start.ps1 "${PKG}/start.ps1"
           else
