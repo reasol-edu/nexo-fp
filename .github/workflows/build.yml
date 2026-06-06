@@ -101,7 +101,7 @@ jobs:
             binary:     frankenphp
             archive:    tar.gz
           - platform: windows-x86_64
-            fp_asset:   frankenphp-windows-x86_64.exe
+            fp_asset:   frankenphp-windows-x86_64.zip
             binary:     frankenphp.exe
             archive:    zip
 
@@ -127,7 +127,12 @@ jobs:
         run: |
           curl -fsSL \
             "https://github.com/dunglas/frankenphp/releases/download/v${{ env.FRANKENPHP_VERSION }}/${{ matrix.fp_asset }}" \
-            -o "${{ matrix.binary }}"
+            -o fp_asset_download
+          if [[ "${{ matrix.fp_asset }}" == *.zip ]]; then
+            unzip -j fp_asset_download "*.exe" -d .
+          else
+            mv fp_asset_download "${{ matrix.binary }}"
+          fi
           chmod +x "${{ matrix.binary }}"
 
       - name: Ensamblar paquete
