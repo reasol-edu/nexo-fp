@@ -12,7 +12,7 @@ on:
         default: "dev"
 
 env:
-  FRANKENPHP_VERSION: "1.4.4"
+  FRANKENPHP_VERSION: "1.12.4"
   PHP_VERSION: "8.4"
 
 # ── Job 1: compilar la aplicación PHP ────────────────────────────────────────
