@@ -227,7 +227,15 @@ jobs:
         run: |
           which pkg-config  # confirmar que está en PATH antes de compilar
           cd /tmp/frankenphp
-          EMBED=dist/app/ ./build-static.sh
+          for attempt in 1 2 3; do
+            EMBED=dist/app/ ./build-static.sh && break
+            if [ "$attempt" -eq 3 ]; then
+              echo "❌ build-static.sh falló tras ${attempt} intentos."
+              exit 1
+            fi
+            echo "⚠️ build-static.sh falló (intento ${attempt}/3). Reintentando en 15s..."
+            sleep 15
+          done
 
       - name: Copiar binario resultante
         run: |
