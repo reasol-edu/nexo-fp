@@ -36,11 +36,9 @@ if not exist "%DATA%" mkdir "%DATA%"
 :: ── APP_SECRET: generar en el primer arranque ────────────────────────────────
 if not exist "%DATA%\.secret" (
     echo Generando APP_SECRET...
-    for /f "delims=" %%i in ('"%FP%" php-cli -r "echo bin2hex(random_bytes(32));" 2^>nul') do (
-        echo %%i> "%DATA%\.secret"
-    )
+    "%FP%" php-cli -r "file_put_contents('%DATA_FWD%/.secret', bin2hex(random_bytes(32)));" 2>nul
 )
-for /f "usebackq delims=" %%a in ("%DATA%\.secret") do set APP_SECRET=%%a
+set /p APP_SECRET=<"%DATA%\.secret"
 
 :: ── .env: exponer variables a PHP ────────────────────────────────────────────
 (

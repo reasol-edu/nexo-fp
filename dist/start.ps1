@@ -7,13 +7,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# -- Rutas ---------------------------------------------------------------------
+# -- Rutas -----------------------------------------------------------------------
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Data = Join-Path $Root "data"
 $App  = Join-Path $Root "app"
 $FP   = Join-Path $Root "frankenphp.exe"
 
-# -- Variables de entorno -------------------------------------------------------
+# -- Variables de entorno --------------------------------------------------------
 $env:APP_ENV       = "prod"
 $env:APP_DEBUG     = "0"
 $env:DOCUMENT_ROOT = Join-Path $App "public"
@@ -30,10 +30,10 @@ if (-not $env:APP_EXTERNAL_ENABLED)        { $env:APP_EXTERNAL_ENABLED = "true" 
 if (-not $env:APP_EXTERNAL_URL)            { $env:APP_EXTERNAL_URL = "https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp" }
 if (-not $env:APP_EXTERNAL_URL_FORCE_SECURITY) { $env:APP_EXTERNAL_URL_FORCE_SECURITY = "true" }
 
-# -- Carpeta de datos -----------------------------------------------------------
+# -- Carpeta de datos ------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
 
-# -- APP_SECRET: generar en el primer arranque ---------------------------------
+# -- APP_SECRET: generar en el primer arranque -----------------------------------
 $SecretFile = Join-Path $Data ".secret"
 if (-not (Test-Path $SecretFile)) {
     Write-Host "Generando APP_SECRET..."
@@ -42,7 +42,7 @@ if (-not (Test-Path $SecretFile)) {
 }
 $env:APP_SECRET = (Get-Content $SecretFile -Raw -Encoding ascii).Trim()
 
-# -- .env: exponer variables a PHP ---------------------------------------------
+# -- .env: exponer variables a PHP ----------------------------------------------
 # Set-Content -Encoding utf8 escribe BOM en PS 5.x; Symfony no admite BOM.
 $envContent = @"
 APP_ENV=prod
@@ -58,28 +58,28 @@ APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
 "@
 [System.IO.File]::WriteAllText((Join-Path $App ".env"), $envContent, [System.Text.UTF8Encoding]::new($false))
 
-# -- Caché: limpiar posibles compilaciones parciales de arranques anteriores ----
+# -- Caché: limpiar posibles compilaciones parciales de arranques anteriores -----
 $CacheDir = Join-Path $App "var\cache"
 if (Test-Path $CacheDir) { Remove-Item -Recurse -Force $CacheDir }
 
 Push-Location $App
 try {
-    # -- Precalentar caché (compila el contenedor DI correctamente) ------------
+    # -- Precalentar caché (compila el contenedor DI correctamente) -------------
     Write-Host "Precalentando cache. Espere por favor..."
     & $FP php-cli bin/console cache:warmup --no-interaction
 
-    # -- Base de datos SQLite --------------------------------------------------
+    # -- Base de datos SQLite ---------------------------------------------------
     Write-Host "Aplicando migraciones..."
     & $FP php-cli bin/console doctrine:migrations:migrate --no-interaction
 
-    # -- Datos por defecto -----------------------------------------------------
+    # -- Datos por defecto ------------------------------------------------------
     Write-Host "Inicializando datos por defecto..."
     try { & $FP php-cli bin/console app:setup --no-interaction } catch {}
 } finally {
     Pop-Location
 }
 
-# -- Arrancar servidor ----------------------------------------------------------
+# -- Arrancar servidor -----------------------------------------------------------
 Set-Location $Root
 Write-Host ""
 Write-Host "  Nexo FP disponible en -> http://localhost:$Port"
