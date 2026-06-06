@@ -30,6 +30,15 @@ jobs:
       - name: Instalar dependencias
         run: composer install --prefer-dist --no-interaction
 
+      - name: Cachear binario de Tailwind
+        uses: actions/cache@v4
+        with:
+          path: var/tailwind/v4.1.11
+          key: tailwind-v4.1.11-linux-x64
+
+      - name: Compilar Tailwind CSS
+        run: php bin/console tailwind:build
+
       - name: Calentar caché de test
         run: php bin/console cache:warmup
 
