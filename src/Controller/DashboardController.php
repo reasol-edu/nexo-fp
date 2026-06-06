@@ -21,9 +21,13 @@ class DashboardController extends AbstractController
     public function index(): Response
     {
         $centre = $this->tenantContext->getSelectedCentre();
-        $year   = $centre?->getActiveAcademicYear();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
 
-        if ($centre === null || $year === null) {
+        $year = $centre->getActiveAcademicYear();
+
+        if ($year === null) {
             return $this->render('dashboard/index.html.twig', [
                 'stats'           => null,
                 'studentCount'    => 0,

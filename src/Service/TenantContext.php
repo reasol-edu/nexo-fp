@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class TenantContext
@@ -14,6 +15,7 @@ final class TenantContext
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly EducationalCentreRepository $centres,
+        private readonly EntityManagerInterface $em,
     ) {}
 
     public function isSelected(): bool
@@ -28,7 +30,15 @@ final class TenantContext
             return null;
         }
 
-        return $this->centres->findByIdWithActiveYear($id);
+        $centre = $this->centres->findByIdWithActiveYear($id);
+
+        // Ensure activeAcademicYear is not stale from a prior identity-map load
+        // (e.g. the subscriber loaded the centre without the JOIN in the same request)
+        if ($centre !== null && $this->em->getUnitOfWork()->isInIdentityMap($centre)) {
+            $this->em->refresh($centre);
+        }
+
+        return $centre;
     }
 
     public function selectCentre(EducationalCentre $centre): void

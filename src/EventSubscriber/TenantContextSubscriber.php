@@ -56,7 +56,12 @@ final class TenantContextSubscriber implements EventSubscriberInterface
         }
 
         if ($this->tenantContext->isSelected()) {
-            return;
+            // Guard against stale sessions where the stored UUID no longer resolves
+            if ($this->tenantContext->getSelectedCentre() === null) {
+                $this->tenantContext->clear();
+            } else {
+                return;
+            }
         }
 
         $centres = $this->centres->findAccessibleByTeacher($user);
