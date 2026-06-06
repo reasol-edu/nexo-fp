@@ -17,16 +17,16 @@
 
         <div class="relative flex flex-col justify-between h-full p-12 z-10">
             {# Logo #}
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}" class="w-10 h-10 shrink-0">
-                <span class="text-white text-xl font-semibold tracking-tight">{{ app_name }}{% if app_version %} - v{{ app_version }}{% endif %}</span>
+            <div class="flex items-start gap-4">
+                <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}" class="w-40 h-40 shrink-0">
+                <span class="text-white/60 text-xs font-medium tracking-tight mt-1">{% if app_version %}v{{ app_version }}{% endif %}</span>
             </div>
 
             {# Texto central #}
             <div>
                 <p class="text-plum-300 text-sm font-medium uppercase tracking-widest mb-4">{{ 'platform_label'|trans({}, 'login') }}</p>
                 <h1 class="text-4xl font-bold text-white leading-tight mb-4">
-                    {{ app_name }}{% if app_version %} - v{{ app_version }}{% endif %}
+                    {{ app_name }}
                 </h1>
                 <p class="text-plum-300 text-lg leading-relaxed">
                     {{ 'hero_description'|trans({}, 'login') }}
@@ -34,7 +34,7 @@
             </div>
 
             {# Footer #}
-            <p class="text-plum-500 text-sm">{{ 'copyright'|trans({'%year%': 'now'|date('Y')}, 'login') }}</p>
+            <p class="text-plum-500 text-sm">{{ 'copyright'|trans({'%year%': 'now'|date('Y')}, 'login') }} REASOL, Luis Ramón López López</p>
         </div>
     </div>
 
@@ -42,9 +42,9 @@
     <div class="flex-1 flex items-center justify-center p-8 bg-white">
         <div class="w-full max-w-md">
 
-            {# Logo móvil #}
+            {# Logo #}
             <div class="flex items-center gap-2 mb-10 lg:hidden">
-                <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}" class="w-8 h-8 shrink-0">
+                <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}" class="w-14 h-14 shrink-0">
                 <span class="text-plum-900 text-lg font-semibold">{{ app_name }}</span>
             </div>
 
@@ -85,7 +85,7 @@
                                name="_username"
                                value="{{ last_username }}"
                                autocomplete="username"
-                               autofocus
+                               {% if last_username is empty %}autofocus{% endif %}
                                required
                                class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4
                                       text-gray-900 placeholder-gray-400 text-sm
@@ -113,6 +113,7 @@
                                name="_password"
                                autocomplete="current-password"
                                required
+                               {% if last_username is not empty %}autofocus{% endif %}
                                data-password-visibility-target="input"
                                class="block w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-11
                                       text-gray-900 placeholder-gray-400 text-sm

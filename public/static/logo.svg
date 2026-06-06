@@ -1,41 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
-  <defs>
-    <radialGradient id="bgGradient2" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#67597A" />
-      <stop offset="100%" stop-color="#342F3C" />
-    </radialGradient>
-    
-    <linearGradient id="nexoGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6E8894" />
-      <stop offset="50%" stop-color="#67597A" />
-      <stop offset="100%" stop-color="#544E61" />
-    </linearGradient>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <!-- Fondo más profundo para máximo contraste -->
+        <radialGradient id="bgGradient2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#1A171E"></stop>
+            <stop offset="100%" stop-color="#1A171E"></stop>
+        </radialGradient>
 
-    <filter id="dropShadow2" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1A171E" flood-opacity="0.5" />
-    </filter>
-  </defs>
+        <!-- Gradiente del path más brillante para destacar sobre el fondo -->
+        <linearGradient id="nexoGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8FA3B0"></stop>
+            <stop offset="50%" stop-color="#7A6E8F"></stop>
+            <stop offset="100%" stop-color="#6B6580"></stop>
+        </linearGradient>
 
-  <rect width="400" height="400" rx="80" fill="url(#bgGradient2)" />
+        <!-- Sombra más pronunciada para separación -->
+        <filter id="dropShadow2" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0D0B10" flood-opacity="0.8"></feDropShadow>
+        </filter>
 
-  <path d="M 120 230 L 120 70 L 280 230 L 280 70" 
-        fill="none" 
-        stroke="url(#nexoGradient2)" 
-        stroke-width="44" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        filter="url(#dropShadow2)" />
+        <!-- Glow sutil para el path -->
+        <filter id="pathGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="6" result="blur"></feGaussianBlur>
+            <feFlood flood-color="#8FA3B0" flood-opacity="0.3" result="glowColor"></feFlood>
+            <feComposite in="glowColor" in2="blur" operator="in" result="glow"></feComposite>
+            <feMerge>
+                <feMergeNode in="glow"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
 
-  <circle cx="120" cy="230" r="14" fill="#ffffff" filter="url(#dropShadow2)" />
-  <circle cx="280" cy="70" r="14" fill="#ffffff" filter="url(#dropShadow2)" />
+        <!-- Halo para los nodos -->
+        <filter id="nodeHalo" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+            <feFlood flood-color="#ffffff" flood-opacity="0.4" result="halo"></feFlood>
+            <feComposite in="halo" in2="blur" operator="in" result="glow"></feComposite>
+            <feMerge>
+                <feMergeNode in="glow"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
 
-  <text x="200" y="330" 
-        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-        font-size="54" 
-        font-weight="800" 
-        text-anchor="middle" 
-        letter-spacing="3">
-    <tspan fill="#ffffff">NX </tspan>
-    <tspan fill="#6E8894">FP</tspan>
-  </text>
+    <rect width="400" height="400" rx="80" fill="url(#bgGradient2)"></rect>
+
+    <!-- Path con mayor grosor y glow para mejor separación del fondo -->
+    <path d="M 120 230 L 120 70 L 280 230 L 280 70" fill="none" stroke="url(#nexoGradient2)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" filter="url(#pathGlow)"></path>
+
+    <!-- Nodos con halo para mayor luminosidad -->
+    <circle cx="120" cy="230" r="16" fill="#ffffff" filter="url(#nodeHalo)"></circle>
+    <circle cx="280" cy="70" r="16" fill="#ffffff" filter="url(#nodeHalo)"></circle>
+
+    <!-- Texto con mejor contraste: FP en tono más claro de la paleta -->
+    <text x="200" y="330" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="54" font-weight="800" text-anchor="middle" letter-spacing="3">
+        <tspan fill="#ffffff">NX</tspan>
+        <tspan fill="#8FA3B0">FP</tspan>
+    </text>
 </svg>
