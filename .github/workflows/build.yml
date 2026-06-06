@@ -65,7 +65,7 @@ jobs:
         run: |
           mkdir -p /tmp/app-bundle
           cp -r \
-            bin config migrations public src templates translations vendor \
+            assets bin config migrations public src templates translations vendor \
             composer.json importmap.php symfony.lock \
             /tmp/app-bundle/
           mkdir -p /tmp/app-bundle/var

@@ -61,7 +61,7 @@ if exist "%APP%\var\cache" rmdir /s /q "%APP%\var\cache"
 
 :: ── Precalentar caché (compila el contenedor DI correctamente) ───────────────
 cd /d "%APP%"
-echo Precalentando cache...
+echo Precalentando cache. Espere por favor...
 "%FP%" php-cli bin\console cache:warmup --no-interaction
 
 :: ── Base de datos SQLite ─────────────────────────────────────────────────────
