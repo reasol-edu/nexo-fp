@@ -147,20 +147,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # El static-builder-gnu incluye mingw-w64 para cross-compile a Windows
-          cat > /tmp/Dockerfile.embed.windows << 'EOF'
-          FROM dunglas/frankenphp:static-builder-gnu
-          ARG GITHUB_TOKEN
-          ENV GITHUB_TOKEN=${GITHUB_TOKEN}
-          WORKDIR /go/src/app/dist/app
-          COPY embed-app/ .
-          WORKDIR /go/src/app/
-          RUN EMBED=dist/app/ GOOS=windows GOARCH=amd64 ./build-static.sh
-          EOF
-
           docker build \
             --platform linux/amd64 \
-            --file /tmp/Dockerfile.embed.windows \
+            --file dist/Dockerfile.embed.windows \
             --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
             --tag nexo-embed-windows \
             .
