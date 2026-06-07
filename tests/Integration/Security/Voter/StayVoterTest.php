@@ -7,9 +7,11 @@ namespace App\Tests\Integration\Security\Voter;
 use App\Entity\AcademicYear;
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Security\Voter\StayVoter;
@@ -261,6 +263,139 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    // ── VIEW ─────────────────────────────────────────────────────────────────
+
+    public function testViewGrantedToGlobalAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000019');
+        $admin = $this->makeTeacher('view.admin', admin: true);
+        $this->persist($centre, $year, $family, $programme, $stay, $admin);
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($admin), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToCentreAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000020');
+        $teacher = $this->makeTeacher('view.cadmin');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $centre->addAdmin($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToCoordinator(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000021');
+        $teacher = $this->makeTeacher('view.coord');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000022');
+        $teacher = $this->makeTeacher('view.fhead');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $family->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToGroupTutor(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000023');
+        $teacher      = $this->makeTeacher('view.tutor');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->setTutor($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToGroupTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000024');
+        $teacher      = $this->makeTeacher('view.teacher');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToLiaison(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000025');
+        $teacher = $this->makeTeacher('view.liaison');
+        $company = $this->makeCompany($centre, 'Empresa View S.L.');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewDeniedToUnrelatedTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000026');
+        $teacher = $this->makeTeacher('view.unrelated');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewDeniedToTeacherInDifferentProgramme(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000027');
+        $family2       = $this->makeFamily($year, 'Sanidad');
+        $programme2    = $this->makeProgramme($year, $family2, 'SMR');
+        $programmeYear = $this->makeProgrammeYear($programme2);
+        $group         = $this->makeGroup($programmeYear);
+        $teacher       = $this->makeTeacher('view.other.prog');
+        $this->persist($centre, $year, $family, $programme, $stay, $family2, $programme2, $programmeYear, $group, $teacher);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /** @return array{0: EducationalCentre, 1: AcademicYear, 2: Programme, 3: Stay, 4: ProfessionalFamily} */
@@ -321,6 +456,16 @@ class StayVoterTest extends RepositoryTestCase
         return (new Teacher(new PersonName('Test', 'Teacher')))
             ->setUsername($username)
             ->setAdmin($admin);
+    }
+
+    private function makeProgrammeYear(Programme $programme, string $name = '1º'): ProgrammeYear
+    {
+        return (new ProgrammeYear())->setName($name)->setProgramme($programme);
+    }
+
+    private function makeGroup(ProgrammeYear $programmeYear, string $name = 'A'): Group
+    {
+        return (new Group())->setName($name)->setProgrammeYear($programmeYear);
     }
 
     private function token(Teacher $teacher): TokenInterface

@@ -8,6 +8,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Repository\CompanyRepository;
+use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -19,6 +20,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 final class StayVoter extends Voter
 {
+    /** Ver una estancia en el listado y acceder a su contenido. Sujeto: Stay */
+    public const VIEW   = 'stay.view';
     /** Gestionar una estancia existente y sus puestos. Sujeto: Stay */
     public const MANAGE = 'stay.manage';
     /** Crear una nueva estancia en el centro activo. Sujeto: EducationalCentre */
@@ -27,14 +30,15 @@ final class StayVoter extends Voter
     public function __construct(
         private readonly ProgrammeRepository $programmes,
         private readonly ProfessionalFamilyRepository $families,
+        private readonly GroupRepository $groups,
         private readonly CompanyRepository $companies,
     ) {}
 
     protected function supports(string $attribute, mixed $subject): bool
     {
         return match ($attribute) {
-            self::MANAGE => $subject instanceof Stay,
-            self::CREATE => $subject instanceof EducationalCentre,
+            self::VIEW, self::MANAGE => $subject instanceof Stay,
+            self::CREATE             => $subject instanceof EducationalCentre,
             default => false,
         };
     }
@@ -51,10 +55,34 @@ final class StayVoter extends Voter
         }
 
         return match ($attribute) {
+            self::VIEW   => $this->canView($user, $subject),     /** @phpstan-ignore argument.type */
             self::MANAGE => $this->canManage($user, $subject),   /** @phpstan-ignore argument.type */
             self::CREATE => $this->canCreate($user, $subject),   /** @phpstan-ignore argument.type */
             default => false,
         };
+    }
+
+    private function canView(Teacher $user, Stay $stay): bool
+    {
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
+
+        if ($centre->getAdmins()->contains($user)) {
+            return true;
+        }
+
+        if ($this->programmes->isCoordinatorOf($user, $stay->getProgramme())) {
+            return true;
+        }
+
+        if ($this->families->isFamilyHeadOfProgramme($user, $stay->getProgramme())) {
+            return true;
+        }
+
+        if ($this->groups->isTeacherInProgramme($user, $stay->getProgramme())) {
+            return true;
+        }
+
+        return $this->companies->hasLiaisonInCentre($user, $centre);
     }
 
     private function canManage(Teacher $user, Stay $stay): bool

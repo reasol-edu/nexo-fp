@@ -6,6 +6,7 @@ namespace App\Twig\Components;
 
 use App\Entity\EducationalCentre;
 use App\Entity\Stay;
+use App\Entity\Teacher;
 use App\Pagination\Paginator;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
@@ -81,8 +82,11 @@ class StayListComponent extends AbstractController
             $periods[] = 'past';
         }
 
+        $user   = $this->getUser();
+        $viewer = $user instanceof Teacher ? $user : null;
+
         $query = $year !== null
-            ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId, $periods)
+            ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId, $periods, $viewer)
             : $this->stays->findNoneQuery();
 
         $this->paginationCache = new Paginator($query, $this->page, $this->pageSize);

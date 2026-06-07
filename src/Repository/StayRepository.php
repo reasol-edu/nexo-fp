@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\AcademicYear;
+use App\Entity\Company;
+use App\Entity\EducationalCentre;
+use App\Entity\Group;
+use App\Entity\Programme;
 use App\Entity\Stay;
+use App\Entity\Teacher;
 use App\Entity\TrainingPositionState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -31,6 +36,7 @@ class StayRepository extends ServiceEntityRepository
         string $familyId = '',
         string $programmeId = '',
         array $periods = ['current', 'future', 'past'],
+        ?Teacher $viewer = null,
     ): Query {
         $qb = $this->createQueryBuilder('s')
             ->join('s.programme', 'p')
@@ -87,6 +93,20 @@ class StayRepository extends ServiceEntityRepository
             }
 
             $qb->andWhere($orConditions);
+        }
+
+        if ($viewer !== null && !$viewer->isAdmin()) {
+            $qb
+                ->join('s.academicYear', 'vay')
+                ->join('vay.educationalCentre', 'vc');
+
+            $qb->andWhere($qb->expr()->orX(
+                'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vc AND vcea.id = :vViewer)',
+                'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = p AND vcrd.id = :vViewer)',
+                'f.head = :vViewer',
+                'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = p AND (vg.tutor = :vViewer OR vgt.id = :vViewer))',
+                'EXISTS(SELECT 1 FROM ' . Company::class . ' vco JOIN vco.liaisons vli WHERE vco.educationalCentre = vc AND vli.id = :vViewer)',
+            ))->setParameter('vViewer', $viewer->getId(), 'uuid');
         }
 
         return $qb->getQuery();

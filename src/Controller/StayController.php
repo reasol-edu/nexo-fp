@@ -317,6 +317,8 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
+
         return $this->render('stays/show.html.twig', [
             'centre' => $centre,
             'stay'   => $stay,
@@ -339,6 +341,8 @@ class StayController extends AbstractController
         ) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
 
         $allPositions = $this->positions->findByStayOrdered($stay);
 

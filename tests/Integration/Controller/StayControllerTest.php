@@ -203,6 +203,39 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testShowDeniedToUnrelatedTeacher(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay    = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $teacher = $this->makeTeacher('unrelated.show');
+        $this->persist($globalAdmin, $teacher, $centre, $year, $family, $programme, $stay);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122());
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testShowGrantedToTeacherInGroup(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay         = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $teacher      = $this->makeTeacher('teacher.in.group');
+        $programmeYear = (new ProgrammeYear())->setName('1º')->setProgramme($programme);
+        $group        = (new Group())->setName('DAW1A')->setProgrammeYear($programmeYear);
+        $this->persist($globalAdmin, $teacher, $centre, $year, $family, $programme, $stay, $programmeYear, $group);
+        $group->addTeacher($teacher);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122());
+
+        self::assertResponseIsSuccessful();
+    }
+
     public function testShowReturns404ForStayFromDifferentYear(): void
     {
         $admin   = $this->makeAdmin('admin.1');

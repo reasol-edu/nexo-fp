@@ -8,6 +8,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
+use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,6 +20,21 @@ class GroupRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Group::class);
+    }
+
+    public function isTeacherInProgramme(Teacher $teacher, Programme $programme): bool
+    {
+        return $this->createQueryBuilder('g')
+            ->select('1')
+            ->join('g.programmeYear', 'py')
+            ->leftJoin('g.teachers', 't')
+            ->where('py.programme = :programme')
+            ->andWhere('g.tutor = :teacher OR t.id = :teacher')
+            ->setParameter('programme', $programme->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
     }
 
     /** @return Group[] */
