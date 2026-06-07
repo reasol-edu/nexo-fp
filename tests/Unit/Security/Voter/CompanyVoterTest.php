@@ -10,6 +10,7 @@ use App\Entity\PersonName;
 use App\Entity\Teacher;
 use App\Repository\CompanyRepository;
 use App\Repository\ProfessionalFamilyRepository;
+use App\Repository\ProgrammeRepository;
 use App\Security\Voter\CompanyVoter;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -22,13 +23,15 @@ class CompanyVoterTest extends TestCase
 {
     private CompanyRepository&MockObject $companies;
     private ProfessionalFamilyRepository&MockObject $families;
+    private ProgrammeRepository&MockObject $programmes;
     private CompanyVoter $voter;
 
     protected function setUp(): void
     {
-        $this->companies = $this->createMock(CompanyRepository::class);
-        $this->families  = $this->createMock(ProfessionalFamilyRepository::class);
-        $this->voter     = new CompanyVoter($this->companies, $this->families);
+        $this->companies  = $this->createMock(CompanyRepository::class);
+        $this->families   = $this->createMock(ProfessionalFamilyRepository::class);
+        $this->programmes = $this->createMock(ProgrammeRepository::class);
+        $this->voter      = new CompanyVoter($this->companies, $this->families, $this->programmes);
     }
 
     // ── supports() ──────────────────────────────────────────────────────────
@@ -128,6 +131,7 @@ class CompanyVoterTest extends TestCase
 
         $this->companies->method('hasLiaisonInCentre')->willReturn(true);
         $this->families->expects(self::never())->method('isFamilyHeadInCentre');
+        $this->programmes->expects(self::never())->method('isCoordinatorInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $centre, [CompanyVoter::SECTION]);
 
@@ -147,6 +151,20 @@ class CompanyVoterTest extends TestCase
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
+    public function testSectionGrantedToCoordinator(): void
+    {
+        $teacher = $this->teacher();
+        $centre  = $this->centre();
+
+        $this->companies->method('hasLiaisonInCentre')->willReturn(false);
+        $this->families->method('isFamilyHeadInCentre')->willReturn(false);
+        $this->programmes->method('isCoordinatorInCentre')->willReturn(true);
+
+        $result = $this->voter->vote($this->token($teacher), $centre, [CompanyVoter::SECTION]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     public function testSectionDeniedToUnrelatedTeacher(): void
     {
         $teacher = $this->teacher();
@@ -154,6 +172,7 @@ class CompanyVoterTest extends TestCase
 
         $this->companies->method('hasLiaisonInCentre')->willReturn(false);
         $this->families->method('isFamilyHeadInCentre')->willReturn(false);
+        $this->programmes->method('isCoordinatorInCentre')->willReturn(false);
 
         $result = $this->voter->vote($this->token($teacher), $centre, [CompanyVoter::SECTION]);
 
@@ -204,6 +223,20 @@ class CompanyVoterTest extends TestCase
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
+    public function testEditGrantedToCoordinator(): void
+    {
+        $teacher = $this->teacher();
+        $centre  = $this->centre();
+        $company = $this->company($centre);
+
+        $this->families->method('isFamilyHeadInCentre')->willReturn(false);
+        $this->programmes->method('isCoordinatorInCentre')->willReturn(true);
+
+        $result = $this->voter->vote($this->token($teacher), $company, [CompanyVoter::EDIT]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     public function testEditDeniedToUnrelatedTeacher(): void
     {
         $teacher = $this->teacher();
@@ -211,6 +244,7 @@ class CompanyVoterTest extends TestCase
         $company = $this->company($centre);
 
         $this->families->method('isFamilyHeadInCentre')->willReturn(false);
+        $this->programmes->method('isCoordinatorInCentre')->willReturn(false);
 
         $result = $this->voter->vote($this->token($teacher), $company, [CompanyVoter::EDIT]);
 

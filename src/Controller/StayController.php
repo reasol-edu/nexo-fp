@@ -11,6 +11,7 @@ use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
 use App\Repository\ProgrammeRepository;
+use App\Security\Voter\StayVoter;
 use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
@@ -71,7 +72,17 @@ class StayController extends AbstractController
             return $this->redirectToRoute('app_stays_index');
         }
 
-        $allProgrammes = $this->programmes->findByAcademicYearOrderedByFamilyAndName($year);
+        $this->denyAccessUnlessGranted(StayVoter::CREATE, $centre);
+
+        /** @var Teacher $teacher */
+        $teacher = $this->getUser();
+        $uid = $teacher->getId()->toRfc4122();
+        $canSeeAll = $teacher->isAdmin()
+            || $centre->getAdmins()->exists(fn(int $k, Teacher $a) => $a->getId()->toRfc4122() === $uid);
+
+        $allProgrammes = $canSeeAll
+            ? $this->programmes->findByAcademicYearOrderedByFamilyAndName($year)
+            : $this->programmes->findCoordinatedByAcademicYear($teacher, $year);
 
         /** @var array<string, array{family: \App\Entity\ProfessionalFamily, programmes: \App\Entity\Programme[]}> $byFamily */
         $byFamily = [];
@@ -110,6 +121,8 @@ class StayController extends AbstractController
             }
             if ($programme === null) {
                 $errors['programme_id'] = $this->t('stays.error.programme_required');
+            } elseif (!$canSeeAll && !$this->programmes->isCoordinatorOf($teacher, $programme)) {
+                throw $this->createAccessDeniedException();
             }
 
             $startDate = null;
@@ -179,9 +192,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         if (!$this->isCsrfTokenValid('delete_stay_' . $id, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -217,9 +228,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         $errors = [];
         $values = [
@@ -411,9 +420,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         $allWorkcenters = $this->workcenters->findByCentreOrdered($centre);
         $byCompany      = [];
@@ -519,9 +526,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null) {
@@ -557,9 +562,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null) {
@@ -831,9 +834,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->canManagePositions($stay, $centre)) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
         // Groups with students, eager-loaded, for the stay's programme
         $groupList = $this->groups->findByProgrammeWithStudents($stay->getProgramme());
@@ -912,34 +913,6 @@ class StayController extends AbstractController
             'enrolled_ids'    => $enrolledStudents,
             'position_ids'    => $hasPositionIds,
         ]);
-    }
-
-    private function canManagePositions(Stay $stay, \App\Entity\EducationalCentre $centre): bool
-    {
-        /** @var Teacher $teacher */
-        $teacher = $this->getUser();
-
-        if ($teacher->isAdmin()) {
-            return true;
-        }
-
-        $teacherId = $teacher->getId()->toRfc4122();
-
-        foreach ($centre->getAdmins() as $admin) {
-            if ($admin->getId()->toRfc4122() === $teacherId) {
-                return true;
-            }
-        }
-
-        if ($this->programmes->isCoordinatorOf($teacher, $stay->getProgramme())) {
-            return true;
-        }
-
-        if ($this->companies->hasLiaisonInCentre($teacher, $centre)) {
-            return true;
-        }
-
-        return false;
     }
 
     private function t(string $key): string

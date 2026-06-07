@@ -747,6 +747,100 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    // ── new: control de acceso por coordinador ────────────────────────────────
+
+    public function testNewDeniedToUnrelatedTeacher(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $teacher = $this->makeTeacher('unrelated.teacher');
+        $this->persist($globalAdmin, $teacher, $centre, $year, $family, $programme);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/estancias/nueva');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testNewGrantedToCoordinator(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $coordinator = $this->makeTeacher('coord.new.1');
+        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme);
+        $programme->addCoordinator($coordinator);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($coordinator, $centre);
+
+        $this->client->request('GET', '/estancias/nueva');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testNewCoordinatorSeesOnlyOwnProgramme(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $coordinator = $this->makeTeacher('coord.filter');
+        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
+        $programme->addCoordinator($coordinator);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($coordinator, $centre);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+
+        self::assertResponseIsSuccessful();
+        $options = $crawler->filter('option[value="' . $programme->getId()->toRfc4122() . '"]');
+        self::assertCount(1, $options, 'El coordinador debe ver su propia enseñanza');
+        $otherOptions = $crawler->filter('option[value="' . $otherProg->getId()->toRfc4122() . '"]');
+        self::assertCount(0, $otherOptions, 'El coordinador no debe ver enseñanzas ajenas');
+    }
+
+    public function testNewAdminSeesAllProgrammes(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $otherProg = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $this->persist($admin, $centre, $year, $family, $programme, $otherProg);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+
+        self::assertResponseIsSuccessful();
+        $options = $crawler->filter('option[value="' . $programme->getId()->toRfc4122() . '"]');
+        self::assertCount(1, $options);
+        $otherOptions = $crawler->filter('option[value="' . $otherProg->getId()->toRfc4122() . '"]');
+        self::assertCount(1, $otherOptions);
+    }
+
+    public function testNewPostCoordinatorCannotCreateStayForOtherProgramme(): void
+    {
+        [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $coordinator = $this->makeTeacher('coord.post.403');
+        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
+        $programme->addCoordinator($coordinator);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($coordinator, $centre);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/nueva', [
+            '_token'       => $token,
+            'name'         => 'Estancia Intrusa',
+            'programme_id' => $otherProg->getId()->toRfc4122(),
+            'start_date'   => '2025-03-01',
+            'end_date'     => '2025-06-30',
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     public function testProgrammeCoordinatorCanAccessEditStay(): void
     {
         $coordinator = $this->makeTeacher('coordinator.1');

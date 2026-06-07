@@ -219,6 +219,133 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         self::assertFalse($this->repo->isCoordinatorOf($teacher, $progB));
     }
 
+    // ── isCoordinatorInCentre ─────────────────────────────────────────────────
+
+    public function testIsCoordinatorInCentreReturnsTrueWhenTeacherCoordsInCentre(): void
+    {
+        $centre    = $this->makeCentre('41000013');
+        $year      = $this->makeYear($centre);
+        $fam       = $this->makeFamily($year, 'Informatica');
+        $programme = $this->makeProgramme($year, $fam, 'DAW');
+        $teacher   = $this->makeTeacher('coord.centre.1');
+        $this->persist($centre, $year, $fam, $programme, $teacher);
+
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertTrue($this->repo->isCoordinatorInCentre($teacher, $centre));
+    }
+
+    public function testIsCoordinatorInCentreReturnsFalseForUnrelatedTeacher(): void
+    {
+        $centre    = $this->makeCentre('41000014');
+        $year      = $this->makeYear($centre);
+        $fam       = $this->makeFamily($year, 'Informatica');
+        $programme = $this->makeProgramme($year, $fam, 'DAW');
+        $teacher   = $this->makeTeacher('no.coord.centre');
+        $this->persist($centre, $year, $fam, $programme, $teacher);
+
+        self::assertFalse($this->repo->isCoordinatorInCentre($teacher, $centre));
+    }
+
+    public function testIsCoordinatorInCentreReturnsFalseForDifferentCentre(): void
+    {
+        $centreA   = $this->makeCentre('41000015');
+        $centreB   = $this->makeCentre('41000016');
+        $yearA     = $this->makeYear($centreA);
+        $fam       = $this->makeFamily($yearA, 'Informatica');
+        $programme = $this->makeProgramme($yearA, $fam, 'DAW');
+        $teacher   = $this->makeTeacher('coord.centreA.only');
+        $this->persist($centreA, $centreB, $yearA, $fam, $programme, $teacher);
+
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertFalse($this->repo->isCoordinatorInCentre($teacher, $centreB));
+    }
+
+    // ── findCoordinatedByAcademicYear ─────────────────────────────────────────
+
+    public function testFindCoordinatedByAcademicYearReturnsOnlyCoordinatedProgrammes(): void
+    {
+        $centre  = $this->makeCentre('41000017');
+        $year    = $this->makeYear($centre);
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $progA   = $this->makeProgramme($year, $fam, 'DAM');
+        $progB   = $this->makeProgramme($year, $fam, 'DAW');
+        $teacher = $this->makeTeacher('coord.only.dam');
+        $this->persist($centre, $year, $fam, $progA, $progB, $teacher);
+
+        $progA->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCoordinatedByAcademicYear($teacher, $year);
+
+        self::assertCount(1, $results);
+        self::assertSame('DAM', $results[0]->getName());
+    }
+
+    public function testFindCoordinatedByAcademicYearReturnsEmptyForNonCoordinator(): void
+    {
+        $centre  = $this->makeCentre('41000018');
+        $year    = $this->makeYear($centre);
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAW');
+        $teacher = $this->makeTeacher('no.coord.at.all');
+        $this->persist($centre, $year, $fam, $prog, $teacher);
+
+        $results = $this->repo->findCoordinatedByAcademicYear($teacher, $year);
+
+        self::assertCount(0, $results);
+    }
+
+    public function testFindCoordinatedByAcademicYearIgnoresOtherYears(): void
+    {
+        $centre  = $this->makeCentre('41000019');
+        $yearA   = $this->makeYear($centre, '2024-2025');
+        $yearB   = $this->makeYear($centre, '2025-2026');
+        $famA    = $this->makeFamily($yearA, 'Informatica');
+        $famB    = $this->makeFamily($yearB, 'Informatica');
+        $progA   = $this->makeProgramme($yearA, $famA, 'DAW');
+        $progB   = $this->makeProgramme($yearB, $famB, 'DAW');
+        $teacher = $this->makeTeacher('coord.year.a');
+        $this->persist($centre, $yearA, $yearB, $famA, $famB, $progA, $progB, $teacher);
+
+        $progA->addCoordinator($teacher);
+        $progB->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCoordinatedByAcademicYear($teacher, $yearA);
+
+        self::assertCount(1, $results);
+        self::assertSame($yearA->getId()->toRfc4122(), $results[0]->getAcademicYear()->getId()->toRfc4122());
+    }
+
+    public function testFindCoordinatedByAcademicYearIsOrderedByFamilyThenName(): void
+    {
+        $centre = $this->makeCentre('41000020');
+        $year   = $this->makeYear($centre);
+        $famA   = $this->makeFamily($year, 'Administracion');
+        $famB   = $this->makeFamily($year, 'Informatica');
+        $progC  = $this->makeProgramme($year, $famB, 'DAM');
+        $progA  = $this->makeProgramme($year, $famA, 'ASIR');
+        $progB  = $this->makeProgramme($year, $famB, 'DAW');
+        $teacher = $this->makeTeacher('coord.order');
+        $this->persist($centre, $year, $famA, $famB, $progA, $progB, $progC, $teacher);
+
+        $progA->addCoordinator($teacher);
+        $progB->addCoordinator($teacher);
+        $progC->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCoordinatedByAcademicYear($teacher, $year);
+
+        self::assertCount(3, $results);
+        self::assertSame('ASIR', $results[0]->getName()); // Administracion/ASIR
+        self::assertSame('DAM',  $results[1]->getName()); // Informatica/DAM
+        self::assertSame('DAW',  $results[2]->getName()); // Informatica/DAW
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeCentre(string $code): EducationalCentre

@@ -9,6 +9,7 @@ use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
 use App\Entity\Teacher;
 use App\Security\Voter\CompanyVoter;
 use App\Tests\Integration\RepositoryTestCase;
@@ -426,6 +427,98 @@ class CompanyVoterTest extends RepositoryTestCase
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
             $this->voter->vote($this->token($teacher), $centreB, [CompanyVoter::SECTION])
+        );
+    }
+
+    // ── Coordinador de FP Dual ───────────────────────────────────────────────
+
+    public function testSectionGrantedToCoordinatorInCentre(): void
+    {
+        $teacher = $this->makeTeacher('coord.section');
+        $centre  = $this->makeCentre('41000034');
+        $year    = $this->makeYear($centre);
+        $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
+        $this->persist($centre, $year, $family, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $centre, [CompanyVoter::SECTION])
+        );
+    }
+
+    public function testSectionDeniedToCoordinatorOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('coord.other.centre');
+        $centreA  = $this->makeCentre('41000035');
+        $centreB  = $this->makeCentre('41000036');
+        $yearA    = $this->makeYear($centreA);
+        $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($yearA);
+        $prog     = (new Programme())->setName('DAW')->setAcademicYear($yearA)->setProfessionalFamily($family);
+        $this->persist($centreA, $centreB, $yearA, $family, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centreB, [CompanyVoter::SECTION])
+        );
+    }
+
+    public function testEditGrantedToCoordinatorInCentre(): void
+    {
+        $teacher = $this->makeTeacher('coord.edit');
+        $centre  = $this->makeCentre('41000037');
+        $company = $this->makeCompany($centre, 'Empresa Coord S.L.');
+        $year    = $this->makeYear($centre);
+        $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
+        $this->persist($centre, $company, $year, $family, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $company, [CompanyVoter::EDIT])
+        );
+    }
+
+    public function testEditDeniedToCoordinatorOfDifferentCentre(): void
+    {
+        $teacher  = $this->makeTeacher('coord.edit.other');
+        $centreA  = $this->makeCentre('41000038');
+        $centreB  = $this->makeCentre('41000039');
+        $companyB = $this->makeCompany($centreB, 'Empresa en B S.L.');
+        $yearA    = $this->makeYear($centreA);
+        $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($yearA);
+        $prog     = (new Programme())->setName('DAW')->setAcademicYear($yearA)->setProfessionalFamily($family);
+        $this->persist($centreA, $centreB, $companyB, $yearA, $family, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $companyB, [CompanyVoter::EDIT])
+        );
+    }
+
+    public function testDeleteDeniedToCoordinator(): void
+    {
+        $teacher = $this->makeTeacher('coord.delete');
+        $centre  = $this->makeCentre('41000040');
+        $company = $this->makeCompany($centre, 'Empresa Coord S.L.');
+        $year    = $this->makeYear($centre);
+        $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
+        $this->persist($centre, $company, $year, $family, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $company, [CompanyVoter::DELETE])
         );
     }
 

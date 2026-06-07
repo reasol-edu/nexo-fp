@@ -8,13 +8,11 @@ use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
-use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
-use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
-use App\Service\TenantContext;
+use App\Security\Voter\StayVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -41,9 +39,6 @@ class StayDetailComponent extends AbstractController
         private readonly GroupRepository $groups,
         private readonly TeacherRepository $teachers,
         private readonly EntityManagerInterface $em,
-        private readonly TenantContext $tenant,
-        private readonly CompanyRepository $companies,
-        private readonly ProgrammeRepository $programmes,
     ) {}
 
     /** @return array<string, mixed> */
@@ -58,7 +53,7 @@ class StayDetailComponent extends AbstractController
             throw new \RuntimeException('Stay not found: ' . $this->stayId);
         }
 
-        $canManage    = $this->computeCanManage($stay);
+        $canManage    = $this->isGranted(StayVoter::MANAGE, $stay);
         $allPositions = $this->positions->findByStayOrdered($stay);
 
         $studentPositionMap  = [];
@@ -181,47 +176,13 @@ class StayDetailComponent extends AbstractController
         return $this->cache;
     }
 
-    private function computeCanManage(Stay $stay): bool
-    {
-        $centre = $this->tenant->getSelectedCentre();
-        if ($centre === null) {
-            return false;
-        }
 
-        /** @var Teacher|null $teacher */
-        $teacher = $this->getUser();
-        if ($teacher === null) {
-            return false;
-        }
-
-        if ($teacher->isAdmin()) {
-            return true;
-        }
-
-        $tid = $teacher->getId()->toRfc4122();
-
-        foreach ($centre->getAdmins() as $admin) {
-            if ($admin->getId()->toRfc4122() === $tid) {
-                return true;
-            }
-        }
-
-        if ($this->programmes->isCoordinatorOf($teacher, $stay->getProgramme())) {
-            return true;
-        }
-
-        if ($this->companies->hasLiaisonInCentre($teacher, $centre)) {
-            return true;
-        }
-
-        return false;
-    }
 
     #[LiveAction]
     public function assignPosition(#[LiveArg] string $studentId, #[LiveArg] string $positionId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->computeCanManage($stay)) {
+        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
             throw new AccessDeniedException();
         }
 
@@ -249,7 +210,7 @@ class StayDetailComponent extends AbstractController
     public function unassignPosition(#[LiveArg] string $positionId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->computeCanManage($stay)) {
+        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
             throw new AccessDeniedException();
         }
 
@@ -269,7 +230,7 @@ class StayDetailComponent extends AbstractController
     public function setAcademicTutor(#[LiveArg] string $positionId, #[LiveArg] string $teacherId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->computeCanManage($stay)) {
+        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
             throw new AccessDeniedException();
         }
 
@@ -291,7 +252,7 @@ class StayDetailComponent extends AbstractController
     public function setWorkplaceMentor(#[LiveArg] string $positionId, #[LiveArg] string $workerId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->computeCanManage($stay)) {
+        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
             throw new AccessDeniedException();
         }
 

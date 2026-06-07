@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\AcademicYear;
+use App\Entity\EducationalCentre;
 use App\Entity\Programme;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Teacher;
@@ -98,5 +99,36 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult() !== null;
+    }
+
+    public function isCoordinatorInCentre(Teacher $teacher, EducationalCentre $centre): bool
+    {
+        return $this->createQueryBuilder('p')
+            ->select('1')
+            ->join('p.coordinators', 'c')
+            ->join('p.academicYear', 'y')
+            ->where('c.id = :teacher')
+            ->andWhere('y.educationalCentre = :centre')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
+    }
+
+    /** @return Programme[] */
+    public function findCoordinatedByAcademicYear(Teacher $teacher, AcademicYear $year): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.coordinators', 'c')
+            ->join('p.professionalFamily', 'f')
+            ->where('p.academicYear = :year')
+            ->andWhere('c.id = :teacher')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->orderBy('f.name', 'ASC')
+            ->addOrderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

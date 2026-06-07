@@ -9,6 +9,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
 use App\Repository\CompanyRepository;
 use App\Repository\ProfessionalFamilyRepository;
+use App\Repository\ProgrammeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -28,6 +29,7 @@ final class CompanyVoter extends Voter
     public function __construct(
         private readonly CompanyRepository $companies,
         private readonly ProfessionalFamilyRepository $families,
+        private readonly ProgrammeRepository $programmes,
     ) {}
 
     protected function supports(string $attribute, mixed $subject): bool
@@ -69,7 +71,11 @@ final class CompanyVoter extends Voter
             return true;
         }
 
-        return $this->families->isFamilyHeadInCentre($user, $centre);
+        if ($this->families->isFamilyHeadInCentre($user, $centre)) {
+            return true;
+        }
+
+        return $this->programmes->isCoordinatorInCentre($user, $centre);
     }
 
     private function canEdit(Teacher $user, Company $company): bool
@@ -84,7 +90,11 @@ final class CompanyVoter extends Voter
             return true;
         }
 
-        return $this->families->isFamilyHeadInCentre($user, $centre);
+        if ($this->families->isFamilyHeadInCentre($user, $centre)) {
+            return true;
+        }
+
+        return $this->programmes->isCoordinatorInCentre($user, $centre);
     }
 
     private function canDelete(Teacher $user, Company $company): bool
