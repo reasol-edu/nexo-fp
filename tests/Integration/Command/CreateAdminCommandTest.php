@@ -64,13 +64,27 @@ class CreateAdminCommandTest extends RepositoryTestCase
         self::assertTrue($hasher->isPasswordValid($teacher, 'secret123'));
     }
 
-    public function testCreateAdminDefaultUsernameIsAdmin(): void
+    public function testCreateAdminRequiresUsername(): void
     {
-        // Invocar sin argumentos → usa el valor por defecto 'admin'
-        $status = $this->tester->execute([]);
+        $this->expectException(\RuntimeException::class);
+
+        $this->tester->execute([]);
+    }
+
+    public function testCreateAdminPromptsForPasswordWhenNotProvided(): void
+    {
+        $this->tester->setInputs(['secret-interactivo']);
+
+        $status = $this->tester->execute(['username' => 'admin']);
 
         self::assertSame(Command::SUCCESS, $status);
-        self::assertNotNull($this->teachers->findByUsername('admin'));
+
+        $teacher = $this->teachers->findByUsername('admin');
+        self::assertNotNull($teacher);
+
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = self::getContainer()->get(UserPasswordHasherInterface::class);
+        self::assertTrue($hasher->isPasswordValid($teacher, 'secret-interactivo'));
     }
 
     public function testCreateAdminOutputContainsSuccessMessage(): void

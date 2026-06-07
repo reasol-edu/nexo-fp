@@ -33,8 +33,8 @@ class CreateAdminCommand extends Command
 
         $this
             ->setDescription($t('create_admin.description'))
-            ->addArgument('username', InputArgument::OPTIONAL, $t('create_admin.argument.username'), 'admin')
-            ->addArgument('password', InputArgument::OPTIONAL, $t('create_admin.argument.password'), 'admin');
+            ->addArgument('username', InputArgument::REQUIRED, $t('create_admin.argument.username'))
+            ->addArgument('password', InputArgument::OPTIONAL, $t('create_admin.argument.password'));
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -42,7 +42,8 @@ class CreateAdminCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $username = $input->getArgument('username');
-        $password = $input->getArgument('password');
+        $password = $input->getArgument('password')
+            ?? $io->askHidden($this->translator->trans('create_admin.argument.password', domain: 'command'));
 
         if ($this->teachers->findByUsername($username) !== null) {
             $io->error($this->translator->trans(
