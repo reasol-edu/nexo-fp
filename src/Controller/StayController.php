@@ -36,7 +36,6 @@ class StayController extends AbstractController
         private readonly TenantContext $tenant,
         private readonly StayRepository $stays,
         private readonly TrainingPositionRepository $positions,
-        private readonly CompanyRepository $companies,
         private readonly WorkcenterRepository $workcenters,
         private readonly ProgrammeYearRepository $programmeYears,
         private readonly GroupRepository $groups,

@@ -130,8 +130,8 @@ class CompanyVoterTest extends TestCase
         $centre  = $this->centre();
 
         $this->companies->method('hasLiaisonInCentre')->willReturn(true);
-        $this->families->expects(self::never())->method('isFamilyHeadInCentre');
-        $this->programmes->expects(self::never())->method('isCoordinatorInCentre');
+        $this->families->expects($this->never())->method('isFamilyHeadInCentre');
+        $this->programmes->expects($this->never())->method('isCoordinatorInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $centre, [CompanyVoter::SECTION]);
 
@@ -341,11 +341,11 @@ class CompanyVoterTest extends TestCase
 
     private function companiesNeverCalled(): void
     {
-        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
     }
 
     private function familiesNeverCalled(): void
     {
-        $this->families->expects(self::never())->method('isFamilyHeadInCentre');
+        $this->families->expects($this->never())->method('isFamilyHeadInCentre');
     }
 }

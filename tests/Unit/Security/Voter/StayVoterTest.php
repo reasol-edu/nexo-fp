@@ -85,7 +85,7 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
         $stay->getAcademicYear()->getEducationalCentre()->addAdmin($teacher);
 
-        $this->programmes->expects(self::never())->method('isCoordinatorOf');
+        $this->programmes->expects($this->never())->method('isCoordinatorOf');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW]);
 
@@ -95,7 +95,7 @@ class StayVoterTest extends TestCase
     public function testViewGrantedToCoordinator(): void
     {
         $this->programmes->method('isCoordinatorOf')->willReturn(true);
-        $this->families->expects(self::never())->method('isFamilyHeadOfProgramme');
+        $this->families->expects($this->never())->method('isFamilyHeadOfProgramme');
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
@@ -106,7 +106,7 @@ class StayVoterTest extends TestCase
     {
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
-        $this->groups->expects(self::never())->method('isTeacherInProgramme');
+        $this->groups->expects($this->never())->method('isTeacherInProgramme');
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
@@ -118,7 +118,7 @@ class StayVoterTest extends TestCase
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->groups->method('isTeacherInProgramme')->willReturn(true);
-        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
@@ -196,8 +196,8 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
         $stay->getAcademicYear()->getEducationalCentre()->addAdmin($teacher);
 
-        $this->programmes->expects(self::never())->method('isCoordinatorOf');
-        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+        $this->programmes->expects($this->never())->method('isCoordinatorOf');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
 
@@ -210,8 +210,8 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
 
         $this->programmes->method('isCoordinatorOf')->willReturn(true);
-        $this->families->expects(self::never())->method('isFamilyHeadOfProgramme');
-        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+        $this->families->expects($this->never())->method('isFamilyHeadOfProgramme');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
 
@@ -225,7 +225,7 @@ class StayVoterTest extends TestCase
 
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
-        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
 
@@ -268,7 +268,7 @@ class StayVoterTest extends TestCase
         $centre  = $this->centre();
         $centre->addAdmin($teacher);
 
-        $this->programmes->expects(self::never())->method('isCoordinatorInCentre');
+        $this->programmes->expects($this->never())->method('isCoordinatorInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE]);
 

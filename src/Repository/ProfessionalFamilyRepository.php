@@ -27,7 +27,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('pf')
             ->select('1')
-            ->join(Programme::class, 'p', 'WITH', 'p.professionalFamily = pf')
+            ->join(Programme::class, 'p', 'ON', 'p.professionalFamily = pf')
             ->where('p.id = :programme')
             ->andWhere('pf.head = :teacher')
             ->setParameter('programme', $programme->getId(), 'uuid')
