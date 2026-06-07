@@ -43,6 +43,10 @@ Desde esta sección se puede:
 - Inscribir o retirar estudiantes de la estancia.
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
 
+> Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol
+> (administrador de centro, coordinador/a, responsable de familia, tutor/a o docente de un grupo,
+> o docente de enlace del centro). Las estancias de otras enseñanzas no aparecen ni son accesibles.
+
 Cada puesto formativo registra:
 
 | Campo                   | Descripción                                                                    |
@@ -112,9 +116,9 @@ las estancias. No tiene acceso a la sección de administración global.
 
 ### Docente
 
-Rol base de todos los usuarios autenticados. Accede al panel de inicio, a las estancias del curso
-activo y a su propio perfil. Si está asignado a un grupo como tutor o docente, puede gestionar las
-estancias relacionadas con ese grupo.
+Rol base de todos los usuarios autenticados. Accede al panel de inicio y a su propio perfil.
+Si está asignado a un grupo como tutor o docente de ese grupo, puede **ver** las estancias de
+la enseñanza correspondiente y consultar sus puestos formativos, pero no puede modificarlas.
 
 ### Coordinador/a de FP dual
 
