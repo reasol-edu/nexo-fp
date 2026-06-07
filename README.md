@@ -1,10 +1,257 @@
-NEXO-FP
-========
+<p align="center">
+  <img src="public/static/logo.svg" alt="Nexo FP" width="120">
+</p>
 
-Aplicación web para gestionar la asignación de puestos formativos en la fase de formación en empresas u organismo equiparado.
+<h1 align="center">Nexo FP</h1>
 
-Este proyecto está desarrollado en PHP utilizando [Symfony] 8.1 y otros muchos componentes que se instalan usando
-[Composer].
+<p align="center">
+  Plataforma web para gestionar la formación en empresas de la Formación Profesional
+</p>
+
+---
+
+Nexo FP es una aplicación web desarrollada con [Symfony] que permite organizar y gestionar la
+la **Fase de Formación en Empresa u Organismo Equiparado**. Centraliza la
+información de estudiantes, empresas, puestos formativos y tutores, y permite llevar el seguimiento
+del proceso de asignación desde que se crea un puesto hasta que se registra en Séneca.
+
+La aplicación se ha diseñado para ser intuitiva y fácil de usar, con un enfoque en la eficiencia
+y la reducción de errores administrativos. Permite generar informes detallados en PDF y facilita la
+comunicación entre el centro educativo y las empresas.
+
+Forma parte del proyecto de innovación educativa REASOL (PIN-219/23 y PIN-354/24) financiado por la Consejería de 
+Desarrollo Educativo y Formación Profesional de la Junta de Andalucía.
+
+---
+
+## Secciones de la aplicación
+
+### Inicio
+
+Panel resumen del curso académico activo. Muestra el número de estancias abiertas, puestos
+formativos creados, estudiantes inscritos y el estado general de las asignaciones.
+
+### Estancias
+
+Una **estancia** agrupa un conjunto de puestos formativos de una misma enseñanza dentro de un
+periodo concreto (por ejemplo, "DAW - 2º curso, marzo-mayo 2027").
+
+Desde esta sección se puede:
+
+- Crear y editar estancias con nombre, enseñanza y fechas de inicio y fin.
+- Añadir, editar y eliminar **puestos formativos** dentro de cada estancia.
+- Inscribir o retirar estudiantes de la estancia.
+- Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
+
+Cada puesto formativo registra:
+
+| Campo                   | Descripción                                                                    |
+|-------------------------|--------------------------------------------------------------------------------|
+| Centro de trabajo       | Sede de la empresa donde se realizará la estancia                              |
+| Estudiante              | Alumno/a asignado/a al puesto                                                  |
+| Tutor/a dual docente    | Profesor/a responsable del seguimiento académico                               |
+| Tutor/a dual de empresa | Empleado/a responsable en la empresa                                           |
+| Nivel                   | Curso(s) de la enseñanza al que corresponde el puesto ("1º", "2º" o "1º y 2º") |
+| Fechas                  | Inicio y fin propios del puesto (pueden diferir de la estancia)                |
+| Estado                  | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca`                     |
+| Firmado                 | Indica si el convenio está firmado                                             |
+
+### Empresas
+
+Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
+
+- Datos de la empresa: nombre, CIF/NIF, localidad y circunstancias excepcionales.
+- **Centros de trabajo** (sedes o filiales) donde los estudiantes realizarán su formación.
+- **Empleados** de la empresa que pueden actuar como tutores de empresa.
+- **Docentes de enlace** asignados a cada empresa.
+
+> Esta sección solo es visible para administradores de centro, docentes de enlace, coordinadores
+> de FP dual y responsables de familia profesional.
+
+### Centro Educativo
+
+Aquí se implementa la gestión interna del centro. Reúne en un único espacio:
+
+- **Docentes del curso:** alta, baja e importación del personal adscrito al curso activo.
+- **Estudiantes:** alta, edición, baja e importación masiva desde CSV.
+- **Oferta formativa:** estructura jerárquica completa:
+  - Familias profesionales
+  - Enseñanzas (ciclos formativos)
+  - Niveles (cursos dentro de cada enseñanza)
+  - Grupos (con asignación de tutor y docentes)
+- **Cursos académicos:** crear y activar cursos del centro.
+
+### Administración
+
+Sección exclusiva para administradores globales. Permite:
+
+- Gestionar todos los **docentes** del sistema (alta, baja, activación, asignación de rol de administrador,
+  tipo de autenticación).
+- Gestionar **centros educativos**: crearlos, asignarles el equipo directivo y gestionar sus cursos académicos.
+
+---
+
+## Roles de los docentes
+
+Todos los usuarios del sistema son docentes (`Teacher`). El nivel de acceso depende de los roles
+y responsabilidades asignados:
+
+### Administrador global (`ROLE_ADMIN`)
+
+Acceso completo a la aplicación, incluida la sección **Administración**. Puede gestionar todos los
+docentes y centros del sistema, y suplantar la identidad de cualquier usuario para soporte.
+
+Se crea al menos uno durante el primer arranque (`admin` / `admin`). Se pueden crear más con
+`bin/console app:create-admin`.
+
+### Administrador de centro
+
+Docente designado como responsable de un centro educativo concreto. Tiene acceso completo a ese
+centro: puede gestionar la oferta formativa, el alumnado, los docentes del curso, las empresas y
+las estancias. No tiene acceso a la sección de administración global.
+
+### Docente
+
+Rol base de todos los usuarios autenticados. Accede al panel de inicio, a las estancias del curso
+activo y a su propio perfil. Si está asignado a un grupo como tutor o docente, puede gestionar las
+estancias relacionadas con ese grupo.
+
+### Coordinador/a de FP dual
+
+Docente asignado como coordinador/a de una o varias enseñanzas. Tiene acceso a la sección
+**Empresas** (puede ver y editar todas las empresas del centro) y puede crear, modificar y
+eliminar estancias de las enseñanzas que coordina, así como gestionar sus puestos formativos
+y las asignaciones de estudiantes y tutores. Al crear una nueva estancia, solo puede seleccionar
+enseñanzas de las que es coordinador/a.
+
+### Docente de enlace
+
+Docente asignado a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
+editar los datos de aquellas empresas de las que es enlace: centros de trabajo, empleados y
+docentes de enlace.
+
+### Responsable de familia profesional
+
+Docente designado como responsable de una familia profesional. Tiene acceso a la sección
+**Empresas** y puede editar cualquier estancia asociada a su familia.
+
+---
+
+## Flujo de trabajo
+
+El proceso habitual en Nexo FP sigue estas fases, desde la configuración inicial del curso hasta
+el cierre de las estancias:
+
+### 1 — Configurar el curso
+
+El administrador de centro accede a **Centro Educativo** y prepara el curso activo:
+
+1. Crea o activa el **curso académico**.
+2. Estructura la **oferta formativa**: familias → enseñanzas → niveles → grupos.
+3. Asigna **tutores y docentes** a cada grupo.
+4. Importa o da de alta a los **estudiantes** y los distribuye en sus grupos.
+5. Añade al resto de **docentes del curso** para que puedan acceder a la plataforma.
+
+### 2 — Registrar empresas y centros de trabajo
+
+Antes de crear puestos, el personal con acceso a **Empresas** registra:
+
+1. Las **empresas** colaboradoras con sus datos básicos.
+2. Los **centros de trabajo** (sedes) de cada empresa.
+3. Los **empleados** que actuarán como tutores de empresa.
+4. Los **docentes de enlace** asignados a cada empresa.
+
+### 3 — Crear estancias y puestos formativos
+
+Con la oferta formativa y las empresas preparadas, los docentes con permisos crean las estancias:
+
+1. En **Estancias → Nueva estancia**, se selecciona la enseñanza y se define el nombre y las
+   fechas.
+2. Dentro de la estancia, se añaden los **puestos formativos**: para cada puesto se indica el
+   centro de trabajo y el nivel al que corresponde.
+3. Se inscriben los **estudiantes** en la estancia para que puedan asignarse a los puestos.
+
+### 4 — Asignar estudiantes y tutores
+
+Una vez creados los puestos, se completa cada uno con su asignación:
+
+1. Se selecciona el **estudiante** que ocupará el puesto.
+2. Se designa el **tutor/a docente** (responsable académico).
+3. Se designa el **tutor/a de empresa** (responsable en la empresa).
+4. Se ajustan las fechas del puesto si difieren de las de la estancia.
+
+Mientras el puesto está en estado **Borrador**, todos los campos son editables.
+
+### 5 — Tramitar en Séneca
+
+Cuando una asignación está lista para enviarse al sistema regional:
+
+1. El estado del puesto pasa a **Pendiente de Séneca**.
+2. Una vez confirmada la recepción en Séneca, se marca como **Registrado en Séneca** y el
+   convenio se indica como firmado.
+3. Los puestos en estado `Registrado` quedan bloqueados para evitar modificaciones accidentales.
+
+### 6 — Generar informes
+
+En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle
+completo de todos los puestos, estudiantes, tutores y fechas.
+
+---
+
+## Comandos de consola
+
+La aplicación incluye tres comandos de consola para la administración inicial del sistema. Se ejecutan con `php bin/console <comando>` en desarrollo, o con el binario nativo (`nexo-fp php-cli bin/console <comando>` en Linux/macOS, `nexo-fp.exe php-cli bin/console <comando>` en Windows).
+
+---
+
+### `app:setup`
+
+Inicializa la aplicación con datos de ejemplo si la base de datos está vacía. Si ya existe algún docente registrado, el comando no hace nada y muestra un aviso.
+
+**Cuándo usarlo:** primera puesta en marcha en un entorno de desarrollo o pruebas para disponer de un usuario `admin`/`admin` y un centro educativo de ejemplo listos para usar.
+
+```bash
+php bin/console app:setup
+```
+
+No acepta argumentos ni opciones. Es idempotente: se puede ejecutar varias veces sin riesgo.
+
+---
+
+### `app:create-educational-centre`
+
+Crea un nuevo centro educativo y su primer curso académico (el curso actual, calculado automáticamente).
+
+```bash
+php bin/console app:create-educational-centre [<código>] [<nombre>] [<ciudad>]
+```
+
+| Argumento | Descripción                               | Requisito |
+|-----------|-------------------------------------------|-----------|
+| `código`  | Código del centro (p. ej. `23700281`)     | Se solicita de forma interactiva si no se indica |
+| `nombre`  | Nombre del centro (p. ej. `IES Oretania`) | Se solicita de forma interactiva si no se indica |
+| `ciudad`  | Ciudad del centro (p. ej. `Linares`)      | Se solicita de forma interactiva si no se indica |
+
+El comando falla si ya existe un centro con el mismo código.
+
+---
+
+### `app:create-admin`
+
+Crea un docente con privilegios de administrador global.
+
+```bash
+php bin/console app:create-admin <nombre_de_usuario> [<contraseña>]
+```
+
+| Argumento          | Descripción                        | Requisito |
+|--------------------|------------------------------------|-----------|
+| `nombre_de_usuario` | Nombre de usuario para el login   | **Obligatorio** |
+| `contraseña`        | Contraseña en texto plano          | Se solicita de forma oculta e interactiva si no se indica |
+
+El comando falla si el nombre de usuario ya está registrado. La contraseña se almacena siempre hasheada.
+
+---
 
 ## Requisitos
 
@@ -16,10 +263,12 @@ Según el modo de despliegue elegido, los requisitos son distintos:
 | Binario nativo | Sin requisitos adicionales (todo incluido) |
 | Desarrollo local | PHP 8.4+, Composer, PostgreSQL 16+ o SQLite |
 
+---
+
 ## Despliegue con Docker
 
-Este es el modo recomendado para entornos de producción. La imagen incluye [FrankenPHP] como servidor de aplicaciones
-y usa [PostgreSQL] 16 como base de datos.
+Este es el modo recomendado para entornos de producción. La imagen incluye [FrankenPHP] como
+servidor de aplicaciones y usa [PostgreSQL] 16 como base de datos.
 
 ### Preparación
 
@@ -100,14 +349,14 @@ docker compose exec app php bin/console app:create-admin
 
 ## Ejecución como binario nativo
 
-El modo binario nativo está pensado para instalaciones sencillas sin Docker. Incluye un ejecutable de
-[FrankenPHP] que embebe el servidor web y PHP, y usa [SQLite] como base de datos, por lo que no necesita
-ningún software adicional instalado en el sistema.
+El modo binario nativo está pensado para instalaciones sencillas sin Docker. Incluye un ejecutable
+de [FrankenPHP] que embebe el servidor web y PHP, y usa [SQLite] como base de datos, por lo que no
+necesita ningún software adicional instalado en el sistema.
 
 ### Descarga
 
-Descarga el paquete correspondiente a tu sistema operativo desde la página de releases del proyecto y
-descomprímelo. El paquete contiene:
+Descarga el paquete correspondiente a tu sistema operativo desde la página de releases del proyecto
+y descomprímelo. El paquete contiene:
 
 ```
 nexo-fp/
@@ -161,13 +410,13 @@ La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado
 
 ### Datos persistentes
 
-Todo lo generado en tiempo de ejecución se guarda en el directorio `data/` dentro del paquete. Para hacer
-una copia de seguridad basta con copiar ese directorio.
+Todo lo generado en tiempo de ejecución se guarda en el directorio `data/` dentro del paquete.
+Para hacer una copia de seguridad basta con copiar ese directorio.
 
 ### macOS: aviso de Gatekeeper
 
-La primera vez que se ejecuta en macOS, el sistema puede bloquear el binario por no estar firmado. El
-script `start.sh` elimina la cuarentena automáticamente, pero si el problema persiste ejecuta:
+La primera vez que se ejecuta en macOS, el sistema puede bloquear el binario por no estar firmado.
+El script `start.sh` elimina la cuarentena automáticamente, pero si el problema persiste ejecuta:
 
 ```bash
 xattr -d com.apple.quarantine frankenphp
