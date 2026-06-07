@@ -6,14 +6,14 @@ setlocal enabledelayedexpansion
 if "%~1"=="" ( set PORT=8080 ) else ( set PORT=%~1 )
 if not "%PORT_ENV%"=="" set PORT=%PORT_ENV%
 
-:: ── Rutas ──────────────────────────────────────────────────────────────────
+:: -- Rutas ------------------------------------------------------------------
 set "ROOT=%~dp0"
 set "ROOT=%ROOT:~0,-1%"
 set "DATA=%ROOT%\data"
 set "APP=%ROOT%\app"
 set "FP=%ROOT%\frankenphp.exe"
 
-:: ── Variables de entorno ────────────────────────────────────────────────────
+:: -- Variables de entorno ----------------------------------------------------
 set APP_ENV=prod
 set APP_DEBUG=0
 set DOCUMENT_ROOT=%APP%\public
@@ -30,17 +30,17 @@ if "%APP_EXTERNAL_ENABLED%"==""        set APP_EXTERNAL_ENABLED=true
 if "%APP_EXTERNAL_URL%"==""            set APP_EXTERNAL_URL=https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp
 if "%APP_EXTERNAL_URL_FORCE_SECURITY%"=="" set APP_EXTERNAL_URL_FORCE_SECURITY=true
 
-:: ── Carpeta de datos ────────────────────────────────────────────────────────
+:: -- Carpeta de datos --------------------------------------------------------
 if not exist "%DATA%" mkdir "%DATA%"
 
-:: ── APP_SECRET: generar en el primer arranque ────────────────────────────────
+:: -- APP_SECRET: generar en el primer arranque --------------------------------
 if not exist "%DATA%\.secret" (
     echo Generando APP_SECRET...
     "%FP%" php-cli -r "file_put_contents('%DATA_FWD%/.secret', bin2hex(random_bytes(32)));" 2>nul
 )
 set /p APP_SECRET=<"%DATA%\.secret"
 
-:: ── .env: exponer variables a PHP ────────────────────────────────────────────
+:: -- .env: exponer variables a PHP --------------------------------------------
 (
     echo APP_ENV=prod
     echo APP_DEBUG=0
@@ -54,23 +54,23 @@ set /p APP_SECRET=<"%DATA%\.secret"
     echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%
 ) > "%APP%\.env"
 
-:: ── Caché: limpiar posibles compilaciones parciales de arranques anteriores ──
+:: -- Caché: limpiar posibles compilaciones parciales de arranques anteriores --
 if exist "%APP%\var\cache" rmdir /s /q "%APP%\var\cache"
 
-:: ── Precalentar caché (compila el contenedor DI correctamente) ───────────────
+:: -- Precalentar caché (compila el contenedor DI correctamente) ---------------
 cd /d "%APP%"
 echo Precalentando cache. Espere por favor...
 "%FP%" php-cli bin\console cache:warmup --no-interaction
 
-:: ── Base de datos SQLite ─────────────────────────────────────────────────────
+:: -- Base de datos SQLite -----------------------------------------------------
 echo Aplicando migraciones...
 "%FP%" php-cli bin\console doctrine:migrations:migrate --no-interaction
 
-:: ── Datos por defecto ────────────────────────────────────────────────────────
+:: -- Datos por defecto --------------------------------------------------------
 echo Inicializando datos por defecto...
 "%FP%" php-cli bin\console app:setup --no-interaction
 
-:: ── Arrancar servidor ────────────────────────────────────────────────────────
+:: -- Arrancar servidor --------------------------------------------------------
 cd /d "%ROOT%"
 echo.
 echo   Nexo FP disponible en -^> http://localhost:%PORT%
