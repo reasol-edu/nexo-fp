@@ -8,6 +8,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Repository\CompanyRepository;
+use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
@@ -25,6 +26,7 @@ final class StayVoter extends Voter
 
     public function __construct(
         private readonly ProgrammeRepository $programmes,
+        private readonly ProfessionalFamilyRepository $families,
         private readonly CompanyRepository $companies,
     ) {}
 
@@ -64,6 +66,10 @@ final class StayVoter extends Voter
         }
 
         if ($this->programmes->isCoordinatorOf($user, $stay->getProgramme())) {
+            return true;
+        }
+
+        if ($this->families->isFamilyHeadOfProgramme($user, $stay->getProgramme())) {
             return true;
         }
 

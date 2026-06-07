@@ -131,6 +131,35 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    public function testManageGrantedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000016');
+        $teacher = $this->makeTeacher('family.head.1');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $family->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE])
+        );
+    }
+
+    public function testManageDeniedToFamilyHeadOfDifferentFamily(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000017');
+        $family2 = $this->makeFamily($year, 'Sanidad');
+        $teacher = $this->makeTeacher('family.head.other');
+        $this->persist($centre, $year, $family, $programme, $stay, $family2, $teacher);
+        $family2->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE])
+        );
+    }
+
     // ── CREATE ───────────────────────────────────────────────────────────────
 
     public function testCreateGrantedToGlobalAdmin(): void
@@ -192,6 +221,20 @@ class StayVoterTest extends RepositoryTestCase
         $company = $this->makeCompany($centre, 'Empresa S.L.');
         $this->persist($centre, $teacher, $company);
         $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE])
+        );
+    }
+
+    public function testCreateDeniedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, , $family] = $this->makeStayContext('41000018');
+        $teacher = $this->makeTeacher('family.head.create');
+        $this->persist($centre, $year, $family, $programme, $teacher);
+        $family->setHead($teacher);
         $this->flush();
 
         self::assertSame(

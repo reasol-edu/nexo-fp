@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -20,6 +21,20 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, ProfessionalFamily::class);
+    }
+
+    public function isFamilyHeadOfProgramme(Teacher $teacher, Programme $programme): bool
+    {
+        return $this->createQueryBuilder('pf')
+            ->select('1')
+            ->join(Programme::class, 'p', 'WITH', 'p.professionalFamily = pf')
+            ->where('p.id = :programme')
+            ->andWhere('pf.head = :teacher')
+            ->setParameter('programme', $programme->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
     }
 
     public function isFamilyHeadInCentre(Teacher $teacher, EducationalCentre $centre): bool

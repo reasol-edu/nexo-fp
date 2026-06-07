@@ -12,6 +12,7 @@ use App\Entity\ProfessionalFamily;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Repository\CompanyRepository;
+use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Security\Voter\StayVoter;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
@@ -24,14 +25,16 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 class StayVoterTest extends TestCase
 {
     private ProgrammeRepository&MockObject $programmes;
+    private ProfessionalFamilyRepository&MockObject $families;
     private CompanyRepository&MockObject $companies;
     private StayVoter $voter;
 
     protected function setUp(): void
     {
         $this->programmes = $this->createMock(ProgrammeRepository::class);
+        $this->families   = $this->createMock(ProfessionalFamilyRepository::class);
         $this->companies  = $this->createMock(CompanyRepository::class);
-        $this->voter      = new StayVoter($this->programmes, $this->companies);
+        $this->voter      = new StayVoter($this->programmes, $this->families, $this->companies);
     }
 
     // ── supports() ──────────────────────────────────────────────────────────
@@ -125,6 +128,21 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
 
         $this->programmes->method('isCoordinatorOf')->willReturn(true);
+        $this->families->expects(self::never())->method('isFamilyHeadOfProgramme');
+        $this->companies->expects(self::never())->method('hasLiaisonInCentre');
+
+        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testManageGrantedToFamilyHead(): void
+    {
+        $teacher = $this->teacher();
+        $stay    = $this->stay();
+
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
         $this->companies->expects(self::never())->method('hasLiaisonInCentre');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
@@ -138,6 +156,7 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
 
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->companies->method('hasLiaisonInCentre')->willReturn(true);
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
@@ -151,6 +170,7 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
 
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->companies->method('hasLiaisonInCentre')->willReturn(false);
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
