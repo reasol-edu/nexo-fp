@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-06-07
+
 ### Added
 
+- `feat`: Nuevo rol de coordinador de FP dual: puede crear y gestionar las estancias de las enseñanzas que coordina, y tiene acceso a la sección Empresas
+- `feat`: El panel de inicio muestra estadísticas del curso: estancias abiertas, puestos formativos y estado de las asignaciones
+- `feat`: Pantalla de edición del perfil del docente, accesible desde el menú de usuario
+- `feat`: Al crear un administrador desde la consola, la contraseña puede introducirse de forma interactiva si no se especifica en el comando
 - `feat`: Generación de informe PDF de estancias
 - `feat`: Vista de detalle de estancia como SPA con Symfony UX Live Components: asignar/desasignar puesto y tutores duales actualiza la página sin recarga completa; los diálogos de confirmación de borrado también funcionan tras cada rerender del componente
 - `feat`: Asignación rápida de tutores duales desde la fila del alumno: al hacer hover sobre una fila con puesto asignado pero sin tutor dual docente o de empresa, aparecen selectores con autocompletar que asignan el tutor y recargan la página
@@ -111,6 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `chore`: La lista de docentes de enlace de una empresa muestra ahora el nombre y apellidos del docente
+- `chore`: Mejorada la apariencia de la página de inicio de sesión
 - `chore`: Renombrado el apartado de «Familias profesionales» a «Oferta formativa» en toda la UI y traducciones
 - `refactor`: Breadcrumbs de oferta formativa actualizados para reflejar la jerarquía «Centro educativo → Oferta formativa → …»
 - `refactor`: Enlace a oferta formativa movido desde la barra lateral directamente al hub «Centro educativo»
@@ -130,6 +138,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `fix`: Los docentes podían ver y acceder a estancias de enseñanzas en las que no tenían ninguna atribución
+- `fix`: Los responsables de familia profesional no podían gestionar las estancias de las enseñanzas de su familia
+- `fix`: El curso académico activo podía no seleccionarse correctamente al iniciar sesión
+- `fix`: Los iconos de la interfaz no se mostraban en la instalación nativa
+- `fix`: Los scripts de inicio de la instalación nativa no arrancaban correctamente en algunos sistemas
 - `fix`: Las estadísticas de puestos y estudiantes en las cards y en la vista de detalle de estancia no reflejaban los datos reales; causa: `WHERE stay IN (:array)` genera un único `IN (?)` que Doctrine no expande correctamente para UUIDs binarios en MySQL; corregido con condiciones OR individuales (`stay.id = :sid_N`) y tipo `'uuid'` explícito por parámetro
 - `fix`: Las fechas de inicio y fin de una estancia son obligatorias (columnas `NOT NULL` en base de datos)
 - `fix`: Terminología unificada: «tutor dual docente» (tutor académico) y «tutor dual de empresa» (workplaceMentor) en toda la sección de estancias
