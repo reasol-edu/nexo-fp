@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- El número de identificación (DNI, NIE, pasaporte u otro documento) de los empleados se muestra enmascarado en el listado de la empresa, mostrando únicamente los cuatro dígitos centrales según las directrices de la AEPD
+
 ## [1.0.0] - 2024-06-07
 
 ### Added

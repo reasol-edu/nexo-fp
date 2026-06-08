@@ -149,7 +149,7 @@
                     <li class="flex items-center gap-4 px-6 py-4">
                         <div class="flex-1 min-w-0">
                             <span class="text-sm font-medium text-gray-900">{{ worker.name.lastName }}, {{ worker.name.firstName }}</span>
-                            <span class="ml-2 font-mono text-xs text-gray-400">{{ worker.nationalIdNumber }}</span>
+                            <span class="ml-2 font-mono text-xs text-gray-400">{{ worker.nationalIdNumber|mask_national_id }}</span>
                             {% if worker.workEmail %}
                                 <span class="ml-2 text-xs text-gray-400">{{ worker.workEmail }}</span>
                             {% endif %}
