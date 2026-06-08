@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Autocomplete;
 
+use App\Entity\AcademicYear;
 use App\Entity\Teacher;
+use App\Security\Voter\EducationalCentreVoter;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Uid\Uuid;
 use Symfony\UX\Autocomplete\EntityAutocompleterInterface;
 
 /**
@@ -20,6 +24,7 @@ class TeacherCentreAutocompleter implements EntityAutocompleterInterface
 {
     public function __construct(
         private readonly RequestStack $requestStack,
+        private readonly EntityManagerInterface $em,
     ) {}
 
     public function getEntityClass(): string
@@ -73,7 +78,20 @@ class TeacherCentreAutocompleter implements EntityAutocompleterInterface
 
     public function isGranted(Security $security): bool
     {
-        return $security->isGranted('ROLE_ADMIN');
+        $academicYearId = trim(
+            (string) ($this->requestStack->getCurrentRequest()?->query->getString('academicYearId') ?? '')
+        );
+
+        if ($academicYearId === '' || !Uuid::isValid($academicYearId)) {
+            return $security->isGranted('ROLE_ADMIN');
+        }
+
+        $year = $this->em->find(AcademicYear::class, Uuid::fromString($academicYearId));
+        if ($year === null) {
+            return false;
+        }
+
+        return $security->isGranted(EducationalCentreVoter::SECTION, $year->getEducationalCentre());
     }
 
     public function getGroupBy(): mixed
