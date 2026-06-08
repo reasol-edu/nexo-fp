@@ -3,6 +3,7 @@ app:
 
 # Acciones globales
 ui.cancel: 'Cancelar'
+ui.close: 'Cerrar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
 

@@ -205,7 +205,13 @@
                                             : 'bg-red-50 border-red-200 text-red-800' }}">
                                 {{ ux_icon(type == 'success' ? 'heroicons:check-circle' : 'heroicons:exclamation-circle',
                                     {class: 'h-4.5 w-4.5 shrink-0'}) }}
-                                {{ message }}
+                                <span class="flex-1">{{ message }}</span>
+                                <button type="button"
+                                        data-flash-close
+                                        class="shrink-0 rounded p-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                                        aria-label="{{ 'ui.close'|trans }}">
+                                    {{ ux_icon('heroicons:x-mark', {class: 'h-4 w-4'}) }}
+                                </button>
                             </div>
                         {% endfor %}
                     {% endfor %}
@@ -221,11 +227,16 @@
 
 <script>
 (function () {
+    function dismissFlash(el) {
+        el.style.opacity = '0';
+        setTimeout(function () { el.remove(); }, 500);
+    }
     document.querySelectorAll('[data-flash]').forEach(function (el) {
-        setTimeout(function () {
-            el.style.opacity = '0';
-            setTimeout(function () { el.remove(); }, 500);
-        }, 4000);
+        setTimeout(function () { dismissFlash(el); }, 4000);
+    });
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-flash-close]');
+        if (btn) dismissFlash(btn.closest('[data-flash]'));
     });
 }());
 </script>
