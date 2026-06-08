@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- La página de edición de un empleado ya no falla al intentar cargarse
+
 ### Changed
 
 - El número de identificación (DNI, NIE, pasaporte u otro documento) de los empleados se muestra enmascarado en el listado de la empresa, mostrando únicamente los cuatro dígitos centrales según las directrices de la AEPD

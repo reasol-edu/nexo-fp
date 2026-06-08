@@ -26,7 +26,7 @@
                         label="{{ 'worker.field.first_name'|trans({}, 'companies') }}"
                         value="{{ firstName }}"
                         :error="errors.firstName ?? null"
-                        data-model="on(change)|firstName"
+                        model="on(change)|firstName"
                     />
                 </div>
 
@@ -38,7 +38,7 @@
                         label="{{ 'worker.field.last_name'|trans({}, 'companies') }}"
                         value="{{ lastName }}"
                         :error="errors.lastName ?? null"
-                        data-model="on(change)|lastName"
+                        model="on(change)|lastName"
                     />
                 </div>
 
@@ -50,7 +50,7 @@
                         type="email"
                         label="{{ 'worker.field.work_email'|trans({}, 'companies') }}"
                         value="{{ workEmail }}"
-                        data-model="on(change)|workEmail"
+                        model="on(change)|workEmail"
                     />
                 </div>
 
@@ -61,7 +61,7 @@
                         name="work_phone"
                         label="{{ 'worker.field.work_phone'|trans({}, 'companies') }}"
                         value="{{ workPhone }}"
-                        data-model="on(change)|workPhone"
+                        model="on(change)|workPhone"
                     />
                 </div>
 

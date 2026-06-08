@@ -8,6 +8,7 @@ use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Entity\Worker;
 use App\Tests\Integration\ControllerTestCase;
 
 class CompanyControllerTest extends ControllerTestCase
@@ -314,6 +315,27 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertStringContainsString('/empresas/' . $companyId, (string) $this->client->getResponse()->headers->get('Location'));
     }
 
+    // ── edit worker ──────────────────────────────────────────────────────────
+
+    public function testEditWorkerPageRendersWithoutError(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $worker  = $this->makeWorker('12345678A', 'Ana', 'López');
+        $company->addWorker($worker);
+        $this->persist($centre, $teacher, $worker, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $workerId  = $worker->getId()->toRfc4122();
+
+        $this->client->request('GET', '/empresas/' . $companyId . '/empleados/' . $workerId);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[data-model="on(change)|firstName"]');
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username): Teacher
@@ -338,5 +360,11 @@ class CompanyControllerTest extends ControllerTestCase
             ->setVatNumber($vat)
             ->setCity('Sevilla')
             ->setEducationalCentre($centre);
+    }
+
+    private function makeWorker(string $nationalId, string $firstName, string $lastName): Worker
+    {
+        return (new Worker(new PersonName($firstName, $lastName)))
+            ->setNationalIdNumber($nationalId);
     }
 }
