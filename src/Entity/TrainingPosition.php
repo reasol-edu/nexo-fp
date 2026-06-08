@@ -18,13 +18,13 @@ class TrainingPosition
     #[ORM\Column(type: 'uuid')]
     private Uuid $id;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $details = null;
 
     #[ORM\Column]
     private bool $signed = false;
 
-    #[ORM\Column(type: 'string', enumType: TrainingPositionState::class)]
+    #[ORM\Column(type: Types::STRING, enumType: TrainingPositionState::class)]
     private TrainingPositionState $state = TrainingPositionState::DRAFT;
 
     #[ORM\ManyToOne(inversedBy: 'trainingPositions')]

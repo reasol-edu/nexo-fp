@@ -2,6 +2,7 @@
 namespace App\Entity;
 
 use App\Repository\ProgrammeYearRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -17,7 +18,7 @@ class ProgrammeYear
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $details = null;
 
     #[ORM\ManyToOne]

@@ -2,6 +2,7 @@
 namespace App\Entity;
 
 use App\Repository\CompanyAuditRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
@@ -25,7 +26,7 @@ class CompanyAudit
     private ?Teacher $changedBy;
 
     /** @var array<string, array{old: scalar|null, new: scalar|null}> */
-    #[ORM\Column(type: 'json')]
+    #[ORM\Column(type: Types::JSON)]
     private array $changes;
 
     /** @param array<string, array{old: scalar|null, new: scalar|null}> $changes */
