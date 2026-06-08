@@ -6,13 +6,14 @@ use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
 use App\Service\TenantContext;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class TenantContextSubscriber implements EventSubscriberInterface
+#[AsEventListener(event: KernelEvents::REQUEST, method: 'onKernelRequest', priority: 4)]
+final class TenantContextSubscriber
 {
     private const EXCLUDED_ROUTES = [
         'app_login',
@@ -28,11 +29,6 @@ final class TenantContextSubscriber implements EventSubscriberInterface
         private readonly Security $security,
         private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
-
-    public static function getSubscribedEvents(): array
-    {
-        return [KernelEvents::REQUEST => ['onKernelRequest', 4]];
-    }
 
     public function onKernelRequest(RequestEvent $event): void
     {
