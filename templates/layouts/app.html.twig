@@ -128,7 +128,7 @@
         <div class="shrink-0 border-t border-white/8 p-4 space-y-3">
 
             {# Banner de suplantación #}
-            {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
+            {% if is_granted('IS_IMPERSONATOR') %}
                 <div class="rounded-lg bg-amber-500/15 border border-amber-400/25 px-3 py-2.5">
                     <div class="flex items-center gap-2 mb-2">
                         {{ ux_icon('heroicons:eye', {class: 'h-3.5 w-3.5 shrink-0 text-amber-300'}) }}

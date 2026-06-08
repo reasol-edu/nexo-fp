@@ -340,6 +340,22 @@ class TeacherControllerTest extends ControllerTestCase
         self::assertResponseRedirects();
     }
 
+    public function testSwitchBackLinkAppearsInSidebarWhenImpersonating(): void
+    {
+        $admin   = $this->makeAdmin('admin.1');
+        $teacher = $this->makeTeacher('teacher.1');
+        $this->persist($admin, $teacher);
+        $this->loginAs($admin);
+
+        // Switch to teacher, then navigate to a page that uses the full app layout
+        $this->client->request('GET', '/?_switch_user=teacher.1');
+        $this->client->followRedirect();
+        $this->client->request('GET', '/perfil');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href*="_switch_user=_exit"]');
+    }
+
     public function testNonAdminCannotUseImpersonation(): void
     {
         $teacher1 = $this->makeTeacher('teacher.1');
