@@ -93,20 +93,22 @@
                 ) }}
             {% endif %}
 
-            {# Centro educativo #}
-            {% set centre_active = current_route starts with 'app_educational_centre'
-                or current_route starts with 'app_admin_centre_teachers'
-                or current_route starts with 'app_admin_students'
-                or current_route starts with 'app_admin_families'
-                or current_route starts with 'app_admin_programmes'
-                or current_route starts with 'app_admin_levels'
-                or current_route starts with 'app_admin_groups' %}
-            <a href="{{ path('app_educational_centre_index') }}"
-               class="{{ centre_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
-                      group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
-                {{ ux_icon('heroicons:building-library', {class: 'h-5 w-5 shrink-0'}) }}
-                <span class="truncate">{{ 'educational_centre'|trans({}, 'navigation') }}</span>
-            </a>
+            {# Centro educativo — solo para admins #}
+            {% if is_granted('ROLE_ADMIN') %}
+                {% set centre_active = current_route starts with 'app_educational_centre'
+                    or current_route starts with 'app_admin_centre_teachers'
+                    or current_route starts with 'app_admin_students'
+                    or current_route starts with 'app_admin_families'
+                    or current_route starts with 'app_admin_programmes'
+                    or current_route starts with 'app_admin_levels'
+                    or current_route starts with 'app_admin_groups' %}
+                <a href="{{ path('app_educational_centre_index') }}"
+                   class="{{ centre_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
+                          group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
+                    {{ ux_icon('heroicons:building-library', {class: 'h-5 w-5 shrink-0'}) }}
+                    <span class="truncate">{{ 'educational_centre'|trans({}, 'navigation') }}</span>
+                </a>
+            {% endif %}
 
             {# Administración — solo para admins #}
             {% if is_granted('ROLE_ADMIN') %}
