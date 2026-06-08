@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Los administradores pueden impersonar a cualquier docente desde el listado de docentes con el botón «Acceder como»
+
+### Fixed
+
+- El enlace «Volver al usuario original» del sidebar ahora aparece correctamente al impersonar a un usuario
+
 ## [1.0.1] - 2026-06-08
 
 ### Fixed
