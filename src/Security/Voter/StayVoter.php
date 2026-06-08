@@ -55,9 +55,9 @@ final class StayVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW   => $this->canView($user, $subject),     /** @phpstan-ignore argument.type */
-            self::MANAGE => $this->canManage($user, $subject),   /** @phpstan-ignore argument.type */
-            self::CREATE => $this->canCreate($user, $subject),   /** @phpstan-ignore argument.type */
+            self::VIEW   => $this->canView($user, $subject),
+            self::MANAGE => $this->canManage($user, $subject),
+            self::CREATE => $this->canCreate($user, $subject),
             default => false,
         };
     }
