@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: StayRepository::class)]
 #[ORM\UniqueConstraint(name: 'uq_stay_name_year', columns: ['name', 'academic_year_id'])]
@@ -18,6 +19,8 @@ class Stay
     private Uuid $id;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private string $name;
 
     #[ORM\ManyToOne]

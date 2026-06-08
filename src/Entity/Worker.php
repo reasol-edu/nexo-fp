@@ -4,6 +4,7 @@ namespace App\Entity;
 use App\Repository\WorkerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: WorkerRepository::class)]
 class Worker
@@ -18,9 +19,12 @@ class Worker
     private PersonName $name;
 
     #[ORM\Column(length: 20, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 9, max: 20)]
     private string $nationalIdNumber;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Email]
     private ?string $workEmail = null;
 
     #[ORM\Column(length: 50, nullable: true)]

@@ -21,6 +21,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/empresas')]
@@ -34,6 +35,7 @@ class CompanyController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
+        private readonly ValidatorInterface $validator,
     ) {}
 
     #[Route('', name: 'app_companies_index')]
@@ -89,19 +91,22 @@ class CompanyController extends AbstractController
                     ->setCity($values['city'])
                     ->setEducationalCentre($centre);
 
-                $this->em->persist($company);
+                $errors = $this->mapViolations($this->validator->validate($company));
 
-                $workcenter = (new Workcenter())
-                    ->setName($this->t('workcenter.default_name'))
-                    ->setCity($values['city'])
-                    ->setCompany($company);
+                if (empty($errors)) {
+                    $workcenter = (new Workcenter())
+                        ->setName($this->t('workcenter.default_name'))
+                        ->setCity($values['city'])
+                        ->setCompany($company);
 
-                $this->em->persist($workcenter);
-                $this->em->flush();
+                    $this->em->persist($company);
+                    $this->em->persist($workcenter);
+                    $this->em->flush();
 
-                $this->addFlash('success', $this->t('company.flash.created'));
+                    $this->addFlash('success', $this->t('company.flash.created'));
 
-                return $this->redirectToRoute('app_companies_edit', ['id' => $company->getId()->toRfc4122()]);
+                    return $this->redirectToRoute('app_companies_edit', ['id' => $company->getId()->toRfc4122()]);
+                }
             }
         }
 
@@ -181,11 +186,17 @@ class CompanyController extends AbstractController
                     }
                 }
 
-                $this->em->flush();
+                $errors = $this->mapViolations($this->validator->validate($company));
 
-                $this->addFlash('success', $this->t('company.flash.saved'));
+                if (!empty($errors)) {
+                    $selectedLiaisons = $company->getLiaisons()->toArray();
+                } else {
+                    $this->em->flush();
 
-                return $this->redirectToRoute('app_companies_edit', ['id' => $id]);
+                    $this->addFlash('success', $this->t('company.flash.saved'));
+
+                    return $this->redirectToRoute('app_companies_edit', ['id' => $id]);
+                }
             }
         }
 
@@ -393,6 +404,25 @@ class CompanyController extends AbstractController
         }
 
         return $company;
+    }
+
+    /**
+     * @param \Symfony\Component\Validator\ConstraintViolationListInterface $violations
+     * @return array<string, string>
+     */
+    private function mapViolations(\Symfony\Component\Validator\ConstraintViolationListInterface $violations): array
+    {
+        $errors = [];
+        $pathMap = ['vatNumber' => 'vat_number'];
+        foreach ($violations as $violation) {
+            $path = $violation->getPropertyPath();
+            $key  = $pathMap[$path] ?? $path;
+            if (!isset($errors[$key])) {
+                $errors[$key] = (string) $violation->getMessage();
+            }
+        }
+
+        return $errors;
     }
 
     /**

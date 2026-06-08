@@ -19,6 +19,7 @@
 namespace App\Service;
 
 use phpseclib3\Math\BigInteger;
+use Psr\Log\LoggerInterface;
 use Random\RandomException;
 use RuntimeException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -32,8 +33,11 @@ class SenecaAuthenticatorService
         private readonly bool $forceSecurity,
         #[Autowire(env: 'bool:APP_EXTERNAL_ENABLED')]
         private readonly bool $enabled,
-    )
-    {
+        private readonly LoggerInterface $logger,
+    ) {
+        if (!$this->forceSecurity) {
+            $this->logger->warning('iSéneca TLS verification is DISABLED — do not use in production');
+        }
     }
 
     public function isEnabled(): bool
@@ -73,11 +77,14 @@ class SenecaAuthenticatorService
         }
 
         $dom = new \DOMDocument();
-        libxml_use_internal_errors(true);
+        $previous = libxml_use_internal_errors(true);
 
-        if (!$dom->loadXML($str)) {
+        if (!$dom->loadXML($str, LIBXML_NONET | LIBXML_NOENT)) {
+            libxml_use_internal_errors($previous);
             throw new RuntimeException('External authentication service returned an invalid response.');
         }
+
+        libxml_use_internal_errors($previous);
 
         $xpath = new \DOMXPath($dom);
         $nav = $xpath->query('//correcto');
@@ -109,6 +116,12 @@ class SenecaAuthenticatorService
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $fieldsString);
         $str = curl_exec($curl);
+        if ($str === false) {
+            $this->logger->error('iSéneca cURL error', [
+                'errno' => curl_errno($curl),
+                'error' => curl_error($curl),
+            ]);
+        }
         curl_close($curl);
 
         return $str === false ? '' : (string) $str;
@@ -117,6 +130,8 @@ class SenecaAuthenticatorService
     private function setCurlDefaultOptions(string $url, bool $forceSecurity, \CurlHandle $curl): void
     {
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, $forceSecurity);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_MAXREDIRS, 2);

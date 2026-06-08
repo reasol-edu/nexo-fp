@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TeacherRepository::class)]
 class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
@@ -22,6 +23,8 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     private PersonName $name;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 3, max: 180)]
     private string $username;
 
     #[ORM\Column]
@@ -37,6 +40,7 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $active = true;
 
     #[ORM\Column(length: 180, nullable: true)]
+    #[Assert\Email]
     private ?string $email = null;
 
     /** @var Collection<int, AcademicYear> */

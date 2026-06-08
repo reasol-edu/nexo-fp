@@ -13,6 +13,7 @@ use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -54,6 +55,20 @@ class StayListComponent extends AbstractController
     private ?array $itemsCache = null;
     /** @var array<string, mixed>|null */
     private ?array $statsCache = null;
+
+    public function mount(): void
+    {
+        if (mb_strlen($this->search) > 255) {
+            $this->search = mb_substr($this->search, 0, 255);
+        }
+        if ($this->familyId !== '' && !Uuid::isValid($this->familyId)) {
+            $this->familyId = '';
+        }
+        if ($this->programmeId !== '' && !Uuid::isValid($this->programmeId)) {
+            $this->programmeId = '';
+        }
+        $this->page = max(1, min($this->page, 9999));
+    }
 
     public function __construct(
         private readonly StayRepository $stays,
