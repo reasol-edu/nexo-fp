@@ -17,6 +17,15 @@ class AcademicYearRepository extends ServiceEntityRepository
         parent::__construct($registry, AcademicYear::class);
     }
 
+    public function findById(string $id): ?AcademicYear
+    {
+        return $this->createQueryBuilder('ay')
+            ->where('ay.id = :id')
+            ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /** @return AcademicYear[] */
     public function findByCentreOrderedByName(EducationalCentre $centre): array
     {

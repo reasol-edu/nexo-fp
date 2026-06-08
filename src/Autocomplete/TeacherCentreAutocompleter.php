@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Autocomplete;
 
-use App\Entity\AcademicYear;
 use App\Entity\Teacher;
+use App\Repository\AcademicYearRepository;
 use App\Security\Voter\EducationalCentreVoter;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -24,7 +23,7 @@ class TeacherCentreAutocompleter implements EntityAutocompleterInterface
 {
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly EntityManagerInterface $em,
+        private readonly AcademicYearRepository $academicYears,
     ) {}
 
     public function getEntityClass(): string
@@ -86,7 +85,7 @@ class TeacherCentreAutocompleter implements EntityAutocompleterInterface
             return $security->isGranted('ROLE_ADMIN');
         }
 
-        $year = $this->em->find(AcademicYear::class, Uuid::fromString($academicYearId));
+        $year = $this->academicYears->findById($academicYearId);
         if ($year === null) {
             return false;
         }
