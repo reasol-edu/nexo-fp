@@ -11,6 +11,7 @@ use App\Pagination\Paginator;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
+use App\Security\Voter\EducationalCentreVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Uid\Uuid;
@@ -138,7 +139,13 @@ class StayListComponent extends AbstractController
             return [];
         }
 
-        return $this->families->findByAcademicYearFiltered($year, '');
+        $user = $this->getUser();
+
+        if (!$user instanceof Teacher || $this->isGranted(EducationalCentreVoter::SECTION, $this->centre)) {
+            return $this->families->findByAcademicYearFiltered($year, '');
+        }
+
+        return $this->families->findByAcademicYearVisibleToTeacher($year, $user);
     }
 
     /** @return \App\Entity\Programme[] */
@@ -149,7 +156,13 @@ class StayListComponent extends AbstractController
             return [];
         }
 
-        return $this->programmes->findByAcademicYearFilteredByFamily($year, $this->familyId);
+        $user = $this->getUser();
+
+        if (!$user instanceof Teacher || $this->isGranted(EducationalCentreVoter::SECTION, $this->centre)) {
+            return $this->programmes->findByAcademicYearFilteredByFamily($year, $this->familyId);
+        }
+
+        return $this->programmes->findByAcademicYearVisibleToTeacher($year, $user, $this->familyId);
     }
 
     #[LiveAction]

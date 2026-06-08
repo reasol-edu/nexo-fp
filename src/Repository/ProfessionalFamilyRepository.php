@@ -77,6 +77,41 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * Families that have at least one programme visible to the teacher (head, group tutor or group teacher).
+     *
+     * @return ProfessionalFamily[]
+     */
+    public function findByAcademicYearVisibleToTeacher(AcademicYear $year, Teacher $teacher): array
+    {
+        return $this->createQueryBuilder('pf')
+            ->where('pf.academicYear = :year')
+            ->andWhere(
+                'pf.head = :teacher
+                OR EXISTS (
+                    SELECT 1 FROM App\Entity\Programme p
+                    WHERE p.professionalFamily = pf
+                    AND (
+                        EXISTS (
+                            SELECT 1 FROM App\Entity\Group g
+                            JOIN g.programmeYear py
+                            WHERE py.programme = p AND g.tutor = :teacher
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM App\Entity\Group g2
+                            JOIN g2.programmeYear py2
+                            WHERE py2.programme = p AND :teacher MEMBER OF g2.teachers
+                        )
+                    )
+                )'
+            )
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->orderBy('pf.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /** @return ProfessionalFamily[] */
     public function findByAcademicYearFiltered(AcademicYear $year, string $search = ''): array
     {

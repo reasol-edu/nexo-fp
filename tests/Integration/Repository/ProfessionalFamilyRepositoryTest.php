@@ -6,8 +6,11 @@ namespace App\Tests\Integration\Repository;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Teacher;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Tests\Integration\RepositoryTestCase;
@@ -175,6 +178,123 @@ class ProfessionalFamilyRepositoryTest extends RepositoryTestCase
         $result = $this->repo->findByYearAndId($year, '00000000-0000-0000-0000-000000000000');
 
         self::assertNull($result);
+    }
+
+    // ── findByAcademicYearVisibleToTeacher ────────────────────────────────────
+
+    public function testVisibleToTeacherReturnsFamilyWhenFamilyHead(): void
+    {
+        $centre  = $this->makeCentre('41000013');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('fam.head.vis.1');
+        $famA    = $this->makeFamily($year, 'Informatica', $teacher);
+        $famB    = $this->makeFamily($year, 'Sanidad');
+        $this->persist($centre, $year, $teacher, $famA, $famB);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame('Informatica', $results[0]->getName());
+    }
+
+    public function testVisibleToTeacherReturnsFamilyWhenGroupTutor(): void
+    {
+        $centre  = $this->makeCentre('41000014');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('tutor.fam.vis.1');
+        $famA    = $this->makeFamily($year, 'Informatica');
+        $famB    = $this->makeFamily($year, 'Sanidad');
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level)->setTutor($teacher);
+        $this->persist($centre, $year, $teacher, $famA, $famB, $prog, $level, $group);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame('Informatica', $results[0]->getName());
+    }
+
+    public function testVisibleToTeacherReturnsFamilyWhenGroupTeacher(): void
+    {
+        $centre  = $this->makeCentre('41000015');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('grp.teacher.fam.1');
+        $famA    = $this->makeFamily($year, 'Informatica');
+        $famB    = $this->makeFamily($year, 'Sanidad');
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
+        $this->persist($centre, $year, $teacher, $famA, $famB, $prog, $level, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame('Informatica', $results[0]->getName());
+    }
+
+    public function testVisibleToTeacherReturnsEmptyForUnrelatedTeacher(): void
+    {
+        $centre  = $this->makeCentre('41000016');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('unrelated.fam.1');
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $this->persist($centre, $year, $teacher, $fam);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(0, $results);
+    }
+
+    public function testVisibleToTeacherDeduplicatesWhenMultipleProgrammesInSameFamily(): void
+    {
+        $centre  = $this->makeCentre('41000017');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('multi.prog.fam.1');
+        $fam     = $this->makeFamily($year, 'Informatica', $teacher);
+        $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $this->persist($centre, $year, $teacher, $fam, $progA, $progB);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+    }
+
+    public function testVisibleToTeacherIgnoresFamiliesFromOtherYears(): void
+    {
+        $centre  = $this->makeCentre('41000018');
+        $yearA   = $this->makeYear($centre, '2024-2025');
+        $yearB   = $this->makeYear($centre, '2023-2024');
+        $teacher = $this->makeTeacher('year.fam.vis.1');
+        $famA    = $this->makeFamily($yearA, 'Informatica', $teacher);
+        $famB    = $this->makeFamily($yearB, 'Informatica', $teacher);
+        $this->persist($centre, $yearA, $yearB, $teacher, $famA, $famB);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($yearA, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame($yearA->getId()->toRfc4122(), $results[0]->getAcademicYear()->getId()->toRfc4122());
+    }
+
+    public function testVisibleToTeacherIsOrderedByName(): void
+    {
+        $centre  = $this->makeCentre('41000019');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('order.fam.vis.1');
+        $famC    = $this->makeFamily($year, 'Sanidad', $teacher);
+        $famA    = $this->makeFamily($year, 'Administracion', $teacher);
+        $famB    = $this->makeFamily($year, 'Informatica', $teacher);
+        $this->persist($centre, $year, $teacher, $famA, $famB, $famC);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(3, $results);
+        self::assertSame('Administracion', $results[0]->getName());
+        self::assertSame('Informatica',    $results[1]->getName());
+        self::assertSame('Sanidad',        $results[2]->getName());
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

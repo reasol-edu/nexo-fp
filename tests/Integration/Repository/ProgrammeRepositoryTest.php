@@ -6,9 +6,11 @@ namespace App\Tests\Integration\Repository;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Teacher;
 use App\Repository\ProgrammeRepository;
 use App\Tests\Integration\RepositoryTestCase;
@@ -24,6 +26,109 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         /** @var ProgrammeRepository $repo */
         $repo       = self::getContainer()->get(ProgrammeRepository::class);
         $this->repo = $repo;
+    }
+
+    // ── findByAcademicYearVisibleToTeacher ────────────────────────────────────
+
+    public function testVisibleToTeacherReturnsProgrammeWhenFamilyHead(): void
+    {
+        $centre  = $this->makeCentre('41001001');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('head.1');
+        $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($teacher);
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $other   = $this->makeProgramme($year, $fam, 'DAW');
+        $this->persist($centre, $year, $teacher, $fam, $prog, $other);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(2, $results);
+    }
+
+    public function testVisibleToTeacherReturnsProgrammeWhenGroupTutor(): void
+    {
+        $centre  = $this->makeCentre('41001002');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('tutor.1');
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $other   = $this->makeProgramme($year, $fam, 'DAW');
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level)->setTutor($teacher);
+        $this->persist($centre, $year, $teacher, $fam, $prog, $other, $level, $group);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame('DAM', $results[0]->getName());
+    }
+
+    public function testVisibleToTeacherReturnsProgrammeWhenGroupTeacher(): void
+    {
+        $centre  = $this->makeCentre('41001003');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('grp.teacher.1');
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $other   = $this->makeProgramme($year, $fam, 'DAW');
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
+        $this->persist($centre, $year, $teacher, $fam, $prog, $other, $level, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame('DAM', $results[0]->getName());
+    }
+
+    public function testVisibleToTeacherReturnsEmptyForUnrelatedTeacher(): void
+    {
+        $centre  = $this->makeCentre('41001004');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('unrelated.1');
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $this->persist($centre, $year, $teacher, $fam, $prog);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(0, $results);
+    }
+
+    public function testVisibleToTeacherDeduplicatesWhenMultipleGroupsInSameProgramme(): void
+    {
+        $centre  = $this->makeCentre('41001005');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('multi.group.1');
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
+        $groupA  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->setTutor($teacher);
+        $groupB  = (new Group())->setName('DAM1B')->setProgrammeYear($level)->setTutor($teacher);
+        $this->persist($centre, $year, $teacher, $fam, $prog, $level, $groupA, $groupB);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);
+
+        self::assertCount(1, $results);
+    }
+
+    public function testVisibleToTeacherFiltersWhenFamilyIdGiven(): void
+    {
+        $centre  = $this->makeCentre('41001006');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('fam.filter.1');
+        $famA    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($teacher);
+        $famB    = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year)->setHead($teacher);
+        $progA   = $this->makeProgramme($year, $famA, 'DAM');
+        $progB   = $this->makeProgramme($year, $famB, 'Enfermeria');
+        $this->persist($centre, $year, $teacher, $famA, $famB, $progA, $progB);
+
+        $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher, $famA->getId()->toRfc4122());
+
+        self::assertCount(1, $results);
+        self::assertSame('DAM', $results[0]->getName());
     }
 
     // ── findByAcademicYearFilteredByFamily ────────────────────────────────────

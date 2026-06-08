@@ -22,6 +22,42 @@ class ProgrammeRepository extends ServiceEntityRepository
         parent::__construct($registry, Programme::class);
     }
 
+    /**
+     * Programmes visible to a teacher: they teach a group in it, are tutor of a group, or are head of its family.
+     *
+     * @return Programme[]
+     */
+    public function findByAcademicYearVisibleToTeacher(AcademicYear $year, Teacher $teacher, string $familyId = ''): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->join('p.professionalFamily', 'f')
+            ->where('p.academicYear = :year')
+            ->andWhere(
+                'f.head = :teacher
+                OR EXISTS (
+                    SELECT 1 FROM App\Entity\Group g
+                    JOIN g.programmeYear py
+                    WHERE py.programme = p AND g.tutor = :teacher
+                )
+                OR EXISTS (
+                    SELECT 1 FROM App\Entity\Group g2
+                    JOIN g2.programmeYear py2
+                    WHERE py2.programme = p AND :teacher MEMBER OF g2.teachers
+                )'
+            )
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->orderBy('f.name', 'ASC')
+            ->addOrderBy('p.name', 'ASC');
+
+        if ($familyId !== '') {
+            $qb->andWhere('f.id = :family')
+               ->setParameter('family', $familyId, 'uuid');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     /** @return Programme[] */
     public function findByAcademicYearFilteredByFamily(AcademicYear $year, string $familyId = ''): array
     {

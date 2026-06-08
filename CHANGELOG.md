@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Los administradores pueden impersonar a cualquier docente desde el listado de docentes con el botón «Acceder como»
 - Los docentes marcados como equipo directivo del centro pueden acceder a la sección «Centro educativo» y gestionar toda su configuración (estudiantes, docentes del curso, familias profesionales)
 
+### Changed
+
+- El desplegable de enseñanzas del filtro de estancias muestra solo las relacionadas con el docente (responsable de familia, tutor de grupo o docente asignado a un grupo); el equipo directivo y los administradores siguen viendo todas
+- El desplegable de familias profesionales del filtro de estancias muestra solo las familias de las enseñanzas visibles para el docente; el equipo directivo y los administradores siguen viendo todas
+
 ### Fixed
 
 - El autocompletado del docente responsable de una familia profesional ya muestra los docentes del centro al equipo directivo
