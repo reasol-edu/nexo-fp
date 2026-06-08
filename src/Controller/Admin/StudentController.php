@@ -16,11 +16,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Security\Voter\EducationalCentreVoter;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/centros/{centreId}/estudiantes')]
-#[IsGranted('ROLE_ADMIN')]
 class StudentController extends AbstractController
 {
     public function __construct(
@@ -335,6 +334,8 @@ class StudentController extends AbstractController
         if ($centre === null) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
 
         return $centre;
     }

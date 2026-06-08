@@ -93,8 +93,8 @@
                 ) }}
             {% endif %}
 
-            {# Centro educativo — solo para admins #}
-            {% if is_granted('ROLE_ADMIN') %}
+            {# Centro educativo — solo para equipo directivo y admins #}
+            {% if active_centre and is_granted('educational_centre.section', active_centre) %}
                 {% set centre_active = current_route starts with 'app_educational_centre'
                     or current_route starts with 'app_admin_centre_teachers'
                     or current_route starts with 'app_admin_students'

@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Los administradores pueden impersonar a cualquier docente desde el listado de docentes con el botón «Acceder como»
+- Los docentes marcados como equipo directivo del centro pueden acceder a la sección «Centro educativo» y gestionar toda su configuración (estudiantes, docentes del curso, familias profesionales)
 
 ### Fixed
 
 - El enlace «Volver al usuario original» del sidebar ahora aparece correctamente al impersonar a un usuario
+- El enlace «Centro educativo» del sidebar solo se muestra a docentes con acceso a esa sección (administradores globales o equipo directivo del centro activo)
 
 ## [1.0.1] - 2026-06-08
 

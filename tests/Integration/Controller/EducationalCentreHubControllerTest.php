@@ -24,10 +24,41 @@ class EducationalCentreHubControllerTest extends ControllerTestCase
         self::assertStringContainsString('/centro', (string) $this->client->getResponse()->headers->get('Location'));
     }
 
-    public function testIndexRendersPageWithTenantSet(): void
+    public function testIndexRendersPageForGlobalAdmin(): void
     {
-        $teacher = $this->makeTeacher('teacher.1');
-        $centre  = (new EducationalCentre())->setCode('41000001')->setName('IES Test')->setCity('Sevilla');
+        $admin  = (new Teacher(new PersonName('Admin', 'User')))->setUsername('admin.hub')->setAdmin(true);
+        $centre = (new EducationalCentre())->setCode('41000001')->setName('IES Test')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/mi-centro');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testIndexRendersPageForEquipoDirectivo(): void
+    {
+        $teacher = $this->makeTeacher('directivo.hub');
+        $centre  = (new EducationalCentre())->setCode('41000002')->setName('IES Test')->setCity('Sevilla');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $this->persist($teacher, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $centre->addAdmin($teacher);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/mi-centro');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testIndexDeniesAccessToUnprivilegedTeacher(): void
+    {
+        $teacher = $this->makeTeacher('unprivileged.hub');
+        $centre  = (new EducationalCentre())->setCode('41000003')->setName('IES Test')->setCity('Sevilla');
         $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $this->persist($teacher, $centre, $year);
         $centre->setActiveAcademicYear($year);
@@ -36,7 +67,7 @@ class EducationalCentreHubControllerTest extends ControllerTestCase
 
         $this->client->request('GET', '/mi-centro');
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(403);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

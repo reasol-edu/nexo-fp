@@ -17,11 +17,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Security\Voter\EducationalCentreVoter;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/centros/{centreId}/docentes-curso')]
-#[IsGranted('ROLE_ADMIN')]
 class CentreTeacherController extends AbstractController
 {
     public function __construct(
@@ -392,6 +391,8 @@ class CentreTeacherController extends AbstractController
         if ($centre === null) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
 
         return $centre;
     }

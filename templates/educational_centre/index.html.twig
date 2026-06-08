@@ -14,8 +14,8 @@
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
-        {# ── Estudiantes ── solo admins #}
-        {% if is_granted('ROLE_ADMIN') %}
+        {# ── Estudiantes ── equipo directivo y admins #}
+        {% if is_granted('educational_centre.section', centre) %}
             <a href="{{ centre.activeAcademicYear ? path('app_admin_students_index', {centreId: centre.id}) : '#' }}"
                class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
                       hover:border-plum-200 hover:shadow-sm transition-all
@@ -43,8 +43,8 @@
             </a>
         {% endif %}
 
-        {# ── Docentes del curso ── solo admins #}
-        {% if is_granted('ROLE_ADMIN') %}
+        {# ── Docentes del curso ── equipo directivo y admins #}
+        {% if is_granted('educational_centre.section', centre) %}
             <a href="{{ centre.activeAcademicYear ? path('app_admin_centre_teachers_index', {centreId: centre.id}) : '#' }}"
                class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
                       hover:border-plum-200 hover:shadow-sm transition-all
@@ -72,8 +72,8 @@
             </a>
         {% endif %}
 
-        {# ── Familias profesionales ── solo admins #}
-        {% if is_granted('ROLE_ADMIN') %}
+        {# ── Familias profesionales ── equipo directivo y admins #}
+        {% if is_granted('educational_centre.section', centre) %}
             <a href="{{ centre.activeAcademicYear ? path('app_admin_families_index', {centreId: centre.id}) : '#' }}"
                class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
                       hover:border-plum-200 hover:shadow-sm transition-all
