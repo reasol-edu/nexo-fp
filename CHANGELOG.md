@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-06-08
+
+### Changed
+
+- Los componentes de listado (estancias, docentes, alumnos, empresas, familias profesionales…) muestran un indicador de carga mientras se actualiza el contenido
+- Las tablas de listados de administración permiten desplazamiento horizontal en pantallas estrechas
+- Los diálogos de confirmación de borrado se muestran como un panel integrado en lugar del diálogo nativo del navegador
+- Los mensajes de notificación se ocultan automáticamente pasados 4 segundos y pueden cerrarse manualmente con el botón ×
+
+### Fixed
+
+- La confirmación de borrado enviaba el formulario de forma inmediata sin esperar a que el usuario confirmara
+
 ## [1.0.2] - 2026-06-08
 
 ### Added
