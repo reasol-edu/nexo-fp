@@ -27,6 +27,20 @@ class StudentControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testIndexIsAccessibleToEquipoDirectivo(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $directivo = $this->makeTeacher('directivo.1');
+        $this->persist($admin, $centre, $year, $directivo);
+        $centre->addAdmin($directivo);
+        $this->flush();
+        $this->loginAs($directivo);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes');
+
+        self::assertResponseIsSuccessful();
+    }
+
     public function testIndexDeniesNonAdmin(): void
     {
         [$admin, $centre, $year] = $this->makeCentreWithYear();

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - El enlace «Volver al usuario original» del sidebar ahora aparece correctamente al impersonar a un usuario
 - El enlace «Centro educativo» del sidebar solo se muestra a docentes con acceso a esa sección (administradores globales o equipo directivo del centro activo)
+- Los docentes del equipo directivo ya pueden acceder a las páginas de gestión del centro educativo (los componentes Twig de cada sección bloqueaban el acceso con `ROLE_ADMIN` aunque el voter lo concediera)
 
 ## [1.0.1] - 2026-06-08
 

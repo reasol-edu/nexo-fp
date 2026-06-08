@@ -8,6 +8,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
 use App\Pagination\Paginator;
 use App\Repository\TeacherRepository;
+use App\Security\Voter\EducationalCentreVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -37,7 +38,7 @@ class TeacherCentreListComponent extends AbstractController
 
     public function mount(EducationalCentre $centre): void
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
         $this->centre = $centre;
     }
 

@@ -31,6 +31,21 @@ class ProfessionalFamilyControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testIndexIsAccessibleToEquipoDirectivo(): void
+    {
+        $directivo = $this->makeTeacher('directivo.1');
+        [, $centre, $year] = $this->makeAdminAndCentre();
+        $this->persist($directivo, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $centre->addAdmin($directivo);
+        $this->flush();
+        $this->loginAs($directivo);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/familias');
+
+        self::assertResponseIsSuccessful();
+    }
+
     public function testIndexDeniesNonAdmin(): void
     {
         $teacher = $this->makeTeacher('teacher.1');

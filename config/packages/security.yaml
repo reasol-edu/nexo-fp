@@ -26,6 +26,7 @@ security:
 
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: '^/admin/centros/[^/]+/(estudiantes|docentes-curso|familias)', roles: ROLE_TEACHER }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/, roles: ROLE_TEACHER }
 

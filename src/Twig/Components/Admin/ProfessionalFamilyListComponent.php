@@ -13,6 +13,7 @@ use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
+use App\Security\Voter\EducationalCentreVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -38,7 +39,7 @@ class ProfessionalFamilyListComponent extends AbstractController
 
     public function mount(EducationalCentre $centre): void
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
         $this->centre = $centre;
     }
 
