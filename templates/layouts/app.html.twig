@@ -238,6 +238,7 @@
         var trigger = e.target.closest('.js-confirm-trigger');
         if (!trigger) return;
         if (trigger.closest('[data-controller~="live"]')) return;
+        e.preventDefault();
         e.stopPropagation();
         var form = trigger.closest('.js-confirm-form');
         if (!form || form.querySelector('.js-confirm-panel')) return;
