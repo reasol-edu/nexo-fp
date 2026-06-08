@@ -70,10 +70,11 @@
                                 </a>
                                 <form method="post"
                                       action="{{ path('app_admin_centres_delete', {id: centre.id}) }}"
-                                      onsubmit="return confirm('{{ 'centres.delete_confirm'|trans({}, 'admin') }}')">
+                                      class="js-confirm-form"
+                                      data-confirm="{{ 'centres.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_centre_' ~ centre.id) }}">
                                     <button type="submit"
-                                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
+                                            class="js-confirm-trigger inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
                                                    text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
                                         {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                         {{ 'centres.delete'|trans({}, 'admin') }}

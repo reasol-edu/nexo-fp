@@ -93,10 +93,11 @@
                                     </a>
                                     <form method="post"
                                           action="{{ path('app_admin_centre_teachers_remove', {centreId: centre.id, teacherId: teacher.id}) }}"
-                                          onsubmit="return confirm('{{ 'centre_teachers.remove_confirm'|trans({}, 'admin') }}')">
+                                          class="js-confirm-form"
+                                          data-confirm="{{ 'centre_teachers.remove_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                         <input type="hidden" name="_token" value="{{ csrf_token('remove_centre_teacher_' ~ teacher.id) }}">
                                         <button type="submit"
-                                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
+                                                class="js-confirm-trigger inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
                                                        text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
                                             {{ ux_icon('heroicons:user-minus', {class: 'h-3.5 w-3.5'}) }}
                                             {{ 'centre_teachers.action.remove'|trans({}, 'admin') }}

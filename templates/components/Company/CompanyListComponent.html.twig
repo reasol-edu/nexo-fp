@@ -93,11 +93,12 @@
                                 {% if is_granted('company.delete', company) %}
                                     <form method="post"
                                           action="{{ path('app_companies_delete', {id: company.id}) }}"
-                                          onsubmit="return confirm('{{ 'companies.delete_confirm'|trans({}, 'companies') }}')">
+                                          class="js-confirm-form"
+                                          data-confirm="{{ 'companies.delete_confirm'|trans({}, 'companies')|e('html_attr') }}">
                                         <input type="hidden" name="_token"
                                                value="{{ csrf_token('delete_company_' ~ company.id) }}">
                                         <button type="submit"
-                                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
+                                                class="js-confirm-trigger inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium
                                                        text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
                                             {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                             {{ 'companies.delete'|trans({}, 'companies') }}

@@ -72,10 +72,11 @@
                                 </a>
                                 <form method="post"
                                       action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
-                                      onsubmit="return confirm('{{ 'families.delete_confirm'|trans({}, 'admin') }}')">
+                                      class="js-confirm-form"
+                                      data-confirm="{{ 'families.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
                                     <button type="submit"
-                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
                                                    text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
                                         {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                     </button>
@@ -118,10 +119,11 @@
                                                 </a>
                                                 <form method="post"
                                                       action="{{ path('app_admin_programmes_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
-                                                      onsubmit="return confirm('{{ 'programmes.delete_confirm'|trans({}, 'admin') }}')">
+                                                      class="js-confirm-form"
+                                                      data-confirm="{{ 'programmes.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_programme_' ~ programme.id) }}">
                                                     <button type="submit"
-                                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
                                                                    text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
                                                         {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                                     </button>
@@ -164,10 +166,11 @@
                                                                 </a>
                                                                 <form method="post"
                                                                       action="{{ path('app_admin_levels_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
-                                                                      onsubmit="return confirm('{{ 'levels.delete_confirm'|trans({}, 'admin') }}')">
+                                                                      class="js-confirm-form"
+                                                                      data-confirm="{{ 'levels.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_level_' ~ level.id) }}">
                                                                     <button type="submit"
-                                                                            class="inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
+                                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
                                                                                    text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
                                                                         {{ ux_icon('heroicons:trash', {class: 'h-3 w-3'}) }}
                                                                     </button>
@@ -202,10 +205,11 @@
                                                                             </a>
                                                                             <form method="post"
                                                                                   action="{{ path('app_admin_groups_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
-                                                                                  onsubmit="return confirm('{{ 'groups.delete_confirm'|trans({}, 'admin') }}')">
+                                                                                  class="js-confirm-form"
+                                                                                  data-confirm="{{ 'groups.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
                                                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_group_' ~ group.id) }}">
                                                                                 <button type="submit"
-                                                                                        class="inline-flex items-center rounded-lg border border-transparent px-2 py-1
+                                                                                        class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1
                                                                                                text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
                                                                                     {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                                                                 </button>

@@ -166,10 +166,11 @@
                             </a>
                             <form method="post"
                                   action="{{ path('app_companies_worker_remove', {id: company.id, workerID: worker.id}) }}"
-                                  onsubmit="return confirm('{{ 'workers.delete_confirm'|trans({}, 'companies') }}')">
+                                  class="js-confirm-form"
+                                  data-confirm="{{ 'workers.delete_confirm'|trans({}, 'companies')|e('html_attr') }}">
                                 <input type="hidden" name="_token" value="{{ csrf_token('remove_worker_' ~ worker.id) }}">
                                 <button type="submit"
-                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
+                                        class="js-confirm-trigger inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
                                                text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
                                     {{ ux_icon('heroicons:x-mark', {class: 'h-3.5 w-3.5'}) }}
                                     {{ 'workers.action.remove'|trans({}, 'companies') }}
@@ -251,11 +252,12 @@
                             </a>
                             <form method="post"
                                   action="{{ path('app_companies_workcenter_delete', {companyId: company.id, workcenterID: workcenter.id}) }}"
-                                  onsubmit="return confirm('{{ 'workcenters.delete_confirm'|trans({}, 'companies') }}')">
+                                  class="js-confirm-form"
+                                  data-confirm="{{ 'workcenters.delete_confirm'|trans({}, 'companies')|e('html_attr') }}">
                                 <input type="hidden" name="_token"
                                        value="{{ csrf_token('delete_workcenter_' ~ workcenter.id) }}">
                                 <button type="submit"
-                                        class="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
+                                        class="js-confirm-trigger inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5
                                                text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
                                     {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
                                     {{ 'workcenters.action.delete'|trans({}, 'companies') }}
@@ -305,10 +307,11 @@
             <p class="text-sm text-gray-600">{{ 'company.delete_warning'|trans({}, 'companies') }}</p>
             <form method="post"
                   action="{{ path('app_companies_delete', {id: company.id}) }}"
-                  onsubmit="return confirm('{{ 'companies.delete_confirm'|trans({}, 'companies') }}')">
+                  class="js-confirm-form"
+                  data-confirm="{{ 'companies.delete_confirm'|trans({}, 'companies')|e('html_attr') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete_company_' ~ company.id) }}">
                 <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium
+                        class="js-confirm-trigger inline-flex items-center gap-2 rounded-xl border border-red-300 px-4 py-2.5 text-sm font-medium
                                text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors shrink-0">
                     {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
                     {{ 'companies.delete'|trans({}, 'companies') }}
