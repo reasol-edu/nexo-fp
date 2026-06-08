@@ -15,13 +15,14 @@ use App\Entity\TrainingPositionState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Clock\ClockInterface;
 
 /**
  * @extends ServiceEntityRepository<Stay>
  */
 class StayRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly ClockInterface $clock)
     {
         parent::__construct($registry, Stay::class);
     }
@@ -75,7 +76,7 @@ class StayRepository extends ServiceEntityRepository
         if ($activePeriods === []) {
             $qb->andWhere('1 = 0');
         } elseif (count($activePeriods) < 3) {
-            $today = new \DateTimeImmutable('today');
+            $today = $this->clock->now()->setTime(0, 0, 0);
             $qb->setParameter('today', $today);
 
             $orConditions = $qb->expr()->orX();
@@ -158,7 +159,7 @@ class StayRepository extends ServiceEntityRepository
      */
     public function findDashboardStats(AcademicYear $year): array
     {
-        $today = new \DateTimeImmutable('today');
+        $today = $this->clock->now()->setTime(0, 0, 0);
 
         /** @var array{total_stays: string, current_stays: string, future_stays: string, past_stays: string} $stayRow */
         $stayRow = $this->createQueryBuilder('s')
@@ -225,7 +226,7 @@ class StayRepository extends ServiceEntityRepository
      */
     public function findActiveAndUpcoming(AcademicYear $year, int $limit = 6): array
     {
-        $today = new \DateTimeImmutable('today');
+        $today = $this->clock->now()->setTime(0, 0, 0);
 
         return $this->createQueryBuilder('s')
             ->join('s.programme', 'p')->addSelect('p')
