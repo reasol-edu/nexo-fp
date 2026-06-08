@@ -196,7 +196,8 @@
                 <div class="px-6 pt-6 space-y-2">
                     {% for type, messages in flashes %}
                         {% for message in messages %}
-                            <div class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm
+                            <div data-flash
+                                 class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-opacity duration-500
                                         {{ type == 'success'
                                             ? 'bg-green-50 border-green-200 text-green-800'
                                             : 'bg-red-50 border-red-200 text-red-800' }}">
@@ -215,6 +216,17 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    document.querySelectorAll('[data-flash]').forEach(function (el) {
+        setTimeout(function () {
+            el.style.opacity = '0';
+            setTimeout(function () { el.remove(); }, 500);
+        }, 4000);
+    });
+}());
+</script>
 
 <script>
 (function () {
