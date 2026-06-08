@@ -74,6 +74,14 @@
                                     {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
                                     {{ 'teachers.edit'|trans({}, 'admin') }}
                                 </a>
+                                {% if not is_granted('IS_IMPERSONATOR') and app.user and app.user.userIdentifier != teacher.username %}
+                                    <a href="{{ path('app_dashboard') }}?_switch_user={{ teacher.username|e('url') }}"
+                                       class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium
+                                              text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 transition-colors">
+                                        {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-3.5 w-3.5'}) }}
+                                        {{ 'teachers.switch_user'|trans({}, 'admin') }}
+                                    </a>
+                                {% endif %}
                                 {% if app.user and app.user.id == teacher.id %}
                                     <span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50">
                                         {{ ux_icon('heroicons:shield-exclamation', {class: 'h-3.5 w-3.5'}) }}

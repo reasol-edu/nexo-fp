@@ -301,6 +301,57 @@ class TeacherControllerTest extends ControllerTestCase
         self::assertSelectorNotExists('form[action*="/eliminar"]');
     }
 
+    // ── switch_user ───────────────────────────────────────────────────────────
+
+    public function testSwitchUserLinkIsVisibleForOtherTeachers(): void
+    {
+        $admin   = $this->makeAdmin('admin.1');
+        $teacher = $this->makeTeacher('teacher.1');
+        $this->persist($admin, $teacher);
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/admin/docentes');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href*="_switch_user=teacher.1"]');
+    }
+
+    public function testSwitchUserLinkIsNotVisibleForCurrentUser(): void
+    {
+        $admin = $this->makeAdmin('admin.1');
+        $this->persist($admin);
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/admin/docentes');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('a[href*="_switch_user=admin.1"]');
+    }
+
+    public function testAdminCanImpersonateAnotherUser(): void
+    {
+        $admin   = $this->makeAdmin('admin.1');
+        $teacher = $this->makeTeacher('teacher.1');
+        $this->persist($admin, $teacher);
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/?_switch_user=teacher.1');
+
+        self::assertResponseRedirects();
+    }
+
+    public function testNonAdminCannotUseImpersonation(): void
+    {
+        $teacher1 = $this->makeTeacher('teacher.1');
+        $teacher2 = $this->makeTeacher('teacher.2');
+        $this->persist($teacher1, $teacher2);
+        $this->loginAs($teacher1);
+
+        $this->client->request('GET', '/?_switch_user=teacher.2');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username): Teacher
