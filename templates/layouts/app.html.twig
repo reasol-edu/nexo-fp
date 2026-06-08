@@ -41,6 +41,7 @@
                 {% if can_switch_centre() %}
                     <a href="{{ path('app_select_centre') }}"
                        title="{{ 'switch_centre'|trans({}, 'navigation') }}"
+                       aria-label="{{ 'switch_centre'|trans({}, 'navigation') }}"
                        class="shrink-0 rounded-md p-1 text-plum-500 hover:bg-plum-800 hover:text-white transition-colors">
                         {{ ux_icon('heroicons:arrows-right-left', {class: 'h-3.5 w-3.5'}) }}
                     </a>
@@ -183,6 +184,7 @@
         <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
             <button type="button"
                     data-action="sidebar#toggle"
+                    aria-label="{{ 'menu'|trans({}, 'navigation') }}"
                     class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
                 {{ ux_icon('heroicons:bars-3', {class: 'h-5 w-5'}) }}
             </button>
