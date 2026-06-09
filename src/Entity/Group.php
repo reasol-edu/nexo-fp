@@ -32,8 +32,10 @@ class Group
     #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
     private Collection $teachers;
 
-    #[ORM\ManyToOne]
-    private ?Teacher $tutor = null;
+    /** @var Collection<int, Teacher> */
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinTable(name: 'group_tutor')]
+    private Collection $tutors;
 
     /** @var Collection<int, Student> */
     #[ORM\ManyToMany(targetEntity: Student::class, mappedBy: 'groups', fetch: 'EXTRA_LAZY')]
@@ -42,6 +44,7 @@ class Group
     public function __construct()
     {
         $this->teachers = new ArrayCollection();
+        $this->tutors   = new ArrayCollection();
         $this->students = new ArrayCollection();
     }
 
@@ -110,14 +113,26 @@ class Group
         return $this;
     }
 
-    public function getTutor(): ?Teacher
+    /**
+     * @return Collection<int, Teacher>
+     */
+    public function getTutors(): Collection
     {
-        return $this->tutor;
+        return $this->tutors;
     }
 
-    public function setTutor(?Teacher $tutor): static
+    public function addTutor(Teacher $tutor): static
     {
-        $this->tutor = $tutor;
+        if (!$this->tutors->contains($tutor)) {
+            $this->tutors->add($tutor);
+        }
+
+        return $this;
+    }
+
+    public function removeTutor(Teacher $tutor): static
+    {
+        $this->tutors->removeElement($tutor);
 
         return $this;
     }

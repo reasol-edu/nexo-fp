@@ -194,9 +194,9 @@
                                                                         <span class="text-xs font-medium text-gray-700 flex-1 min-w-0 truncate">
                                                                             {{ group.name }}
                                                                         </span>
-                                                                        {% if group.tutor %}
+                                                                        {% if group.tutors|length > 0 %}
                                                                             <span class="hidden md:inline text-xs text-gray-400 shrink-0">
-                                                                                {{ group.tutor.name.lastName }}, {{ group.tutor.name.firstName }}
+                                                                                {{ group.tutors|map(t => t.name.lastName ~ ', ' ~ t.name.firstName)|join(' · ') }}
                                                                             </span>
                                                                         {% endif %}
                                                                         <span class="shrink-0 inline-flex items-center gap-1">

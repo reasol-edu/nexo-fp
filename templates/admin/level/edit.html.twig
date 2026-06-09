@@ -64,8 +64,8 @@
                     <li class="flex items-center gap-4 px-6 py-4">
                         <div class="flex-1 min-w-0">
                             <span class="text-sm font-medium text-gray-900">{{ group.name }}</span>
-                            {% if group.tutor %}
-                                <p class="text-xs text-gray-400 mt-0.5">{{ group.tutor.name.lastName }}, {{ group.tutor.name.firstName }}</p>
+                            {% if group.tutors|length > 0 %}
+                                <p class="text-xs text-gray-400 mt-0.5">{{ group.tutors|map(t => t.name.lastName ~ ', ' ~ t.name.firstName)|join(' · ') }}</p>
                             {% endif %}
                         </div>
                         <div class="flex items-center gap-2 shrink-0">

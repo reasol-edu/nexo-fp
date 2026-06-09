@@ -95,7 +95,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
                         EXISTS (
                             SELECT 1 FROM App\Entity\Group g
                             JOIN g.programmeYear py
-                            WHERE py.programme = p AND g.tutor = :teacher
+                            WHERE py.programme = p AND :teacher MEMBER OF g.tutors
                         )
                         OR EXISTS (
                             SELECT 1 FROM App\Entity\Group g2

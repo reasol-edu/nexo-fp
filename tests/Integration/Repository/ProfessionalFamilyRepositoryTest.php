@@ -206,7 +206,7 @@ class ProfessionalFamilyRepositoryTest extends RepositoryTestCase
         $famB    = $this->makeFamily($year, 'Sanidad');
         $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
         $level   = (new ProgrammeYear())->setName('1º')->setProgramme($prog);
-        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level)->setTutor($teacher);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($teacher);
         $this->persist($centre, $year, $teacher, $famA, $famB, $prog, $level, $group);
 
         $results = $this->repo->findByAcademicYearVisibleToTeacher($year, $teacher);

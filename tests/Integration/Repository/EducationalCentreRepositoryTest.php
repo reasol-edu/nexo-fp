@@ -249,7 +249,7 @@ class EducationalCentreRepositoryTest extends RepositoryTestCase
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($py);
         $this->persist($centre, $year, $family, $prog, $py, $teacher, $group);
 
-        $group->setTutor($teacher);
+        $group->addTutor($teacher);
         $this->flush();
 
         $results = $this->repo->findAccessibleByTeacher($teacher);

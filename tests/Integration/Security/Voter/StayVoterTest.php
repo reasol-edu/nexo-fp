@@ -328,12 +328,34 @@ class StayVoterTest extends RepositoryTestCase
         $programmeYear = $this->makeProgrammeYear($programme);
         $group        = $this->makeGroup($programmeYear);
         $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
-        $group->setTutor($teacher);
+        $group->addTutor($teacher);
         $this->flush();
 
         self::assertSame(
             VoterInterface::ACCESS_GRANTED,
             $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewGrantedToSecondOfMultipleTutors(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000099');
+        $tutorA       = $this->makeTeacher('view.tutor.a');
+        $tutorB       = $this->makeTeacher('view.tutor.b');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $tutorA, $tutorB, $programmeYear, $group);
+        $group->addTutor($tutorA);
+        $group->addTutor($tutorB);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($tutorA), $stay, [StayVoter::VIEW])
+        );
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($tutorB), $stay, [StayVoter::VIEW])
         );
     }
 

@@ -49,7 +49,7 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             FROM App\Entity\Teacher t, App\Entity\Group g
             JOIN g.programmeYear py
             WHERE py.programme = :programme
-              AND (g.tutor = t OR t MEMBER OF g.teachers)
+              AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)
             ORDER BY t.name.lastName ASC, t.name.firstName ASC
         ')
         ->setParameter('programme', $programme->getId(), 'uuid')

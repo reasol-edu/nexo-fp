@@ -59,15 +59,15 @@
                     {{ 'group.field.tutor'|trans({}, 'admin') }}
                 </label>
                 <p class="text-xs text-gray-400 mb-2">{{ 'group.field.tutor_help'|trans({}, 'admin') }}</p>
-                <select name="tutor"
+                <select name="tutors[]" multiple
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_centre'}) ~ '?academicYearId=' ~ (centre.activeAcademicYear ? centre.activeAcademicYear.id : '') }}"
                         data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         class="w-full">
-                    {% if selectedTutor %}
-                        <option value="{{ selectedTutor.id }}" selected>{{ selectedTutor.name.lastName }}, {{ selectedTutor.name.firstName }}</option>
-                    {% endif %}
+                    {% for tutor in selectedTutors %}
+                        <option value="{{ tutor.id }}" selected>{{ tutor.name.lastName }}, {{ tutor.name.firstName }}</option>
+                    {% endfor %}
                 </select>
             </div>
 

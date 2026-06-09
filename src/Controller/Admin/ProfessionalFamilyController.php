@@ -496,7 +496,7 @@ class ProfessionalFamilyController extends AbstractController
 
         $errors           = [];
         $values           = ['name' => $group->getName(), 'details' => $group->getDetails() ?? ''];
-        $selectedTutor    = $group->getTutor();
+        $selectedTutors   = $group->getTutors()->toArray();
         $selectedTeachers = $group->getTeachers()->toArray();
 
         if ($request->isMethod('POST')) {
@@ -513,8 +513,13 @@ class ProfessionalFamilyController extends AbstractController
                 $errors['name'] = $this->t('group.error.name_required');
             }
 
-            $tutorId    = trim($request->request->getString('tutor'));
-            $tutor      = $tutorId !== '' ? $this->teachers->findById($tutorId) : null;
+            $tutorIds   = array_values(array_filter(
+                array_map(
+                    static fn(mixed $v): string => \is_string($v) ? $v : '',
+                    $request->request->all('tutors'),
+                ),
+                static fn(string $v): bool => $v !== '',
+            ));
             $teacherIds = array_values(array_filter(
                 array_map(
                     static fn(mixed $v): string => \is_string($v) ? $v : '',
@@ -524,14 +529,25 @@ class ProfessionalFamilyController extends AbstractController
             ));
 
             if (!empty($errors)) {
-                $selectedTutor    = $tutor;
-                $selectedTeachers = array_filter(
+                $selectedTutors   = array_values(array_filter(
+                    array_map(fn(string $id) => $this->teachers->findById($id), $tutorIds),
+                ));
+                $selectedTeachers = array_values(array_filter(
                     array_map(fn(string $id) => $this->teachers->findById($id), $teacherIds),
-                );
+                ));
             } else {
                 $group->setName($values['name'])
-                    ->setDetails($values['details'] !== '' ? $values['details'] : null)
-                    ->setTutor($tutor);
+                    ->setDetails($values['details'] !== '' ? $values['details'] : null);
+
+                foreach ($group->getTutors()->toArray() as $t) {
+                    $group->removeTutor($t);
+                }
+                foreach ($tutorIds as $id) {
+                    $tutor = $this->teachers->findById($id);
+                    if ($tutor !== null) {
+                        $group->addTutor($tutor);
+                    }
+                }
 
                 foreach ($group->getTeachers()->toArray() as $t) {
                     $group->removeTeacher($t);
@@ -564,7 +580,7 @@ class ProfessionalFamilyController extends AbstractController
             'group'            => $group,
             'errors'           => $errors,
             'values'           => $values,
-            'selectedTutor'    => $selectedTutor,
+            'selectedTutors'   => $selectedTutors,
             'selectedTeachers' => $selectedTeachers,
         ]);
     }

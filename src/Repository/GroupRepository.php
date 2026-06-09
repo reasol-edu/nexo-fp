@@ -29,7 +29,7 @@ class GroupRepository extends ServiceEntityRepository
             ->join('g.programmeYear', 'py')
             ->leftJoin('g.teachers', 't')
             ->where('py.programme = :programme')
-            ->andWhere('g.tutor = :teacher OR t.id = :teacher')
+            ->andWhere(':teacher MEMBER OF g.tutors OR t.id = :teacher')
             ->setParameter('programme', $programme->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->setMaxResults(1)

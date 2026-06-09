@@ -105,7 +105,7 @@ class StayRepository extends ServiceEntityRepository
                 'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vc AND vcea.id = :vViewer)',
                 'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = p AND vcrd.id = :vViewer)',
                 'f.head = :vViewer',
-                'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = p AND (vg.tutor = :vViewer OR vgt.id = :vViewer))',
+                'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = p AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))',
                 'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
             ))->setParameter('vViewer', $viewer->getId(), 'uuid');
         }
