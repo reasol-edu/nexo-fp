@@ -103,6 +103,38 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    public function testManageDeniedToGroupTutor(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000105');
+        $teacher      = $this->makeTeacher('manage.tutor.denied');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->addTutor($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE])
+        );
+    }
+
+    public function testManageDeniedToGroupTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000106');
+        $teacher      = $this->makeTeacher('manage.teacher.denied');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE])
+        );
+    }
+
     public function testManageDeniedToCoordinatorOfDifferentProgramme(): void
     {
         [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000006');
@@ -211,6 +243,38 @@ class StayVoterTest extends RepositoryTestCase
         $centre  = $this->makeCentre('41000012');
         $teacher = $this->makeTeacher('unrelated.2');
         $this->persist($centre, $teacher);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE])
+        );
+    }
+
+    public function testCreateDeniedToGroupTutor(): void
+    {
+        [$centre, $year, $programme, , $family] = $this->makeStayContext('41000107');
+        $teacher      = $this->makeTeacher('create.tutor.denied');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $teacher, $programmeYear, $group);
+        $group->addTutor($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE])
+        );
+    }
+
+    public function testCreateDeniedToGroupTeacher(): void
+    {
+        [$centre, $year, $programme, , $family] = $this->makeStayContext('41000108');
+        $teacher      = $this->makeTeacher('create.teacher.denied');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group        = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $teacher, $programmeYear, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
 
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
@@ -465,6 +529,46 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    public function testAddPositionGrantedToGlobalAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000100');
+        $admin = $this->makeTeacher('ap.admin', admin: true);
+        $this->persist($centre, $year, $family, $programme, $stay, $admin);
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($admin), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
+    public function testAddPositionGrantedToCentreAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000101');
+        $teacher = $this->makeTeacher('ap.cadmin');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $centre->addAdmin($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
+    public function testAddPositionGrantedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000102');
+        $teacher = $this->makeTeacher('ap.fhead');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $family->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
     // ── MANAGE_POSITION ──────────────────────────────────────────────────────
 
     public function testManagePositionGrantedToLiaisonOfPositionCompany(): void
@@ -550,6 +654,38 @@ class StayVoterTest extends RepositoryTestCase
 
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionGrantedToGlobalAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000103');
+        $admin      = $this->makeTeacher('mp.admin', admin: true);
+        $company    = $this->makeCompany($centre, 'Empresa Admin MP S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede Admin');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $admin, $company, $workcenter, $position);
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($admin), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionGrantedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000104');
+        $teacher    = $this->makeTeacher('mp.fhead');
+        $company    = $this->makeCompany($centre, 'Empresa FHead MP S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede FHead');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position);
+        $family->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
             $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
         );
     }

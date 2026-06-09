@@ -245,6 +245,120 @@ class StayRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $results);
     }
 
+    public function testFilteredQueryAdminSeesAllStays(): void
+    {
+        [$year, $prog] = $this->makeChain('41000046');
+        $fam   = $prog->getProfessionalFamily();
+        $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $admin = (new Teacher(new PersonName('A', 'Admin')))->setUsername('admin.filter.1')->setAdmin(true);
+        $this->persist($progB, $stayB, $admin);
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $admin)->getResult();
+
+        self::assertCount(2, $results);
+    }
+
+    public function testFilteredQueryCentreAdminSeesAllStays(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000047')->setName('IES 41000047')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $admin  = (new Teacher(new PersonName('C', 'Admin')))->setUsername('cadmin.filter.1');
+        $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $admin);
+        $centre->addAdmin($admin);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $admin)->getResult();
+
+        self::assertCount(2, $results);
+    }
+
+    public function testFilteredQueryCoordinatorSeesOwnProgrammeOnly(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000048')->setName('IES 41000048')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $coord  = (new Teacher(new PersonName('Co', 'Ord')))->setUsername('coord.filter.1');
+        $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $coord);
+        $progA->addCoordinator($coord);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $coord)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+    }
+
+    public function testFilteredQueryFamilyHeadSeesOwnFamilyOnly(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000049')->setName('IES 41000049')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $head   = (new Teacher(new PersonName('H', 'Ead')))->setUsername('head.filter.1');
+        $famA   = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($head);
+        $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $progB  = (new Programme())->setName('Enfermeria')->setAcademicYear($year)->setProfessionalFamily($famB);
+        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FCT Enfermeria');
+        $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $head)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($stayA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFilteredQueryGroupTutorSeesOwnProgrammeOnly(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000050')->setName('IES 41000050')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $tutor  = (new Teacher(new PersonName('T', 'Utor')))->setUsername('tutor.cfilter.1');
+        $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
+        $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $tutor, $level, $group);
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $tutor)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($stayA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFilteredQueryGroupTeacherSeesOwnProgrammeOnly(): void
+    {
+        $centre  = (new EducationalCentre())->setCode('41000051')->setName('IES 41000051')->setCity('Sevilla');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.cfilter.1');
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
+        $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $teacher, $level, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $teacher)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($stayA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
     // ── findStatsForStays ─────────────────────────────────────────────────────
 
     public function testFindStatsForStaysReturnsEmptyForEmptyInput(): void
@@ -566,6 +680,28 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->findActiveAndUpcoming($year, $admin);
 
         self::assertCount(2, $results);
+    }
+
+    public function testFindActiveAndUpcomingFiltersByGroupTeacher(): void
+    {
+        $centre  = (new EducationalCentre())->setCode('41000052')->setName('IES 41000052')->setCity('Sevilla');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.upcoming.2');
+        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
+        $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $teacher, $level, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        $results = $this->repo->findActiveAndUpcoming($year, $teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
     }
 
     public function testFindActiveAndUpcomingFiltersByCompanyLiaison(): void

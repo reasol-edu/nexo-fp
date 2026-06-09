@@ -258,6 +258,39 @@ class EducationalCentreRepositoryTest extends RepositoryTestCase
         self::assertSame($centre->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
     }
 
+    public function testFindAccessibleByTeacherReturnsCentreWhenTeacherIsCentreAdmin(): void
+    {
+        $centre  = $this->makeCentre('41000024');
+        $teacher = $this->makeTeacher('centre.admin.two');
+        $this->persist($centre, $teacher);
+        $centre->addAdmin($teacher);
+        $this->flush();
+
+        $results = $this->repo->findAccessibleByTeacher($teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame($centre->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFindAccessibleByTeacherReturnsCentreWhenTeacherIsGroupTeacher(): void
+    {
+        $centre  = $this->makeCentre('41000025');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family  = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $py      = (new ProgrammeYear())->setName('1.º DAM')->setProgramme($prog);
+        $teacher = $this->makeTeacher('teacher.group.two');
+        $group   = (new Group())->setName('DAM1A')->setProgrammeYear($py);
+        $this->persist($centre, $year, $family, $prog, $py, $teacher, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        $results = $this->repo->findAccessibleByTeacher($teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame($centre->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
     public function testFindAccessibleByTeacherDeduplicatesWhenTeacherHasMultipleRoles(): void
     {
         // Teacher is both family head and company liaison for the same centre
