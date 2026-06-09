@@ -397,6 +397,52 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    // ── ADD_POSITION ─────────────────────────────────────────────────────────
+
+    public function testAddPositionGrantedToLiaison(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000033');
+        $teacher = $this->makeTeacher('ap.liaison.yes');
+        $company = $this->makeCompany($centre, 'Empresa AP S.L.');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
+    public function testAddPositionDeniedToNonLiaison(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000034');
+        $teacher = $this->makeTeacher('ap.nonliaison');
+        $company = $this->makeCompany($centre, 'Empresa AP No S.L.');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        // teacher is NOT added as liaison
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
+    public function testAddPositionGrantedToCoordinator(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000035');
+        $teacher = $this->makeTeacher('ap.coord');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::ADD_POSITION])
+        );
+    }
+
     // ── MANAGE_POSITION ──────────────────────────────────────────────────────
 
     public function testManagePositionGrantedToLiaisonOfPositionCompany(): void
@@ -463,6 +509,44 @@ class StayVoterTest extends RepositoryTestCase
 
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionDeniedToLiaisonWhenStudentAssigned(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000036');
+        $teacher    = $this->makeTeacher('mp.liaison.student');
+        $company    = $this->makeCompany($centre, 'Empresa MS S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede MS');
+        $position   = $this->makePosition($stay, $workcenter);
+        $student    = (new \App\Entity\Student(new \App\Entity\PersonName('Ana', 'López')))->setStudentId('2024-001');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position, $student);
+        $company->addLiaison($teacher);
+        $position->setStudent($student);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionGrantedToCoordinatorEvenWhenStudentAssigned(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000037');
+        $teacher    = $this->makeTeacher('mp.coord.student');
+        $company    = $this->makeCompany($centre, 'Empresa CS S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede CS');
+        $position   = $this->makePosition($stay, $workcenter);
+        $student    = (new \App\Entity\Student(new \App\Entity\PersonName('Ana', 'López')))->setStudentId('2024-002');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position, $student);
+        $programme->addCoordinator($teacher);
+        $position->setStudent($student);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
             $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
         );
     }

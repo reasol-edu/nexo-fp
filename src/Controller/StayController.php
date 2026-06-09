@@ -423,10 +423,17 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
+        $this->denyAccessUnlessGranted(StayVoter::ADD_POSITION, $stay);
 
-        $allWorkcenters = $this->workcenters->findByCentreOrdered($centre);
-        $byCompany      = [];
+        /** @var Teacher $currentUser */
+        $currentUser = $this->getUser();
+        $canManage   = $this->isGranted(StayVoter::MANAGE, $stay);
+
+        $allWorkcenters = $canManage
+            ? $this->workcenters->findByCentreOrdered($centre)
+            : $this->workcenters->findByCentreAndLiaisonOrdered($centre, $currentUser);
+
+        $byCompany = [];
         foreach ($allWorkcenters as $wc) {
             $cid = $wc->getCompany()->getId()->toRfc4122();
             if (!isset($byCompany[$cid])) {
@@ -465,6 +472,8 @@ class StayController extends AbstractController
                 $workcenter = $this->workcenters->findByCentreAndId($centre, $values['workcenter_id']);
                 if ($workcenter === null) {
                     $errors['workcenter_id'] = $this->t('stays.error.workcenter_invalid');
+                } elseif (!$canManage && !$workcenter->getCompany()->getLiaisons()->contains($currentUser)) {
+                    throw $this->createAccessDeniedException();
                 }
             }
 

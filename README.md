@@ -232,7 +232,7 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 
 ¹ Familias profesionales, enseñanzas, niveles y grupos.
 
-> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos de sus empresas asignadas, y gestionar (editar, asignar tutores/mentor, eliminar) únicamente esos puestos. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
+> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos de sus empresas asignadas, añadir nuevos puestos de sus empresas a esas estancias, y editar o eliminar únicamente los puestos de sus empresas **que no tengan estudiante asignado**. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
 >
 > **Nota sobre el docente base (D):** puede ver las estancias de las enseñanzas en las que está asignado a algún grupo (como tutor o docente). Si no tiene ningún grupo asignado, no accede a ninguna estancia.
 
@@ -243,7 +243,8 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 | Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
 | Crear estancia | ✅ | ✅ | ❌ | Sus enseñanzas | ❌ | ❌ | ❌ |
 | Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Gestionar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
+| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
+| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
 | Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
 | Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
 
@@ -259,6 +260,7 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 
 ² Incluye centros de trabajo, empleados y docentes de enlace asignados.
 ³ Solo estancias/puestos donde intervienen sus empresas asignadas.
+⁴ Solo puestos sin estudiante asignado. Los puestos con estudiante asignado no pueden ser modificados ni eliminados por el docente de enlace.
 
 ### Administración global
 

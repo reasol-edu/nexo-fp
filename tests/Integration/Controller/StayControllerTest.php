@@ -487,6 +487,40 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testNewPositionAccessibleToLiaison(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay    = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $liaison = $this->makeTeacher('liaison.newpos');
+        $company = $this->makeCompany($centre);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $liaison, $company);
+        $company->addLiaison($liaison);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($liaison, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122() . '/nuevo-puesto');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testNewPositionForbiddenToNonLiaison(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay    = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $teacher = $this->makeTeacher('teacher.newpos.denied');
+        $company = $this->makeCompany($centre);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $teacher, $company);
+        // teacher is NOT added as liaison
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122() . '/nuevo-puesto');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     // ── delete position ───────────────────────────────────────────────────────
 
     public function testDeletePositionDeletesEntityAndRedirectsToShow(): void

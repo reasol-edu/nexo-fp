@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\Teacher;
 use App\Entity\Workcenter;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -50,6 +51,23 @@ class WorkcenterRepository extends ServiceEntityRepository
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->orderBy('co.name', 'ASC')
             ->addOrderBy('w.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Workcenter[] */
+    public function findByCentreAndLiaisonOrdered(EducationalCentre $centre, Teacher $liaison): array
+    {
+        return $this->createQueryBuilder('w')
+            ->join('w.company', 'co')
+            ->join('co.liaisons', 'l')
+            ->addSelect('co')
+            ->where('co.educationalCentre = :centre')
+            ->andWhere('l.id = :liaison')
+            ->orderBy('co.name', 'ASC')
+            ->addOrderBy('w.name', 'ASC')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setParameter('liaison', $liaison->getId(), 'uuid')
             ->getQuery()
             ->getResult();
     }

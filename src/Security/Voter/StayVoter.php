@@ -23,8 +23,10 @@ final class StayVoter extends Voter
 {
     /** Ver una estancia en el listado y acceder a su contenido. Sujeto: Stay */
     public const VIEW   = 'stay.view';
-    /** Gestionar una estancia completa (editar, eliminar, añadir puestos, gestionar estudiantes). Sujeto: Stay */
+    /** Gestionar una estancia completa (editar, eliminar, gestionar estudiantes). Sujeto: Stay */
     public const MANAGE = 'stay.manage';
+    /** Añadir un nuevo puesto formativo a la estancia. Sujeto: Stay */
+    public const ADD_POSITION = 'stay.add_position';
     /** Editar o eliminar un puesto formativo concreto. Sujeto: TrainingPosition */
     public const MANAGE_POSITION = 'stay.manage_position';
     /** Crear una nueva estancia en el centro activo. Sujeto: EducationalCentre */
@@ -40,9 +42,9 @@ final class StayVoter extends Voter
     protected function supports(string $attribute, mixed $subject): bool
     {
         return match ($attribute) {
-            self::VIEW, self::MANAGE => $subject instanceof Stay,
-            self::CREATE             => $subject instanceof EducationalCentre,
-            self::MANAGE_POSITION    => $subject instanceof TrainingPosition,
+            self::VIEW, self::MANAGE, self::ADD_POSITION => $subject instanceof Stay,
+            self::CREATE                                  => $subject instanceof EducationalCentre,
+            self::MANAGE_POSITION                         => $subject instanceof TrainingPosition,
             default => false,
         };
     }
@@ -61,6 +63,7 @@ final class StayVoter extends Voter
         return match ($attribute) {
             self::VIEW            => $this->canView($user, $subject),
             self::MANAGE          => $this->canManage($user, $subject),
+            self::ADD_POSITION    => $this->canAddPosition($user, $subject),
             self::MANAGE_POSITION => $this->canManagePosition($user, $subject),
             self::CREATE          => $this->canCreate($user, $subject),
             default => false,
@@ -105,6 +108,17 @@ final class StayVoter extends Voter
         return $this->families->isFamilyHeadOfProgramme($user, $stay->getProgramme());
     }
 
+    private function canAddPosition(Teacher $user, Stay $stay): bool
+    {
+        if ($this->canManage($user, $stay)) {
+            return true;
+        }
+
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
+
+        return $this->companies->hasLiaisonInCentre($user, $centre);
+    }
+
     private function canManagePosition(Teacher $user, TrainingPosition $position): bool
     {
         $stay   = $position->getStay();
@@ -125,7 +139,8 @@ final class StayVoter extends Voter
         $workcenter = $position->getWorkcenter();
 
         return $workcenter !== null
-            && $workcenter->getCompany()->getLiaisons()->contains($user);
+            && $workcenter->getCompany()->getLiaisons()->contains($user)
+            && $position->getStudent() === null;
     }
 
     private function canCreate(Teacher $user, EducationalCentre $centre): bool

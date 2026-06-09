@@ -54,6 +54,7 @@ class StayDetailComponent extends AbstractController
         }
 
         $canManage    = $this->isGranted(StayVoter::MANAGE, $stay);
+        $canAddPosition = $this->isGranted(StayVoter::ADD_POSITION, $stay);
         $allPositions = $this->positions->findByStayOrdered($stay);
 
         $manageablePositionIds = [];
@@ -168,6 +169,7 @@ class StayDetailComponent extends AbstractController
         $this->cache = [
             'stay'                             => $stay,
             'can_manage'                       => $canManage,
+            'can_add_position'                 => $canAddPosition,
             'manageable_position_ids'          => $manageablePositionIds,
             'by_group'                         => $byGroup,
             'ungrouped_students'               => $ungroupedStudents,
