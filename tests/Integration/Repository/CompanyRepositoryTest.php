@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Repository;
 
+use App\Entity\AcademicYear;
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
+use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
+use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
+use App\Entity\Workcenter;
 use App\Repository\CompanyRepository;
 use App\Tests\Integration\RepositoryTestCase;
 
@@ -118,6 +124,53 @@ class CompanyRepositoryTest extends RepositoryTestCase
         self::assertTrue($this->repo->hasLiaisonInCentre($teacher, $centre));
     }
 
+    // ── hasLiaisonPositionInStay ─────────────────────────────────────────────
+
+    public function testHasLiaisonPositionInStayReturnsTrueWhenLiaisonHasPosition(): void
+    {
+        [$centre, $stay, $company] = $this->makeStayChain('41000013');
+        $teacher    = $this->makeTeacher('liaison.stay');
+        $workcenter = $this->makeWorkcenter($company, 'Sede');
+        $this->persist($teacher, $workcenter);
+        $company->addLiaison($teacher);
+        $position = (new TrainingPosition())->setStay($stay)->setWorkcenter($workcenter);
+        $this->persist($position);
+        $this->flush();
+
+        self::assertTrue($this->repo->hasLiaisonPositionInStay($teacher, $stay));
+    }
+
+    public function testHasLiaisonPositionInStayReturnsFalseWhenNotLiaison(): void
+    {
+        [$centre, $stay, $company] = $this->makeStayChain('41000014');
+        $teacher    = $this->makeTeacher('not.liaison');
+        $workcenter = $this->makeWorkcenter($company, 'Sede');
+        $this->persist($teacher, $workcenter);
+        $position = (new TrainingPosition())->setStay($stay)->setWorkcenter($workcenter);
+        $this->persist($position);
+        $this->flush();
+
+        self::assertFalse($this->repo->hasLiaisonPositionInStay($teacher, $stay));
+    }
+
+    public function testHasLiaisonPositionInStayReturnsFalseForDifferentStay(): void
+    {
+        [$centre, $stayA, $company] = $this->makeStayChain('41000015');
+        $year    = $stayA->getAcademicYear();
+        $prog    = $stayA->getProgramme();
+        $stayB   = $this->makeStay($year, $prog, 'FCT DAM B');
+        $teacher = $this->makeTeacher('liaison.other.stay');
+        $workcenter = $this->makeWorkcenter($company, 'Sede');
+        $this->persist($stayB, $teacher, $workcenter);
+        $company->addLiaison($teacher);
+        $posB = (new TrainingPosition())->setStay($stayB)->setWorkcenter($workcenter);
+        $this->persist($posB);
+        $this->flush();
+
+        // Teacher has a position in stayB but not in stayA
+        self::assertFalse($this->repo->hasLiaisonPositionInStay($teacher, $stayA));
+    }
+
     // ── findByIdAndCentre ────────────────────────────────────────────────────
 
     public function testFindByIdAndCentreReturnsCompanyInSameCentre(): void
@@ -167,5 +220,35 @@ class CompanyRepositoryTest extends RepositoryTestCase
             ->setVatNumber($vatNumber)
             ->setCity('Sevilla')
             ->setEducationalCentre($centre);
+    }
+
+    private function makeWorkcenter(Company $company, string $name): Workcenter
+    {
+        return (new Workcenter())->setName($name)->setCity('Sevilla')->setCompany($company);
+    }
+
+    private function makeStay(AcademicYear $year, Programme $programme, string $name): Stay
+    {
+        return (new Stay())
+            ->setName($name)
+            ->setAcademicYear($year)
+            ->setProgramme($programme)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+    }
+
+    /**
+     * @return array{EducationalCentre, Stay, Company}
+     */
+    private function makeStayChain(string $centreCode): array
+    {
+        $centre  = $this->makeCentre($centreCode);
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family  = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay    = $this->makeStay($year, $prog, 'FCT DAM ' . $centreCode);
+        $company = $this->makeCompany('Empresa S.L.', 'B' . substr(md5($centreCode), 0, 8), $centre);
+        $this->persist($centre, $year, $family, $prog, $stay, $company);
+        return [$centre, $stay, $company];
     }
 }

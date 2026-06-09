@@ -6,6 +6,8 @@ namespace App\Tests\Integration\Repository;
 
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\PersonName;
+use App\Entity\Teacher;
 use App\Entity\Workcenter;
 use App\Repository\WorkcenterRepository;
 use App\Tests\Integration\RepositoryTestCase;
@@ -127,6 +129,58 @@ class WorkcenterRepositoryTest extends RepositoryTestCase
         self::assertSame('Sede A', $results[0]->getName());
     }
 
+    // ── findByCentreAndLiaisonOrdered ─────────────────────────────────────────
+
+    public function testFindByCentreAndLiaisonOrderedReturnsOnlyLiaisonWorkcenters(): void
+    {
+        $centre  = $this->makeCentre('41000011');
+        $liaison = $this->makeTeacher('liaison.wc');
+        $company = $this->makeCompany($centre, 'Empresa S.L.');
+        $this->persist($centre, $liaison, $company);
+        $company->addLiaison($liaison);
+        $wc1 = $this->makeWorkcenter($company, 'Zona B');
+        $wc2 = $this->makeWorkcenter($company, 'Almacen');
+        $this->persist($wc1, $wc2);
+        $this->flush();
+
+        $results = $this->repo->findByCentreAndLiaisonOrdered($centre, $liaison);
+
+        self::assertCount(2, $results);
+        self::assertSame('Almacen', $results[0]->getName());
+        self::assertSame('Zona B',  $results[1]->getName());
+    }
+
+    public function testFindByCentreAndLiaisonOrderedExcludesOtherLiaisons(): void
+    {
+        $centre   = $this->makeCentre('41000012');
+        $liaisonA = $this->makeTeacher('liaison.a');
+        $liaisonB = $this->makeTeacher('liaison.b');
+        $company  = $this->makeCompany($centre, 'Empresa S.L.');
+        $this->persist($centre, $liaisonA, $liaisonB, $company);
+        $company->addLiaison($liaisonA);
+        $wc = $this->makeWorkcenter($company, 'Sede A');
+        $this->persist($wc);
+        $this->flush();
+
+        $results = $this->repo->findByCentreAndLiaisonOrdered($centre, $liaisonB);
+
+        self::assertCount(0, $results);
+    }
+
+    public function testFindByCentreAndLiaisonOrderedReturnsEmptyWhenNoWorkcenters(): void
+    {
+        $centre  = $this->makeCentre('41000013');
+        $liaison = $this->makeTeacher('liaison.none');
+        $company = $this->makeCompany($centre, 'Empresa Vacía S.L.');
+        $this->persist($centre, $liaison, $company);
+        $company->addLiaison($liaison);
+        $this->flush();
+
+        $results = $this->repo->findByCentreAndLiaisonOrdered($centre, $liaison);
+
+        self::assertCount(0, $results);
+    }
+
     // ── findByCentreAndId ─────────────────────────────────────────────────────
 
     public function testFindByCentreAndIdReturnsWorkcenter(): void
@@ -178,5 +232,10 @@ class WorkcenterRepositoryTest extends RepositoryTestCase
             ->setName($name)
             ->setCity('Sevilla')
             ->setCompany($company);
+    }
+
+    private function makeTeacher(string $username): Teacher
+    {
+        return (new Teacher(new PersonName('Test', 'Teacher')))->setUsername($username);
     }
 }
