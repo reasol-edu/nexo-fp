@@ -203,6 +203,22 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testShowRendersWithEnrolledStudentWithoutPosition(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        [$level, $group, $student] = $this->makeGroupWithStudent($programme);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $level, $group, $student);
+        $stay->addStudent($student);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122());
+
+        self::assertResponseIsSuccessful();
+    }
+
     public function testShowDeniedToUnrelatedTeacher(): void
     {
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();

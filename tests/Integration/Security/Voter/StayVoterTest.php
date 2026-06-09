@@ -14,6 +14,8 @@ use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
+use App\Entity\Workcenter;
 use App\Security\Voter\StayVoter;
 use App\Tests\Integration\RepositoryTestCase;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -74,7 +76,7 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
-    public function testManageGrantedToLiaison(): void
+    public function testManageDeniedToLiaison(): void
     {
         [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000004');
         $teacher = $this->makeTeacher('liaison.1');
@@ -84,7 +86,7 @@ class StayVoterTest extends RepositoryTestCase
         $this->flush();
 
         self::assertSame(
-            VoterInterface::ACCESS_GRANTED,
+            VoterInterface::ACCESS_DENIED,
             $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE])
         );
     }
@@ -351,17 +353,34 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
-    public function testViewGrantedToLiaison(): void
+    public function testViewGrantedToLiaisonWithPositionInStay(): void
     {
         [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000025');
-        $teacher = $this->makeTeacher('view.liaison');
-        $company = $this->makeCompany($centre, 'Empresa View S.L.');
-        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        $teacher    = $this->makeTeacher('view.liaison');
+        $company    = $this->makeCompany($centre, 'Empresa View S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede View');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position);
         $company->addLiaison($teacher);
         $this->flush();
 
         self::assertSame(
             VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    public function testViewDeniedToLiaisonWithNoPositionInStay(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000028');
+        $teacher = $this->makeTeacher('view.liaison.nopos');
+        $company = $this->makeCompany($centre, 'Empresa Sin Puestos S.L.');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
             $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
         );
     }
@@ -375,6 +394,76 @@ class StayVoterTest extends RepositoryTestCase
         self::assertSame(
             VoterInterface::ACCESS_DENIED,
             $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW])
+        );
+    }
+
+    // ── MANAGE_POSITION ──────────────────────────────────────────────────────
+
+    public function testManagePositionGrantedToLiaisonOfPositionCompany(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000029');
+        $teacher    = $this->makeTeacher('mp.liaison.yes');
+        $company    = $this->makeCompany($centre, 'Empresa MP S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede MP');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position);
+        $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionDeniedToLiaisonOfDifferentCompany(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000030');
+        $teacher    = $this->makeTeacher('mp.liaison.no');
+        $companyA   = $this->makeCompany($centre, 'Empresa A S.L.');
+        $companyB   = $this->makeCompany($centre, 'Empresa B S.L.');
+        $workcenter = $this->makeWorkcenter($companyA, 'Sede A');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $companyA, $companyB, $workcenter, $position);
+        $companyB->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionGrantedToCentreAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000031');
+        $teacher    = $this->makeTeacher('mp.cadmin');
+        $company    = $this->makeCompany($centre, 'Empresa CA S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede CA');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position);
+        $centre->addAdmin($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
+        );
+    }
+
+    public function testManagePositionDeniedToUnrelatedTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000032');
+        $teacher    = $this->makeTeacher('mp.unrelated');
+        $company    = $this->makeCompany($centre, 'Empresa UR S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede UR');
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company, $workcenter, $position);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION])
         );
     }
 
@@ -466,6 +555,20 @@ class StayVoterTest extends RepositoryTestCase
     private function makeGroup(ProgrammeYear $programmeYear, string $name = 'A'): Group
     {
         return (new Group())->setName($name)->setProgrammeYear($programmeYear);
+    }
+
+    private function makeWorkcenter(Company $company, string $name): Workcenter
+    {
+        return (new Workcenter())->setName($name)->setCity('Sevilla')->setCompany($company);
+    }
+
+    private function makePosition(Stay $stay, Workcenter $workcenter): TrainingPosition
+    {
+        return (new TrainingPosition())
+            ->setStay($stay)
+            ->setWorkcenter($workcenter)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2025-06-30'));
     }
 
     private function token(Teacher $teacher): TokenInterface

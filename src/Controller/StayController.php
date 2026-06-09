@@ -529,12 +529,12 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
-
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE_POSITION, $position);
 
         if (!$this->isCsrfTokenValid('delete_position_' . $positionId, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -565,12 +565,12 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
-
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null) {
             throw $this->createNotFoundException();
         }
+
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE_POSITION, $position);
 
         // Workcenters for autocomplete
         $allWorkcenters = $this->workcenters->findByCentreOrdered($centre);

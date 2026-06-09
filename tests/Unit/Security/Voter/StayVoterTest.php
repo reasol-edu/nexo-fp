@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Security\Voter;
 
 use App\Entity\AcademicYear;
+use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\Programme;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
+use App\Entity\Workcenter;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
@@ -49,6 +52,15 @@ class StayVoterTest extends TestCase
         self::assertNotSame(VoterInterface::ACCESS_ABSTAIN, $result);
     }
 
+    public function testSupportsManagePositionWithTrainingPosition(): void
+    {
+        $position = $this->position($this->stay(), $this->company());
+
+        $result = $this->voter->vote($this->token($this->teacher(admin: true)), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertNotSame(VoterInterface::ACCESS_ABSTAIN, $result);
+    }
+
     public function testSupportsCreateWithCentre(): void
     {
         $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->centre(), [StayVoter::CREATE]);
@@ -73,6 +85,13 @@ class StayVoterTest extends TestCase
     public function testAbstainsWhenCreateReceivesStayInsteadOfCentre(): void
     {
         $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->stay(), [StayVoter::CREATE]);
+
+        self::assertSame(VoterInterface::ACCESS_ABSTAIN, $result);
+    }
+
+    public function testAbstainsWhenManagePositionReceivesStay(): void
+    {
+        $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->stay(), [StayVoter::MANAGE_POSITION]);
 
         self::assertSame(VoterInterface::ACCESS_ABSTAIN, $result);
     }
@@ -118,23 +137,35 @@ class StayVoterTest extends TestCase
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->groups->method('isTeacherInProgramme')->willReturn(true);
-        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonPositionInStay');
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    public function testViewGrantedToLiaison(): void
+    public function testViewGrantedToLiaisonWhoHasPositionInStay(): void
     {
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->groups->method('isTeacherInProgramme')->willReturn(false);
-        $this->companies->method('hasLiaisonInCentre')->willReturn(true);
+        $this->companies->method('hasLiaisonPositionInStay')->willReturn(true);
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testViewDeniedToLiaisonWithNoPositionInStay(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+        $this->groups->method('isTeacherInProgramme')->willReturn(false);
+        $this->companies->method('hasLiaisonPositionInStay')->willReturn(false);
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
     public function testViewDeniedToUnrelatedTeacher(): void
@@ -142,7 +173,7 @@ class StayVoterTest extends TestCase
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
         $this->groups->method('isTeacherInProgramme')->willReturn(false);
-        $this->companies->method('hasLiaisonInCentre')->willReturn(false);
+        $this->companies->method('hasLiaisonPositionInStay')->willReturn(false);
 
         $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW]);
 
@@ -168,6 +199,15 @@ class StayVoterTest extends TestCase
     public function testGlobalAdminIsGrantedCreate(): void
     {
         $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->centre(), [StayVoter::CREATE]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testGlobalAdminIsGrantedManagePosition(): void
+    {
+        $position = $this->position($this->stay(), $this->company());
+
+        $result = $this->voter->vote($this->token($this->teacher(admin: true)), $position, [StayVoter::MANAGE_POSITION]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
@@ -198,6 +238,7 @@ class StayVoterTest extends TestCase
 
         $this->programmes->expects($this->never())->method('isCoordinatorOf');
         $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonPositionInStay');
 
         $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
 
@@ -206,56 +247,140 @@ class StayVoterTest extends TestCase
 
     public function testManageGrantedToCoordinator(): void
     {
-        $teacher = $this->teacher();
-        $stay    = $this->stay();
-
         $this->programmes->method('isCoordinatorOf')->willReturn(true);
         $this->families->expects($this->never())->method('isFamilyHeadOfProgramme');
         $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonPositionInStay');
 
-        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::MANAGE]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
     public function testManageGrantedToFamilyHead(): void
     {
-        $teacher = $this->teacher();
-        $stay    = $this->stay();
-
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
         $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+        $this->companies->expects($this->never())->method('hasLiaisonPositionInStay');
 
-        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::MANAGE]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
-    public function testManageGrantedToLiaison(): void
+    public function testManageDeniedToLiaison(): void
     {
-        $teacher = $this->teacher();
-        $stay    = $this->stay();
-
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
-        $this->companies->method('hasLiaisonInCentre')->willReturn(true);
 
-        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::MANAGE]);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
     public function testManageDeniedToUnrelatedTeacher(): void
     {
-        $teacher = $this->teacher();
-        $stay    = $this->stay();
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::MANAGE]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    // ── MANAGE_POSITION: acceso por rol ──────────────────────────────────────
+
+    public function testManagePositionGrantedToCentreAdmin(): void
+    {
+        $teacher  = $this->teacher();
+        $stay     = $this->stay();
+        $stay->getAcademicYear()->getEducationalCentre()->addAdmin($teacher);
+        $position = $this->position($stay, $this->company());
+
+        $this->programmes->expects($this->never())->method('isCoordinatorOf');
+
+        $result = $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testManagePositionGrantedToCoordinator(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(true);
+        $this->families->expects($this->never())->method('isFamilyHeadOfProgramme');
+
+        $position = $this->position($this->stay(), $this->company());
+
+        $result = $this->voter->vote($this->token($this->teacher()), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testManagePositionGrantedToFamilyHead(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
+
+        $position = $this->position($this->stay(), $this->company());
+
+        $result = $this->voter->vote($this->token($this->teacher()), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testManagePositionGrantedToLiaisonOfPositionCompany(): void
+    {
+        $teacher  = $this->teacher();
+        $company  = $this->company($teacher);
+        $position = $this->position($this->stay(), $company);
 
         $this->programmes->method('isCoordinatorOf')->willReturn(false);
         $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
-        $this->companies->method('hasLiaisonInCentre')->willReturn(false);
 
-        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::MANAGE]);
+        $result = $this->voter->vote($this->token($teacher), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testManagePositionDeniedToLiaisonOfDifferentCompany(): void
+    {
+        $liaison  = $this->teacher();
+        $other    = $this->company();           // liaison is NOT in this company
+        $position = $this->position($this->stay(), $other);
+
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+
+        $result = $this->voter->vote($this->token($liaison), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    public function testManagePositionDeniedToViewOnlyTeacher(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+
+        $position = $this->position($this->stay(), $this->company());
+
+        $result = $this->voter->vote($this->token($this->teacher()), $position, [StayVoter::MANAGE_POSITION]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    public function testManagePositionDeniedWhenPositionHasNoWorkcenter(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+
+        $stay     = $this->stay();
+        $position = (new TrainingPosition())
+            ->setStay($stay)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2025-06-30'));
+
+        $result = $this->voter->vote($this->token($this->teacher()), $position, [StayVoter::MANAGE_POSITION]);
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
@@ -277,36 +402,27 @@ class StayVoterTest extends TestCase
 
     public function testCreateGrantedToCoordinator(): void
     {
-        $teacher = $this->teacher();
-        $centre  = $this->centre();
-
         $this->programmes->method('isCoordinatorInCentre')->willReturn(true);
 
-        $result = $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->centre(), [StayVoter::CREATE]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
     }
 
     public function testCreateDeniedToLiaison(): void
     {
-        $teacher = $this->teacher();
-        $centre  = $this->centre();
-
         $this->programmes->method('isCoordinatorInCentre')->willReturn(false);
 
-        $result = $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->centre(), [StayVoter::CREATE]);
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
     public function testCreateDeniedToUnrelatedTeacher(): void
     {
-        $teacher = $this->teacher();
-        $centre  = $this->centre();
-
         $this->programmes->method('isCoordinatorInCentre')->willReturn(false);
 
-        $result = $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE]);
+        $result = $this->voter->vote($this->token($this->teacher()), $this->centre(), [StayVoter::CREATE]);
 
         self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
@@ -342,6 +458,31 @@ class StayVoterTest extends TestCase
              ->setEndDate(new \DateTimeImmutable('2025-06-30'));
 
         return $stay;
+    }
+
+    private function company(Teacher ...$liaisons): Company
+    {
+        $company = (new Company())
+            ->setName('Empresa Test SL')
+            ->setVatNumber('B12345678');
+        foreach ($liaisons as $liaison) {
+            $company->addLiaison($liaison);
+        }
+
+        return $company;
+    }
+
+    private function position(Stay $stay, Company $company): TrainingPosition
+    {
+        $workcenter = (new Workcenter())
+            ->setName('Sede Test')
+            ->setCompany($company);
+
+        return (new TrainingPosition())
+            ->setStay($stay)
+            ->setWorkcenter($workcenter)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2025-06-30'));
     }
 
     private function token(mixed $user): TokenInterface

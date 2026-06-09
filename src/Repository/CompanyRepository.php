@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\Stay;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -79,6 +80,22 @@ class CompanyRepository extends ServiceEntityRepository
             ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
+    public function hasLiaisonPositionInStay(Teacher $teacher, Stay $stay): bool
+    {
+        return (int) $this->getEntityManager()
+            ->createQuery('
+                SELECT COUNT(tp.id)
+                FROM App\Entity\TrainingPosition tp
+                JOIN tp.workcenter wc
+                JOIN wc.company c
+                JOIN c.liaisons l
+                WHERE l.id = :teacherId AND tp.stay = :stay
+            ')
+            ->setParameter('teacherId', $teacher->getId(), 'uuid')
+            ->setParameter('stay', $stay->getId(), 'uuid')
             ->getSingleScalarResult() > 0;
     }
 }

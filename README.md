@@ -232,16 +232,20 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 
 ¹ Familias profesionales, enseñanzas, niveles y grupos.
 
+> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos de sus empresas asignadas, y gestionar (editar, asignar tutores/mentor, eliminar) únicamente esos puestos. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
+>
+> **Nota sobre el docente base (D):** puede ver las estancias de las enseñanzas en las que está asignado a algún grupo (como tutor o docente). Si no tiene ningún grupo asignado, no accede a ninguna estancia.
+
 ### Estancias
 
 | Acción | ADM | ED | JFP | CFD | DE | TG | D |
 |--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | Sus enseñanzas | ❌ |
+| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
 | Crear estancia | ✅ | ✅ | ❌ | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
-| Gestionar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
-| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
-| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | Sus enseñanzas | ❌ |
+| Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Gestionar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
+| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
 
 ### Empresas
 
@@ -254,6 +258,7 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 | Eliminar empresa | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ² Incluye centros de trabajo, empleados y docentes de enlace asignados.
+³ Solo estancias/puestos donde intervienen sus empresas asignadas.
 
 ### Administración global
 

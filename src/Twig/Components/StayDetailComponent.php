@@ -56,6 +56,13 @@ class StayDetailComponent extends AbstractController
         $canManage    = $this->isGranted(StayVoter::MANAGE, $stay);
         $allPositions = $this->positions->findByStayOrdered($stay);
 
+        $manageablePositionIds = [];
+        foreach ($allPositions as $tp) {
+            if ($canManage || $this->isGranted(StayVoter::MANAGE_POSITION, $tp)) {
+                $manageablePositionIds[$tp->getId()->toRfc4122()] = true;
+            }
+        }
+
         $studentPositionMap  = [];
         $unassignedPositions = [];
         foreach ($allPositions as $tp) {
@@ -161,6 +168,7 @@ class StayDetailComponent extends AbstractController
         $this->cache = [
             'stay'                             => $stay,
             'can_manage'                       => $canManage,
+            'manageable_position_ids'          => $manageablePositionIds,
             'by_group'                         => $byGroup,
             'ungrouped_students'               => $ungroupedStudents,
             'student_position_map'             => $studentPositionMap,
@@ -182,7 +190,7 @@ class StayDetailComponent extends AbstractController
     public function assignPosition(#[LiveArg] string $studentId, #[LiveArg] string $positionId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+        if ($stay === null) {
             throw new AccessDeniedException();
         }
 
@@ -202,6 +210,10 @@ class StayDetailComponent extends AbstractController
             return;
         }
 
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
+        }
+
         $position->setStudent($student);
         $this->em->flush();
     }
@@ -210,7 +222,7 @@ class StayDetailComponent extends AbstractController
     public function unassignPosition(#[LiveArg] string $positionId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+        if ($stay === null) {
             throw new AccessDeniedException();
         }
 
@@ -222,6 +234,10 @@ class StayDetailComponent extends AbstractController
             return;
         }
 
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
+        }
+
         $position->setStudent(null);
         $this->em->flush();
     }
@@ -230,13 +246,17 @@ class StayDetailComponent extends AbstractController
     public function setAcademicTutor(#[LiveArg] string $positionId, #[LiveArg] string $teacherId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+        if ($stay === null) {
             throw new AccessDeniedException();
         }
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() === null) {
             return;
+        }
+
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
         }
 
         $teacher = $this->teachers->findById($teacherId);
@@ -252,13 +272,17 @@ class StayDetailComponent extends AbstractController
     public function setWorkplaceMentor(#[LiveArg] string $positionId, #[LiveArg] string $workerId): void
     {
         $stay = $this->stays->findById($this->stayId);
-        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+        if ($stay === null) {
             throw new AccessDeniedException();
         }
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() === null || $position->getWorkcenter() === null) {
             return;
+        }
+
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
         }
 
         $mentor = null;
