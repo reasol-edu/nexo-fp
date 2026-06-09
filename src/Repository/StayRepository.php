@@ -14,6 +14,7 @@ use App\Entity\Teacher;
 use App\Entity\TrainingPositionState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Clock\ClockInterface;
 
@@ -96,19 +97,7 @@ class StayRepository extends ServiceEntityRepository
             $qb->andWhere($orConditions);
         }
 
-        if ($viewer !== null && !$viewer->isAdmin()) {
-            $qb
-                ->join('s.academicYear', 'vay')
-                ->join('vay.educationalCentre', 'vc');
-
-            $qb->andWhere($qb->expr()->orX(
-                'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vc AND vcea.id = :vViewer)',
-                'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = p AND vcrd.id = :vViewer)',
-                'f.head = :vViewer',
-                'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = p AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))',
-                'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
-            ))->setParameter('vViewer', $viewer->getId(), 'uuid');
-        }
+        $this->addViewerFilter($qb, $viewer);
 
         return $qb->getQuery();
     }
@@ -157,12 +146,11 @@ class StayRepository extends ServiceEntityRepository
      *     state_draft: int, state_pending: int, state_done: int, companies: int
      * }
      */
-    public function findDashboardStats(AcademicYear $year): array
+    public function findDashboardStats(AcademicYear $year, ?Teacher $viewer = null): array
     {
         $today = $this->clock->now()->setTime(0, 0, 0);
 
-        /** @var array{total_stays: string, current_stays: string, future_stays: string, past_stays: string} $stayRow */
-        $stayRow = $this->createQueryBuilder('s')
+        $stayQb = $this->createQueryBuilder('s')
             ->select(
                 'COUNT(s.id) AS total_stays',
                 'SUM(CASE WHEN (s.startDate IS NULL OR s.startDate <= :today) AND (s.endDate IS NULL OR s.endDate >= :today) THEN 1 ELSE 0 END) AS current_stays',
@@ -171,14 +159,15 @@ class StayRepository extends ServiceEntityRepository
             )
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
-            ->setParameter('today', $today)
-            ->getQuery()
-            ->getSingleResult();
+            ->setParameter('today', $today);
+        $this->addViewerFilter($stayQb, $viewer);
+
+        /** @var array{total_stays: string, current_stays: string, future_stays: string, past_stays: string} $stayRow */
+        $stayRow = $stayQb->getQuery()->getSingleResult();
 
         $em = $this->getEntityManager();
 
-        /** @var array{total_positions: string, occupied: string, signed: string, state_draft: string, state_pending: string, state_done: string, companies: string} $posRow */
-        $posRow = $em->createQueryBuilder()
+        $posQb = $em->createQueryBuilder()
             ->select(
                 'COUNT(tp.id) AS total_positions',
                 'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
@@ -196,9 +185,11 @@ class StayRepository extends ServiceEntityRepository
             ->setParameter('btrue', true)
             ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
             ->setParameter('s_pending', TrainingPositionState::PENDING->value)
-            ->setParameter('s_done', TrainingPositionState::DONE->value)
-            ->getQuery()
-            ->getSingleResult();
+            ->setParameter('s_done', TrainingPositionState::DONE->value);
+        $this->addViewerFilter($posQb, $viewer);
+
+        /** @var array{total_positions: string, occupied: string, signed: string, state_draft: string, state_pending: string, state_done: string, companies: string} $posRow */
+        $posRow = $posQb->getQuery()->getSingleResult();
 
         $total = (int) $posRow['total_positions'];
         $occupied = (int) $posRow['occupied'];
@@ -224,11 +215,11 @@ class StayRepository extends ServiceEntityRepository
      *
      * @return Stay[]
      */
-    public function findActiveAndUpcoming(AcademicYear $year, int $limit = 6): array
+    public function findActiveAndUpcoming(AcademicYear $year, ?Teacher $viewer = null, int $limit = 6): array
     {
         $today = $this->clock->now()->setTime(0, 0, 0);
 
-        return $this->createQueryBuilder('s')
+        $qb = $this->createQueryBuilder('s')
             ->join('s.programme', 'p')->addSelect('p')
             ->join('p.professionalFamily', 'f')->addSelect('f')
             ->where('s.academicYear = :year')
@@ -236,9 +227,11 @@ class StayRepository extends ServiceEntityRepository
             ->setParameter('year', $year->getId(), 'uuid')
             ->setParameter('today', $today)
             ->orderBy('s.startDate', 'ASC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+            ->setMaxResults($limit);
+
+        $this->addViewerFilter($qb, $viewer);
+
+        return $qb->getQuery()->getResult();
     }
 
     /**
@@ -352,5 +345,25 @@ class StayRepository extends ServiceEntityRepository
         }
 
         return $stats;
+    }
+
+    private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer): void
+    {
+        if ($viewer === null || $viewer->isAdmin()) {
+            return;
+        }
+
+        $qb->join('s.programme', 'vvp')
+           ->join('vvp.professionalFamily', 'vvf')
+           ->join('s.academicYear', 'vvay')
+           ->join('vvay.educationalCentre', 'vvc');
+
+        $qb->andWhere($qb->expr()->orX(
+            'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vvc AND vcea.id = :vViewer)',
+            'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)',
+            'vvf.head = :vViewer',
+            'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))',
+            'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
+        ))->setParameter('vViewer', $viewer->getId(), 'uuid');
     }
 }

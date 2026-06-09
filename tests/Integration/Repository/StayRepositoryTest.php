@@ -7,9 +7,11 @@ namespace App\Tests\Integration\Repository;
 use App\Entity\AcademicYear;
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
@@ -301,6 +303,113 @@ class StayRepositoryTest extends RepositoryTestCase
         self::assertSame(1, $stats[$id]['state_pending']);
         self::assertSame(1, $stats[$id]['state_draft']);
         self::assertSame(1, $stats[$id]['companies']);
+    }
+
+    // ── findDashboardStats: filtrado por viewer ───────────────────────────────
+
+    public function testFindDashboardStatsWithNullViewerReturnsAllStays(): void
+    {
+        [$year, $prog] = $this->makeChain('41000030');
+        $fam  = $prog->getProfessionalFamily();
+        $stay2 = $this->makeStay($year, $prog, 'FCT DAM B');
+        $this->persist($stay2);
+
+        $stats = $this->repo->findDashboardStats($year, null);
+
+        self::assertSame(2, $stats['total_stays']);
+    }
+
+    public function testFindDashboardStatsWithAdminViewerReturnsAllStays(): void
+    {
+        [$year, $prog] = $this->makeChain('41000031');
+        $stay2  = $this->makeStay($year, $prog, 'FCT DAM B');
+        $admin  = (new Teacher(new PersonName('Admin', 'Global')))->setUsername('admin.dash.1')->setAdmin(true);
+        $this->persist($stay2, $admin);
+
+        $stats = $this->repo->findDashboardStats($year, $admin);
+
+        self::assertSame(2, $stats['total_stays']);
+    }
+
+    public function testFindDashboardStatsFiltersStaysByGroupTutor(): void
+    {
+        [$year, $progA, $stayA] = $this->makeChain('41000032');
+        $fam   = $progA->getProfessionalFamily();
+        $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.1');
+        $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
+        $this->persist($progB, $stayB, $tutor, $level, $group);
+
+        $stats = $this->repo->findDashboardStats($year, $tutor);
+
+        self::assertSame(1, $stats['total_stays']);
+    }
+
+    public function testFindDashboardStatsFiltersPositionsByGroupTutor(): void
+    {
+        [$year, $progA, $stayA] = $this->makeChain('41000033');
+        $centre = $progA->getAcademicYear()->getEducationalCentre();
+        $fam    = $progA->getProfessionalFamily();
+        $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $tutor  = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.2');
+        $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
+        $company    = $this->makeCompany($centre, 'Empresa Dash S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Oficina');
+        $posA1 = (new TrainingPosition())->setStay($stayA)->setWorkcenter($workcenter);
+        $posA2 = (new TrainingPosition())->setStay($stayA)->setWorkcenter($workcenter);
+        $posB1 = (new TrainingPosition())->setStay($stayB)->setWorkcenter($workcenter);
+        $this->persist($progB, $stayB, $tutor, $level, $group, $company, $workcenter, $posA1, $posA2, $posB1);
+
+        $stats = $this->repo->findDashboardStats($year, $tutor);
+
+        self::assertSame(1, $stats['total_stays']);
+        self::assertSame(2, $stats['total_positions']);
+    }
+
+    public function testFindDashboardStatsReturnsZerosForUnrelatedTeacher(): void
+    {
+        [$year] = $this->makeChain('41000034');
+        $outsider = (new Teacher(new PersonName('Out', 'Sider')))->setUsername('outsider.dash.1');
+        $this->persist($outsider);
+
+        $stats = $this->repo->findDashboardStats($year, $outsider);
+
+        self::assertSame(0, $stats['total_stays']);
+        self::assertSame(0, $stats['total_positions']);
+    }
+
+    // ── findActiveAndUpcoming: filtrado por viewer ────────────────────────────
+
+    public function testFindActiveAndUpcomingWithNullViewerReturnsAll(): void
+    {
+        [$year, $prog] = $this->makeChain('41000035');
+        $stay2 = $this->makeStay($year, $prog, 'FCT DAM B');
+        $this->persist($stay2);
+
+        $results = $this->repo->findActiveAndUpcoming($year, null);
+
+        self::assertCount(2, $results);
+    }
+
+    public function testFindActiveAndUpcomingFiltersForGroupTutor(): void
+    {
+        [$year, $progA] = $this->makeChain('41000036');
+        $fam   = $progA->getProfessionalFamily();
+        $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.upcoming.1');
+        $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
+        $this->persist($progB, $stayB, $tutor, $level, $group);
+
+        $results = $this->repo->findActiveAndUpcoming($year, $tutor);
+
+        self::assertCount(1, $results);
+        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

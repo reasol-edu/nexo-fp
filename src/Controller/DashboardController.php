@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Teacher;
 use App\Repository\StayRepository;
 use App\Repository\StudentRepository;
 use App\Service\TenantContext;
@@ -35,10 +36,13 @@ class DashboardController extends AbstractController
             ]);
         }
 
+        $user   = $this->getUser();
+        $viewer = $user instanceof Teacher ? $user : null;
+
         return $this->render('dashboard/index.html.twig', [
-            'stats'         => $this->stayRepository->findDashboardStats($year),
+            'stats'         => $this->stayRepository->findDashboardStats($year, $viewer),
             'studentCount'  => $this->studentRepository->countByActiveYear($centre),
-            'upcomingStays' => $this->stayRepository->findActiveAndUpcoming($year),
+            'upcomingStays' => $this->stayRepository->findActiveAndUpcoming($year, $viewer),
         ]);
     }
 }
