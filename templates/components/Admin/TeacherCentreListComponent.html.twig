@@ -85,11 +85,11 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ path('app_admin_teachers_edit', {id: teacher.id}) }}"
+                                    <a href="{{ path('app_admin_centre_teachers_edit', {centreId: centre.id, teacherId: teacher.id}) }}"
                                        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
                                               text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                        {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                        {{ 'teachers.edit'|trans({}, 'admin') }}
+                                        {{ ux_icon('heroicons:user-group', {class: 'h-3.5 w-3.5'}) }}
+                                        {{ 'centre_teachers.action.edit_groups'|trans({}, 'admin') }}
                                     </a>
                                     <form method="post"
                                           action="{{ path('app_admin_centre_teachers_remove', {centreId: centre.id, teacherId: teacher.id}) }}"

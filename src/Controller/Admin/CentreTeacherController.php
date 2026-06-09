@@ -360,6 +360,61 @@ class CentreTeacherController extends AbstractController
         ]);
     }
 
+    #[Route('/{teacherId}/editar', name: 'app_admin_centre_teachers_edit')]
+    public function edit(string $centreId, string $teacherId, Request $request): Response
+    {
+        $centre  = $this->requireCentreWithActiveYear($centreId);
+        $teacher = $this->teachers->findById($teacherId);
+
+        if ($teacher === null || !$centre->getActiveAcademicYear()->getTeachers()->contains($teacher)) {
+            throw $this->createNotFoundException();
+        }
+
+        $allGroups      = $this->groups->findByActiveYearOfCentreWithProgramme($centre);
+        $currentGroupIds = [];
+        foreach ($allGroups as $group) {
+            if ($group->getTeachers()->contains($teacher)) {
+                $currentGroupIds[] = $group->getId()->toRfc4122();
+            }
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('edit_centre_teacher_groups_' . $teacherId, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $submittedIds = $request->request->all('group_ids');
+            $submittedIds = array_filter(array_map('strval', $submittedIds));
+
+            foreach ($allGroups as $group) {
+                $id       = $group->getId()->toRfc4122();
+                $isIn     = $group->getTeachers()->contains($teacher);
+                $selected = in_array($id, $submittedIds, true);
+
+                if ($selected && !$isIn) {
+                    $group->addTeacher($teacher);
+                } elseif (!$selected && $isIn) {
+                    $group->removeTeacher($teacher);
+                }
+            }
+
+            $this->em->flush();
+            $this->addFlash('success', $this->t('centre_teachers.flash.groups_updated'));
+
+            return $this->redirectToRoute('app_admin_centre_teachers_edit', [
+                'centreId'  => $centre->getId(),
+                'teacherId' => $teacherId,
+            ]);
+        }
+
+        return $this->render('admin/centre_teacher/edit.html.twig', [
+            'centre'          => $centre,
+            'teacher'         => $teacher,
+            'all_groups'      => $allGroups,
+            'current_group_ids' => $currentGroupIds,
+        ]);
+    }
+
     #[Route('/{teacherId}/quitar', name: 'app_admin_centre_teachers_remove', methods: ['POST'])]
     public function remove(string $centreId, string $teacherId, Request $request): Response
     {

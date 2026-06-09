@@ -145,6 +145,15 @@
 .ts-wc-item .ts-wc-sep          { color: #d1d5db; margin: 0 0.3rem; font-size: 0.875rem; }
 .ts-wc-item .ts-wc-sub          { font-size: 0.8125rem; color: #9ca3af; }
 
+/* Selector de grupos (edición de docente en centro) */
+.ts-group-option                        { padding: 0.125rem 0; line-height: 1.35; }
+.ts-group-option .ts-group-programme    { font-size: 0.8125rem; font-weight: 500; color: #111827; }
+.ts-group-option .ts-group-level        { font-size: 0.75rem; font-weight: 400; color: #9ca3af; }
+.ts-group-option .ts-group-name         { font-size: 0.75rem; color: #6b7280; margin-top: 0.1rem; }
+.ts-group-item                          { display: flex; align-items: baseline; gap: 0; line-height: 1.4; }
+.ts-group-item .ts-group-item-programme { font-weight: 500; color: inherit; font-size: 0.8125rem; }
+.ts-group-item .ts-sep                  { color: #d1d5db; margin: 0 0.3rem; font-size: 0.8125rem; }
+
 /* Asignación rápida de puesto: opción con empresa / centro / observaciones */
 .ts-pos-option                  { padding: 0.125rem 0; line-height: 1.35; }
 .ts-pos-option .ts-pos-company  { font-size: 0.8125rem; font-weight: 500; color: #111827; }

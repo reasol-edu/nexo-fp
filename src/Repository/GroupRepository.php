@@ -97,4 +97,29 @@ class GroupRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Returns groups for the centre's active year with programme and level data eagerly loaded,
+     * sorted by programme family → programme → level → group name.
+     *
+     * @return Group[]
+     */
+    public function findByActiveYearOfCentreWithProgramme(EducationalCentre $centre): array
+    {
+        if ($centre->getActiveAcademicYear() === null) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('g')
+            ->join('g.programmeYear', 'py')->addSelect('py')
+            ->join('py.programme', 'prog')->addSelect('prog')
+            ->join('prog.professionalFamily', 'f')
+            ->where('f.academicYear = :year')
+            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->orderBy('prog.name', 'ASC')
+            ->addOrderBy('py.name', 'ASC')
+            ->addOrderBy('g.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
