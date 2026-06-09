@@ -133,8 +133,9 @@ enseñanzas de las que es coordinador/a.
 
 Docente asignado/a a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
 editar los datos de aquellas empresas de las que es enlace: centros de trabajo, empleados y
-docentes de enlace. Además, puede ver y gestionar todas las estancias del centro,
-independientemente de la enseñanza a la que pertenezcan.
+docentes de enlace. Además, puede ver las estancias que tienen puestos formativos en sus empresas
+asignadas, añadir nuevos puestos de sus empresas a esas estancias, y editar o eliminar únicamente
+los puestos de sus empresas que no tengan estudiante asignado.
 
 ### Jefe/a de departamento de familia profesional
 
@@ -232,21 +233,21 @@ La siguiente tabla resume qué puede hacer cada perfil en cada sección de la ap
 
 ¹ Familias profesionales, enseñanzas, niveles y grupos.
 
-> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos de sus empresas asignadas, añadir nuevos puestos de sus empresas a esas estancias, y editar o eliminar únicamente los puestos de sus empresas **que no tengan estudiante asignado**. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
+> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos en sus empresas asignadas, añadir nuevos puestos desde sus empresas a esas estancias, y editar o eliminar únicamente los puestos de sus empresas **que no tengan estudiante asignado**. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
 >
-> **Nota sobre el docente base (D):** puede ver las estancias de las enseñanzas en las que está asignado a algún grupo (como tutor o docente). Si no tiene ningún grupo asignado, no accede a ninguna estancia.
+> **Nota sobre el docente base (D):** un docente sin ningún rol específico en el centro (no es tutor/a ni docente de ningún grupo, ni enlace de ninguna empresa, ni jefe/a de familia profesional, ni coordinador/a) no tiene acceso a estancias, empresas ni al área de Centro Educativo.
 
 ### Estancias
 
 | Acción | ADM | ED | JFP | CFD | DE | TG | D |
 |--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
+| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 | Crear estancia | ✅ | ✅ | ❌ | Sus enseñanzas | ❌ | ❌ | ❌ |
 | Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
+| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
 | Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
 | Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | Sus enseñanzas |
+| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 
 ### Empresas
 
