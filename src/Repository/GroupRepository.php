@@ -99,6 +99,58 @@ class GroupRepository extends ServiceEntityRepository
     }
 
     /**
+     * Returns student and teacher counts for every group in the given academic year,
+     * keyed by group UUID (RFC4122). Single query; avoids N+1 per group.
+     *
+     * @param  Group[] $groups  All groups in the year (used to normalise binary UUIDs from getScalarResult)
+     * @return array<string, array{students: int, teachers: int}>
+     */
+    public function findCountsByAcademicYear(\App\Entity\AcademicYear $year, array $groups): array
+    {
+        if ($groups === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->createQuery('
+                SELECT g.id AS gid,
+                       COUNT(DISTINCT s.id) AS students,
+                       COUNT(DISTINCT t.id) AS teachers
+                FROM App\Entity\Group g
+                JOIN g.programmeYear py
+                JOIN py.programme prog
+                JOIN prog.professionalFamily f
+                LEFT JOIN g.students s
+                LEFT JOIN g.teachers t
+                WHERE f.academicYear = :year
+                GROUP BY g.id
+            ')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->getScalarResult();
+
+        // getScalarResult() returns UUIDs in binary form on MySQL.
+        // Build a lookup map so either representation normalises to RFC4122.
+        $uuidNorm = [];
+        foreach ($groups as $group) {
+            $rfc = $group->getId()->toRfc4122();
+            $uuidNorm[$rfc]                        = $rfc;
+            $uuidNorm[$group->getId()->toBinary()]  = $rfc;
+        }
+        $normalize = static fn (mixed $raw): string =>
+            $uuidNorm[(string) $raw] ?? (string) $raw;
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$normalize($row['gid'])] = [
+                'students' => (int) $row['students'],
+                'teachers' => (int) $row['teachers'],
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
      * Returns groups for the centre's active year with programme and level data eagerly loaded,
      * sorted by programme family → programme → level → group name.
      *

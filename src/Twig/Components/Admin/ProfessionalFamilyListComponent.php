@@ -44,30 +44,39 @@ class ProfessionalFamilyListComponent extends AbstractController
     }
 
     /**
-     * @return list<array{
-     *   family: ProfessionalFamily,
-     *   programmes: list<array{
-     *     programme: Programme,
-     *     levels: list<array{level: ProgrammeYear, groups: list<Group>}>
-     *   }>
-     * }>
+     * @return array{
+     *   tree: list<array{
+     *     family: ProfessionalFamily,
+     *     programmes: list<array{
+     *       programme: Programme,
+     *       levels: list<array{level: ProgrammeYear, groups: list<Group>}>
+     *     }>
+     *   }>,
+     *   counts: array<string, array{students: int, teachers: int}>
+     * }
      */
     public function getTree(): array
     {
         $year = $this->centre->getActiveAcademicYear();
         if ($year === null) {
-            return [];
+            return ['tree' => [], 'counts' => []];
         }
 
-        $tree = [];
+        $allGroups = [];
+        $tree      = [];
+
         foreach ($this->families->findByAcademicYearFiltered($year, trim($this->search)) as $family) {
             $familyNode = ['family' => $family, 'programmes' => []];
             foreach ($this->programmes->findByFamilyOrderedByName($family) as $programme) {
                 $programmeNode = ['programme' => $programme, 'levels' => []];
                 foreach ($this->levels->findByProgrammeOrderedByName($programme) as $level) {
+                    $groups = $this->groups->findByLevelOrderedByName($level);
+                    foreach ($groups as $g) {
+                        $allGroups[] = $g;
+                    }
                     $programmeNode['levels'][] = [
                         'level'  => $level,
-                        'groups' => $this->groups->findByLevelOrderedByName($level),
+                        'groups' => $groups,
                     ];
                 }
                 $familyNode['programmes'][] = $programmeNode;
@@ -75,6 +84,9 @@ class ProfessionalFamilyListComponent extends AbstractController
             $tree[] = $familyNode;
         }
 
-        return $tree;
+        return [
+            'tree'   => $tree,
+            'counts' => $this->groups->findCountsByAcademicYear($year, $allGroups),
+        ];
     }
 }

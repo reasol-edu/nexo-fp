@@ -5,7 +5,9 @@
             <p class="text-sm text-gray-500">{{ 'families.no_active_year'|trans({}, 'admin') }}</p>
         </div>
     {% else %}
-        {% set tree = this.tree %}
+        {% set result = this.tree %}
+        {% set tree   = result.tree %}
+        {% set counts = result.counts %}
 
         {# Barra de búsqueda #}
         <div class="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
@@ -186,6 +188,7 @@
                                                         {% else %}
                                                             <ul class="border-t border-gray-100/60 divide-y divide-gray-50 bg-gray-50/20">
                                                                 {% for group in level_node.groups %}
+                                                                    {% set gc = counts[group.id.toRfc4122] ?? {students: 0, teachers: 0} %}
                                                                     <li class="flex items-center gap-3 pl-32 pr-6 py-2 hover:bg-gray-50/60 transition-colors">
                                                                         <span class="shrink-0 h-1.5 w-1.5 rounded-full bg-gray-300"></span>
                                                                         <span class="text-xs font-medium text-gray-700 flex-1 min-w-0 truncate">
@@ -196,6 +199,20 @@
                                                                                 {{ group.tutor.name.lastName }}, {{ group.tutor.name.firstName }}
                                                                             </span>
                                                                         {% endif %}
+                                                                        <span class="shrink-0 inline-flex items-center gap-1">
+                                                                            <span title="{{ 'groups.col.students'|trans({}, 'admin') }}"
+                                                                                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
+                                                                                         {{ gc.students > 0 ? 'bg-sky-50 text-sky-700' : 'bg-gray-100 text-gray-400' }}">
+                                                                                {{ ux_icon('heroicons:users', {class: 'h-3 w-3'}) }}
+                                                                                {{ gc.students }}
+                                                                            </span>
+                                                                            <span title="{{ 'groups.col.teachers'|trans({}, 'admin') }}"
+                                                                                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
+                                                                                         {{ gc.teachers > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-100 text-gray-400' }}">
+                                                                                {{ ux_icon('heroicons:academic-cap', {class: 'h-3 w-3'}) }}
+                                                                                {{ gc.teachers }}
+                                                                            </span>
+                                                                        </span>
                                                                         <div class="shrink-0 flex items-center gap-1.5 ml-2">
                                                                             <a href="{{ path('app_admin_groups_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
                                                                                class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1
