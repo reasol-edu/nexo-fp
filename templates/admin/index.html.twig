@@ -34,13 +34,14 @@
                     <span class="text-lg font-semibold text-plum-600">{{ stats.teachers_admin }}</span>
                 </div>
             </div>
-            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
-                <a href="{{ path('app_admin_teachers_index') }}"
-                   class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 hover:text-plum-800 transition-colors">
+            <a href="{{ path('app_admin_teachers_index') }}"
+               class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end
+                      hover:bg-gray-100 transition-colors">
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 group-hover:text-plum-800 transition-colors">
                     {{ 'card.teachers.action'|trans({}, 'admin') }}
                     {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
-                </a>
-            </div>
+                </span>
+            </a>
         </div>
 
         {# ── Card: Centros educativos ─────────────────────────────────────────── #}
@@ -57,13 +58,14 @@
                     <span class="text-2xl font-bold text-gray-900">{{ stats.centres_total }}</span>
                 </div>
             </div>
-            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
-                <a href="{{ path('app_admin_centres_index') }}"
-                   class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 hover:text-plum-800 transition-colors">
+            <a href="{{ path('app_admin_centres_index') }}"
+               class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end
+                      hover:bg-gray-100 transition-colors">
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 group-hover:text-plum-800 transition-colors">
                     {{ 'card.centres.action'|trans({}, 'admin') }}
                     {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
-                </a>
-            </div>
+                </span>
+            </a>
         </div>
 
     </div>
