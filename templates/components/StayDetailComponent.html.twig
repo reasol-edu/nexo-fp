@@ -770,7 +770,7 @@ function initAssignForm(form) {
     new TomSelect(dropdown, {
         options: opts, items: [], valueField: 'value', labelField: 'text',
         searchField: ['search'], allowEmptyOption: false, create: false, maxOptions: null,
-        placeholder: ph, wrapperClass: 'ts-wrapper ts-local',
+        placeholder: ph, wrapperClass: 'ts-wrapper ts-local', dropdownParent: 'body',
         render: {
             option: function (d, esc) {
                 if (!d.value) return '<div class="py-0.5 text-gray-400 italic">' + esc(d.text) + '</div>';
@@ -818,7 +818,7 @@ function initInlineForm(form) {
     new TomSelect(dropdown, {
         options: opts, items: [], valueField: 'value', labelField: 'text',
         searchField: ['text'], allowEmptyOption: false, create: false, maxOptions: null,
-        placeholder: ph, wrapperClass: 'ts-wrapper ts-local',
+        placeholder: ph, wrapperClass: 'ts-wrapper ts-local', dropdownParent: 'body',
         onChange: function (value) {
             if (!value || !liveComp) return;
             const params = { positionId };
