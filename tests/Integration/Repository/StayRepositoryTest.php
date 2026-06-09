@@ -7,9 +7,11 @@ namespace App\Tests\Integration\Repository;
 use App\Entity\AcademicYear;
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\Stay;
+use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
@@ -154,6 +156,91 @@ class StayRepositoryTest extends RepositoryTestCase
         // The first stay from makeChain starts 2026-03-01 and ends 2026-06-30;
         // today is 2026-06-05 so it is still current
         self::assertCount(1, $results);
+    }
+
+    // ── createByCentreFilteredQuery: filtrado por rol de viewer ──────────────
+
+    public function testLiaisonSeesOnlyStaysWhereCompanyHasPositions(): void
+    {
+        [$year, $prog] = $this->makeChain('41000020');
+        $centre = $prog->getAcademicYear()->getEducationalCentre();
+
+        $stayWith    = $this->makeStay($year, $prog, 'FCT Con Puestos');
+        $stayWithout = $this->makeStay($year, $prog, 'FCT Sin Puestos');
+        $company     = $this->makeCompany($centre, 'Empresa Enlace S.L.');
+        $workcenter  = $this->makeWorkcenter($company, 'Sede');
+        $position    = (new TrainingPosition())->setStay($stayWith)->setWorkcenter($workcenter)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $liaison = (new Teacher(new PersonName('Ana', 'Enlace')))->setUsername('liaison.filter.1');
+
+        $this->persist($stayWith, $stayWithout, $company, $workcenter, $position, $liaison);
+        $company->addLiaison($liaison);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $liaison)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($stayWith->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testLiaisonSeesNoStaysWhenCompanyHasNoPositionsAnywhere(): void
+    {
+        [$year, $prog] = $this->makeChain('41000021');
+        $centre = $prog->getAcademicYear()->getEducationalCentre();
+
+        $company = $this->makeCompany($centre, 'Empresa Sin Puestos S.L.');
+        $liaison = (new Teacher(new PersonName('Pedro', 'Enlace')))->setUsername('liaison.filter.2');
+
+        $this->persist($company, $liaison);
+        $company->addLiaison($liaison);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $liaison)->getResult();
+
+        self::assertCount(0, $results);
+    }
+
+    public function testLiaisonSeesStaysFromMultipleStaysWhereCompanyHasPositions(): void
+    {
+        [$year, $prog] = $this->makeChain('41000022');
+        $centre = $prog->getAcademicYear()->getEducationalCentre();
+
+        $stayA      = $this->makeStay($year, $prog, 'FCT A');
+        $stayB      = $this->makeStay($year, $prog, 'FCT B');
+        $stayC      = $this->makeStay($year, $prog, 'FCT C Sin Puestos');
+        $company    = $this->makeCompany($centre, 'Empresa Multi S.L.');
+        $workcenter = $this->makeWorkcenter($company, 'Sede Multi');
+        $posA       = (new TrainingPosition())->setStay($stayA)->setWorkcenter($workcenter)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $posB       = (new TrainingPosition())->setStay($stayB)->setWorkcenter($workcenter)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $liaison    = (new Teacher(new PersonName('Maria', 'Enlace')))->setUsername('liaison.filter.3');
+
+        $this->persist($stayA, $stayB, $stayC, $company, $workcenter, $posA, $posB, $liaison);
+        $company->addLiaison($liaison);
+        $this->flush();
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $liaison)->getResult();
+
+        self::assertCount(2, $results);
+        $ids = array_map(fn ($s) => $s->getId()->toRfc4122(), $results);
+        self::assertContains($stayA->getId()->toRfc4122(), $ids);
+        self::assertContains($stayB->getId()->toRfc4122(), $ids);
+    }
+
+    public function testNonLiaisonTeacherSeesNoStaysWithoutRoleInProgramme(): void
+    {
+        [$year, $prog] = $this->makeChain('41000023');
+
+        $teacher = (new Teacher(new PersonName('Carlos', 'Sin Rol')))->setUsername('teacher.norole');
+        $this->persist($teacher);
+
+        $results = $this->repo->createByCentreFilteredQuery($year, viewer: $teacher)->getResult();
+
+        self::assertCount(0, $results);
     }
 
     // ── findStatsForStays ─────────────────────────────────────────────────────
