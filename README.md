@@ -44,8 +44,9 @@ Desde esta sección se puede:
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
 
 > Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol
-> (administrador de centro, coordinador/a, responsable de familia, tutor/a o docente de un grupo,
-> o docente de enlace del centro). Las estancias de otras enseñanzas no aparecen ni son accesibles.
+> (administrador/a de centro, coordinador/a de FP dual, jefe/a de departamento de familia profesional,
+> tutor/a o docente de un grupo, o docente de enlace del centro). Las estancias de otras enseñanzas
+> no aparecen ni son accesibles.
 
 Cada puesto formativo registra:
 
@@ -69,8 +70,8 @@ Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 - **Empleados** de la empresa que pueden actuar como tutores de empresa.
 - **Docentes de enlace** asignados a cada empresa.
 
-> Esta sección solo es visible para administradores de centro, docentes de enlace, coordinadores
-> de FP dual y responsables de familia profesional.
+> Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual,
+> jefes/as de departamento de familia profesional y docentes de enlace.
 
 ### Centro Educativo
 
@@ -130,14 +131,17 @@ enseñanzas de las que es coordinador/a.
 
 ### Docente de enlace
 
-Docente asignado a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
+Docente asignado/a a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
 editar los datos de aquellas empresas de las que es enlace: centros de trabajo, empleados y
-docentes de enlace.
+docentes de enlace. Además, puede ver y gestionar todas las estancias del centro,
+independientemente de la enseñanza a la que pertenezcan.
 
-### Responsable de familia profesional
+### Jefe/a de departamento de familia profesional
 
-Docente designado como responsable de una familia profesional. Tiene acceso a la sección
-**Empresas** y puede editar cualquier estancia asociada a su familia.
+Docente designado/a como jefe/a de departamento de una familia profesional. Tiene acceso a la
+sección **Empresas** (puede ver y editar cualquier empresa del centro) y puede ver y gestionar
+—editar, gestionar puestos y eliminar— las estancias de las enseñanzas pertenecientes a su
+familia profesional.
 
 ---
 
@@ -199,6 +203,74 @@ Cuando una asignación está lista para enviarse al sistema regional:
 
 En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle
 completo de todos los puestos, estudiantes, tutores y fechas.
+
+---
+
+## Tabla de permisos
+
+La siguiente tabla resume qué puede hacer cada perfil en cada sección de la aplicación. Los roles son acumulativos: un docente con varios roles tiene la unión de sus permisos.
+
+| Abrev. | Rol |
+|--------|-----|
+| **ADM** | Administrador/a global |
+| **ED** | Administrador/a de centro |
+| **JFP** | Jefe/a de departamento de familia profesional |
+| **CFD** | Coordinador/a de FP dual |
+| **DE** | Docente de enlace |
+| **TG** | Tutor/a de grupo / Docente de grupo |
+| **D** | Docente (sin rol específico en el centro) |
+
+### Centro educativo
+
+| Acción | ADM | ED | JFP | CFD | DE | TG | D |
+|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
+| Acceder a la sección | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar docentes del curso | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar estudiantes | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar oferta formativa¹ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Crear y activar cursos académicos | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+¹ Familias profesionales, enseñanzas, niveles y grupos.
+
+### Estancias
+
+| Acción | ADM | ED | JFP | CFD | DE | TG | D |
+|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
+| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | Sus enseñanzas | ❌ |
+| Crear estancia | ✅ | ✅ | ❌ | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
+| Gestionar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
+| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | ❌ | ❌ |
+| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ✅ | Sus enseñanzas | ❌ |
+
+### Empresas
+
+| Acción | ADM | ED | JFP | CFD | DE | TG | D |
+|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
+| Acceder a la sección | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Ver y buscar empresas | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Crear empresa | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Editar empresa² | ✅ | ✅ | ✅ | ✅ | Sus empresas | ❌ | ❌ |
+| Eliminar empresa | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+² Incluye centros de trabajo, empleados y docentes de enlace asignados.
+
+### Administración global
+
+| Acción | ADM | ED | JFP | CFD | DE | TG | D |
+|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
+| Acceder a la sección | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar docentes del sistema | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gestionar centros educativos | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+### Otras acciones y permisos generales
+
+| Acción | ADM | ED | JFP | CFD | DE | TG | D |
+|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
+| Acceder a la plataforma | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Ver panel de inicio | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Gestionar el propio perfil | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Acceder como otro usuario (suplantación) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
