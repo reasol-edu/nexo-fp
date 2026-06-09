@@ -8,10 +8,17 @@
   Plataforma web para gestionar la formación en empresas de la Formación Profesional
 </p>
 
+<p align="center">
+  <strong>v1.0.4</strong> &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
+  <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
+  <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
+</p>
+
 ---
 
 Nexo FP es una aplicación web desarrollada con [Symfony] que permite organizar y gestionar la
-la **Fase de Formación en Empresa u Organismo Equiparado**. Centraliza la
+**Fase de Formación en Empresa u Organismo Equiparado**. Centraliza la
 información de estudiantes, empresas, puestos formativos y tutores, y permite llevar el seguimiento
 del proceso de asignación desde que se crea un puesto hasta que se registra en Séneca.
 
@@ -19,8 +26,42 @@ La aplicación se ha diseñado para ser intuitiva y fácil de usar, con un enfoq
 y la reducción de errores administrativos. Permite generar informes detallados en PDF y facilita la
 comunicación entre el centro educativo y las empresas.
 
-Forma parte del proyecto de innovación educativa REASOL (PIN-219/23 y PIN-354/24) financiado por la Consejería de 
-Desarrollo Educativo y Formación Profesional de la Junta de Andalucía.
+Es **multi-centro**: un mismo servidor puede alojar varios centros educativos con datos
+completamente separados. Cada docente selecciona el centro activo al iniciar sesión y solo ve los
+datos de ese centro. Los administradores globales pueden gestionar todos los centros desde la
+sección **Administración**.
+
+Forma parte del proyecto de innovación educativa REASOL (PIN-219/23 y PIN-354/24) financiado por la
+Consejería de Desarrollo Educativo y Formación Profesional de la Junta de Andalucía.
+Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para la guía de contribución y [CHANGELOG.md](CHANGELOG.md)
+para el historial de cambios.
+
+---
+
+## Contenidos
+
+- [Inicio rápido](#inicio-rápido)
+- [Secciones de la aplicación](#secciones-de-la-aplicación)
+- [Roles de los docentes](#roles-de-los-docentes)
+- [Flujo de trabajo](#flujo-de-trabajo)
+- [Tabla de permisos](#tabla-de-permisos)
+- [Comandos de consola](#comandos-de-consola)
+- [Desarrollo local](#desarrollo-local)
+- [Despliegue con Docker](#despliegue-con-docker)
+- [Ejecución como binario nativo](#ejecución-como-binario-nativo)
+
+---
+
+## Inicio rápido
+
+```bash
+cp .env.example .env   # edita APP_SECRET y DB_PASSWORD
+docker compose up -d
+```
+
+Accede a **http://localhost** con `admin` / `admin`.
+Para otras opciones de despliegue consulta [Despliegue con Docker](#despliegue-con-docker)
+o [Ejecución como binario nativo](#ejecución-como-binario-nativo).
 
 ---
 
@@ -133,9 +174,8 @@ enseñanzas de las que es coordinador/a.
 
 Docente asignado/a a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
 editar los datos de aquellas empresas de las que es enlace: centros de trabajo, empleados y
-docentes de enlace. Además, puede ver las estancias que tienen puestos formativos en sus empresas
-asignadas, añadir nuevos puestos de sus empresas a esas estancias, y editar o eliminar únicamente
-los puestos de sus empresas que no tengan estudiante asignado.
+docentes de enlace. Su acceso a la sección **Estancias** está limitado a las estancias con puestos
+formativos en sus empresas; consulta la [Tabla de permisos](#tabla-de-permisos) para el detalle.
 
 ### Jefe/a de departamento de familia profesional
 
@@ -209,7 +249,12 @@ completo de todos los puestos, estudiantes, tutores y fechas.
 
 ## Tabla de permisos
 
-La siguiente tabla resume qué puede hacer cada perfil en cada sección de la aplicación. Los roles son acumulativos: un docente con varios roles tiene la unión de sus permisos.
+La siguiente tabla resume qué puede hacer cada perfil en cada sección de la aplicación.
+
+Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es parcial se indica
+el ámbito: **"Su familia prof."** = estancias o enseñanzas de su familia profesional;
+**"Sus enseñanzas"** = las que coordina; **"Sus empresas"** = las que tiene asignadas como enlace.
+Los roles son acumulativos: un docente con varios roles acumula todos sus permisos.
 
 | Abrev. | Rol |
 |--------|-----|
@@ -346,6 +391,44 @@ Según el modo de despliegue elegido, los requisitos son distintos:
 | Docker | Docker Engine 24+ y Docker Compose v2 |
 | Binario nativo | Sin requisitos adicionales (todo incluido) |
 | Desarrollo local | PHP 8.4+, Composer, PostgreSQL 16+ o SQLite |
+
+---
+
+## Desarrollo local
+
+Requisitos: PHP 8.4+, Composer y Docker Compose (solo para la base de datos).
+
+```bash
+# 1. Clona el repositorio y copia el entorno
+cp .env.example .env          # ajusta si es necesario
+
+# 2. Levanta PostgreSQL (el servicio app queda deshabilitado en dev)
+docker compose up -d
+
+# 3. Instala dependencias e inicializa la base de datos
+composer install
+php bin/console doctrine:migrations:migrate
+php bin/console app:setup
+
+# 4. Arranca el servidor de desarrollo
+symfony server:start          # o: php -S localhost:8000 -t public/
+```
+
+Accede a **http://localhost:8080** con `admin` / `admin`.
+
+> El fichero `compose.override.yaml` está activo automáticamente en desarrollo y expone PostgreSQL en el puerto 5432. El servicio PHP (`app`) solo se levanta al pasar `--profile production`.
+
+### Ejecutar los tests
+
+```bash
+php bin/phpunit
+```
+
+### Análisis estático
+
+```bash
+php vendor/bin/phpstan analyse
+```
 
 ---
 
