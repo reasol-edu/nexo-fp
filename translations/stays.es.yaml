@@ -11,6 +11,7 @@ stays.filter.show_label: 'Mostrar:'
 
 stays.card.students_with_position: 'Estudiantes con puesto asignado'
 stays.card.unassigned_hint: '{1} 1 estudiante inscrito sin puesto asignado|]1,Inf[ %count% estudiantes inscritos sin puesto asignado'
+stays.card.unsigned_hint: '{1} 1 estudiante con puesto pendiente de firma|]1,Inf[ %count% estudiantes con puesto pendiente de firma'
 stays.card.companies: 'Empresas con puestos'
 stays.card.occupied: 'Puestos asignados'
 stays.card.free: 'Puestos sin asignar'
