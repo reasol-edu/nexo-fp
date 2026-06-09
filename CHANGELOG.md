@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-06-09
+
+### Added
+
+- Los docentes de enlace pueden añadir puestos de formación en las estancias de las empresas a las que están asignados como enlace
+- Al editar un docente en el contexto de un centro educativo, se pueden seleccionar los grupos en los que imparte clase mediante un desplegable con autocompletar
+- El árbol de oferta académica muestra el número de alumnos y docentes de cada grupo mediante insignias de colores
+
+### Fixed
+
+- Los docentes de enlace solo ven en el listado las estancias en las que su empresa tiene puestos asignados
+- Corregidos los permisos del docente de enlace al consultar estancias que tienen alumnos sin puesto asignado
+
 ## [1.0.3] - 2026-06-08
 
 ### Changed

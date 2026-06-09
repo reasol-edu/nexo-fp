@@ -9,8 +9,8 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "1.0.3"
-    app.pub_date:               "2026-06-08"
+    app.version:                "1.0.4"
+    app.pub_date:               "2026-06-09"
 
     # Elementos predeterminados por página en los listados
     page.size:                  "%env(APP_PAGE_SIZE)%"
