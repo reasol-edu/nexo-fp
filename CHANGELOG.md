@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-10
+
+### Added
+
+- Los fixtures de demostración incluyen nombres completos de los ciclos formativos (con prefijo CFGM/CFGS)
+- Los fixtures generan tres estancias por enseñanza: una pasada (sept. 2025–ene. 2026), una activa (mar.–jun. 2026) y una futura (sept. 2026–ene. 2027), con estudiantes matriculados sin puesto asignado
+- Variable de entorno `LOAD_FIXTURES=true` en los scripts de arranque Docker y binario para pre-cargar los datos de demostración automáticamente al iniciar la aplicación
+
+### Changed
+
+- El contador de estudiantes del dashboard muestra únicamente los alumnos de las enseñanzas accesibles al usuario según su rol (administrador global y de centro ven todos; coordinadores, jefes de familia y docentes de grupo ven solo los de sus enseñanzas)
+
 ## [1.0.4] - 2026-06-09
 
 ### Added
