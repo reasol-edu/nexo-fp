@@ -36,11 +36,41 @@
 
     {% if stats is not null %}
 
+    {# ── Accesos rápidos ───────────────────────────────────────────────────── #}
+    {% set can_students_section = is_granted('educational_centre.section', active_centre) %}
+    {% set can_companies_section = is_granted('company.section', active_centre) %}
+    {% if is_granted('stay.create', active_centre) or can_students_section or can_companies_section %}
+        <div class="flex flex-wrap gap-2">
+            {% if is_granted('stay.create', active_centre) %}
+                <a href="{{ path('app_stays_new') }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:border-plum-300 hover:text-plum-700 transition-colors">
+                    {{ ux_icon('heroicons:plus', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'action_new_stay'|trans({}, 'dashboard') }}
+                </a>
+            {% endif %}
+            {% if can_students_section %}
+                <a href="{{ path('app_admin_students_import', {centreId: active_centre.id}) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:border-plum-300 hover:text-plum-700 transition-colors">
+                    {{ ux_icon('heroicons:arrow-up-tray', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'action_import_students'|trans({}, 'dashboard') }}
+                </a>
+            {% endif %}
+            {% if can_companies_section %}
+                <a href="{{ path('app_companies_new') }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:border-plum-300 hover:text-plum-700 transition-colors">
+                    {{ ux_icon('heroicons:building-office-2', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'action_new_company'|trans({}, 'dashboard') }}
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {# ── Tarjetas de métricas ──────────────────────────────────────────────── #}
     <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
 
         {# Alumnos #}
-        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+        {% set students_url = can_students_section ? path('app_admin_students_index', {centreId: active_centre.id}) : null %}
+        {% if students_url %}<a href="{{ students_url }}" class="col-span-1 block rounded-2xl border border-gray-200 bg-white p-5 shadow-xs hover:border-plum-300 hover:shadow-sm transition">{% else %}<div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">{% endif %}
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ 'students'|trans({}, 'dashboard') }}
@@ -51,10 +81,10 @@
             </div>
             <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ studentCount }}</p>
             <p class="mt-1 text-xs text-gray-500">{{ 'students_enrolled'|trans({}, 'dashboard') }}</p>
-        </div>
+        {% if students_url %}</a>{% else %}</div>{% endif %}
 
         {# Estancias #}
-        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+        <a href="{{ path('app_stays_index') }}" class="col-span-1 block rounded-2xl border border-gray-200 bg-white p-5 shadow-xs hover:border-plum-300 hover:shadow-sm transition">
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ 'stays'|trans({}, 'dashboard') }}
@@ -74,10 +104,10 @@
                     {{ stats.future_stays }} {{ 'stays_upcoming'|trans({}, 'dashboard') }}
                 </span>
             </div>
-        </div>
+        </a>
 
         {# Plazas #}
-        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+        <a href="{{ path('app_stays_index') }}" class="col-span-1 block rounded-2xl border border-gray-200 bg-white p-5 shadow-xs hover:border-plum-300 hover:shadow-sm transition">
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ 'positions'|trans({}, 'dashboard') }}
@@ -100,10 +130,11 @@
             {% else %}
                 <p class="mt-1 text-xs text-gray-400">—</p>
             {% endif %}
-        </div>
+        </a>
 
         {# Empresas #}
-        <div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+        {% set companies_url = can_companies_section ? path('app_companies_index') : null %}
+        {% if companies_url %}<a href="{{ companies_url }}" class="col-span-1 block rounded-2xl border border-gray-200 bg-white p-5 shadow-xs hover:border-plum-300 hover:shadow-sm transition">{% else %}<div class="col-span-1 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">{% endif %}
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ 'companies'|trans({}, 'dashboard') }}
@@ -114,7 +145,7 @@
             </div>
             <p class="mt-3 text-3xl font-bold text-gray-900 tabular-nums">{{ stats.companies }}</p>
             <p class="mt-1 text-xs text-gray-500">{{ 'companies_participating'|trans({}, 'dashboard') }}</p>
-        </div>
+        {% if companies_url %}</a>{% else %}</div>{% endif %}
 
     </div>
 
@@ -318,6 +349,72 @@
             {% endif %}
         </div>
 
+    </div>
+
+    {# ── Pendientes ────────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100">
+            {{ ux_icon('heroicons:bell-alert', {class: 'h-4 w-4 text-amber-500'}) }}
+            <h2 class="text-sm font-semibold text-gray-700">
+                {{ 'pending_title'|trans({}, 'dashboard') }}
+            </h2>
+        </div>
+
+        {% if alerts is empty %}
+            <div class="flex items-center justify-center gap-2 py-8 px-6 text-center">
+                {{ ux_icon('heroicons:check-circle', {class: 'h-5 w-5 text-emerald-500'}) }}
+                <p class="text-sm text-gray-500">{{ 'pending_all_clear'|trans({}, 'dashboard') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-50">
+            {% for alert in alerts %}
+                <li>
+                    <a href="{{ path('app_stays_show', {id: alert.stay.id}) }}"
+                       class="flex flex-col gap-2 px-6 py-3.5 hover:bg-gray-50 transition-colors group sm:flex-row sm:items-center sm:gap-4">
+                        <div class="min-w-0 sm:flex-1">
+                            <p class="truncate text-sm font-medium text-gray-900 group-hover:text-plum-700 transition-colors">
+                                {{ alert.stay.name }}
+                            </p>
+                            <p class="truncate text-xs text-gray-400 mt-0.5">
+                                {{ alert.stay.programme.name }}
+                                {% if alert.stay.endDate %}
+                                    <span class="mx-1">·</span>
+                                    {{ alert.stay.endDate|date('d/m/Y') }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 shrink-0">
+                            {% if alert.students_without_position > 0 %}
+                                <span class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+                                    {{ 'pending_students_without_position'|trans({'%count%': alert.students_without_position}, 'dashboard') }}
+                                </span>
+                            {% endif %}
+                            {% if alert.free > 0 %}
+                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                    {{ 'pending_free'|trans({'%count%': alert.free}, 'dashboard') }}
+                                </span>
+                            {% endif %}
+                            {% if alert.missing_tutor > 0 %}
+                                <span class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+                                    {{ 'pending_missing_tutor'|trans({'%count%': alert.missing_tutor}, 'dashboard') }}
+                                </span>
+                            {% endif %}
+                            {% if alert.missing_mentor > 0 %}
+                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                    {{ 'pending_missing_mentor'|trans({'%count%': alert.missing_mentor}, 'dashboard') }}
+                                </span>
+                            {% endif %}
+                            {% if alert.done_unsigned > 0 %}
+                                <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                    {{ 'pending_done_unsigned'|trans({'%count%': alert.done_unsigned}, 'dashboard') }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </a>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 
     {% else %}

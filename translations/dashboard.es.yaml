@@ -29,6 +29,18 @@ state_done: 'Completada'
 no_positions: 'No hay plazas registradas'
 total_positions: 'plazas totales'
 
+action_new_stay: 'Nueva estancia'
+action_import_students: 'Importar estudiantes'
+action_new_company: 'Nueva empresa'
+
+pending_title: 'Pendientes'
+pending_all_clear: 'Todo al día. No hay tareas pendientes en las estancias activas.'
+pending_students_without_position: '{1} 1 estudiante sin plaza|]1,Inf[ %count% estudiantes sin plaza'
+pending_free: '{1} 1 plaza sin estudiante|]1,Inf[ %count% plazas sin estudiante'
+pending_missing_tutor: '{1} 1 plaza sin tutoría docente|]1,Inf[ %count% plazas sin tutoría docente'
+pending_missing_mentor: '{1} 1 plaza sin tutoría de empresa|]1,Inf[ %count% plazas sin tutoría de empresa'
+pending_done_unsigned: '{1} 1 plaza completada sin firmar|]1,Inf[ %count% plazas completadas sin firmar'
+
 upcoming_stays: 'Estancias activas y próximas'
 no_upcoming_stays: 'No hay estancias activas ni próximas'
 stay_current: 'En curso'

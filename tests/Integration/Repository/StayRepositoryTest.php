@@ -13,6 +13,7 @@ use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
+use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
@@ -724,6 +725,170 @@ class StayRepositoryTest extends RepositoryTestCase
 
         self::assertCount(1, $results);
         self::assertSame($stayWith->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    // ── findPositionAlertsByStay ──────────────────────────────────────────────
+
+    public function testPositionAlertsExcludesStayWithoutPositions(): void
+    {
+        [$year] = $this->makeChain('41000060');
+
+        self::assertSame([], $this->repo->findPositionAlertsByStay($year));
+    }
+
+    public function testPositionAlertsCountsFreePositions(): void
+    {
+        [$year, , $stay] = $this->makeChain('41000061');
+        $free = (new TrainingPosition())->setStay($stay);
+        $this->persist($free);
+
+        $alerts = $this->repo->findPositionAlertsByStay($year);
+
+        self::assertCount(1, $alerts);
+        self::assertSame($stay->getId()->toRfc4122(), $alerts[0]['stay']->getId()->toRfc4122());
+        self::assertSame(1, $alerts[0]['free']);
+        self::assertSame(0, $alerts[0]['missing_tutor']);
+        self::assertSame(0, $alerts[0]['missing_mentor']);
+        self::assertSame(0, $alerts[0]['done_unsigned']);
+    }
+
+    public function testPositionAlertsCountsMissingTutorAndMentorOnlyWhenStayStarted(): void
+    {
+        [$year, $prog] = $this->makeChain('41000062');
+        $started    = $this->makeStay($year, $prog, 'FCT Iniciada', '-30 days', '+30 days');
+        $notStarted = $this->makeStay($year, $prog, 'FCT Futura', '+10 days', '+60 days');
+        $studentA   = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-62A');
+        $studentB   = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-62B');
+        $posA = (new TrainingPosition())->setStay($started)->setStudent($studentA);
+        $posB = (new TrainingPosition())->setStay($notStarted)->setStudent($studentB);
+        $this->persist($started, $notStarted, $studentA, $studentB, $posA, $posB);
+
+        $alerts = $this->repo->findPositionAlertsByStay($year);
+
+        self::assertCount(1, $alerts);
+        self::assertSame($started->getId()->toRfc4122(), $alerts[0]['stay']->getId()->toRfc4122());
+        self::assertSame(1, $alerts[0]['missing_tutor']);
+        self::assertSame(1, $alerts[0]['missing_mentor']);
+    }
+
+    public function testPositionAlertsCountsDoneUnsignedOnly(): void
+    {
+        [$year, , $stay] = $this->makeChain('41000063');
+        $student  = (new Student(new PersonName('Eva', 'Ruiz')))->setStudentId('S-63A');
+        $tutor    = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.alerts.63');
+        $unsigned = (new TrainingPosition())->setStay($stay)->setStudent($student)
+            ->setAcademicTutor($tutor)->setState(TrainingPositionState::DONE)->setSigned(false);
+        $this->persist($student, $tutor, $unsigned);
+
+        $alerts = $this->repo->findPositionAlertsByStay($year);
+
+        self::assertCount(1, $alerts);
+        self::assertSame(1, $alerts[0]['done_unsigned']);
+
+        $unsigned->setSigned(true);
+        // sin mentor: la estancia sigue teniendo la alerta missing_mentor
+        $this->flush();
+
+        $alerts = $this->repo->findPositionAlertsByStay($year);
+        self::assertSame(0, $alerts[0]['done_unsigned']);
+    }
+
+    public function testPositionAlertsExcludesFinishedStays(): void
+    {
+        [$year, $prog] = $this->makeChain('41000064');
+        $past = $this->makeStay($year, $prog, 'FCT Pasada', '-90 days', '-10 days');
+        $free = (new TrainingPosition())->setStay($past);
+        $this->persist($past, $free);
+
+        $alerts = $this->repo->findPositionAlertsByStay($year);
+
+        self::assertSame([], $alerts);
+    }
+
+    public function testPositionAlertsFiltersByViewer(): void
+    {
+        [$year, $progA] = $this->makeChain('41000065');
+        $fam   = $progA->getProfessionalFamily();
+        $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayA = $this->makeStay($year, $progA, 'FCT DAM Alertas');
+        $stayB = $this->makeStay($year, $progB, 'FCT DAW Alertas');
+        $freeA = (new TrainingPosition())->setStay($stayA);
+        $freeB = (new TrainingPosition())->setStay($stayB);
+        $coord = (new Teacher(new PersonName('Co', 'Ord')))->setUsername('coord.alerts.65');
+        $this->persist($progB, $stayA, $stayB, $freeA, $freeB, $coord);
+        $progA->addCoordinator($coord);
+        $this->flush();
+
+        $alerts = $this->repo->findPositionAlertsByStay($year, $coord);
+
+        self::assertCount(1, $alerts);
+        self::assertSame($stayA->getId()->toRfc4122(), $alerts[0]['stay']->getId()->toRfc4122());
+    }
+
+    // ── countStudentsWithoutPositionByStay ────────────────────────────────────
+
+    public function testCountStudentsWithoutPositionReturnsDifference(): void
+    {
+        [$year, , $stay] = $this->makeChain('41000070');
+        $studentA = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-70A');
+        $studentB = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-70B');
+        $pos      = (new TrainingPosition())->setStay($stay)->setStudent($studentA);
+        $this->persist($studentA, $studentB, $pos);
+        $stay->addStudent($studentA);
+        $stay->addStudent($studentB);
+        $this->flush();
+
+        $rows = $this->repo->countStudentsWithoutPositionByStay($year);
+
+        self::assertCount(1, $rows);
+        self::assertSame($stay->getId()->toRfc4122(), $rows[0]['stay']->getId()->toRfc4122());
+        self::assertSame(1, $rows[0]['students_without_position']);
+    }
+
+    public function testCountStudentsWithoutPositionExcludesFullyAssignedStays(): void
+    {
+        [$year, , $stay] = $this->makeChain('41000071');
+        $student = (new Student(new PersonName('Eva', 'Ruiz')))->setStudentId('S-71A');
+        $pos     = (new TrainingPosition())->setStay($stay)->setStudent($student);
+        $this->persist($student, $pos);
+        $stay->addStudent($student);
+        $this->flush();
+
+        self::assertSame([], $this->repo->countStudentsWithoutPositionByStay($year));
+    }
+
+    public function testCountStudentsWithoutPositionExcludesFinishedStays(): void
+    {
+        [$year, $prog] = $this->makeChain('41000072');
+        $past    = $this->makeStay($year, $prog, 'FCT Pasada', '-90 days', '-10 days');
+        $student = (new Student(new PersonName('Mar', 'Sol')))->setStudentId('S-72A');
+        $this->persist($past, $student);
+        $past->addStudent($student);
+        $this->flush();
+
+        self::assertSame([], $this->repo->countStudentsWithoutPositionByStay($year));
+    }
+
+    public function testCountStudentsWithoutPositionFiltersByViewer(): void
+    {
+        [$year, $progA, $stayA] = $this->makeChain('41000073');
+        $fam      = $progA->getProfessionalFamily();
+        $progB    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
+        $stayB    = $this->makeStay($year, $progB, 'FCT DAW Sin Plaza');
+        $studentA = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-73A');
+        $studentB = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-73B');
+        $tutor    = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.nopos.73');
+        $level    = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $group    = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
+        $this->persist($progB, $stayB, $studentA, $studentB, $tutor, $level, $group);
+        $stayA->addStudent($studentA);
+        $stayB->addStudent($studentB);
+        $this->flush();
+
+        $rows = $this->repo->countStudentsWithoutPositionByStay($year, $tutor);
+
+        self::assertCount(1, $rows);
+        self::assertSame($stayA->getId()->toRfc4122(), $rows[0]['stay']->getId()->toRfc4122());
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

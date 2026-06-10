@@ -211,6 +211,88 @@ class StayRepository extends ServiceEntityRepository
     }
 
     /**
+     * Stays not yet finished whose positions need attention, with per-stay counters.
+     *
+     * @return list<array{stay: Stay, free: int, missing_tutor: int, missing_mentor: int, done_unsigned: int}>
+     */
+    public function findPositionAlertsByStay(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        $today = $this->clock->now()->setTime(0, 0, 0);
+
+        // tp.id IS NOT NULL guards against the LEFT JOIN row of stays with no positions
+        $freeExpr          = 'SUM(CASE WHEN tp.id IS NOT NULL AND tp.student IS NULL THEN 1 ELSE 0 END)';
+        $missingTutorExpr  = 'SUM(CASE WHEN tp.student IS NOT NULL AND tp.academicTutor IS NULL AND s.startDate <= :today THEN 1 ELSE 0 END)';
+        $missingMentorExpr = 'SUM(CASE WHEN tp.student IS NOT NULL AND tp.workplaceMentor IS NULL AND s.startDate <= :today THEN 1 ELSE 0 END)';
+        $doneUnsignedExpr  = 'SUM(CASE WHEN tp.state = :s_done AND tp.signed = :bfalse THEN 1 ELSE 0 END)';
+
+        $qb = $this->createQueryBuilder('s')
+            ->select('s')
+            ->addSelect($freeExpr . ' AS free')
+            ->addSelect($missingTutorExpr . ' AS missing_tutor')
+            ->addSelect($missingMentorExpr . ' AS missing_mentor')
+            ->addSelect($doneUnsignedExpr . ' AS done_unsigned')
+            ->leftJoin('s.trainingPositions', 'tp')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
+            ->groupBy('s.id')
+            ->having("({$freeExpr} + {$missingTutorExpr} + {$missingMentorExpr} + {$doneUnsignedExpr}) > 0")
+            ->orderBy('s.endDate', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('today', $today)
+            ->setParameter('s_done', TrainingPositionState::DONE->value)
+            ->setParameter('bfalse', false);
+
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{0: Stay, free: string|int, missing_tutor: string|int, missing_mentor: string|int, done_unsigned: string|int}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static fn (array $row): array => [
+            'stay'           => $row[0],
+            'free'           => (int) $row['free'],
+            'missing_tutor'  => (int) $row['missing_tutor'],
+            'missing_mentor' => (int) $row['missing_mentor'],
+            'done_unsigned'  => (int) $row['done_unsigned'],
+        ], $rows);
+    }
+
+    /**
+     * Enrolled students without an assigned position, per non-finished stay.
+     *
+     * @return list<array{stay: Stay, students_without_position: int}>
+     */
+    public function countStudentsWithoutPositionByStay(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        $today = $this->clock->now()->setTime(0, 0, 0);
+
+        // COUNT(DISTINCT ...) on both sides neutralises the cartesian product of the two LEFT JOINs
+        $expr = 'COUNT(DISTINCT st.id) - COUNT(DISTINCT IDENTITY(tp.student))';
+
+        $qb = $this->createQueryBuilder('s')
+            ->select('s')
+            ->addSelect($expr . ' AS students_without_position')
+            ->leftJoin('s.students', 'st')
+            ->leftJoin('s.trainingPositions', 'tp')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
+            ->groupBy('s.id')
+            ->having($expr . ' > 0')
+            ->orderBy('s.endDate', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('today', $today);
+
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{0: Stay, students_without_position: string|int}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static fn (array $row): array => [
+            'stay'                      => $row[0],
+            'students_without_position' => (int) $row['students_without_position'],
+        ], $rows);
+    }
+
+    /**
      * Returns current and upcoming stays ordered by start date, limited to $limit results.
      *
      * @return Stay[]
