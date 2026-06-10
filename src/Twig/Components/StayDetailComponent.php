@@ -16,6 +16,7 @@ use App\Security\Voter\StayVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -39,6 +40,7 @@ class StayDetailComponent extends AbstractController
         private readonly GroupRepository $groups,
         private readonly TeacherRepository $teachers,
         private readonly EntityManagerInterface $em,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     /** @return array<string, mixed> */
@@ -218,6 +220,10 @@ class StayDetailComponent extends AbstractController
 
         $position->setStudent($student);
         $this->em->flush();
+
+        $this->toast('stays.toast.position_assigned', [
+            '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
+        ]);
     }
 
     #[LiveAction]
@@ -240,8 +246,13 @@ class StayDetailComponent extends AbstractController
             throw new AccessDeniedException();
         }
 
+        $student = $position->getStudent();
         $position->setStudent(null);
         $this->em->flush();
+
+        $this->toast('stays.toast.position_unassigned', [
+            '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
+        ]);
     }
 
     #[LiveAction]
@@ -268,6 +279,10 @@ class StayDetailComponent extends AbstractController
 
         $position->setAcademicTutor($teacher);
         $this->em->flush();
+
+        $this->toast('stays.toast.academic_tutor_set', [
+            '%teacher%' => $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),
+        ]);
     }
 
     #[LiveAction]
@@ -300,5 +315,15 @@ class StayDetailComponent extends AbstractController
 
         $position->setWorkplaceMentor($mentor);
         $this->em->flush();
+
+        $this->toast('stays.toast.workplace_mentor_set', [
+            '%mentor%' => $mentor->getName()->getFirstName() . ' ' . $mentor->getName()->getLastName(),
+        ]);
+    }
+
+    /** @param array<string, string> $params */
+    private function toast(string $key, array $params): void
+    {
+        $this->addFlash('live_toast', $this->translator->trans($key, $params, 'stays'));
     }
 }

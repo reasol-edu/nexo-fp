@@ -32,6 +32,14 @@
                     {{ 'companies.empty'|trans({}, 'companies') }}
                 {% endif %}
             </p>
+            {% if search is empty %}
+                <a href="{{ path('app_companies_new') }}"
+                   class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-plum-600 px-3 py-1.5
+                          text-xs font-semibold text-white shadow-xs hover:bg-plum-700 transition-colors">
+                    {{ ux_icon('heroicons:plus', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'companies.new'|trans({}, 'companies') }}
+                </a>
+            {% endif %}
         </div>
     {% else %}
         <div class="overflow-x-auto">

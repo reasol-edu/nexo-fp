@@ -43,6 +43,16 @@
 
 <div {{ attributes }} class="px-6 py-8 max-w-6xl mx-auto space-y-5">
 
+    {# ── Toasts de acciones en vivo ───────────────────────────────────────── #}
+    <div class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none">
+        {% for message in app.flashes('live_toast') %}
+            <div class="js-live-toast pointer-events-auto flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm text-white shadow-lg">
+                {{ ux_icon('heroicons:check-circle', {class: 'h-4 w-4 text-green-400 shrink-0'}) }}
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+
     {# ── Cabecera ─────────────────────────────────────────────────────────── #}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
         <div class="px-6 py-5">
@@ -174,9 +184,21 @@
                 </span>
             {% endif %}
 
+            <span class="ml-auto"></span>
+            {% if manageable_position_ids is not empty and (by_group is not empty or ungrouped_students is not empty) %}
+                <button type="button"
+                        aria-pressed="false"
+                        class="js-quick-toggle inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
+                               px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs
+                               hover:border-gray-400 hover:bg-gray-50 transition-colors shrink-0"
+                        title="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}">
+                    {{ ux_icon('heroicons:bolt', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'stays.quick_mode.toggle'|trans({}, 'stays') }}
+                </button>
+            {% endif %}
             {% if can_manage %}
                 <a href="{{ path('app_stays_manage_students', {id: stay.id.toRfc4122}) }}"
-                   class="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
                           px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs
                           hover:border-gray-400 hover:bg-gray-50 transition-colors shrink-0">
                     {{ ux_icon('heroicons:user-group', {class: 'h-3.5 w-3.5'}) }}
@@ -189,6 +211,15 @@
             <div class="px-6 py-14 text-center">
                 {{ ux_icon('heroicons:user-group', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
                 <p class="text-sm text-gray-500">{{ 'stays.show.students_empty'|trans({}, 'stays') }}</p>
+                {% if can_manage %}
+                    <a href="{{ path('app_stays_manage_students', {id: stay.id.toRfc4122}) }}"
+                       class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-plum-600 bg-plum-600
+                              px-3 py-1.5 text-xs font-semibold text-white shadow-xs
+                              hover:border-plum-700 hover:bg-plum-700 transition-colors">
+                        {{ ux_icon('heroicons:user-group', {class: 'h-3.5 w-3.5'}) }}
+                        {{ 'stays.students.manage_btn'|trans({}, 'stays') }}
+                    </a>
+                {% endif %}
             </div>
         {% else %}
             <div class="overflow-x-auto">
@@ -680,6 +711,7 @@ import { getComponent } from '@symfony/ux-live-component';
 
 let liveEl  = null;
 let liveComp = null;
+let quickMode = false;
 
 const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
 const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
@@ -690,6 +722,14 @@ const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
 // Idiomorph re-renders, which morph elements in place but fire live:render after.
 function setupEventDelegation() {
     liveEl.addEventListener('click', function (e) {
+
+        // Quick assignment mode toggle
+        const quickToggle = e.target.closest('.js-quick-toggle');
+        if (quickToggle) {
+            quickMode = !quickMode;
+            applyQuickMode();
+            return;
+        }
 
         // Confirm panel
         const confirmTrigger = e.target.closest('.js-confirm-trigger');
@@ -793,6 +833,7 @@ function initAssignForm(form) {
             liveComp.action('assignPosition', { studentId, positionId });
         },
         onDropdownClose: function () {
+            if (quickMode) return;
             wrap.classList.add('hidden');
             trigger.classList.remove('hidden');
         },
@@ -826,6 +867,7 @@ function initInlineForm(form) {
             liveComp.action(actionName, params);
         },
         onDropdownClose: function () {
+            if (quickMode) return;
             wrap.classList.add('hidden');
             trigger.classList.remove('hidden');
         },
@@ -837,13 +879,54 @@ function initAllForms() {
     liveEl.querySelectorAll('.js-inline-assign-form').forEach(initInlineForm);
 }
 
+// ── Quick assignment mode ─────────────────────────────────────────────────────
+// Pure client-side: reveals the (already rendered) assignment selectors in every
+// row. Re-applied after each render because Idiomorph restores the server HTML.
+function applyQuickMode() {
+    liveEl.querySelectorAll('.js-assign-form, .js-inline-assign-form').forEach(function (form) {
+        const trigger = form.querySelector('.js-assign-trigger, .js-inline-trigger');
+        const wrap    = form.querySelector('.js-assign-select, .js-inline-select-wrap');
+        if (!trigger || !wrap) return;
+        wrap.classList.toggle('hidden', !quickMode);
+        trigger.classList.toggle('hidden', quickMode);
+    });
+    const btn = liveEl.querySelector('.js-quick-toggle');
+    if (btn) {
+        btn.setAttribute('aria-pressed', quickMode ? 'true' : 'false');
+        btn.classList.toggle('bg-plum-600', quickMode);
+        btn.classList.toggle('border-plum-600', quickMode);
+        btn.classList.toggle('text-white', quickMode);
+        btn.classList.toggle('bg-white', !quickMode);
+        btn.classList.toggle('border-gray-300', !quickMode);
+        btn.classList.toggle('text-gray-700', !quickMode);
+    }
+}
+
+// ── Toast auto-dismiss ────────────────────────────────────────────────────────
+function dismissToasts() {
+    liveEl.querySelectorAll('.js-live-toast').forEach(function (toast) {
+        if (toast.dataset.toastTimer) return;
+        toast.dataset.toastTimer = '1';
+        setTimeout(function () {
+            toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 3000);
+    });
+}
+
+function onRender() {
+    initAllForms();
+    applyQuickMode();
+    dismissToasts();
+}
+
 liveEl = document.querySelector('[data-controller~="live"]');
 if (liveEl) {
     getComponent(liveEl).then(function (component) {
         liveComp = component;
         setupEventDelegation();
-        initAllForms();
-        component.on('render:finished', initAllForms);
+        onRender();
+        component.on('render:finished', onRender);
     });
 }
 </script>

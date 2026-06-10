@@ -118,6 +118,14 @@ stays.position.field.count: 'Número de puestos'
 stays.position.field.count_hint: 'Si indicas más de 1, se crearán tantas copias independientes como se especifique.'
 stays.position.assignment_locked_hint: 'Este puesto no está en borrador: los datos están bloqueados.'
 
+stays.toast.position_assigned: 'Puesto asignado a %student%.'
+stays.toast.position_unassigned: 'Puesto de %student% liberado.'
+stays.toast.academic_tutor_set: 'Tutoría dual docente asignada a %teacher%.'
+stays.toast.workplace_mentor_set: '%mentor% asignado/a como tutor/a dual de empresa.'
+
+stays.quick_mode.toggle: 'Asignación rápida'
+stays.quick_mode.hint: 'Muestra los selectores de asignación en todas las filas.'
+
 stays.show.students_title: 'Estudiantes'
 stays.show.students_empty: 'No hay estudiantes inscritos en esta estancia.'
 stays.show.students_no_position: '{1} 1 estudiante sin puesto|]1,Inf[ %count% estudiantes sin puesto'
