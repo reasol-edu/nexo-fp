@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v1.0.4</strong> &nbsp;·&nbsp;
+  <strong>v1.1.0</strong> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
   <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
@@ -45,6 +45,7 @@ para el historial de cambios.
 - [Roles de los docentes](#roles-de-los-docentes)
 - [Flujo de trabajo](#flujo-de-trabajo)
 - [Tabla de permisos](#tabla-de-permisos)
+- [Notificaciones por email](#notificaciones-por-email)
 - [Comandos de consola](#comandos-de-consola)
 - [Desarrollo local](#desarrollo-local)
 - [Despliegue con Docker](#despliegue-con-docker)
@@ -70,7 +71,13 @@ o [Ejecución como binario nativo](#ejecución-como-binario-nativo).
 ### Inicio
 
 Panel resumen del curso académico activo. Muestra el número de estancias abiertas, puestos
-formativos creados, estudiantes inscritos y el estado general de las asignaciones.
+formativos creados, estudiantes inscritos y el estado general de las asignaciones. Cada tarjeta
+de métricas enlaza con su sección correspondiente y, según los permisos del docente, se muestran
+**accesos rápidos** para crear una estancia, importar estudiantes o registrar una empresa.
+
+Al final del panel, el bloque **Pendientes** lista las estancias activas que requieren atención:
+estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa,
+y puestos finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.
 
 ### Estancias
 
@@ -82,7 +89,11 @@ Desde esta sección se puede:
 - Crear y editar estancias con nombre, enseñanza y fechas de inicio y fin.
 - Añadir, editar y eliminar **puestos formativos** dentro de cada estancia.
 - Inscribir o retirar estudiantes de la estancia.
+- Asignar estudiantes y tutores directamente desde el detalle, con un modo de
+  **asignación rápida** que muestra los selectores en todas las filas a la vez.
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
+- Exportar los puestos de la estancia a **CSV** (compatible con Excel) con estudiante, empresa,
+  centro de trabajo, tutorías y estado.
 
 > Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol
 > (administrador/a de centro, coordinador/a de FP dual, jefe/a de departamento de familia profesional,
@@ -111,6 +122,8 @@ Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 - **Empleados** de la empresa que pueden actuar como tutores de empresa.
 - **Docentes de enlace** asignados a cada empresa.
 
+El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo.
+
 > Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual,
 > jefes/as de departamento de familia profesional y docentes de enlace.
 
@@ -119,7 +132,8 @@ Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 Aquí se implementa la gestión interna del centro. Reúne en un único espacio:
 
 - **Docentes del curso:** alta, baja e importación del personal adscrito al curso activo.
-- **Estudiantes:** alta, edición, baja e importación masiva desde CSV.
+- **Estudiantes:** alta, edición, baja, importación masiva desde CSV y exportación a CSV
+  respetando los filtros de búsqueda y grupo activos.
 - **Oferta formativa:** estructura jerárquica completa:
   - Familias profesionales
   - Enseñanzas (ciclos formativos)
@@ -243,7 +257,8 @@ Cuando una asignación está lista para enviarse al sistema regional:
 ### 6 — Generar informes
 
 En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle
-completo de todos los puestos, estudiantes, tutores y fechas.
+completo de todos los puestos, estudiantes, tutores y fechas, o exportar los datos a **CSV**
+para trabajarlos en una hoja de cálculo.
 
 ---
 
@@ -292,7 +307,7 @@ Los roles son acumulativos: un docente con varios roles acumula todos sus permis
 | Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
 | Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
 | Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Descargar informe PDF | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
+| Descargar informe PDF / exportar CSV | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 
 ### Empresas
 
@@ -324,6 +339,40 @@ Los roles son acumulativos: un docente con varios roles acumula todos sus permis
 | Ver panel de inicio | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Gestionar el propio perfil | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Acceder como otro usuario (suplantación) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## Notificaciones por email
+
+La aplicación puede enviar notificaciones automáticas por email en estos casos:
+
+- **Asignación de tutoría:** cuando a un puesto formativo se le asigna un tutor/a dual docente
+  (o se cambia el existente), el tutor/a recibe un email con el enlace a la estancia.
+- **Nuevos puestos formativos:** al crear puestos en una estancia, los docentes de enlace de la
+  empresa reciben un aviso (excepto quien los creó).
+- **Recordatorios de firma:** mediante el comando [`app:send-reminders`](#appsend-reminders),
+  cada tutor/a dual docente recibe un recordatorio de sus puestos pendientes de firma cuando la
+  estancia está próxima a finalizar.
+
+Las notificaciones están **desactivadas por defecto** (`MAILER_DSN=null://null`). Para activarlas,
+configura en el entorno:
+
+```dotenv
+# Transporte SMTP (u otro soportado por symfony/mailer)
+MAILER_DSN=smtp://usuario:clave@servidor:587
+# Dirección remitente de los emails automáticos
+MAILER_FROM=no-responder@tudominio.es
+# URL pública de la aplicación, usada en los enlaces de los emails
+DEFAULT_URI=https://nexo.tudominio.es
+```
+
+Los emails se envían de forma síncrona durante la petición. Si el servidor SMTP es lento, se puede
+enviar en segundo plano definiendo un transporte asíncrono de Messenger y descomentando el routing
+de `SendEmailMessage` en `config/packages/messenger.yaml` (requiere un worker ejecutando
+`php bin/console messenger:consume`). Los fallos de envío se registran en el log sin interrumpir
+nunca la operación en curso.
+
+Los destinatarios sin dirección de email registrada se omiten de forma silenciosa.
 
 ---
 
