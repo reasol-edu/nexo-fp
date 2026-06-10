@@ -4,12 +4,36 @@ Este documento describe los datos que carga el comando de fixtures de demostraci
 
 ## Cargar los fixtures
 
+> ⚠️ Ambas opciones borran todos los datos existentes antes de insertar los de demostración,
+> por lo que es seguro ejecutarlas varias veces.
+
+### Opción A — Arranque automático (recomendado)
+
+Establece `LOAD_FIXTURES=true` antes de arrancar la aplicación:
+
+**Docker** — añade al fichero `.env`:
+
+```dotenv
+LOAD_FIXTURES=true
+```
+
+**Binario nativo (Linux / macOS):**
+
+```bash
+LOAD_FIXTURES=true ./start.sh
+```
+
+**Binario nativo (Windows PowerShell):**
+
+```powershell
+$env:LOAD_FIXTURES = "true"; .\start.ps1
+```
+
+### Opción B — Manual (entorno de desarrollo)
+
 ```bash
 php bin/console doctrine:fixtures:load --append
 ```
-
-> El comando borra todos los datos existentes antes de insertar los de demostración,
-> por lo que es seguro ejecutarlo varias veces.
 
 ## Credenciales de acceso
 
