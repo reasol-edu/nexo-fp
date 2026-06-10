@@ -158,7 +158,7 @@ class CompanyRepositoryTest extends RepositoryTestCase
         [$centre, $stayA, $company] = $this->makeStayChain('41000015');
         $year    = $stayA->getAcademicYear();
         $prog    = $stayA->getProgramme();
-        $stayB   = $this->makeStay($year, $prog, 'FCT DAM B');
+        $stayB   = $this->makeStay($year, $prog, 'FFEOE DAM B');
         $teacher = $this->makeTeacher('liaison.other.stay');
         $workcenter = $this->makeWorkcenter($company, 'Sede');
         $this->persist($stayB, $teacher, $workcenter);
@@ -246,7 +246,7 @@ class CompanyRepositoryTest extends RepositoryTestCase
         $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $family  = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
-        $stay    = $this->makeStay($year, $prog, 'FCT DAM ' . $centreCode);
+        $stay    = $this->makeStay($year, $prog, 'FFEOE DAM ' . $centreCode);
         $company = $this->makeCompany('Empresa S.L.', 'B' . substr(md5($centreCode), 0, 8), $centre);
         $this->persist($centre, $year, $family, $prog, $stay, $company);
         return [$centre, $stay, $company];

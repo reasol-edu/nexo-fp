@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-10
+
+### Added
+
+- Dashboard accionable: bloque «Pendientes» con las estancias activas que requieren atención (estudiantes sin puesto, puestos libres, sin tutorías o finalizados sin firmar), accesos rápidos según permisos y tarjetas de métricas enlazadas a sus secciones
+- Exportación a CSV (compatible con Excel) de estudiantes, empresas y puestos de estancia, respetando los filtros activos y los permisos de cada rol
+- Modo de asignación rápida en el detalle de estancia: muestra los selectores de asignación en todas las filas sin recargas
+- Notificaciones de confirmación (toasts) tras las acciones en vivo del detalle de estancia
+- Estados vacíos con botón de acción directa en el detalle de estancia y en los listados de estancias y empresas
+- Notificaciones por email: aviso al tutor/a dual docente al asignarle un puesto y a los docentes de enlace al crear puestos de su empresa; desactivadas por defecto (`MAILER_DSN=null://null`)
+- Comando `app:send-reminders` para enviar recordatorios de puestos pendientes de firma en estancias próximas a finalizar, pensado para cron diario
+
+### Changed
+
+- El README documenta las nuevas características y la configuración del envío de correo
+
 ## [1.1.0] - 2026-06-10
 
 ### Added

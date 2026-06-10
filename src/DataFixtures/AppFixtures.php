@@ -603,9 +603,9 @@ class AppFixtures extends Fixture
             // Abbreviation derived from ProgrammeYear name (e.g. "1.º SMR" → "SMR")
             $abbr = preg_replace('/^\d+\.º\s+/', '', $py1->getName()) ?? '';
 
-            // ── Estancia pasada (1.er semestre 2025-2026) ────────────────────
+            // ── Estancia pasada (1.er trimestre 2025-2026) ────────────────────
             $pastStay = (new Stay())
-                ->setName('FCT ' . $abbr . ' 2025 (1.er semestre)')
+                ->setName('FFEOE ' . $abbr . ' 2025 (1.er trimestre)')
                 ->setAcademicYear($year)
                 ->setProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2025-09-15'))
@@ -635,9 +635,9 @@ class AppFixtures extends Fixture
                 }
             }
 
-            // ── Estancia actual (2.º semestre 2025-2026) ─────────────────────
+            // ── Estancia actual (2.º trimestre 2025-2026) ─────────────────────
             $currentStay = (new Stay())
-                ->setName('FCT ' . $abbr . ' 2026 (2.º semestre)')
+                ->setName('FFEOE ' . $abbr . ' 2026 (2.º trimestre)')
                 ->setAcademicYear($year)
                 ->setProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2026-03-01'))
@@ -708,9 +708,9 @@ class AppFixtures extends Fixture
                 }
             }
 
-            // ── Estancia futura (1.er semestre 2026-2027) ─────────────────────
+            // ── Estancia futura (1.er trimestre 2026-2027) ─────────────────────
             $futureStay = (new Stay())
-                ->setName('FCT ' . $abbr . ' 2026-2027')
+                ->setName('FFEOE ' . $abbr . ' 2026-2027')
                 ->setAcademicYear($year)
                 ->setProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2026-09-15'))

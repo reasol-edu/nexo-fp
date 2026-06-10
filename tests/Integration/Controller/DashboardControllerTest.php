@@ -113,7 +113,7 @@ class DashboardControllerTest extends ControllerTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $stay   = (new Stay())
-            ->setName('FCT DAM ' . $code)
+            ->setName('FFEOE DAM ' . $code)
             ->setAcademicYear($year)
             ->setProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))

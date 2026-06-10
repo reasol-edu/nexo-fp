@@ -92,13 +92,13 @@ class StayRepositoryTest extends RepositoryTestCase
     {
         [$year, $prog] = $this->makeChain('41000007');
         $fam    = $prog->getProfessionalFamily();
-        $stayB  = $this->makeStay($year, $prog, 'FCT Informatica B');
+        $stayB  = $this->makeStay($year, $prog, 'FFEOE Informatica B');
         $this->persist($stayB);
 
         $results = $this->repo->createByCentreFilteredQuery($year, 'Informatica B')->getResult();
 
         self::assertCount(1, $results);
-        self::assertSame('FCT Informatica B', $results[0]->getName());
+        self::assertSame('FFEOE Informatica B', $results[0]->getName());
     }
 
     public function testCreateByCentreFilteredQueryFiltersByFamilyId(): void
@@ -107,7 +107,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $centre = $prog->getAcademicYear()->getEducationalCentre();
         $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
         $progB  = (new Programme())->setName('Enfermeria')->setAcademicYear($year)->setProfessionalFamily($famB);
-        $stayB  = $this->makeStay($year, $progB, 'FCT Sanidad');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Sanidad');
         $this->persist($famB, $progB, $stayB);
 
         $famAId = $prog->getProfessionalFamily()->getId()->toRfc4122();
@@ -123,7 +123,7 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $progA] = $this->makeChain('41000009');
         $famA  = $progA->getProfessionalFamily();
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($famA);
-        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $this->persist($progB, $stayB);
 
         $results = $this->repo->createByCentreFilteredQuery(
@@ -150,8 +150,8 @@ class StayRepositoryTest extends RepositoryTestCase
     {
         [$year, $prog] = $this->makeChain('41000011');
 
-        $past    = $this->makeStay($year, $prog, 'FCT Past',    '2025-01-01', '2025-06-30');
-        $future  = $this->makeStay($year, $prog, 'FCT Future',  '2027-01-01', '2027-06-30');
+        $past    = $this->makeStay($year, $prog, 'FFEOE Past',    '2025-01-01', '2025-06-30');
+        $future  = $this->makeStay($year, $prog, 'FFEOE Future',  '2027-01-01', '2027-06-30');
         $this->persist($past, $future);
 
         $results = $this->repo->createByCentreFilteredQuery($year, '', '', '', ['current'])->getResult();
@@ -168,8 +168,8 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $prog] = $this->makeChain('41000020');
         $centre = $prog->getAcademicYear()->getEducationalCentre();
 
-        $stayWith    = $this->makeStay($year, $prog, 'FCT Con Puestos');
-        $stayWithout = $this->makeStay($year, $prog, 'FCT Sin Puestos');
+        $stayWith    = $this->makeStay($year, $prog, 'FFEOE Con Puestos');
+        $stayWithout = $this->makeStay($year, $prog, 'FFEOE Sin Puestos');
         $company     = $this->makeCompany($centre, 'Empresa Enlace S.L.');
         $workcenter  = $this->makeWorkcenter($company, 'Sede');
         $position    = (new TrainingPosition())->setStay($stayWith)->setWorkcenter($workcenter)
@@ -209,9 +209,9 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $prog] = $this->makeChain('41000022');
         $centre = $prog->getAcademicYear()->getEducationalCentre();
 
-        $stayA      = $this->makeStay($year, $prog, 'FCT A');
-        $stayB      = $this->makeStay($year, $prog, 'FCT B');
-        $stayC      = $this->makeStay($year, $prog, 'FCT C Sin Puestos');
+        $stayA      = $this->makeStay($year, $prog, 'FFEOE A');
+        $stayB      = $this->makeStay($year, $prog, 'FFEOE B');
+        $stayC      = $this->makeStay($year, $prog, 'FFEOE C Sin Puestos');
         $company    = $this->makeCompany($centre, 'Empresa Multi S.L.');
         $workcenter = $this->makeWorkcenter($company, 'Sede Multi');
         $posA       = (new TrainingPosition())->setStay($stayA)->setWorkcenter($workcenter)
@@ -251,7 +251,7 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $prog] = $this->makeChain('41000046');
         $fam   = $prog->getProfessionalFamily();
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $admin = (new Teacher(new PersonName('A', 'Admin')))->setUsername('admin.filter.1')->setAdmin(true);
         $this->persist($progB, $stayB, $admin);
 
@@ -267,8 +267,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $admin  = (new Teacher(new PersonName('C', 'Admin')))->setUsername('cadmin.filter.1');
         $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $admin);
         $centre->addAdmin($admin);
@@ -286,8 +286,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $coord  = (new Teacher(new PersonName('Co', 'Ord')))->setUsername('coord.filter.1');
         $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $coord);
         $progA->addCoordinator($coord);
@@ -308,8 +308,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
         $progB  = (new Programme())->setName('Enfermeria')->setAcademicYear($year)->setProfessionalFamily($famB);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT Enfermeria');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermeria');
         $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
 
         $results = $this->repo->createByCentreFilteredQuery($year, viewer: $head)->getResult();
@@ -325,8 +325,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor  = (new Teacher(new PersonName('T', 'Utor')))->setUsername('tutor.cfilter.1');
         $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
@@ -345,8 +345,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.cfilter.1');
         $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
@@ -426,7 +426,7 @@ class StayRepositoryTest extends RepositoryTestCase
     {
         [$year, $prog] = $this->makeChain('41000030');
         $fam  = $prog->getProfessionalFamily();
-        $stay2 = $this->makeStay($year, $prog, 'FCT DAM B');
+        $stay2 = $this->makeStay($year, $prog, 'FFEOE DAM B');
         $this->persist($stay2);
 
         $stats = $this->repo->findDashboardStats($year, null);
@@ -437,7 +437,7 @@ class StayRepositoryTest extends RepositoryTestCase
     public function testFindDashboardStatsWithAdminViewerReturnsAllStays(): void
     {
         [$year, $prog] = $this->makeChain('41000031');
-        $stay2  = $this->makeStay($year, $prog, 'FCT DAM B');
+        $stay2  = $this->makeStay($year, $prog, 'FFEOE DAM B');
         $admin  = (new Teacher(new PersonName('Admin', 'Global')))->setUsername('admin.dash.1')->setAdmin(true);
         $this->persist($stay2, $admin);
 
@@ -451,7 +451,7 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $progA, $stayA] = $this->makeChain('41000032');
         $fam   = $progA->getProfessionalFamily();
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.1');
         $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
@@ -468,7 +468,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $centre = $progA->getAcademicYear()->getEducationalCentre();
         $fam    = $progA->getProfessionalFamily();
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor  = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.2');
         $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
@@ -506,8 +506,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $famB    = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
         $progB   = (new Programme())->setName('Enfermeria')->setAcademicYear($year)->setProfessionalFamily($famB);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT Enfermeria');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE Enfermeria');
         $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
 
         $stats = $this->repo->findDashboardStats($year, $head);
@@ -523,8 +523,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $this->persist($centre, $year, $coord, $fam, $progA, $progB, $stayA, $stayB);
         $progA->addCoordinator($coord);
         $this->flush();
@@ -542,8 +542,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $this->persist($centre, $year, $admin, $fam, $progA, $progB, $stayA, $stayB);
         $centre->addAdmin($admin);
         $this->flush();
@@ -559,8 +559,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $year       = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $fam        = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog       = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayWith   = $this->makeStay($year, $prog, 'FCT Con Puestos');
-        $stayWithout = $this->makeStay($year, $prog, 'FCT Sin Puestos');
+        $stayWith   = $this->makeStay($year, $prog, 'FFEOE Con Puestos');
+        $stayWithout = $this->makeStay($year, $prog, 'FFEOE Sin Puestos');
         $liaison    = (new Teacher(new PersonName('En', 'Lace')))->setUsername('liaison.dash.1');
         $company    = $this->makeCompany($centre, 'Empresa Dash Enlace S.L.');
         $workcenter = $this->makeWorkcenter($company, 'Sede');
@@ -582,8 +582,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
         $this->persist($centre, $year, $teacher, $fam, $progA, $progB, $stayA, $stayB, $level, $group);
@@ -600,7 +600,7 @@ class StayRepositoryTest extends RepositoryTestCase
     public function testFindActiveAndUpcomingWithNullViewerReturnsAll(): void
     {
         [$year, $prog] = $this->makeChain('41000035');
-        $stay2 = $this->makeStay($year, $prog, 'FCT DAM B');
+        $stay2 = $this->makeStay($year, $prog, 'FFEOE DAM B');
         $this->persist($stay2);
 
         $results = $this->repo->findActiveAndUpcoming($year, null);
@@ -613,7 +613,7 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $progA] = $this->makeChain('41000036');
         $fam   = $progA->getProfessionalFamily();
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayB = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.upcoming.1');
         $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
@@ -634,8 +634,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
         $progB  = (new Programme())->setName('Enfermeria')->setAcademicYear($year)->setProfessionalFamily($famB);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT Enfermeria');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermeria');
         $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
 
         $results = $this->repo->findActiveAndUpcoming($year, $head);
@@ -652,8 +652,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $this->persist($centre, $year, $coord, $fam, $progA, $progB, $stayA, $stayB);
         $progA->addCoordinator($coord);
         $this->flush();
@@ -672,8 +672,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA  = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB  = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $this->persist($centre, $year, $admin, $fam, $progA, $progB, $stayA, $stayB);
         $centre->addAdmin($admin);
         $this->flush();
@@ -690,8 +690,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $progA   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA   = $this->makeStay($year, $progA, 'FCT DAM');
-        $stayB   = $this->makeStay($year, $progB, 'FCT DAW');
+        $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
+        $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.upcoming.2');
         $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
@@ -711,8 +711,8 @@ class StayRepositoryTest extends RepositoryTestCase
         $year       = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $fam        = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog       = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayWith   = $this->makeStay($year, $prog, 'FCT Con Puestos');
-        $stayWithout = $this->makeStay($year, $prog, 'FCT Sin Puestos');
+        $stayWith   = $this->makeStay($year, $prog, 'FFEOE Con Puestos');
+        $stayWithout = $this->makeStay($year, $prog, 'FFEOE Sin Puestos');
         $liaison    = (new Teacher(new PersonName('En', 'Lace')))->setUsername('liaison.upcoming.1');
         $company    = $this->makeCompany($centre, 'Empresa Upcoming Enlace S.L.');
         $workcenter = $this->makeWorkcenter($company, 'Sede');
@@ -755,8 +755,8 @@ class StayRepositoryTest extends RepositoryTestCase
     public function testPositionAlertsCountsMissingTutorAndMentorOnlyWhenStayStarted(): void
     {
         [$year, $prog] = $this->makeChain('41000062');
-        $started    = $this->makeStay($year, $prog, 'FCT Iniciada', '-30 days', '+30 days');
-        $notStarted = $this->makeStay($year, $prog, 'FCT Futura', '+10 days', '+60 days');
+        $started    = $this->makeStay($year, $prog, 'FFEOE Iniciada', '-30 days', '+30 days');
+        $notStarted = $this->makeStay($year, $prog, 'FFEOE Futura', '+10 days', '+60 days');
         $studentA   = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-62A');
         $studentB   = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-62B');
         $posA = (new TrainingPosition())->setStay($started)->setStudent($studentA);
@@ -796,7 +796,7 @@ class StayRepositoryTest extends RepositoryTestCase
     public function testPositionAlertsExcludesFinishedStays(): void
     {
         [$year, $prog] = $this->makeChain('41000064');
-        $past = $this->makeStay($year, $prog, 'FCT Pasada', '-90 days', '-10 days');
+        $past = $this->makeStay($year, $prog, 'FFEOE Pasada', '-90 days', '-10 days');
         $free = (new TrainingPosition())->setStay($past);
         $this->persist($past, $free);
 
@@ -810,8 +810,8 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $progA] = $this->makeChain('41000065');
         $fam   = $progA->getProfessionalFamily();
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayA = $this->makeStay($year, $progA, 'FCT DAM Alertas');
-        $stayB = $this->makeStay($year, $progB, 'FCT DAW Alertas');
+        $stayA = $this->makeStay($year, $progA, 'FFEOE DAM Alertas');
+        $stayB = $this->makeStay($year, $progB, 'FFEOE DAW Alertas');
         $freeA = (new TrainingPosition())->setStay($stayA);
         $freeB = (new TrainingPosition())->setStay($stayB);
         $coord = (new Teacher(new PersonName('Co', 'Ord')))->setUsername('coord.alerts.65');
@@ -860,7 +860,7 @@ class StayRepositoryTest extends RepositoryTestCase
     public function testCountStudentsWithoutPositionExcludesFinishedStays(): void
     {
         [$year, $prog] = $this->makeChain('41000072');
-        $past    = $this->makeStay($year, $prog, 'FCT Pasada', '-90 days', '-10 days');
+        $past    = $this->makeStay($year, $prog, 'FFEOE Pasada', '-90 days', '-10 days');
         $student = (new Student(new PersonName('Mar', 'Sol')))->setStudentId('S-72A');
         $this->persist($past, $student);
         $past->addStudent($student);
@@ -874,7 +874,7 @@ class StayRepositoryTest extends RepositoryTestCase
         [$year, $progA, $stayA] = $this->makeChain('41000073');
         $fam      = $progA->getProfessionalFamily();
         $progB    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
-        $stayB    = $this->makeStay($year, $progB, 'FCT DAW Sin Plaza');
+        $stayB    = $this->makeStay($year, $progB, 'FFEOE DAW Sin Plaza');
         $studentA = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-73A');
         $studentB = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-73B');
         $tutor    = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.nopos.73');
@@ -904,7 +904,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $family  = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
-        $stay    = $this->makeStay($year, $prog, 'FCT DAM ' . $centreCode);
+        $stay    = $this->makeStay($year, $prog, 'FFEOE DAM ' . $centreCode);
         $this->persist($centre, $year, $family, $prog, $stay);
         return [$year, $prog, $stay];
     }

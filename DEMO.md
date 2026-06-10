@@ -243,7 +243,7 @@ Cada docente de centro usa su **username como contraseña**. Por ejemplo:
 
 Cada enseñanza tiene **tres estancias** que cubren distintos momentos del curso:
 
-### Estancia pasada — `FCT <ABREV> 2025 (1.er semestre)`
+### Estancia pasada — `FFEOE <ABREV> 2025 (1.er trimestre)`
 
 Fechas: 15/09/2025 – 31/01/2026. Alumnos de **1.º** de la enseñanza.
 
@@ -253,7 +253,7 @@ Fechas: 15/09/2025 – 31/01/2026. Alumnos de **1.º** de la enseñanza.
 | — | Alumno F | sin puesto | — | Matriculado en la estancia sin puesto asignado |
 | — | Alumno G | sin puesto | — | Matriculado en la estancia sin puesto asignado |
 
-### Estancia actual — `FCT <ABREV> 2026 (2.º semestre)`
+### Estancia actual — `FFEOE <ABREV> 2026 (2.º trimestre)`
 
 Fechas: 01/03/2026 – 20/06/2026. Alumnos de **2.º** de la enseñanza.
 
@@ -269,7 +269,7 @@ Fechas: 01/03/2026 – 20/06/2026. Alumnos de **2.º** de la enseñanza.
 | — | Alumno F | sin puesto | — | Matriculado en la estancia sin puesto asignado |
 | — | Alumno G | sin puesto | — | Matriculado en la estancia sin puesto asignado |
 
-### Estancia futura — `FCT <ABREV> 2026-2027`
+### Estancia futura — `FFEOE <ABREV> 2026-2027`
 
 Fechas: 15/09/2026 – 31/01/2027. Sin alumnos matriculados aún.
 

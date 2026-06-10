@@ -254,7 +254,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
     private function makeStay(AcademicYear $year, Programme $programme): Stay
     {
         return (new Stay())
-            ->setName('FCT ' . uniqid())
+            ->setName('FFEOE ' . uniqid())
             ->setAcademicYear($year)
             ->setProgramme($programme)
             ->setStartDate(new \DateTimeImmutable('2025-03-01'))
