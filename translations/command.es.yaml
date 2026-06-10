@@ -14,6 +14,12 @@ create_centre.ask.city: 'Localidad'
 create_centre.error.existing_code: 'Ya existe un centro con el código "%code%".'
 create_centre.success: 'Centro educativo "%name%" (%code%) creado con el curso académico "%year%".'
 
+send_reminders.description: 'Envía recordatorios por email de puestos pendientes de firma en estancias próximas a finalizar'
+send_reminders.option.days: 'Días que faltan para el fin de la estancia'
+send_reminders.error.days_invalid: 'El número de días debe ser un entero mayor o igual que 0.'
+send_reminders.warning.no_tutor: '{1} 1 puesto pendiente de firma no tiene tutor/a dual docente asignado: no se puede enviar recordatorio.|]1,Inf[ %count% puestos pendientes de firma no tienen tutor/a dual docente asignado: no se pueden enviar recordatorios.'
+send_reminders.success: '{0} Ningún recordatorio que enviar para estancias que finalizan en %days% días.|{1} Recordatorio enviado a 1 tutor/a para estancias que finalizan en %days% días.|]1,Inf[ Recordatorios enviados a %count% tutores/as para estancias que finalizan en %days% días.'
+
 setup.skipped: 'La base de datos ya contiene datos. Se omite la inicialización.'
 setup.success: 'Aplicación inicializada: usuario "admin" y centro "IES Test" (23999999, Linares) creados.'
 

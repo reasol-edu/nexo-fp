@@ -155,6 +155,52 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $this->repo->findByStayOrdered($stay));
     }
 
+    // ── findUnsignedWithStayEndingOn ─────────────────────────────────────────
+
+    public function testFindUnsignedWithStayEndingOnMatchesExactDate(): void
+    {
+        [$stay] = $this->makeChain('41000020');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student);
+        $this->persist($student, $position);
+
+        $results = $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate());
+
+        self::assertCount(1, $results);
+        self::assertSame($position->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFindUnsignedWithStayEndingOnExcludesOtherDates(): void
+    {
+        [$stay] = $this->makeChain('41000021');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student);
+        $this->persist($student, $position);
+
+        $dayBefore = $stay->getEndDate()->modify('-1 day');
+
+        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($dayBefore));
+    }
+
+    public function testFindUnsignedWithStayEndingOnExcludesSignedPositions(): void
+    {
+        [$stay] = $this->makeChain('41000022');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setSigned(true);
+        $this->persist($student, $position);
+
+        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate()));
+    }
+
+    public function testFindUnsignedWithStayEndingOnExcludesPositionsWithoutStudent(): void
+    {
+        [$stay] = $this->makeChain('41000023');
+        $position = $this->makePosition($stay);
+        $this->persist($position);
+
+        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate()));
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
@@ -218,6 +264,11 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
     private function makePosition(Stay $stay): TrainingPosition
     {
         return (new TrainingPosition())->setStay($stay);
+    }
+
+    private function makeStudent(string $studentId): Student
+    {
+        return (new Student(new PersonName('Test', 'Student')))->setStudentId($studentId);
     }
 
     private function makeCompany(EducationalCentre $centre, string $name): Company

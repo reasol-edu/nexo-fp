@@ -1,0 +1,15 @@
+{% extends 'email/_layout.html.twig' %}
+
+{% block content %}
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': liaison.name.firstName}, 'emails') }}</p>
+
+    <p style="margin: 0 0 16px;">
+        {{ 'emails.positions_created.intro'|trans({'%count%': count, '%company%': company.name, '%stay%': stay.name}, 'emails') }}
+    </p>
+
+    <p style="margin: 0;">
+        <a href="{{ stay_url }}" style="display: inline-block; background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold;">
+            {{ 'emails.view_stay'|trans({}, 'emails') }}
+        </a>
+    </p>
+{% endblock %}

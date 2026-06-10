@@ -1,0 +1,38 @@
+{% extends 'email/_layout.html.twig' %}
+
+{% block content %}
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': tutor.name.firstName}, 'emails') }}</p>
+
+    <p style="margin: 0 0 16px;">
+        {{ 'emails.tutor_assigned.intro'|trans({'%stay%': stay.name}, 'emails') }}
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 0 16px; font-size: 14px;">
+        <tr>
+            <td style="padding: 4px 16px 4px 0; color: #6b7280;">{{ 'emails.tutor_assigned.student'|trans({}, 'emails') }}</td>
+            <td style="padding: 4px 0; font-weight: bold;">
+                {% if position.student %}
+                    {{ position.student.name.lastName }}, {{ position.student.name.firstName }}
+                {% else %}
+                    {{ 'emails.tutor_assigned.student_unassigned'|trans({}, 'emails') }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 4px 16px 4px 0; color: #6b7280;">{{ 'emails.tutor_assigned.workcenter'|trans({}, 'emails') }}</td>
+            <td style="padding: 4px 0; font-weight: bold;">
+                {% if position.workcenter %}
+                    {{ position.workcenter.company.name }} — {{ position.workcenter.name }}
+                {% else %}
+                    {{ 'emails.tutor_assigned.no_workcenter'|trans({}, 'emails') }}
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin: 0;">
+        <a href="{{ stay_url }}" style="display: inline-block; background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold;">
+            {{ 'emails.view_stay'|trans({}, 'emails') }}
+        </a>
+    </p>
+{% endblock %}

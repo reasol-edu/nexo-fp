@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\Stay;
 use App\Entity\TrainingPosition;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -29,6 +30,30 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Puestos con estudiante asignado y sin firmar de estancias que terminan
+     * exactamente en la fecha dada (para recordatorios idempotentes con cron diario).
+     *
+     * @return array<int, TrainingPosition>
+     */
+    public function findUnsignedWithStayEndingOn(\DateTimeImmutable $endDate): array
+    {
+        return $this->createQueryBuilder('tp')
+            ->join('tp.stay', 's')->addSelect('s')
+            ->join('tp.student', 'st')->addSelect('st')
+            ->leftJoin('tp.workcenter', 'wc')->addSelect('wc')
+            ->leftJoin('wc.company', 'co')->addSelect('co')
+            ->leftJoin('tp.academicTutor', 'at')->addSelect('at')
+            ->where('s.endDate = :endDate')
+            ->andWhere('tp.signed = :bfalse')
+            ->setParameter('endDate', $endDate, Types::DATE_IMMUTABLE)
+            ->setParameter('bfalse', false)
+            ->orderBy('st.name.lastName', 'ASC')
+            ->addOrderBy('st.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /** @return array<int, TrainingPosition> */

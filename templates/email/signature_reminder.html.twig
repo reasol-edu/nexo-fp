@@ -1,0 +1,34 @@
+{% extends 'email/_layout.html.twig' %}
+
+{% block content %}
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': tutor.name.firstName}, 'emails') }}</p>
+
+    <p style="margin: 0 0 16px;">
+        {{ 'emails.signature_reminder.intro'|trans({'%count%': positions|length, '%days%': days_left}, 'emails') }}
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px; font-size: 13px; border-collapse: collapse;">
+        <tr>
+            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.student'|trans({}, 'emails') }}</th>
+            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.workcenter'|trans({}, 'emails') }}</th>
+            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.stay'|trans({}, 'emails') }}</th>
+        </tr>
+        {% for position in positions %}
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                    {{ position.student.name.lastName }}, {{ position.student.name.firstName }}
+                </td>
+                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                    {% if position.workcenter %}
+                        {{ position.workcenter.company.name }} — {{ position.workcenter.name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                    <a href="{{ stay_urls[position.stay.id.toRfc4122] }}" style="color: #6d28d9;">{{ position.stay.name }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

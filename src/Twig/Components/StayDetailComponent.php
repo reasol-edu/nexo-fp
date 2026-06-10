@@ -13,6 +13,7 @@ use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Security\Voter\StayVoter;
+use App\Service\StayNotifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -41,6 +42,7 @@ class StayDetailComponent extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
+        private readonly StayNotifier $notifier,
     ) {}
 
     /** @return array<string, mixed> */
@@ -277,8 +279,13 @@ class StayDetailComponent extends AbstractController
             return;
         }
 
+        $previousTutorId = $position->getAcademicTutor()?->getId()->toRfc4122();
         $position->setAcademicTutor($teacher);
         $this->em->flush();
+
+        if ($teacher->getId()->toRfc4122() !== $previousTutorId) {
+            $this->notifier->notifyTutorAssigned($position);
+        }
 
         $this->toast('stays.toast.academic_tutor_set', [
             '%teacher%' => $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),

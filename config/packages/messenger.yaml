@@ -12,6 +12,9 @@ framework:
         routing:
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
+            # Para enviar los emails en segundo plano (recomendado con SMTP lentos),
+            # define un transporte async (p. ej. doctrine://default) y descomenta:
+            # 'Symfony\Component\Mailer\Messenger\SendEmailMessage': async
 
 # when@test:
 #    framework:

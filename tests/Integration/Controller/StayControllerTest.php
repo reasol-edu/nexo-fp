@@ -19,9 +19,12 @@ use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
 use App\Tests\Integration\ControllerTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 
 class StayControllerTest extends ControllerTestCase
 {
+    use MailerAssertionsTrait;
+
     // ── index ─────────────────────────────────────────────────────────────────
 
     public function testIndexRedirectsWhenNoTenantSelected(): void
@@ -998,6 +1001,103 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('GET', '/estancias/' . $oldStay->getId()->toRfc4122() . '/exportar');
 
         self::assertResponseStatusCodeSame(404);
+    }
+
+    // ── email notifications ───────────────────────────────────────────────────
+
+    public function testEditPositionAssigningTutorSendsEmail(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $tutor      = $this->makeTeacher('tutora.notif')->setEmail('tutora@test.local');
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position, $tutor);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'            => $token,
+            'workcenter_id'     => $workcenter->getId()->toRfc4122(),
+            'academic_tutor_id' => $tutor->getId()->toRfc4122(),
+            'state'             => 'DRAFT',
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertEmailCount(1);
+
+        $email = self::getMailerMessage();
+        self::assertNotNull($email);
+        self::assertEmailAddressContains($email, 'to', 'tutora@test.local');
+    }
+
+    public function testEditPositionKeepingSameTutorSendsNoEmail(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $tutor      = $this->makeTeacher('tutora.notif')->setEmail('tutora@test.local');
+        $position->setAcademicTutor($tutor);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position, $tutor);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'            => $token,
+            'workcenter_id'     => $workcenter->getId()->toRfc4122(),
+            'academic_tutor_id' => $tutor->getId()->toRfc4122(),
+            'state'             => 'DRAFT',
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertEmailCount(0);
+    }
+
+    public function testNewPositionNotifiesLiaisonWithEmail(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $liaison    = $this->makeTeacher('liaison.notif')->setEmail('enlace@test.local');
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $liaison);
+        $company->addLiaison($liaison);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId  = $stay->getId()->toRfc4122();
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId . '/nuevo-puesto');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/nuevo-puesto', [
+            '_token'        => $token,
+            'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'count'         => '2',
+            'details'       => '',
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertEmailCount(1);
+
+        $email = self::getMailerMessage();
+        self::assertNotNull($email);
+        self::assertEmailAddressContains($email, 'to', 'enlace@test.local');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -1,0 +1,19 @@
+emails.greeting: 'Hola, %name%:'
+emails.signature: 'Este es un mensaje automático de %app%. No respondas a este correo.'
+emails.view_stay: 'Ver estancia'
+
+emails.tutor_assigned.subject: 'Te han asignado como tutor/a dual docente'
+emails.tutor_assigned.intro: 'Te han asignado como tutor/a dual docente de un puesto formativo en la estancia «%stay%».'
+emails.tutor_assigned.student: 'Estudiante'
+emails.tutor_assigned.student_unassigned: 'Sin asignar'
+emails.tutor_assigned.workcenter: 'Empresa / Centro de trabajo'
+emails.tutor_assigned.no_workcenter: 'Sin centro asignado'
+
+emails.positions_created.subject: 'Nuevos puestos formativos en una empresa de la que eres enlace'
+emails.positions_created.intro: '{1} Se ha creado 1 puesto formativo de la empresa «%company%» en la estancia «%stay%».|]1,Inf[ Se han creado %count% puestos formativos de la empresa «%company%» en la estancia «%stay%».'
+
+emails.signature_reminder.subject: 'Recordatorio: puestos pendientes de firma'
+emails.signature_reminder.intro: '{1} Tienes 1 puesto formativo pendiente de firma en estancias que finalizan en %days% días.|]1,Inf[ Tienes %count% puestos formativos pendientes de firma en estancias que finalizan en %days% días.'
+emails.signature_reminder.col.student: 'Estudiante'
+emails.signature_reminder.col.workcenter: 'Empresa / Centro de trabajo'
+emails.signature_reminder.col.stay: 'Estancia'

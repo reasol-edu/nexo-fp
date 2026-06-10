@@ -19,6 +19,7 @@ use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
 use App\Service\CsvExporter;
 use App\Service\PdfService;
+use App\Service\StayNotifier;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,6 +46,7 @@ class StayController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly PdfService $pdf,
         private readonly CsvExporter $csvExporter,
+        private readonly StayNotifier $notifier,
     ) {}
 
     #[Route('', name: 'app_stays_index')]
@@ -563,6 +565,8 @@ class StayController extends AbstractController
                 }
                 $this->em->flush();
 
+                $this->notifier->notifyLiaisonsPositionsCreated($stay, $workcenter->getCompany(), $count, $currentUser);
+
                 $this->addFlash('success', $this->translator->trans(
                     'stays.flash.positions_created',
                     ['%count%' => $count],
@@ -867,6 +871,10 @@ class StayController extends AbstractController
                          ->setSigned($values['signed']);
 
                 $this->em->flush();
+
+                if ($academicTutor !== null && $academicTutor->getId()->toRfc4122() !== $currentTutorId) {
+                    $this->notifier->notifyTutorAssigned($position);
+                }
 
                 $this->addFlash('success', $this->t('stays.flash.position_updated'));
 
