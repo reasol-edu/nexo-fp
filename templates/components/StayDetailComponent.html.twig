@@ -105,6 +105,12 @@
                        title="{{ 'stays.report.btn'|trans({}, 'stays') }}">
                         {{ ux_icon('heroicons:document-arrow-down', {class: 'h-4 w-4'}) }}
                     </a>
+                    <a href="{{ path('app_stays_export', {id: stay.id.toRfc4122}) }}"
+                       class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
+                              text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                       title="{{ 'stays.export.btn'|trans({}, 'stays') }}">
+                        {{ ux_icon('heroicons:table-cells', {class: 'h-4 w-4'}) }}
+                    </a>
                     {% if can_manage %}
                         <a href="{{ path('app_stays_edit', {id: stay.id.toRfc4122}) }}"
                            class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2

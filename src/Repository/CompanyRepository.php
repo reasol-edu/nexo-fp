@@ -6,6 +6,7 @@ use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\Workcenter;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
@@ -46,6 +47,43 @@ class CompanyRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery();
+    }
+
+    /**
+     * Companies of the centre with workers and liaisons fetch-joined and the
+     * workcenter count resolved in the same query (Company has no inverse side).
+     *
+     * @return list<array{company: Company, workcenter_count: int}>
+     */
+    public function findByCentreFilteredForExport(EducationalCentre $centre, string $search = ''): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->select('c')
+            ->addSelect('(SELECT COUNT(w.id) FROM ' . Workcenter::class . ' w WHERE w.company = c) AS workcenter_count')
+            ->leftJoin('c.workers', 'wk')->addSelect('wk')
+            ->leftJoin('c.liaisons', 'l')->addSelect('l')
+            ->where('c.educationalCentre = :centre')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->orderBy('c.name', 'ASC');
+
+        if ($search !== '') {
+            $q = '%' . $search . '%';
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    'LOWER(c.name) LIKE LOWER(:q)',
+                    'LOWER(c.vatNumber) LIKE LOWER(:q)',
+                    'LOWER(c.city) LIKE LOWER(:q)',
+                )
+            )->setParameter('q', $q);
+        }
+
+        /** @var list<array{0: Company, workcenter_count: string|int}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static fn (array $row): array => [
+            'company'          => $row[0],
+            'workcenter_count' => (int) $row['workcenter_count'],
+        ], $rows);
     }
 
     public function findByIdAndCentre(string $id, EducationalCentre $centre): ?Company

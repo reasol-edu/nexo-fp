@@ -176,3 +176,12 @@ stays.report.col.state: 'Estado'
 stays.report.col.signed: 'Firmado'
 stays.report.col.levels: 'Niveles'
 stays.report.col.notes: 'Observaciones'
+
+# Exportación CSV
+stays.export.btn: 'Exportar CSV'
+stays.export.col.nie: 'NIE'
+stays.export.col.company: 'Empresa'
+stays.export.col.workcenter: 'Centro de trabajo'
+stays.export.col.city: 'Localidad'
+stays.export.yes: 'Sí'
+stays.export.no: 'No'

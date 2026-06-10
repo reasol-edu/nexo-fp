@@ -231,6 +231,7 @@ centre_teachers.import_assignments.error.missing_column: 'Columna requerida no e
 # Estudiantes
 students.title: 'Estudiantes'
 students.new: 'Nuevo estudiante'
+students.export: 'Exportar CSV'
 students.hub_help: 'Alumnado matriculado en los grupos del curso activo.'
 students.manage: 'Gestionar estudiantes'
 students.no_active_year: 'Este centro no tiene un curso académico activo. Establece uno activo para gestionar los estudiantes.'

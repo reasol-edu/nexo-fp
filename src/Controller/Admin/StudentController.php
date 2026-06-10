@@ -11,7 +11,9 @@ use App\Entity\Student;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
+use App\Service\CsvExporter;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +30,7 @@ class StudentController extends AbstractController
         private readonly StudentRepository $students,
         private readonly GroupRepository $groups,
         private readonly TranslatorInterface $translator,
+        private readonly CsvExporter $csvExporter,
     ) {}
 
     #[Route('', name: 'app_admin_students_index')]
@@ -184,6 +187,52 @@ class StudentController extends AbstractController
             'availableGroups'  => array_values($centreGroupsById),
             'selectedGroupIds' => $selectedGroupIds,
         ]);
+    }
+
+    #[Route('/exportar', name: 'app_admin_students_export')]
+    public function export(string $centreId, Request $request): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+
+        $search  = trim($request->query->getString('search'));
+        $groupId = trim($request->query->getString('groupId'));
+        if ($groupId !== '' && !Uuid::isValid($groupId)) {
+            $groupId = '';
+        }
+
+        $activeYearGroupIds = array_keys($this->indexGroupsById($centre));
+        $activeYearGroupIds = array_flip($activeYearGroupIds);
+
+        $rows = [];
+        foreach ($this->students->findByCentreFilteredWithGroups($centre, $search, $groupId) as $student) {
+            $groupNames = [];
+            foreach ($student->getGroups() as $group) {
+                if (isset($activeYearGroupIds[$group->getId()->toRfc4122()])) {
+                    $groupNames[] = $group->getName();
+                }
+            }
+            sort($groupNames);
+
+            $rows[] = [
+                $student->getStudentId(),
+                $student->getName()->getLastName(),
+                $student->getName()->getFirstName(),
+                implode(', ', $groupNames),
+                $student->getDetails(),
+            ];
+        }
+
+        return $this->csvExporter->streamResponse(
+            'estudiantes-' . $centre->getCode() . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.csv',
+            [
+                $this->t('students.col.nie'),
+                $this->t('student.field.last_name'),
+                $this->t('student.field.first_name'),
+                $this->t('students.col.groups'),
+                $this->t('student.field.details'),
+            ],
+            $rows,
+        );
     }
 
     #[Route('/importar', name: 'app_admin_students_import')]

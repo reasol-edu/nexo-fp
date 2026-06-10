@@ -14,6 +14,7 @@ use App\Repository\TeacherRepository;
 use App\Repository\WorkcenterRepository;
 use App\Repository\WorkerRepository;
 use App\Security\Voter\CompanyVoter;
+use App\Service\CsvExporter;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,6 +37,7 @@ class CompanyController extends AbstractController
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
         private readonly ValidatorInterface $validator,
+        private readonly CsvExporter $csvExporter,
     ) {}
 
     #[Route('', name: 'app_companies_index')]
@@ -114,6 +116,53 @@ class CompanyController extends AbstractController
             'errors' => $errors,
             'values' => $values,
         ]);
+    }
+
+    // Debe declararse antes de edit(): su ruta /{id} capturaría /exportar
+    #[Route('/exportar', name: 'app_companies_export')]
+    public function export(Request $request): Response
+    {
+        $centre = $this->tenantContext->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
+
+        $search = trim($request->query->getString('search'));
+
+        $rows = [];
+        foreach ($this->companies->findByCentreFilteredForExport($centre, $search) as $row) {
+            $company = $row['company'];
+
+            $liaisonNames = [];
+            foreach ($company->getLiaisons() as $liaison) {
+                $liaisonNames[] = $liaison->getName()->getLastName() . ', ' . $liaison->getName()->getFirstName();
+            }
+            sort($liaisonNames);
+
+            $rows[] = [
+                $company->getName(),
+                $company->getVatNumber(),
+                $company->getCity(),
+                $row['workcenter_count'],
+                count($company->getWorkers()),
+                implode('; ', $liaisonNames),
+            ];
+        }
+
+        return $this->csvExporter->streamResponse(
+            'empresas-' . $centre->getCode() . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.csv',
+            [
+                $this->t('company.field.name'),
+                $this->t('company.field.vat_number'),
+                $this->t('company.field.city'),
+                $this->t('companies.export.col.workcenters'),
+                $this->t('companies.export.col.workers'),
+                $this->t('companies.liaisons'),
+            ],
+            $rows,
+        );
     }
 
     #[Route('/{id}', name: 'app_companies_edit')]

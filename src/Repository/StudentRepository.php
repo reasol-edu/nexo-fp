@@ -65,6 +65,49 @@ class StudentRepository extends ServiceEntityRepository
         return $qb->getQuery();
     }
 
+    /**
+     * Same filters as createByCentreFilteredQuery, but returns the full list with
+     * the groups collection fetch-joined (separate alias so the group filter does
+     * not truncate the hydrated collection).
+     *
+     * @return list<Student>
+     */
+    public function findByCentreFilteredWithGroups(
+        EducationalCentre $centre,
+        string $search = '',
+        string $groupId = '',
+    ): array {
+        $qb = $this->createQueryBuilder('s')
+            ->distinct()
+            ->join('s.groups', 'g')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'prog')
+            ->join('prog.professionalFamily', 'f')
+            ->join('f.academicYear', 'ay')
+            ->leftJoin('s.groups', 'sg')->addSelect('sg')
+            ->where('ay = :activeYear')
+            ->setParameter('activeYear', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->orderBy('s.name.lastName', 'ASC')
+            ->addOrderBy('s.name.firstName', 'ASC');
+
+        if ($groupId !== '') {
+            $qb->andWhere('g.id = :groupId')
+               ->setParameter('groupId', $groupId, 'uuid');
+        }
+
+        if ($search !== '') {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    's.studentId LIKE :search',
+                    's.name.firstName LIKE :search',
+                    's.name.lastName LIKE :search',
+                )
+            )->setParameter('search', '%' . $search . '%');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     /** @return Query<null, Student> */
     public function findNoneQuery(): Query
     {

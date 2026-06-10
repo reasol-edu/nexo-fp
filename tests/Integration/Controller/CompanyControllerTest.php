@@ -315,6 +315,60 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertStringContainsString('/empresas/' . $companyId, (string) $this->client->getResponse()->headers->get('Location'));
     }
 
+    // ── export ───────────────────────────────────────────────────────────────
+
+    public function testExportReturnsCsvWithCompanyData(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $worker  = $this->makeWorker('12345678A', 'Ana', 'López');
+        $company->addWorker($worker);
+        $this->persist($centre, $teacher, $worker, $company);
+        $this->loginAs($teacher, $centre);
+
+        // También verifica que /empresas/exportar no cae en la ruta /{id} de edit()
+        $this->client->request('GET', '/empresas/exportar');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertStringContainsString('attachment', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
+
+        $content = $this->getStreamedContent();
+        self::assertStringContainsString('Empresa S.L.', $content);
+        self::assertStringContainsString('B12345678', $content);
+    }
+
+    public function testExportAppliesSearchFilter(): void
+    {
+        $centre   = $this->makeCentre('41000001');
+        $teacher  = $this->makeAdmin('admin.1');
+        $company1 = $this->makeCompany($centre, 'Alfa Tecnología', 'B11111111');
+        $company2 = $this->makeCompany($centre, 'Beta Logística', 'B22222222');
+        $this->persist($centre, $teacher, $company1, $company2);
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/empresas/exportar?search=alfa');
+
+        self::assertResponseIsSuccessful();
+
+        $content = $this->getStreamedContent();
+        self::assertStringContainsString('Alfa Tecnología', $content);
+        self::assertStringNotContainsString('Beta Logística', $content);
+    }
+
+    public function testExportRequiresSectionPermission(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeTeacher('teacher.1');
+        $this->persist($centre, $teacher);
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/empresas/exportar');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     // ── edit worker ──────────────────────────────────────────────────────────
 
     public function testEditWorkerPageRendersWithoutError(): void

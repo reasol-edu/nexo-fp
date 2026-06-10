@@ -17,6 +17,7 @@ use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
+use App\Service\CsvExporter;
 use App\Service\PdfService;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,6 +44,7 @@ class StayController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
         private readonly PdfService $pdf,
+        private readonly CsvExporter $csvExporter,
     ) {}
 
     #[Route('', name: 'app_stays_index')]
@@ -404,6 +406,66 @@ class StayController extends AbstractController
             'student_position_map' => $studentPositionMap,
             'unassigned_positions' => $unassignedPositions,
         ], $filename);
+    }
+
+    #[Route('/{id}/exportar', name: 'app_stays_export')]
+    public function export(string $id): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
+
+        $rows = [];
+        foreach ($this->positions->findByStayOrdered($stay) as $position) {
+            $student    = $position->getStudent();
+            $tutor      = $position->getAcademicTutor();
+            $mentor     = $position->getWorkplaceMentor();
+            $workcenter = $position->getWorkcenter();
+
+            $rows[] = [
+                $student !== null ? $student->getName()->getLastName() . ', ' . $student->getName()->getFirstName() : '',
+                $student?->getStudentId() ?? '',
+                $workcenter?->getCompany()->getName() ?? '',
+                $workcenter?->getName() ?? '',
+                $workcenter?->getCity() ?? '',
+                $tutor !== null ? $tutor->getName()->getLastName() . ', ' . $tutor->getName()->getFirstName() : '',
+                $mentor !== null ? $mentor->getName()->getLastName() . ', ' . $mentor->getName()->getFirstName() : '',
+                $this->t('stays.state.' . strtolower($position->getState()->value)),
+                $position->isSigned() ? $this->t('stays.export.yes') : $this->t('stays.export.no'),
+                $position->getDetails(),
+            ];
+        }
+
+        $slug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '-', $stay->getName()));
+
+        return $this->csvExporter->streamResponse(
+            'estancia-' . $slug . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.csv',
+            [
+                $this->t('stays.show.col.student'),
+                $this->t('stays.export.col.nie'),
+                $this->t('stays.export.col.company'),
+                $this->t('stays.export.col.workcenter'),
+                $this->t('stays.export.col.city'),
+                $this->t('stays.show.col.tutor'),
+                $this->t('stays.show.col.workplace_mentor'),
+                $this->t('stays.show.col.state'),
+                $this->t('stays.position.field.signed'),
+                $this->t('stays.show.col.details'),
+            ],
+            $rows,
+        );
     }
 
     #[Route('/{id}/nuevo-puesto', name: 'app_stays_new_position')]

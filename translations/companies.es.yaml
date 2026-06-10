@@ -14,6 +14,11 @@ companies.empty: 'No hay empresas registradas para este centro.'
 companies.search_empty: 'No se encontraron empresas con ese criterio.'
 companies.back: 'Volver a empresas'
 
+# Exportación CSV
+companies.export: 'Exportar CSV'
+companies.export.col.workcenters: 'Centros de trabajo'
+companies.export.col.workers: 'Empleados'
+
 # Formulario de empresa
 company.new.title: 'Nueva empresa'
 company.edit.title: 'Editar empresa'

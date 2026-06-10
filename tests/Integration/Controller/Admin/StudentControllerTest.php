@@ -6,7 +6,11 @@ namespace App\Tests\Integration\Controller\Admin;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
+use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Tests\Integration\ControllerTestCase;
@@ -302,6 +306,90 @@ class StudentControllerTest extends ControllerTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    // ── export ────────────────────────────────────────────────────────────────
+
+    public function testExportReturnsCsvWithStudentData(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        [$family, $programme, $level, $group] = $this->makeGroupChain($year, 'DAW1A');
+        $student = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
+        $group->addStudent($student);
+        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $student);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+
+        $content = $this->getStreamedContent();
+        self::assertStringContainsString('2024-001', $content);
+        self::assertStringContainsString('Martinez', $content);
+        self::assertStringContainsString('DAW1A', $content);
+    }
+
+    public function testExportAppliesSearchFilter(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        [$family, $programme, $level, $group] = $this->makeGroupChain($year, 'DAW1A');
+        $ana   = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
+        $pedro = (new Student(new PersonName('Pedro', 'Sanchez')))->setStudentId('2024-002');
+        $group->addStudent($ana);
+        $group->addStudent($pedro);
+        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $ana, $pedro);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar?search=martinez');
+
+        self::assertResponseIsSuccessful();
+
+        $content = $this->getStreamedContent();
+        self::assertStringContainsString('Martinez', $content);
+        self::assertStringNotContainsString('Sanchez', $content);
+    }
+
+    public function testExportAppliesGroupFilter(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        [$family, $programme, $level, $groupA] = $this->makeGroupChain($year, 'DAW1A');
+        $groupB = (new Group())->setName('DAW1B')->setProgrammeYear($level);
+        $ana    = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
+        $pedro  = (new Student(new PersonName('Pedro', 'Sanchez')))->setStudentId('2024-002');
+        $groupA->addStudent($ana);
+        $groupB->addStudent($pedro);
+        $this->persist($admin, $centre, $year, $family, $programme, $level, $groupA, $groupB, $ana, $pedro);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $url = '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar?groupId=' . $groupA->getId()->toRfc4122();
+        $this->client->request('GET', $url);
+
+        self::assertResponseIsSuccessful();
+
+        $content = $this->getStreamedContent();
+        self::assertStringContainsString('Martinez', $content);
+        self::assertStringNotContainsString('Sanchez', $content);
+    }
+
+    public function testExportDeniesNonAdmin(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $teacher = $this->makeTeacher('teacher.1');
+        $this->persist($admin, $centre, $year, $teacher);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     // ── delete ────────────────────────────────────────────────────────────────
 
     public function testDeleteStudentDeletesEntityAndRedirects(): void
@@ -363,5 +451,16 @@ class StudentControllerTest extends ControllerTestCase
     private function makeStudent(string $studentId): Student
     {
         return (new Student(new PersonName('Test', 'Student')))->setStudentId($studentId);
+    }
+
+    /** @return array{0: ProfessionalFamily, 1: Programme, 2: ProgrammeYear, 3: Group} */
+    private function makeGroupChain(AcademicYear $year, string $groupName): array
+    {
+        $family    = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $level     = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $group     = (new Group())->setName($groupName)->setProgrammeYear($level);
+
+        return [$family, $programme, $level, $group];
     }
 }

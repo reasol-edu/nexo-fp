@@ -56,6 +56,16 @@ abstract class ControllerTestCase extends WebTestCase
     }
 
     /**
+     * Returns the body of a StreamedResponse. KernelBrowser already consumes
+     * the stream when filtering the response, so it must be read from the
+     * BrowserKit internal response instead of sending the content again.
+     */
+    protected function getStreamedContent(): string
+    {
+        return $this->client->getInternalResponse()->getContent();
+    }
+
+    /**
      * Logs in as the given teacher. Makes one request to establish the
      * session, then optionally injects the tenant centre into that session.
      */
