@@ -67,6 +67,11 @@ echo "Aplicando migraciones..."
 echo "Inicializando datos por defecto..."
 "${FP}" php-cli bin/console app:setup --no-interaction || true
 
+if [[ "${LOAD_FIXTURES:-false}" == "true" ]]; then
+    echo "Cargando datos de demostración..."
+    "${FP}" php-cli bin/console doctrine:fixtures:load --no-interaction --append
+fi
+
 # -- Arrancar servidor ----------------------------------------------------------
 cd "${ROOT}"
 echo ""

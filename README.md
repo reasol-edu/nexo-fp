@@ -467,6 +467,18 @@ La primera vez que se inicia, el contenedor realiza automáticamente:
 
 La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
 
+### Datos de demostración
+
+Para arrancar con datos de prueba (usuarios, centros, empresas y estancias precargadas),
+añade al fichero `.env`:
+
+```dotenv
+LOAD_FIXTURES=true
+```
+
+El contenedor cargará los fixtures automáticamente en cada arranque. Consulta [DEMO.md](DEMO.md)
+para ver los usuarios y contraseñas disponibles. ⚠️ Esta opción borra todos los datos existentes.
+
 ### HTTPS con Let's Encrypt
 
 Para habilitar HTTPS automático, edita `.env` con tu dominio real:
@@ -600,6 +612,7 @@ Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script
 | `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
+| `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes). Ver [DEMO.md](DEMO.md). | `false` |
 
 ---
 

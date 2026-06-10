@@ -75,6 +75,12 @@ try {
     # -- Datos por defecto ------------------------------------------------------
     Write-Host "Inicializando datos por defecto..."
     try { & $FP php-cli bin/console app:setup --no-interaction } catch {}
+
+    # -- Datos de demostración (opcional) ---------------------------------------
+    if ($env:LOAD_FIXTURES -eq "true") {
+        Write-Host "Cargando datos de demostración..."
+        & $FP php-cli bin/console doctrine:fixtures:load --no-interaction --append
+    }
 } finally {
     Pop-Location
 }
