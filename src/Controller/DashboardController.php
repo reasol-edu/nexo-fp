@@ -41,7 +41,7 @@ class DashboardController extends AbstractController
 
         return $this->render('dashboard/index.html.twig', [
             'stats'         => $this->stayRepository->findDashboardStats($year, $viewer),
-            'studentCount'  => $this->studentRepository->countByActiveYear($centre),
+            'studentCount'  => $this->studentRepository->countByActiveYear($centre, $viewer),
             'upcomingStays' => $this->stayRepository->findActiveAndUpcoming($year, $viewer),
         ]);
     }
