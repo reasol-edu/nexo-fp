@@ -66,6 +66,38 @@ class SettingsLockTest extends ControllerTestCase
         self::assertTrue($refreshed->isLocked());
     }
 
+    public function testToggleLockCreatesAndLocksGlobalValueWhenNoneStored(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->loginAs($admin);
+
+        $component = $this->createLiveComponent('SettingsComponent', ['scope' => 'global'], $this->client);
+        $component->call('toggleLock', ['key' => 'email.notifications']);
+
+        $def    = $this->em->getRepository(SettingDefinition::class)->findOneBy(['key' => 'email.notifications']);
+        $stored = $this->em->getRepository(GlobalSettingValue::class)->findOneBy(['definition' => $def]);
+
+        self::assertNotNull($stored);
+        self::assertTrue($stored->isLocked());
+        self::assertSame($def->getDefaultValue(), $stored->getValue());
+    }
+
+    public function testToggleLockCreatesCentreValueWhenNoneStored(): void
+    {
+        [$admin, $centre] = $this->makeAdminWithCentre();
+        $this->loginAs($admin, $centre);
+
+        $component = $this->createLiveComponent('SettingsComponent', ['scope' => 'centre'], $this->client);
+        $component->call('toggleLock', ['key' => 'email.notifications']);
+
+        $def    = $this->em->getRepository(SettingDefinition::class)->findOneBy(['key' => 'email.notifications']);
+        $stored = $this->em->getRepository(CentreSettingValue::class)->findOneBy(['definition' => $def, 'centre' => $centre]);
+
+        self::assertNotNull($stored);
+        self::assertTrue($stored->isLocked());
+        self::assertSame($def->getDefaultValue(), $stored->getValue());
+    }
+
     // ── save blocked by parent lock ───────────────────────────────────────────
 
     public function testSaveIsBlockedWhenLockedByGlobal(): void

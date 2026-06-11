@@ -119,8 +119,8 @@
                             data-live-value-param="{{ stored ?? '' }}">
                     {% endif %}
 
-                    {# ── Lock toggle (global and centre scopes, only when a value is stored) ── #}
-                    {% if parentLock is null and scope != 'teacher' and stored is not null %}
+                    {# ── Lock toggle (global and centre scopes) ── #}
+                    {% if parentLock is null and scope != 'teacher' %}
                         <button type="button"
                                 class="transition-colors {{ isLocked ? 'text-amber-500 hover:text-amber-600' : 'text-gray-300 hover:text-amber-400' }}"
                                 data-action="click->live#action:prevent"

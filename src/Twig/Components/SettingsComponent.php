@@ -221,6 +221,11 @@ class SettingsComponent extends AbstractController
     {
         $entity = $this->globalValues->findByDefinition($def);
         if ($entity === null) {
+            $entity = (new GlobalSettingValue())
+                ->setDefinition($def)
+                ->setValue($def->getDefaultValue())
+                ->setLocked(true);
+            $this->em->persist($entity);
             return;
         }
         $entity->setLocked(!$entity->isLocked());
@@ -228,8 +233,15 @@ class SettingsComponent extends AbstractController
 
     private function toggleCentreLock(SettingDefinition $def): void
     {
-        $entity = $this->centreValues->findByDefinitionAndCentre($def, $this->requireCentre());
+        $centre = $this->requireCentre();
+        $entity = $this->centreValues->findByDefinitionAndCentre($def, $centre);
         if ($entity === null) {
+            $entity = (new CentreSettingValue())
+                ->setDefinition($def)
+                ->setCentre($centre)
+                ->setValue($def->getDefaultValue())
+                ->setLocked(true);
+            $this->em->persist($entity);
             return;
         }
         $entity->setLocked(!$entity->isLocked());
