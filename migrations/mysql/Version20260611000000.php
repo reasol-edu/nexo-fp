@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
-use Doctrine\DBAL\Platforms\MySQL80Platform;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
@@ -12,14 +12,14 @@ final class Version20260611000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Sistema de ajustes: tablas setting_definition, global_setting_value, centre_setting_value, teacher_setting_value + ajustes iniciales (MySQL 8)';
+        return 'Sistema de ajustes: tablas setting_definition, global_setting_value, centre_setting_value, teacher_setting_value + ajustes iniciales (MySQL / MariaDB)';
     }
 
     public function up(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         // ── Definiciones de ajustes ────────────────────────────────────────────
@@ -82,7 +82,7 @@ final class Version20260611000000 extends AbstractMigration
         $this->addSql('ALTER TABLE teacher_setting_value ADD CONSTRAINT FK_tsv_definition FOREIGN KEY (definition_id) REFERENCES setting_definition(id)');
         $this->addSql('ALTER TABLE teacher_setting_value ADD CONSTRAINT FK_tsv_teacher    FOREIGN KEY (teacher_id)    REFERENCES teacher(id)');
 
-        // ── Ajustes iniciales (UUID() genera UUIDs en MySQL 8) ─────────────────
+        // ── Ajustes iniciales (UUID() genera UUIDs en MySQL / MariaDB) ─────────────────
         $this->addSql(<<<'SQL'
             INSERT INTO setting_definition (id, `key`, type, default_value, global_scope, centre_scope, teacher_scope) VALUES
                 (UUID(), 'page.size',                             'integer', '20',   0, 0, 1),
@@ -96,8 +96,8 @@ final class Version20260611000000 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         $this->addSql('ALTER TABLE global_setting_value  DROP FOREIGN KEY FK_gsv_definition');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
-use Doctrine\DBAL\Platforms\MySQL80Platform;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
@@ -12,14 +12,14 @@ final class Version20260609000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Múltiples tutores por grupo: convierte tutor_id en tabla group_tutor (MySQL 8)';
+        return 'Múltiples tutores por grupo: convierte tutor_id en tabla group_tutor (MySQL / MariaDB)';
     }
 
     public function up(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         $this->addSql(<<<'SQL'
@@ -36,7 +36,7 @@ final class Version20260609000000 extends AbstractMigration
 
         $this->addSql('INSERT INTO group_tutor (group_id, teacher_id) SELECT id, tutor_id FROM `group` WHERE tutor_id IS NOT NULL');
 
-        // MySQL 8 soporta DROP FOREIGN KEY + DROP INDEX + DROP COLUMN en un solo ALTER
+        // MySQL 8 soporta DROP FOREIGN KEY + DROP INDEX + DROP COLUMN en un solo ALTER (también válido en MariaDB)
         $this->addSql('ALTER TABLE `group` DROP FOREIGN KEY FK_group_tutor');
         $this->addSql('ALTER TABLE `group` DROP INDEX IDX_group_tutor');
         $this->addSql('ALTER TABLE `group` DROP COLUMN tutor_id');
@@ -45,8 +45,8 @@ final class Version20260609000000 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         $this->addSql('ALTER TABLE `group` ADD COLUMN tutor_id CHAR(36) DEFAULT NULL');

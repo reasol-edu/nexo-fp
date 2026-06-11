@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
-use Doctrine\DBAL\Platforms\MySQL80Platform;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
@@ -12,14 +12,14 @@ final class Version20260101000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Esquema inicial (MySQL 8)';
+        return 'Esquema inicial (MySQL / MariaDB)';
     }
 
     public function up(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         // educational_centre sin FK circular (se añade después de crear academic_year)
@@ -362,8 +362,8 @@ final class Version20260101000000 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $this->abortIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQL80Platform,
-            'Esta migración sólo puede ejecutarse en MySQL 8.'
+            !$this->connection->getDatabasePlatform() instanceof AbstractMySQLPlatform,
+            'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
         // Romper la FK circular antes de eliminar tablas
