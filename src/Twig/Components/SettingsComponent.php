@@ -39,6 +39,10 @@ class SettingsComponent extends AbstractController
     #[LiveProp]
     public string $lastSaved = '';
 
+    /** Key of the setting that last failed validation — used for inline error feedback. */
+    #[LiveProp]
+    public string $lastError = '';
+
     public function __construct(
         private readonly SettingDefinitionRepository   $definitions,
         private readonly GlobalSettingValueRepository  $globalValues,
@@ -93,7 +97,15 @@ class SettingsComponent extends AbstractController
 
         if ($isReset) {
             $this->removeValue($def);
+            $this->lastError = '';
         } else {
+            if (!$def->isValueValid($value)) {
+                $this->lastError = $key;
+
+                return;
+            }
+
+            $this->lastError = '';
             $this->upsertValue($def, $value);
         }
 

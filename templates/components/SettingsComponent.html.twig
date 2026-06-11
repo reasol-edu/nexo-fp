@@ -16,6 +16,7 @@
             {% set stored   = row.storedValue %}
             {% set effective = row.effectiveValue %}
             {% set isSaved  = lastSaved == key %}
+            {% set isError  = lastError == key %}
 
             <li class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:gap-6">
 
@@ -58,14 +59,24 @@
                         </select>
 
                     {% elseif def.type.value == 'integer' %}
+                        {# Build placeholder: show effective value plus range hint when both limits are defined #}
+                        {% if def.minValue is not null and def.maxValue is not null %}
+                            {% set intPlaceholder = effective ~ ' (' ~ def.minValue ~ '–' ~ def.maxValue ~ ')' %}
+                        {% else %}
+                            {% set intPlaceholder = effective %}
+                        {% endif %}
+
                         <input
                             type="number"
-                            min="1"
+                            {% if def.minValue is not null %}min="{{ def.minValue }}"{% endif %}
+                            {% if def.maxValue is not null %}max="{{ def.maxValue }}"{% endif %}
                             value="{{ stored ?? '' }}"
-                            placeholder="{{ effective }}"
-                            class="w-24 rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-3 text-sm text-gray-900
-                                   placeholder-gray-400 focus:border-plum-500 focus:outline-none
-                                   focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                            placeholder="{{ intPlaceholder }}"
+                            class="w-28 rounded-lg border py-1.5 px-3 text-sm text-gray-900
+                                   placeholder-gray-400 focus:outline-none focus:ring-3 transition-colors
+                                   {{ isError
+                                       ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
+                                       : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
                             data-controller="setting-capture"
                             data-action="change->setting-capture#capture change->live#action:prevent"
                             data-live-action-param="save"
@@ -75,11 +86,15 @@
                     {% else %}
                         <input
                             type="text"
+                            {% if def.minValue is not null %}minlength="{{ def.minValue }}"{% endif %}
+                            {% if def.maxValue is not null %}maxlength="{{ def.maxValue }}"{% endif %}
                             value="{{ stored ?? '' }}"
                             placeholder="{{ 'settings.default_label'|trans({}, 'settings') }}: {{ effective }}"
-                            class="w-48 rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-3 text-sm text-gray-900
-                                   placeholder-gray-400 focus:border-plum-500 focus:outline-none
-                                   focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                            class="w-48 rounded-lg border py-1.5 px-3 text-sm text-gray-900
+                                   placeholder-gray-400 focus:outline-none focus:ring-3 transition-colors
+                                   {{ isError
+                                       ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
+                                       : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
                             data-controller="setting-capture"
                             data-action="change->setting-capture#capture change->live#action:prevent"
                             data-live-action-param="save"
@@ -105,6 +120,18 @@
                         <span class="flex items-center gap-1 text-xs font-medium text-emerald-600">
                             {{ ux_icon('heroicons:check', {class: 'h-3.5 w-3.5'}) }}
                             {{ 'settings.saved'|trans({}, 'settings') }}
+                        </span>
+                    {% endif %}
+
+                    {# ── Error feedback ── #}
+                    {% if isError %}
+                        <span class="flex items-center gap-1 text-xs font-medium text-red-600">
+                            {{ ux_icon('heroicons:exclamation-circle', {class: 'h-3.5 w-3.5'}) }}
+                            {% if def.type.value == 'integer' and def.minValue is not null and def.maxValue is not null %}
+                                {{ 'settings.error.integer_range'|trans({'%min%': def.minValue, '%max%': def.maxValue}, 'settings') }}
+                            {% else %}
+                                {{ 'settings.error.invalid_value'|trans({}, 'settings') }}
+                            {% endif %}
                         </span>
                     {% endif %}
 

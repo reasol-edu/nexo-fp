@@ -32,3 +32,7 @@ settings.key.email_notification_positions_created.description: 'Notifica a los d
 
 settings.key.email_notification_signature_reminder.label: 'Email de recordatorio de firma'
 settings.key.email_notification_signature_reminder.description: 'Recuerda al tutor o tutora dual docente los puestos pendientes de firma cuando la estancia está próxima a finalizar.'
+
+# ── Errores de validación ──────────────────────────────────────────────────────
+settings.error.integer_range: 'Debe ser un número entre %min% y %max%'
+settings.error.invalid_value: 'Valor no válido'
