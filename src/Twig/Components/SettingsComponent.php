@@ -56,25 +56,31 @@ class SettingsComponent extends AbstractController
     ) {}
 
     /**
-     * Returns rows for the current scope, each row containing the definition
-     * and the stored raw value (null = not set, inherits from parent scope).
+     * Returns rows for the current scope, each row containing the definition,
+     * the stored raw value (null = not set), lock state and parent-lock origin.
      *
-     * @return list<array{definition: SettingDefinition, storedValue: ?string, effectiveValue: string}>
+     * @return list<array{definition: SettingDefinition, storedValue: ?string, effectiveValue: string, isLocked: bool, parentLock: ?string}>
      */
     public function getRows(): array
     {
-        $defs       = $this->definitions->findByScope($this->scope);
-        $storedMap  = $this->loadStoredMap();
-        $rows       = [];
+        $defs          = $this->definitions->findByScope($this->scope);
+        $storedMap     = $this->loadStoredMap();
+        $parentLockMap = $this->loadParentLockMap();
+        $rows          = [];
 
         foreach ($defs as $def) {
-            $key    = $def->getKey();
-            $stored = isset($storedMap[$key]) ? $storedMap[$key]->getValue() : null;
+            $key         = $def->getKey();
+            $storedValue = $storedMap[$key] ?? null;
+            $stored      = $storedValue?->getValue();
 
             $rows[] = [
                 'definition'     => $def,
                 'storedValue'    => $stored,
                 'effectiveValue' => $stored ?? $def->getDefaultValue(),
+                'isLocked'       => $storedValue !== null
+                                        && method_exists($storedValue, 'isLocked')
+                                        && $storedValue->isLocked(),
+                'parentLock'     => $parentLockMap[$key] ?? null,
             ];
         }
 
@@ -88,6 +94,10 @@ class SettingsComponent extends AbstractController
     #[LiveAction]
     public function save(#[LiveArg] string $key, #[LiveArg] string $value): void
     {
+        if (isset($this->loadParentLockMap()[$key])) {
+            return;
+        }
+
         $isReset = $value === '' || $value === '__default__';
         $def     = $this->definitions->findOneBy(['key' => $key]);
 
@@ -112,6 +122,24 @@ class SettingsComponent extends AbstractController
         $this->em->flush();
         $this->appSettings->invalidate();
         $this->lastSaved = $key;
+    }
+
+    #[LiveAction]
+    public function toggleLock(#[LiveArg] string $key): void
+    {
+        $def = $this->definitions->findOneBy(['key' => $key]);
+        if ($def === null) {
+            return;
+        }
+
+        match ($this->scope) {
+            'global'  => $this->toggleGlobalLock($def),
+            'centre'  => $this->toggleCentreLock($def),
+            default   => null,
+        };
+
+        $this->em->flush();
+        $this->appSettings->invalidate();
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -187,6 +215,56 @@ class SettingsComponent extends AbstractController
         if ($entity !== null) {
             $this->em->remove($entity);
         }
+    }
+
+    private function toggleGlobalLock(SettingDefinition $def): void
+    {
+        $entity = $this->globalValues->findByDefinition($def);
+        if ($entity === null) {
+            return;
+        }
+        $entity->setLocked(!$entity->isLocked());
+    }
+
+    private function toggleCentreLock(SettingDefinition $def): void
+    {
+        $entity = $this->centreValues->findByDefinitionAndCentre($def, $this->requireCentre());
+        if ($entity === null) {
+            return;
+        }
+        $entity->setLocked(!$entity->isLocked());
+    }
+
+    /**
+     * Returns a map of keys locked by a parent scope.
+     * Values are 'global' or 'centre' indicating the locking level.
+     *
+     * @return array<string, 'global'|'centre'>
+     */
+    private function loadParentLockMap(): array
+    {
+        $result = [];
+
+        if (in_array($this->scope, ['centre', 'teacher'], true)) {
+            foreach ($this->globalValues->findAllIndexedByKey() as $key => $v) {
+                if ($v->isLocked()) {
+                    $result[$key] = 'global';
+                }
+            }
+        }
+
+        if ($this->scope === 'teacher') {
+            $centre = $this->tenant->getSelectedCentre();
+            if ($centre !== null) {
+                foreach ($this->centreValues->findByCentreIndexedByKey($centre) as $key => $v) {
+                    if ($v->isLocked() && !isset($result[$key])) {
+                        $result[$key] = 'centre';
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     /** @return array<string, GlobalSettingValue|CentreSettingValue|TeacherSettingValue> */

@@ -36,3 +36,9 @@ settings.key.email_notification_signature_reminder.description: 'Recuerda al tut
 # ── Errores de validación ──────────────────────────────────────────────────────
 settings.error.integer_range: 'Debe ser un número entre %min% y %max%'
 settings.error.invalid_value: 'Valor no válido'
+
+# ── Bloqueo ────────────────────────────────────────────────────────────────────
+settings.locked_by_global: 'Bloqueado por la administración global'
+settings.locked_by_centre: 'Bloqueado por el centro educativo'
+settings.lock.title: 'Bloquear este valor para niveles inferiores'
+settings.unlock.title: 'Desbloquear'

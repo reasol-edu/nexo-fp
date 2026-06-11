@@ -10,15 +10,18 @@
     {% else %}
         <ul class="divide-y divide-gray-100">
         {% for row in rows %}
-            {% set def      = row.definition %}
-            {% set key      = def.key %}
-            {% set keySlug  = key|replace({'.': '_', '-': '_'}) %}
-            {% set stored   = row.storedValue %}
-            {% set effective = row.effectiveValue %}
-            {% set isSaved  = lastSaved == key %}
-            {% set isError  = lastError == key %}
+            {% set def        = row.definition %}
+            {% set key        = def.key %}
+            {% set keySlug    = key|replace({'.': '_', '-': '_'}) %}
+            {% set stored     = row.storedValue %}
+            {% set effective  = row.effectiveValue %}
+            {% set isSaved    = lastSaved == key %}
+            {% set isError    = lastError == key %}
+            {% set isLocked   = row.isLocked %}
+            {% set parentLock = row.parentLock %}
 
-            <li class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:gap-6">
+            <li class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:gap-6
+                        {{ parentLock is not null ? 'opacity-60' : '' }}">
 
                 {# ── Label + description ── #}
                 <div class="flex-1 min-w-0">
@@ -30,17 +33,28 @@
                     {% if descVal != descKey %}
                         <p class="text-xs text-gray-500 mt-0.5">{{ descVal }}</p>
                     {% endif %}
+
+                    {# ── Parent-lock notice ── #}
+                    {% if parentLock is not null %}
+                        <p class="flex items-center gap-1 text-xs text-amber-600 mt-1">
+                            {{ ux_icon('heroicons:lock-closed', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                            {{ parentLock == 'global'
+                                ? 'settings.locked_by_global'|trans({}, 'settings')
+                                : 'settings.locked_by_centre'|trans({}, 'settings') }}
+                        </p>
+                    {% endif %}
                 </div>
 
                 {# ── Control ── #}
                 <div class="flex items-center gap-3 shrink-0">
 
                     {% if def.type.value == 'boolean' %}
-                        {# Auto-save on change for booleans — setting-capture#capture sets data-live-value-param to the selected value before the live action fires #}
                         <select
                             class="rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-3 pr-8 text-sm text-gray-900
                                    focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20
-                                   transition-colors cursor-pointer"
+                                   transition-colors cursor-pointer
+                                   disabled:cursor-not-allowed disabled:opacity-50"
+                            {{ parentLock is not null ? 'disabled' : '' }}
                             data-controller="setting-capture"
                             data-action="change->setting-capture#capture change->live#action:prevent"
                             data-live-action-param="save"
@@ -59,7 +73,6 @@
                         </select>
 
                     {% elseif def.type.value == 'integer' %}
-                        {# Build placeholder: show effective value plus range hint when both limits are defined #}
                         {% if def.minValue is not null and def.maxValue is not null %}
                             {% set intPlaceholder = effective ~ ' (' ~ def.minValue ~ '–' ~ def.maxValue ~ ')' %}
                         {% else %}
@@ -72,8 +85,10 @@
                             {% if def.maxValue is not null %}max="{{ def.maxValue }}"{% endif %}
                             value="{{ stored ?? '' }}"
                             placeholder="{{ intPlaceholder }}"
+                            {{ parentLock is not null ? 'disabled' : '' }}
                             class="w-28 rounded-lg border py-1.5 px-3 text-sm text-gray-900
                                    placeholder-gray-400 focus:outline-none focus:ring-3 transition-colors
+                                   disabled:cursor-not-allowed disabled:opacity-50
                                    {{ isError
                                        ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
                                        : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
@@ -90,8 +105,10 @@
                             {% if def.maxValue is not null %}maxlength="{{ def.maxValue }}"{% endif %}
                             value="{{ stored ?? '' }}"
                             placeholder="{{ 'settings.default_label'|trans({}, 'settings') }}: {{ effective }}"
+                            {{ parentLock is not null ? 'disabled' : '' }}
                             class="w-48 rounded-lg border py-1.5 px-3 text-sm text-gray-900
                                    placeholder-gray-400 focus:outline-none focus:ring-3 transition-colors
+                                   disabled:cursor-not-allowed disabled:opacity-50
                                    {{ isError
                                        ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
                                        : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
@@ -102,8 +119,20 @@
                             data-live-value-param="{{ stored ?? '' }}">
                     {% endif %}
 
-                    {# ── Restablecer (only if a value is stored) ── #}
-                    {% if stored is not null %}
+                    {# ── Lock toggle (global and centre scopes, only when a value is stored) ── #}
+                    {% if parentLock is null and scope != 'teacher' and stored is not null %}
+                        <button type="button"
+                                class="transition-colors {{ isLocked ? 'text-amber-500 hover:text-amber-600' : 'text-gray-300 hover:text-amber-400' }}"
+                                data-action="click->live#action:prevent"
+                                data-live-action-param="toggleLock"
+                                data-live-key-param="{{ key }}"
+                                title="{{ isLocked ? 'settings.unlock.title'|trans({}, 'settings') : 'settings.lock.title'|trans({}, 'settings') }}">
+                            {{ ux_icon(isLocked ? 'heroicons:lock-closed' : 'heroicons:lock-open', {class: 'h-4 w-4'}) }}
+                        </button>
+                    {% endif %}
+
+                    {# ── Restablecer (only if value is stored and not locked by the current scope) ── #}
+                    {% if stored is not null and not isLocked and parentLock is null %}
                         <button type="button"
                                 class="text-xs text-gray-400 hover:text-red-500 transition-colors"
                                 data-action="live#action:prevent"
