@@ -1,0 +1,125 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Entity;
+
+use App\Repository\SettingDefinitionRepository;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
+
+#[ORM\Entity(repositoryClass: SettingDefinitionRepository::class)]
+#[ORM\UniqueConstraint(name: 'uq_setting_definition_key', columns: ['key'])]
+class SettingDefinition
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator('doctrine.uuid_generator')]
+    #[ORM\Column(type: 'uuid')]
+    private Uuid $id;
+
+    #[ORM\Column(length: 100, unique: true)]
+    private string $key;
+
+    #[ORM\Column(enumType: SettingType::class)]
+    private SettingType $type;
+
+    #[ORM\Column(length: 255)]
+    private string $defaultValue;
+
+    #[ORM\Column]
+    private bool $globalScope = false;
+
+    #[ORM\Column]
+    private bool $centreScope = false;
+
+    #[ORM\Column]
+    private bool $teacherScope = false;
+
+    public function getId(): Uuid
+    {
+        return $this->id;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function setKey(string $key): static
+    {
+        $this->key = $key;
+
+        return $this;
+    }
+
+    public function getType(): SettingType
+    {
+        return $this->type;
+    }
+
+    public function setType(SettingType $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getDefaultValue(): string
+    {
+        return $this->defaultValue;
+    }
+
+    public function setDefaultValue(string $defaultValue): static
+    {
+        $this->defaultValue = $defaultValue;
+
+        return $this;
+    }
+
+    public function isGlobalScope(): bool
+    {
+        return $this->globalScope;
+    }
+
+    public function setGlobalScope(bool $globalScope): static
+    {
+        $this->globalScope = $globalScope;
+
+        return $this;
+    }
+
+    public function isCentreScope(): bool
+    {
+        return $this->centreScope;
+    }
+
+    public function setCentreScope(bool $centreScope): static
+    {
+        $this->centreScope = $centreScope;
+
+        return $this;
+    }
+
+    public function isTeacherScope(): bool
+    {
+        return $this->teacherScope;
+    }
+
+    public function setTeacherScope(bool $teacherScope): static
+    {
+        $this->teacherScope = $teacherScope;
+
+        return $this;
+    }
+
+    /** Returns the typed default value (int, bool or string). */
+    public function getCastedDefaultValue(): mixed
+    {
+        return match ($this->type) {
+            SettingType::Boolean => $this->defaultValue === 'true',
+            SettingType::Integer => (int) $this->defaultValue,
+            SettingType::String  => $this->defaultValue,
+        };
+    }
+}
