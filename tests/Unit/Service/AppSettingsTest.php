@@ -170,6 +170,127 @@ class AppSettingsTest extends TestCase
         $service->get('page.size');
     }
 
+    // ── getForTeacher: cascade teacher → global → default (no centre) ────────
+
+    public function testGetForTeacherUsesTeacherValueFirst(): void
+    {
+        $def     = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')
+            ->willReturn(['email.notifications' => $this->makeTeacherValue('false')]);
+
+        $service = $this->makeService(
+            defs:    ['email.notifications' => $def],
+            globals: ['email.notifications' => $this->makeGlobalValue('true')],
+        );
+
+        // Replace teacherRepo with one that returns a specific teacher value
+        $service = $this->makeServiceWithTeacherRepo(
+            defs:        ['email.notifications' => $def],
+            globals:     ['email.notifications' => $this->makeGlobalValue('true')],
+            teacherRepo: $teacherRepo,
+        );
+
+        self::assertFalse($service->getForTeacher('email.notifications', $teacher));
+    }
+
+    public function testGetForTeacherFallsBackToGlobalValue(): void
+    {
+        $def     = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithTeacherRepo(
+            defs:        ['email.notifications' => $def],
+            globals:     ['email.notifications' => $this->makeGlobalValue('false')],
+            teacherRepo: $teacherRepo,
+        );
+
+        self::assertFalse($service->getForTeacher('email.notifications', $teacher));
+    }
+
+    public function testGetForTeacherFallsBackToDefault(): void
+    {
+        $def     = $this->makeDef('page.size', SettingType::Integer, '25');
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithTeacherRepo(
+            defs:        ['page.size' => $def],
+            globals:     [],
+            teacherRepo: $teacherRepo,
+        );
+
+        self::assertSame(25, $service->getForTeacher('page.size', $teacher));
+    }
+
+    public function testGetForTeacherIgnoresCentreValue(): void
+    {
+        $def     = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')->willReturn([]);
+
+        // Centre value present but should be ignored
+        $service = $this->makeServiceWithTeacherRepo(
+            defs:        ['email.notifications' => $def],
+            globals:     [],
+            teacherRepo: $teacherRepo,
+            centres:     ['email.notifications' => $this->makeCentreValue('false')],
+        );
+
+        // Default is 'true'; centre value ('false') must be ignored
+        self::assertTrue($service->getForTeacher('email.notifications', $teacher));
+    }
+
+    public function testGetForTeacherReturnsNullForUnknownKey(): void
+    {
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithTeacherRepo(defs: [], globals: [], teacherRepo: $teacherRepo);
+
+        self::assertNull($service->getForTeacher('nonexistent.key', $teacher));
+    }
+
+    public function testSharedBaseCacheReducesQueries(): void
+    {
+        $def     = $this->makeDef('page.size', SettingType::Integer, '20');
+        $teacher = $this->createStub(Teacher::class);
+
+        $defs = $this->createMock(SettingDefinitionRepository::class);
+        $defs->expects(self::once())->method('findAllIndexedByKey')->willReturn(['page.size' => $def]);
+
+        $globals = $this->createMock(GlobalSettingValueRepository::class);
+        $globals->expects(self::once())->method('findAllIndexedByKey')->willReturn([]);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')->willReturn([]);
+
+        $tenant   = $this->createStub(TenantContextInterface::class);
+        $tenant->method('getSelectedCentre')->willReturn(null);
+
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn(null);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+
+        $service = new AppSettings($defs, $globals, $centreRepo, $teacherRepo, $tenant, $security);
+
+        // get() triggers ensureBaseLoaded(); getForTeacher() must reuse the same cache
+        $service->get('page.size');
+        $service->getForTeacher('page.size', $teacher);
+    }
+
     // ── Unknown key ───────────────────────────────────────────────────────────
 
     public function testGetReturnsNullForUnknownKey(): void
@@ -222,6 +343,40 @@ class AppSettingsTest extends TestCase
         } else {
             $security->method('getUser')->willReturn(null);
         }
+
+        return new AppSettings($defsRepo, $globalRepo, $centreRepo, $teacherRepo, $tenant, $security);
+    }
+
+    /**
+     * @param array<string, SettingDefinition>   $defs
+     * @param array<string, GlobalSettingValue>  $globals
+     * @param array<string, CentreSettingValue>  $centres
+     */
+    private function makeServiceWithTeacherRepo(
+        array $defs,
+        array $globals,
+        TeacherSettingValueRepository $teacherRepo,
+        array $centres = [],
+    ): AppSettings {
+        $defsRepo   = $this->createStub(SettingDefinitionRepository::class);
+        $defsRepo->method('findAllIndexedByKey')->willReturn($defs);
+
+        $globalRepo = $this->createStub(GlobalSettingValueRepository::class);
+        $globalRepo->method('findAllIndexedByKey')->willReturn($globals);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $tenant     = $this->createStub(TenantContextInterface::class);
+
+        if ($centres !== []) {
+            $centre = $this->createStub(EducationalCentre::class);
+            $tenant->method('getSelectedCentre')->willReturn($centre);
+            $centreRepo->method('findByCentreIndexedByKey')->willReturn($centres);
+        } else {
+            $tenant->method('getSelectedCentre')->willReturn(null);
+        }
+
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn(null);
 
         return new AppSettings($defsRepo, $globalRepo, $centreRepo, $teacherRepo, $tenant, $security);
     }

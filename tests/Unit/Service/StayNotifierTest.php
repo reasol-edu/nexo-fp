@@ -9,6 +9,7 @@ use App\Entity\PersonName;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Service\AppSettingsInterface;
 use App\Service\StayNotifier;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -145,15 +146,70 @@ class StayNotifierTest extends TestCase
             ->sendSignatureReminder($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'), [], 7);
     }
 
+    // ── Settings-based suppression ────────────────────────────────────────────
+
+    public function testNotifyTutorAssignedIsSkippedWhenMasterNotificationsDisabled(): void
+    {
+        $position = $this->makePosition();
+        $position->setAcademicTutor($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'));
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+
+        $settings = $this->createStub(AppSettingsInterface::class);
+        $settings->method('getForTeacher')->willReturnCallback(
+            fn(string $key) => $key !== 'email.notifications'
+        );
+
+        $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
+    }
+
+    public function testNotifyTutorAssignedIsSkippedWhenSpecificKeyDisabled(): void
+    {
+        $position = $this->makePosition();
+        $position->setAcademicTutor($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'));
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+
+        $settings = $this->createStub(AppSettingsInterface::class);
+        $settings->method('getForTeacher')->willReturnCallback(
+            fn(string $key) => $key !== 'email.notification.tutor_assigned'
+        );
+
+        $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
+    }
+
+    public function testSendSignatureReminderIsSkippedWhenSpecificKeyDisabled(): void
+    {
+        $tutor    = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
+        $position = $this->makePosition();
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+
+        $settings = $this->createStub(AppSettingsInterface::class);
+        $settings->method('getForTeacher')->willReturnCallback(
+            fn(string $key) => $key !== 'email.notification.signature_reminder'
+        );
+
+        $this->makeNotifier($mailer, settings: $settings)->sendSignatureReminder($tutor, [$position], 7);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private function makeNotifier(MailerInterface $mailer, ?LoggerInterface $logger = null): StayNotifier
-    {
+    private function makeNotifier(
+        MailerInterface $mailer,
+        ?LoggerInterface $logger = null,
+        ?AppSettingsInterface $settings = null,
+    ): StayNotifier {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn('http://localhost/estancias/test');
 
         $translator = self::createStub(TranslatorInterface::class);
         $translator->method('trans')->willReturnArgument(0);
+
+        $settings ??= $this->makeAllEnabledSettings();
 
         return new StayNotifier(
             $mailer,
@@ -162,7 +218,16 @@ class StayNotifierTest extends TestCase
             $logger ?? new NullLogger(),
             'no-responder@test.local',
             'Nexo FP',
+            $settings,
         );
+    }
+
+    private function makeAllEnabledSettings(): AppSettingsInterface
+    {
+        $stub = $this->createStub(AppSettingsInterface::class);
+        $stub->method('getForTeacher')->willReturn(true);
+
+        return $stub;
     }
 
     private function makeTeacher(string $firstName, string $lastName, ?string $email): Teacher

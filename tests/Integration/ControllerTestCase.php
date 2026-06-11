@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\EducationalCentre;
+use App\Entity\SettingDefinition;
+use App\Entity\SettingType;
 use App\Entity\Teacher;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -31,6 +33,8 @@ abstract class ControllerTestCase extends WebTestCase
         (new SchemaTool($this->em))->createSchema(
             $this->em->getMetadataFactory()->getAllMetadata()
         );
+
+        $this->seedDefaultSettings();
     }
 
     protected function tearDown(): void
@@ -40,6 +44,33 @@ abstract class ControllerTestCase extends WebTestCase
         );
 
         parent::tearDown();
+    }
+
+    private function seedDefaultSettings(): void
+    {
+        // [key, type, default, globalScope, centreScope, teacherScope, minValue, maxValue]
+        $defs = [
+            ['page.size',                             SettingType::Integer, '20',   false, false, true,  5,    100],
+            ['email.notifications',                   SettingType::Boolean, 'true', true,  true,  true,  null, null],
+            ['email.notification.tutor_assigned',     SettingType::Boolean, 'true', true,  true,  true,  null, null],
+            ['email.notification.positions_created',  SettingType::Boolean, 'true', true,  true,  true,  null, null],
+            ['email.notification.signature_reminder', SettingType::Boolean, 'true', true,  true,  true,  null, null],
+        ];
+
+        foreach ($defs as [$key, $type, $default, $global, $centre, $teacher, $min, $max]) {
+            $def = (new SettingDefinition())
+                ->setKey($key)
+                ->setType($type)
+                ->setDefaultValue($default)
+                ->setGlobalScope($global)
+                ->setCentreScope($centre)
+                ->setTeacherScope($teacher)
+                ->setMinValue($min)
+                ->setMaxValue($max);
+            $this->em->persist($def);
+        }
+
+        $this->em->flush();
     }
 
     protected function persist(object ...$entities): void
