@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-11
+
 ### Added
 
 - Sistema de ajustes configurables a tres niveles (global, centro educativo y personal): ajuste de tamaño de página, interruptor maestro de notificaciones por email y configuración individual de cada tipo de notificación; los valores se resuelven en cascada (personal > centro > global > predeterminado)
