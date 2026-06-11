@@ -29,6 +29,9 @@ class CentreSettingValue
     #[ORM\Column(length: 255)]
     private string $value;
 
+    #[ORM\Column]
+    private bool $locked = false;
+
     public function getId(): Uuid
     {
         return $this->id;
@@ -66,6 +69,18 @@ class CentreSettingValue
     public function setValue(string $value): static
     {
         $this->value = $value;
+
+        return $this;
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked;
+    }
+
+    public function setLocked(bool $locked): static
+    {
+        $this->locked = $locked;
 
         return $this;
     }
