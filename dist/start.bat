@@ -29,6 +29,8 @@ if "%APP_PAGE_SIZE%"==""               set APP_PAGE_SIZE=20
 if "%APP_EXTERNAL_ENABLED%"==""        set APP_EXTERNAL_ENABLED=true
 if "%APP_EXTERNAL_URL%"==""            set APP_EXTERNAL_URL=https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp
 if "%APP_EXTERNAL_URL_FORCE_SECURITY%"=="" set APP_EXTERNAL_URL_FORCE_SECURITY=true
+if "%MAILER_DSN%"==""                  set MAILER_DSN=null://null
+if "%MAILER_FROM%"==""                 set MAILER_FROM=no-responder@example.com
 
 :: -- Carpeta de datos --------------------------------------------------------
 if not exist "%DATA%" mkdir "%DATA%"
@@ -52,6 +54,8 @@ set /p APP_SECRET=<"%DATA%\.secret"
     echo APP_EXTERNAL_ENABLED=%APP_EXTERNAL_ENABLED%
     echo APP_EXTERNAL_URL=%APP_EXTERNAL_URL%
     echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%
+    echo MAILER_DSN=%MAILER_DSN%
+    echo MAILER_FROM=%MAILER_FROM%
 ) > "%APP%\.env"
 
 :: -- Caché: limpiar posibles compilaciones parciales de arranques anteriores --

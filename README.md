@@ -727,6 +727,8 @@ Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script
 | `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
+| `MAILER_DSN` | Transporte de correo para las [notificaciones por email](#notificaciones-por-email) | `null://null` (desactivado) |
+| `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes). Ver [DEMO.md](DEMO.md). | `false` |
 
 ---

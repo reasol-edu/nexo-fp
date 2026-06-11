@@ -29,6 +29,8 @@ if (-not $env:APP_PAGE_SIZE)               { $env:APP_PAGE_SIZE = "20" }
 if (-not $env:APP_EXTERNAL_ENABLED)        { $env:APP_EXTERNAL_ENABLED = "true" }
 if (-not $env:APP_EXTERNAL_URL)            { $env:APP_EXTERNAL_URL = "https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp" }
 if (-not $env:APP_EXTERNAL_URL_FORCE_SECURITY) { $env:APP_EXTERNAL_URL_FORCE_SECURITY = "true" }
+if (-not $env:MAILER_DSN)                  { $env:MAILER_DSN = "null://null" }
+if (-not $env:MAILER_FROM)                 { $env:MAILER_FROM = "no-responder@example.com" }
 
 # -- Carpeta de datos ------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
@@ -55,6 +57,8 @@ APP_PAGE_SIZE=$($env:APP_PAGE_SIZE)
 APP_EXTERNAL_ENABLED=$($env:APP_EXTERNAL_ENABLED)
 APP_EXTERNAL_URL=$($env:APP_EXTERNAL_URL)
 APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
+MAILER_DSN=$($env:MAILER_DSN)
+MAILER_FROM=$($env:MAILER_FROM)
 "@
 [System.IO.File]::WriteAllText((Join-Path $App ".env"), $envContent, [System.Text.UTF8Encoding]::new($false))
 

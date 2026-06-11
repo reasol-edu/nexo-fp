@@ -28,6 +28,8 @@ export APP_PAGE_SIZE="${APP_PAGE_SIZE:-20}"
 export APP_EXTERNAL_ENABLED="${APP_EXTERNAL_ENABLED:-true}"
 export APP_EXTERNAL_URL="${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
 export APP_EXTERNAL_URL_FORCE_SECURITY="${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+export MAILER_DSN="${MAILER_DSN:-null://null}"
+export MAILER_FROM="${MAILER_FROM:-no-responder@example.com}"
 
 # -- Carpeta de datos -----------------------------------------------------------
 mkdir -p "${DATA}"
@@ -51,6 +53,8 @@ APP_PAGE_SIZE=${APP_PAGE_SIZE}
 APP_EXTERNAL_ENABLED=${APP_EXTERNAL_ENABLED}
 APP_EXTERNAL_URL=${APP_EXTERNAL_URL}
 APP_EXTERNAL_URL_FORCE_SECURITY=${APP_EXTERNAL_URL_FORCE_SECURITY}
+MAILER_DSN=${MAILER_DSN}
+MAILER_FROM=${MAILER_FROM}
 EOF
 
 # -- Caché: limpiar posibles compilaciones parciales de arranques anteriores -----
