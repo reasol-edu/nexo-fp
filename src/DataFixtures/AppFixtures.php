@@ -102,6 +102,9 @@ class AppFixtures extends Fixture
             'DELETE FROM ' . $q('teacher_academic_year'),
             'DELETE FROM ' . $q('educational_centre_admins'),
             'DELETE FROM ' . $q('academic_year'),
+            'DELETE FROM ' . $q('teacher_setting_value'),
+            'DELETE FROM ' . $q('centre_setting_value'),
+            'DELETE FROM ' . $q('global_setting_value'),
             'DELETE FROM ' . $q('educational_centre'),
             'DELETE FROM ' . $q('teacher'),
         ];

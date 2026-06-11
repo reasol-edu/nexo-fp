@@ -25,7 +25,7 @@ final class Version20260611000000 extends AbstractMigration
         // ── Definiciones de ajustes ────────────────────────────────────────────
         $this->addSql(<<<'SQL'
             CREATE TABLE setting_definition (
-                id            CHAR(36)     NOT NULL,
+                id            BINARY(16)     NOT NULL,
                 `key`         VARCHAR(100) NOT NULL,
                 type          VARCHAR(10)  NOT NULL,
                 default_value VARCHAR(255) NOT NULL,
@@ -40,8 +40,8 @@ final class Version20260611000000 extends AbstractMigration
         // ── Valores globales ───────────────────────────────────────────────────
         $this->addSql(<<<'SQL'
             CREATE TABLE global_setting_value (
-                id            CHAR(36)     NOT NULL,
-                definition_id CHAR(36)     NOT NULL,
+                id            BINARY(16)     NOT NULL,
+                definition_id BINARY(16)     NOT NULL,
                 value         VARCHAR(255) NOT NULL,
                 PRIMARY KEY(id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -53,9 +53,9 @@ final class Version20260611000000 extends AbstractMigration
         // ── Valores por centro ─────────────────────────────────────────────────
         $this->addSql(<<<'SQL'
             CREATE TABLE centre_setting_value (
-                id            CHAR(36)     NOT NULL,
-                definition_id CHAR(36)     NOT NULL,
-                centre_id     CHAR(36)     NOT NULL,
+                id            BINARY(16)     NOT NULL,
+                definition_id BINARY(16)     NOT NULL,
+                centre_id     BINARY(16)     NOT NULL,
                 value         VARCHAR(255) NOT NULL,
                 PRIMARY KEY(id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -69,9 +69,9 @@ final class Version20260611000000 extends AbstractMigration
         // ── Valores por docente ────────────────────────────────────────────────
         $this->addSql(<<<'SQL'
             CREATE TABLE teacher_setting_value (
-                id            CHAR(36)     NOT NULL,
-                definition_id CHAR(36)     NOT NULL,
-                teacher_id    CHAR(36)     NOT NULL,
+                id            BINARY(16)     NOT NULL,
+                definition_id BINARY(16)     NOT NULL,
+                teacher_id    BINARY(16)     NOT NULL,
                 value         VARCHAR(255) NOT NULL,
                 PRIMARY KEY(id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -82,14 +82,14 @@ final class Version20260611000000 extends AbstractMigration
         $this->addSql('ALTER TABLE teacher_setting_value ADD CONSTRAINT FK_tsv_definition FOREIGN KEY (definition_id) REFERENCES setting_definition(id)');
         $this->addSql('ALTER TABLE teacher_setting_value ADD CONSTRAINT FK_tsv_teacher    FOREIGN KEY (teacher_id)    REFERENCES teacher(id)');
 
-        // ── Ajustes iniciales (UUID() genera UUIDs en MySQL / MariaDB) ─────────────────
+        // ── Ajustes iniciales (UNHEX(REPLACE(UUID(), '-', '')) genera UUIDs en MySQL / MariaDB) ─────────────────
         $this->addSql(<<<'SQL'
             INSERT INTO setting_definition (id, `key`, type, default_value, global_scope, centre_scope, teacher_scope) VALUES
-                (UUID(), 'page.size',                             'integer', '20',   0, 0, 1),
-                (UUID(), 'email.notifications',                   'boolean', 'true', 1, 1, 1),
-                (UUID(), 'email.notification.tutor_assigned',     'boolean', 'true', 1, 1, 1),
-                (UUID(), 'email.notification.positions_created',  'boolean', 'true', 1, 1, 1),
-                (UUID(), 'email.notification.signature_reminder', 'boolean', 'true', 1, 1, 1)
+                (UNHEX(REPLACE(UUID(), '-', '')), 'page.size',                             'integer', '20',   0, 0, 1),
+                (UNHEX(REPLACE(UUID(), '-', '')), 'email.notifications',                   'boolean', 'true', 1, 1, 1),
+                (UNHEX(REPLACE(UUID(), '-', '')), 'email.notification.tutor_assigned',     'boolean', 'true', 1, 1, 1),
+                (UNHEX(REPLACE(UUID(), '-', '')), 'email.notification.positions_created',  'boolean', 'true', 1, 1, 1),
+                (UNHEX(REPLACE(UUID(), '-', '')), 'email.notification.signature_reminder', 'boolean', 'true', 1, 1, 1)
         SQL);
     }
 

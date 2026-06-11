@@ -25,8 +25,8 @@ final class Version20260101000000 extends AbstractMigration
         // educational_centre sin FK circular (se añade después de crear academic_year)
         $this->addSql(<<<'SQL'
             CREATE TABLE educational_centre (
-                id                      CHAR(36)     NOT NULL,
-                active_academic_year_id CHAR(36)     DEFAULT NULL,
+                id                      BINARY(16)     NOT NULL,
+                active_academic_year_id BINARY(16)     DEFAULT NULL,
                 code                    VARCHAR(8)   NOT NULL,
                 name                    VARCHAR(255) NOT NULL,
                 city                    VARCHAR(255) NOT NULL,
@@ -38,8 +38,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE academic_year (
-                id                    CHAR(36)    NOT NULL,
-                educational_centre_id CHAR(36)    NOT NULL,
+                id                    BINARY(16)    NOT NULL,
+                educational_centre_id BINARY(16)    NOT NULL,
                 name                  VARCHAR(50) NOT NULL,
                 PRIMARY KEY(id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -53,7 +53,7 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE teacher (
-                id              CHAR(36)     NOT NULL,
+                id              BINARY(16)     NOT NULL,
                 name_first_name VARCHAR(255) NOT NULL,
                 name_last_name  VARCHAR(255) NOT NULL,
                 username        VARCHAR(180) NOT NULL,
@@ -69,8 +69,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE educational_centre_admins (
-                educational_centre_id CHAR(36) NOT NULL,
-                teacher_id            CHAR(36) NOT NULL,
+                educational_centre_id BINARY(16) NOT NULL,
+                teacher_id            BINARY(16) NOT NULL,
                 PRIMARY KEY(educational_centre_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -81,8 +81,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE teacher_academic_year (
-                academic_year_id CHAR(36) NOT NULL,
-                teacher_id       CHAR(36) NOT NULL,
+                academic_year_id BINARY(16) NOT NULL,
+                teacher_id       BINARY(16) NOT NULL,
                 PRIMARY KEY(academic_year_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -93,9 +93,9 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE professional_family (
-                id               CHAR(36)     NOT NULL,
-                academic_year_id CHAR(36)     NOT NULL,
-                head_id          CHAR(36)     DEFAULT NULL,
+                id               BINARY(16)     NOT NULL,
+                academic_year_id BINARY(16)     NOT NULL,
+                head_id          BINARY(16)     DEFAULT NULL,
                 name             VARCHAR(255) NOT NULL,
                 PRIMARY KEY(id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -107,9 +107,9 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE programme (
-                id                    CHAR(36)     NOT NULL,
-                academic_year_id      CHAR(36)     NOT NULL,
-                professional_family_id CHAR(36)    NOT NULL,
+                id                    BINARY(16)     NOT NULL,
+                academic_year_id      BINARY(16)     NOT NULL,
+                professional_family_id BINARY(16)    NOT NULL,
                 name                  VARCHAR(255) NOT NULL,
                 details               LONGTEXT     DEFAULT NULL,
                 PRIMARY KEY(id)
@@ -122,8 +122,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE programme_coordinator (
-                programme_id CHAR(36) NOT NULL,
-                teacher_id   CHAR(36) NOT NULL,
+                programme_id BINARY(16) NOT NULL,
+                teacher_id   BINARY(16) NOT NULL,
                 PRIMARY KEY(programme_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -134,8 +134,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE programme_year (
-                id           CHAR(36)     NOT NULL,
-                programme_id CHAR(36)     NOT NULL,
+                id           BINARY(16)     NOT NULL,
+                programme_id BINARY(16)     NOT NULL,
                 name         VARCHAR(255) NOT NULL,
                 details      LONGTEXT     DEFAULT NULL,
                 PRIMARY KEY(id)
@@ -147,9 +147,9 @@ final class Version20260101000000 extends AbstractMigration
         // `group` es palabra reservada en MySQL → usar backticks
         $this->addSql(<<<'SQL'
             CREATE TABLE `group` (
-                id                CHAR(36)     NOT NULL,
-                programme_year_id CHAR(36)     NOT NULL,
-                tutor_id          CHAR(36)     DEFAULT NULL,
+                id                BINARY(16)     NOT NULL,
+                programme_year_id BINARY(16)     NOT NULL,
+                tutor_id          BINARY(16)     DEFAULT NULL,
                 name              VARCHAR(255) NOT NULL,
                 details           LONGTEXT     DEFAULT NULL,
                 PRIMARY KEY(id)
@@ -162,8 +162,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE group_teacher (
-                group_id   CHAR(36) NOT NULL,
-                teacher_id CHAR(36) NOT NULL,
+                group_id   BINARY(16) NOT NULL,
+                teacher_id BINARY(16) NOT NULL,
                 PRIMARY KEY(group_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -174,7 +174,7 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE student (
-                id              CHAR(36)     NOT NULL,
+                id              BINARY(16)     NOT NULL,
                 name_first_name VARCHAR(255) NOT NULL,
                 name_last_name  VARCHAR(255) NOT NULL,
                 student_id      VARCHAR(50)  NOT NULL,
@@ -185,8 +185,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE student_groups (
-                student_id CHAR(36) NOT NULL,
-                group_id   CHAR(36) NOT NULL,
+                student_id BINARY(16) NOT NULL,
+                group_id   BINARY(16) NOT NULL,
                 PRIMARY KEY(student_id, group_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -197,8 +197,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE company (
-                id                        CHAR(36)     NOT NULL,
-                educational_centre_id     CHAR(36)     NOT NULL,
+                id                        BINARY(16)     NOT NULL,
+                educational_centre_id     BINARY(16)     NOT NULL,
                 name                      VARCHAR(255) NOT NULL,
                 vat_number                VARCHAR(50)  NOT NULL,
                 city                      VARCHAR(255) NOT NULL,
@@ -212,8 +212,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE company_liaisons (
-                company_id CHAR(36) NOT NULL,
-                teacher_id CHAR(36) NOT NULL,
+                company_id BINARY(16) NOT NULL,
+                teacher_id BINARY(16) NOT NULL,
                 PRIMARY KEY(company_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -224,7 +224,7 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE worker (
-                id                  CHAR(36)     NOT NULL,
+                id                  BINARY(16)     NOT NULL,
                 name_first_name     VARCHAR(255) NOT NULL,
                 name_last_name      VARCHAR(255) NOT NULL,
                 national_id_number  VARCHAR(20)  NOT NULL,
@@ -237,8 +237,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE company_workers (
-                company_id CHAR(36) NOT NULL,
-                worker_id  CHAR(36) NOT NULL,
+                company_id BINARY(16) NOT NULL,
+                worker_id  BINARY(16) NOT NULL,
                 PRIMARY KEY(company_id, worker_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -249,8 +249,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE workcenter (
-                id         CHAR(36)     NOT NULL,
-                company_id CHAR(36)     NOT NULL,
+                id         BINARY(16)     NOT NULL,
+                company_id BINARY(16)     NOT NULL,
                 name       VARCHAR(255) NOT NULL,
                 city       VARCHAR(255) NOT NULL,
                 PRIMARY KEY(id)
@@ -261,9 +261,9 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE comment (
-                id         CHAR(36)  NOT NULL,
-                author_id  CHAR(36)  NOT NULL,
-                company_id CHAR(36)  NOT NULL,
+                id         BINARY(16)  NOT NULL,
+                author_id  BINARY(16)  NOT NULL,
+                company_id BINARY(16)  NOT NULL,
                 content    LONGTEXT  NOT NULL,
                 posted_at  DATETIME  NOT NULL,
                 PRIMARY KEY(id)
@@ -276,9 +276,9 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE company_audit (
-                id            CHAR(36)  NOT NULL,
-                company_id    CHAR(36)  NOT NULL,
-                changed_by_id CHAR(36)  DEFAULT NULL,
+                id            BINARY(16)  NOT NULL,
+                company_id    BINARY(16)  NOT NULL,
+                changed_by_id BINARY(16)  DEFAULT NULL,
                 changed_at    DATETIME  NOT NULL,
                 changes       JSON      NOT NULL,
                 PRIMARY KEY(id)
@@ -291,9 +291,9 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE stay (
-                id               CHAR(36)     NOT NULL,
-                academic_year_id CHAR(36)     NOT NULL,
-                programme_id     CHAR(36)     NOT NULL,
+                id               BINARY(16)     NOT NULL,
+                academic_year_id BINARY(16)     NOT NULL,
+                programme_id     BINARY(16)     NOT NULL,
                 name             VARCHAR(255) NOT NULL,
                 start_date       DATE         NOT NULL,
                 end_date         DATE         NOT NULL,
@@ -308,8 +308,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE stay_students (
-                stay_id    CHAR(36) NOT NULL,
-                student_id CHAR(36) NOT NULL,
+                stay_id    BINARY(16) NOT NULL,
+                student_id BINARY(16) NOT NULL,
                 PRIMARY KEY(stay_id, student_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -320,12 +320,12 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE training_position (
-                id                  CHAR(36)     NOT NULL,
-                stay_id             CHAR(36)     NOT NULL,
-                student_id          CHAR(36)     DEFAULT NULL,
-                academic_tutor_id   CHAR(36)     DEFAULT NULL,
-                workplace_mentor_id CHAR(36)     DEFAULT NULL,
-                workcenter_id       CHAR(36)     DEFAULT NULL,
+                id                  BINARY(16)     NOT NULL,
+                stay_id             BINARY(16)     NOT NULL,
+                student_id          BINARY(16)     DEFAULT NULL,
+                academic_tutor_id   BINARY(16)     DEFAULT NULL,
+                workplace_mentor_id BINARY(16)     DEFAULT NULL,
+                workcenter_id       BINARY(16)     DEFAULT NULL,
                 details             LONGTEXT     DEFAULT NULL,
                 signed              TINYINT(1)   NOT NULL,
                 state               VARCHAR(255) NOT NULL,
@@ -348,8 +348,8 @@ final class Version20260101000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE training_position_programme_year (
-                training_position_id CHAR(36) NOT NULL,
-                programme_year_id    CHAR(36) NOT NULL,
+                training_position_id BINARY(16) NOT NULL,
+                programme_year_id    BINARY(16) NOT NULL,
                 PRIMARY KEY(training_position_id, programme_year_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);

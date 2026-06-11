@@ -24,8 +24,8 @@ final class Version20260609000000 extends AbstractMigration
 
         $this->addSql(<<<'SQL'
             CREATE TABLE group_tutor (
-                group_id   CHAR(36) NOT NULL,
-                teacher_id CHAR(36) NOT NULL,
+                group_id   BINARY(16) NOT NULL,
+                teacher_id BINARY(16) NOT NULL,
                 PRIMARY KEY(group_id, teacher_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
@@ -49,7 +49,7 @@ final class Version20260609000000 extends AbstractMigration
             'Esta migración sólo puede ejecutarse en MySQL o MariaDB.'
         );
 
-        $this->addSql('ALTER TABLE `group` ADD COLUMN tutor_id CHAR(36) DEFAULT NULL');
+        $this->addSql('ALTER TABLE `group` ADD COLUMN tutor_id BINARY(16) DEFAULT NULL');
         $this->addSql('UPDATE `group` g SET tutor_id = (SELECT teacher_id FROM group_tutor WHERE group_id = g.id LIMIT 1)');
         $this->addSql('CREATE INDEX IDX_group_tutor ON `group` (tutor_id)');
         $this->addSql('ALTER TABLE `group` ADD CONSTRAINT FK_group_tutor FOREIGN KEY (tutor_id) REFERENCES teacher(id)');
