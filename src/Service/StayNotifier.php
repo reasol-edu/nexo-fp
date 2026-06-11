@@ -17,6 +17,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+
 /**
  * Envía notificaciones por email relacionadas con las estancias. Los fallos
  * de transporte se registran pero nunca se propagan: el envío ocurre después
@@ -33,6 +34,7 @@ class StayNotifier
         private readonly string $fromAddress,
         #[Autowire('%app.name%')]
         private readonly string $appName,
+        private readonly AppSettingsInterface $appSettings,
     ) {}
 
     public function notifyTutorAssigned(TrainingPosition $position): void
@@ -127,6 +129,14 @@ class StayNotifier
                 'username' => $teacher->getUsername(),
             ]);
 
+            return false;
+        }
+
+        if ($this->appSettings->getForTeacher('email.notifications', $teacher) === false) {
+            return false;
+        }
+
+        if ($this->appSettings->getForTeacher('email.notification.' . $kind, $teacher) === false) {
             return false;
         }
 
