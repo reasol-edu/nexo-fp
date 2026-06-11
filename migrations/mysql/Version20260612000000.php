@@ -24,7 +24,7 @@ final class Version20260612000000 extends AbstractMigration
 
         $this->addSql('ALTER TABLE setting_definition ADD min_value INT DEFAULT NULL');
         $this->addSql('ALTER TABLE setting_definition ADD max_value INT DEFAULT NULL');
-        $this->addSql("UPDATE setting_definition SET min_value = 5, max_value = 100 WHERE \`key\` = 'page.size'");
+        $this->addSql("UPDATE setting_definition SET min_value = 5, max_value = 100 WHERE `key` = 'page.size'");
     }
 
     public function down(Schema $schema): void
