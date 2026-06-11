@@ -9,6 +9,7 @@ ui.yes: 'Sí'
 
 # Perfil del usuario
 profile.title: 'Mi perfil'
+profile.tab.personal: 'Datos personales'
 profile.section.personal: 'Datos personales'
 profile.section.password: 'Cambiar contraseña'
 profile.save: 'Guardar cambios'
@@ -40,4 +41,3 @@ pagination.summary: 'Mostrando %from%–%to% de %total%'
 pagination.previous: 'Página anterior'
 pagination.next: 'Página siguiente'
 pagination.nav_label: 'Navegación de páginas'
-
