@@ -515,7 +515,7 @@ docker compose up -d
 
 # 3. Instala dependencias e inicializa la base de datos
 composer install
-php bin/console doctrine:migrations:migrate
+make migrate
 php bin/console app:setup
 
 # 4. Arranca el servidor de desarrollo
@@ -526,10 +526,18 @@ Accede a **http://localhost:8080** con `admin` / `admin`.
 
 > El fichero `compose.override.yaml` está activo automáticamente en desarrollo y expone PostgreSQL en el puerto 5432. El servicio PHP (`app`) solo se levanta al pasar `--profile production`.
 
+### Cargar datos de demostración
+
+```bash
+make fixtures
+```
+
+Consulta [DEMO.md](DEMO.md) para ver los usuarios, centros y escenarios disponibles.
+
 ### Ejecutar los tests
 
 ```bash
-php bin/phpunit
+make test
 ```
 
 ### Análisis estático

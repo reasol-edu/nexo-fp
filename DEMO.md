@@ -32,8 +32,14 @@ $env:LOAD_FIXTURES = "true"; .\start.ps1
 ### Opción B — Manual (entorno de desarrollo)
 
 ```bash
-php bin/console doctrine:fixtures:load --append
+make fixtures
 ```
+
+> El comando equivalente es `php bin/console doctrine:fixtures:load --no-interaction --append`.
+> El flag `--append` es obligatorio por dos motivos: el esquema tiene una FK circular entre
+> `educational_centre` y `academic_year` que el purger de Doctrine no puede resolver (la limpieza
+> se realiza dentro del propio fixture en el orden correcto), y `setting_definition` es una tabla
+> de datos de referencia sembrada por las migraciones que no debe borrarse al recargar demos.
 
 ## Credenciales de acceso
 
