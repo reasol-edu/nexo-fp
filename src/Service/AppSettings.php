@@ -12,9 +12,15 @@ use App\Repository\SettingDefinitionRepository;
 use App\Repository\TeacherSettingValueRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 
-final class AppSettings
+final class AppSettings implements AppSettingsInterface
 {
-    /** @var array<string, mixed>|null null until first access */
+    /** @var array<string, \App\Entity\SettingDefinition>|null shared base cache */
+    private ?array $allDefinitions = null;
+
+    /** @var array<string, \App\Entity\GlobalSettingValue>|null shared base cache */
+    private ?array $globalMap = null;
+
+    /** @var array<string, mixed>|null full resolved map for the current user / centre */
     private ?array $resolved = null;
 
     public function __construct(
@@ -26,10 +32,6 @@ final class AppSettings
         private readonly Security $security,
     ) {}
 
-    /**
-     * Returns the resolved value for the given key, cast to its native type.
-     * Falls back through teacher → centre → global → definition default.
-     */
     public function get(string $key): mixed
     {
         $this->load();
@@ -37,10 +39,35 @@ final class AppSettings
         return $this->resolved[$key] ?? null;
     }
 
-    /** Invalidates the in-memory cache, forcing a reload on the next get(). */
+    public function getForTeacher(string $key, Teacher $teacher): mixed
+    {
+        $this->ensureBaseLoaded();
+
+        $definition = $this->allDefinitions[$key] ?? null;
+        if ($definition === null) {
+            return null;
+        }
+
+        $teacherMap = $this->teacherValues->findByTeacherIndexedByKey($teacher);
+
+        $raw = match (true) {
+            isset($teacherMap[$key])      => $teacherMap[$key]->getValue(),
+            isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
+            default                       => $definition->getDefaultValue(),
+        };
+
+        return match ($definition->getType()) {
+            SettingType::Boolean => $raw === 'true',
+            SettingType::Integer => (int) $raw,
+            SettingType::String  => $raw,
+        };
+    }
+
     public function invalidate(): void
     {
-        $this->resolved = null;
+        $this->resolved       = null;
+        $this->allDefinitions = null;
+        $this->globalMap      = null;
     }
 
     private function load(): void
@@ -49,19 +76,19 @@ final class AppSettings
             return;
         }
 
+        $this->ensureBaseLoaded();
+
         $this->resolved = [];
 
-        $allDefinitions = $this->definitions->findAllIndexedByKey();
-        $globalMap      = $this->globalValues->findAllIndexedByKey();
-        $centreMap      = $this->loadCentreMap();
-        $teacherMap     = $this->loadTeacherMap();
+        $centreMap  = $this->loadCentreMap();
+        $teacherMap = $this->loadTeacherMap();
 
-        foreach ($allDefinitions as $key => $definition) {
+        foreach ($this->allDefinitions as $key => $definition) {
             $raw = match (true) {
-                isset($teacherMap[$key]) => $teacherMap[$key]->getValue(),
-                isset($centreMap[$key])  => $centreMap[$key]->getValue(),
-                isset($globalMap[$key])  => $globalMap[$key]->getValue(),
-                default                  => $definition->getDefaultValue(),
+                isset($teacherMap[$key])      => $teacherMap[$key]->getValue(),
+                isset($centreMap[$key])       => $centreMap[$key]->getValue(),
+                isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
+                default                       => $definition->getDefaultValue(),
             };
 
             $this->resolved[$key] = match ($definition->getType()) {
@@ -70,6 +97,16 @@ final class AppSettings
                 SettingType::String  => $raw,
             };
         }
+    }
+
+    private function ensureBaseLoaded(): void
+    {
+        if ($this->allDefinitions !== null) {
+            return;
+        }
+
+        $this->allDefinitions = $this->definitions->findAllIndexedByKey();
+        $this->globalMap      = $this->globalValues->findAllIndexedByKey();
     }
 
     /** @return array<string, \App\Entity\CentreSettingValue> */
