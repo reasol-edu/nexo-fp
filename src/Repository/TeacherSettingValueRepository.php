@@ -27,7 +27,7 @@ class TeacherSettingValueRepository extends ServiceEntityRepository
             ->join('v.definition', 'd')
             ->addSelect('d')
             ->where('v.teacher = :teacher')
-            ->setParameter('teacher', $teacher)
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->getQuery()
             ->getResult();
 

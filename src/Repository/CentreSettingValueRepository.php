@@ -27,7 +27,7 @@ class CentreSettingValueRepository extends ServiceEntityRepository
             ->join('v.definition', 'd')
             ->addSelect('d')
             ->where('v.centre = :centre')
-            ->setParameter('centre', $centre)
+            ->setParameter('centre', $centre->getId(), 'uuid')
             ->getQuery()
             ->getResult();
 
