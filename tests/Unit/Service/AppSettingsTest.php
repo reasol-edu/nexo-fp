@@ -291,6 +291,57 @@ class AppSettingsTest extends TestCase
         $service->getForTeacher('page.size', $teacher);
     }
 
+    // ── Lock: global locked overrides all ─────────────────────────────────────
+
+    public function testGetRespectsGlobalLock(): void
+    {
+        $def = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+
+        $service = $this->makeService(
+            defs:    ['email.notifications' => $def],
+            globals: ['email.notifications' => $this->makeGlobalValue('false', locked: true)],
+            centres: ['email.notifications' => $this->makeCentreValue('true')],
+            teachers: ['email.notifications' => $this->makeTeacherValue('true')],
+        );
+
+        // Global lock must override both centre and teacher values
+        self::assertFalse($service->get('email.notifications'));
+    }
+
+    public function testGetRespectsCentreLock(): void
+    {
+        $def = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+
+        $service = $this->makeService(
+            defs:    ['email.notifications' => $def],
+            globals: ['email.notifications' => $this->makeGlobalValue('true')],
+            centres: ['email.notifications' => $this->makeCentreValue('false', locked: true)],
+            teachers: ['email.notifications' => $this->makeTeacherValue('true')],
+        );
+
+        // Centre lock must override teacher value (global is not locked)
+        self::assertFalse($service->get('email.notifications'));
+    }
+
+    public function testGetForTeacherRespectsGlobalLock(): void
+    {
+        $def     = $this->makeDef('email.notifications', SettingType::Boolean, 'true');
+        $teacher = $this->createStub(Teacher::class);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+        $teacherRepo->method('findByTeacherIndexedByKey')
+            ->willReturn(['email.notifications' => $this->makeTeacherValue('true')]);
+
+        $service = $this->makeServiceWithTeacherRepo(
+            defs:        ['email.notifications' => $def],
+            globals:     ['email.notifications' => $this->makeGlobalValue('false', locked: true)],
+            teacherRepo: $teacherRepo,
+        );
+
+        // Global lock must override teacher value in getForTeacher()
+        self::assertFalse($service->getForTeacher('email.notifications', $teacher));
+    }
+
     // ── Unknown key ───────────────────────────────────────────────────────────
 
     public function testGetReturnsNullForUnknownKey(): void
@@ -389,14 +440,14 @@ class AppSettingsTest extends TestCase
             ->setDefaultValue($default);
     }
 
-    private function makeGlobalValue(string $value): GlobalSettingValue
+    private function makeGlobalValue(string $value, bool $locked = false): GlobalSettingValue
     {
-        return (new GlobalSettingValue())->setValue($value);
+        return (new GlobalSettingValue())->setValue($value)->setLocked($locked);
     }
 
-    private function makeCentreValue(string $value): CentreSettingValue
+    private function makeCentreValue(string $value, bool $locked = false): CentreSettingValue
     {
-        return (new CentreSettingValue())->setValue($value);
+        return (new CentreSettingValue())->setValue($value)->setLocked($locked);
     }
 
     private function makeTeacherValue(string $value): TeacherSettingValue
