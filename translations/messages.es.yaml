@@ -35,6 +35,11 @@ profile.error.current_password_invalid: 'La contraseña actual no es correcta.'
 profile.error.password_mismatch: 'Las contraseñas no coinciden.'
 
 profile.flash.saved: 'Perfil guardado correctamente.'
+profile.flash.email_verification_sent: 'Hemos enviado un enlace de verificación a tu nueva dirección de correo. Confirma el cambio haciendo clic en el enlace antes de 24 horas.'
+profile.flash.email_verified: 'Tu dirección de correo ha sido verificada y actualizada correctamente.'
+profile.flash.email_verification_expired: 'El enlace de verificación ha caducado. Vuelve a cambiar tu correo para recibir uno nuevo.'
+profile.flash.email_verification_invalid: 'El enlace de verificación no es válido.'
+profile.notice.email_pending: 'Tienes un cambio de correo pendiente de verificación: <strong>%email%</strong>. Revisa tu bandeja de entrada.'
 
 # Paginación
 pagination.summary: 'Mostrando %from%–%to% de %total%'

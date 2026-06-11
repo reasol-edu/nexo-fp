@@ -22,6 +22,7 @@ final class TenantContextSubscriber
         'app_select_centre_choose',
         'app_profile',
         'app_profile_settings',
+        'app_profile_verify_email',
     ];
 
     public function __construct(

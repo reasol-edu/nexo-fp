@@ -15,6 +15,14 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ 'profile.title'|trans({}, 'messages') }}</h1>
     </div>
 
+    {% if teacher.pendingEmail %}
+    <div data-pending-email-notice
+         class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
+        {{ ux_icon('heroicons:information-circle', {class: 'h-5 w-5 shrink-0 text-amber-500 mt-0.5'}) }}
+        <p>{{ 'profile.notice.email_pending'|trans({'%email%': teacher.pendingEmail}, 'messages')|raw }}</p>
+    </div>
+    {% endif %}
+
     {# ── Tabs ─────────────────────────────────────────────────────────────── #}
     <div class="flex gap-1 rounded-xl bg-gray-100 p-1">
         <a href="{{ path('app_profile') }}"

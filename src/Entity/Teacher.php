@@ -43,6 +43,15 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private ?string $email = null;
 
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $pendingEmail = null;
+
+    #[ORM\Column(length: 64, nullable: true, unique: true)]
+    private ?string $emailVerificationToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $emailVerificationTokenExpiresAt = null;
+
     /** @var Collection<int, AcademicYear> */
     #[ORM\ManyToMany(targetEntity: AcademicYear::class, mappedBy: 'teachers', fetch: 'EXTRA_LAZY')]
     private Collection $academicYears;
@@ -157,6 +166,48 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
 
         return $this;
+    }
+
+    public function getPendingEmail(): ?string
+    {
+        return $this->pendingEmail;
+    }
+
+    public function setPendingEmail(?string $pendingEmail): static
+    {
+        $this->pendingEmail = $pendingEmail;
+
+        return $this;
+    }
+
+    public function getEmailVerificationToken(): ?string
+    {
+        return $this->emailVerificationToken;
+    }
+
+    public function setEmailVerificationToken(?string $token): static
+    {
+        $this->emailVerificationToken = $token;
+
+        return $this;
+    }
+
+    public function getEmailVerificationTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->emailVerificationTokenExpiresAt;
+    }
+
+    public function setEmailVerificationTokenExpiresAt(?\DateTimeImmutable $expiresAt): static
+    {
+        $this->emailVerificationTokenExpiresAt = $expiresAt;
+
+        return $this;
+    }
+
+    public function isEmailVerificationTokenExpired(): bool
+    {
+        return $this->emailVerificationTokenExpiresAt === null
+            || $this->emailVerificationTokenExpiresAt < new \DateTimeImmutable();
     }
 
     /** @return Collection<int, AcademicYear> */

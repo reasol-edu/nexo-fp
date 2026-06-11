@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Service\ProfileMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +22,7 @@ class ProfileController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
+        private readonly ProfileMailer $profileMailer,
     ) {}
 
     #[Route('', name: 'app_profile')]
@@ -80,16 +82,29 @@ class ProfileController extends AbstractController
             }
 
             if (empty($errors)) {
-                $teacher->setName(new PersonName($values['first_name'], $values['last_name']))
-                    ->setEmail($values['email'] !== '' ? $values['email'] : null);
+                $newEmail = $values['email'] !== '' ? $values['email'] : null;
+
+                $teacher->setName(new PersonName($values['first_name'], $values['last_name']));
+
+                if (!$teacher->isAdmin() && $newEmail !== null && $newEmail !== $teacher->getEmail()) {
+                    $token = bin2hex(random_bytes(32));
+                    $teacher
+                        ->setPendingEmail($newEmail)
+                        ->setEmailVerificationToken($token)
+                        ->setEmailVerificationTokenExpiresAt(new \DateTimeImmutable('+24 hours'));
+                    $this->em->flush();
+                    $this->profileMailer->sendEmailVerification($teacher, $newEmail, $token);
+                    $this->addFlash('success', $this->t('profile.flash.email_verification_sent'));
+                } else {
+                    $teacher->setEmail($newEmail);
+                    $this->em->flush();
+                    $this->addFlash('success', $this->t('profile.flash.saved'));
+                }
 
                 if (!$teacher->isExternal() && $values['new_password'] !== '') {
                     $teacher->setPassword($this->hasher->hashPassword($teacher, $values['new_password']));
+                    $this->em->flush();
                 }
-
-                $this->em->flush();
-
-                $this->addFlash('success', $this->t('profile.flash.saved'));
 
                 return $this->redirectToRoute('app_profile');
             }

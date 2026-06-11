@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Controller;
 use App\Entity\PersonName;
 use App\Entity\Teacher;
 use App\Tests\Integration\ControllerTestCase;
+use Symfony\Component\Mailer\EventListener\MessageLoggerListener;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class ProfileControllerTest extends ControllerTestCase
@@ -57,7 +58,9 @@ class ProfileControllerTest extends ControllerTestCase
         $updated = $this->em->find(Teacher::class, $teacher->getId());
         self::assertSame('Nuevo', $updated->getName()->getFirstName());
         self::assertSame('Apellido', $updated->getName()->getLastName());
-        self::assertSame('nuevo@ejemplo.com', $updated->getEmail());
+        // Non-admin changing email: stored as pendingEmail, not promoted yet
+        self::assertNull($updated->getEmail());
+        self::assertSame('nuevo@ejemplo.com', $updated->getPendingEmail());
     }
 
     public function testPostWithInvalidCsrfIsDenied(): void
@@ -222,6 +225,150 @@ class ProfileControllerTest extends ControllerTestCase
         self::assertResponseRedirects('/perfil');
     }
 
+    // ── verificación de email ─────────────────────────────────────────────────
+
+    public function testNonAdminChangingEmailStoresPendingEmail(): void
+    {
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('old@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'     => $token,
+            'first_name' => 'Test',
+            'last_name'  => 'Teacher',
+            'email'      => 'new@ejemplo.com',
+        ]);
+
+        self::assertResponseRedirects('/perfil');
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertSame('old@ejemplo.com', $updated->getEmail());
+        self::assertSame('new@ejemplo.com', $updated->getPendingEmail());
+        self::assertNotNull($updated->getEmailVerificationToken());
+        self::assertNotNull($updated->getEmailVerificationTokenExpiresAt());
+    }
+
+    public function testNonAdminClearingEmailSavesDirectly(): void
+    {
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('old@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'     => $token,
+            'first_name' => 'Test',
+            'last_name'  => 'Teacher',
+            'email'      => '',
+        ]);
+
+        self::assertResponseRedirects('/perfil');
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertNull($updated->getEmail());
+        self::assertNull($updated->getPendingEmail());
+        self::assertNull($updated->getEmailVerificationToken());
+    }
+
+    public function testAdminChangingEmailSavesDirectly(): void
+    {
+        $teacher = $this->makeAdminTeacher('admin.1');
+        $teacher->setEmail('old@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'     => $token,
+            'first_name' => 'Admin',
+            'last_name'  => 'Teacher',
+            'email'      => 'new@ejemplo.com',
+        ]);
+
+        self::assertResponseRedirects('/perfil');
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertSame('new@ejemplo.com', $updated->getEmail());
+        self::assertNull($updated->getPendingEmail());
+        self::assertNull($updated->getEmailVerificationToken());
+    }
+
+    public function testVerifyEmailPromotesPendingEmail(): void
+    {
+        $token   = bin2hex(random_bytes(32));
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('old@ejemplo.com')
+            ->setPendingEmail('new@ejemplo.com')
+            ->setEmailVerificationToken($token)
+            ->setEmailVerificationTokenExpiresAt(new \DateTimeImmutable('+24 hours'));
+        $this->persist($teacher);
+
+        $this->client->request('GET', '/perfil/verificar-email/' . $token);
+
+        self::assertResponseRedirects('/perfil');
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertSame('new@ejemplo.com', $updated->getEmail());
+        self::assertNull($updated->getPendingEmail());
+        self::assertNull($updated->getEmailVerificationToken());
+        self::assertNull($updated->getEmailVerificationTokenExpiresAt());
+    }
+
+    public function testVerifyEmailWithExpiredTokenClearsToken(): void
+    {
+        $token   = bin2hex(random_bytes(32));
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('old@ejemplo.com')
+            ->setPendingEmail('new@ejemplo.com')
+            ->setEmailVerificationToken($token)
+            ->setEmailVerificationTokenExpiresAt(new \DateTimeImmutable('-1 hour'));
+        $this->persist($teacher);
+
+        $this->client->request('GET', '/perfil/verificar-email/' . $token);
+
+        self::assertResponseRedirects('/perfil');
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertSame('old@ejemplo.com', $updated->getEmail());
+        self::assertNull($updated->getPendingEmail());
+        self::assertNull($updated->getEmailVerificationToken());
+    }
+
+    public function testVerifyEmailWithInvalidTokenRedirects(): void
+    {
+        $this->client->request('GET', '/perfil/verificar-email/token-que-no-existe-en-la-bd');
+
+        self::assertResponseRedirects('/perfil');
+    }
+
+    public function testProfilePageShowsPendingEmailNotice(): void
+    {
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setPendingEmail('pending@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $this->client->request('GET', '/perfil');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-pending-email-notice]');
+    }
+
     // ── usuario externo (Séneca) ──────────────────────────────────────────────
 
     public function testPasswordFieldsAreNotRenderedForExternalUser(): void
@@ -241,6 +388,11 @@ class ProfileControllerTest extends ControllerTestCase
     private function makeTeacher(string $username): Teacher
     {
         return (new Teacher(new PersonName('Test', 'Teacher')))->setUsername($username);
+    }
+
+    private function makeAdminTeacher(string $username): Teacher
+    {
+        return (new Teacher(new PersonName('Admin', 'Teacher')))->setUsername($username)->setAdmin(true);
     }
 
     private function makeTeacherWithPassword(string $username, string $plainPassword): Teacher
