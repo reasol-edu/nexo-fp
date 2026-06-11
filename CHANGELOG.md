@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Sistema de ajustes configurables a tres niveles (global, centro educativo y personal): ajuste de tamaño de página, interruptor maestro de notificaciones por email y configuración individual de cada tipo de notificación; los valores se resuelven en cascada (personal > centro > global > predeterminado)
+- Página de ajustes en el perfil del docente (`/perfil/ajustes`), en el hub del centro (`/mi-centro/ajustes`) y en la administración global (`/admin/ajustes`)
+- Los ajustes de tipo entero y cadena pueden tener límites de rango (`min_value` / `max_value`); el tamaño de página admite entre 5 y 100 elementos
+- Verificación de email con enlace temporal (24 h) al cambiar de dirección de correo: los docentes no administradores reciben un correo al nuevo buzón y el cambio solo se aplica al hacer clic en el enlace; los administradores globales guardan el cambio directamente
+- Soporte para MySQL 8 y MariaDB como motor de base de datos, además de PostgreSQL y SQLite; se incluyen migraciones para las tres plataformas
+
+### Changed
+
+- Un grupo puede tener más de un tutor/a dual docente asignado (relación many-to-many); los tutores del grupo pueden gestionarse desde la sección «Centro educativo»
+- Las notificaciones por email pueden habilitarse o deshabilitarse individualmente —por tipo de notificación, por docente y por centro— mediante el sistema de ajustes; la variable de entorno `APP_PAGE_SIZE` ya no está en uso (el tamaño de página se configura en los ajustes)
+
 ## [1.2.0] - 2026-06-10
 
 ### Added

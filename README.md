@@ -46,6 +46,7 @@ para el historial de cambios.
 - [Flujo de trabajo](#flujo-de-trabajo)
 - [Tabla de permisos](#tabla-de-permisos)
 - [Notificaciones por email](#notificaciones-por-email)
+- [Ajustes](#ajustes)
 - [Comandos de consola](#comandos-de-consola)
 - [Desarrollo local](#desarrollo-local)
 - [Despliegue con Docker](#despliegue-con-docker)
@@ -353,6 +354,9 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
 - **Recordatorios de firma:** mediante el comando [`app:send-reminders`](#appsend-reminders),
   cada tutor/a dual docente recibe un recordatorio de sus puestos pendientes de firma cuando la
   estancia está próxima a finalizar.
+- **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de
+  correo, recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El
+  cambio no tiene efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.
 
 Las notificaciones están **desactivadas por defecto** (`MAILER_DSN=null://null`). Para activarlas,
 configura en el entorno:
@@ -373,6 +377,36 @@ de `SendEmailMessage` en `config/packages/messenger.yaml` (requiere un worker ej
 nunca la operación en curso.
 
 Los destinatarios sin dirección de email registrada se omiten de forma silenciosa.
+
+Cada tipo de notificación puede habilitarse o deshabilitarse individualmente desde la sección
+**Ajustes**, con tres niveles de granularidad: global (para toda la aplicación), por centro
+educativo y por docente. El valor más específico tiene prioridad. Si un docente desactiva las
+notificaciones desde su perfil, no recibirá emails independientemente de la configuración global
+o del centro.
+
+---
+
+## Ajustes
+
+La aplicación dispone de un sistema de configuración con tres niveles de granularidad:
+
+| Nivel | URL | Quién puede acceder |
+|-------|-----|---------------------|
+| Global | `/admin/ajustes` | Administradores globales |
+| Centro educativo | `/mi-centro/ajustes` | Administradores de centro |
+| Personal | `/perfil/ajustes` | Todos los docentes autenticados |
+
+Los valores se resuelven en cascada: **personal > centro > global > predeterminado**.
+
+Los ajustes disponibles son:
+
+| Clave | Tipo | Ámbito | Descripción |
+|-------|------|--------|-------------|
+| `page.size` | Entero (5–100) | Personal | Elementos por página en los listados |
+| `email.notifications` | Booleano | Global, centro, personal | Interruptor maestro de notificaciones |
+| `email.notification.tutor_assigned` | Booleano | Global, centro, personal | Aviso al asignar una tutoría |
+| `email.notification.positions_created` | Booleano | Global, centro, personal | Aviso al crear puestos formativos |
+| `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
 
 ---
 
@@ -462,7 +496,7 @@ Según el modo de despliegue elegido, los requisitos son distintos:
 |------|-----------|
 | Docker | Docker Engine 24+ y Docker Compose v2 |
 | Binario nativo | Sin requisitos adicionales (todo incluido) |
-| Desarrollo local | PHP 8.4+, Composer, PostgreSQL 16+ o SQLite |
+| Desarrollo local | PHP 8.4+, Composer, PostgreSQL 16+, MySQL 8+ / MariaDB 11+ o SQLite |
 
 ---
 
@@ -680,7 +714,6 @@ Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script
 | Variable | Descripción | Valor por defecto |
 |----------|-------------|-------------------|
 | `PORT` | Puerto de escucha | `8080` |
-| `APP_PAGE_SIZE` | Elementos por página | `20` |
 | `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
