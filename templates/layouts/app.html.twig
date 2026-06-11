@@ -116,7 +116,8 @@
                 <div class="my-3 h-px bg-white/8"></div>
                 {% set admin_active = current_route == 'app_admin'
                     or current_route starts with 'app_admin_teachers'
-                    or current_route starts with 'app_admin_centres' %}
+                    or current_route starts with 'app_admin_centres'
+                    or current_route == 'app_admin_settings' %}
                 <a href="{{ path('app_admin') }}"
                    class="{{ admin_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
                           group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">

@@ -15,6 +15,20 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ 'profile.title'|trans({}, 'messages') }}</h1>
     </div>
 
+    {# ── Tabs ─────────────────────────────────────────────────────────────── #}
+    <div class="flex gap-1 rounded-xl bg-gray-100 p-1">
+        <a href="{{ path('app_profile') }}"
+           class="flex-1 rounded-lg bg-white py-2 text-center text-sm font-medium shadow-xs
+                  text-gray-900 transition-colors">
+            {{ 'profile.tab.personal'|trans({}, 'messages') }}
+        </a>
+        <a href="{{ path('app_profile_settings') }}"
+           class="flex-1 rounded-lg py-2 text-center text-sm font-medium transition-colors
+                  text-gray-600 hover:text-gray-900">
+            {{ 'settings.title'|trans({}, 'settings') }}
+        </a>
+    </div>
+
     {# ── Datos personales ─────────────────────────────────────────────────────── #}
     <form method="post" class="space-y-8">
         <input type="hidden" name="_token" value="{{ csrf_token('edit_profile') }}">

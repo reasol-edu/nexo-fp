@@ -102,6 +102,12 @@ class ProfileController extends AbstractController
         ]);
     }
 
+    #[Route('/ajustes', name: 'app_profile_settings')]
+    public function settings(): Response
+    {
+        return $this->render('profile/settings.html.twig');
+    }
+
     private function t(string $key): string
     {
         return $this->translator->trans($key, [], 'messages');

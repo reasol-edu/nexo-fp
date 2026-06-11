@@ -30,4 +30,19 @@ class EducationalCentreHubController extends AbstractController
             'centre' => $centre,
         ]);
     }
+
+    #[Route('/mi-centro/ajustes', name: 'app_educational_centre_settings')]
+    public function settings(): Response
+    {
+        $centre = $this->tenantContext->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
+
+        return $this->render('educational_centre/settings.html.twig', [
+            'centre' => $centre,
+        ]);
+    }
 }

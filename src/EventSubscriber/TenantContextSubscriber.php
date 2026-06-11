@@ -21,6 +21,7 @@ final class TenantContextSubscriber
         'app_select_centre',
         'app_select_centre_choose',
         'app_profile',
+        'app_profile_settings',
     ];
 
     public function __construct(

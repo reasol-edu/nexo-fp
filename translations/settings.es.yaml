@@ -1,0 +1,34 @@
+# ── Títulos y secciones ───────────────────────────────────────────────────────
+settings.title: 'Ajustes'
+settings.global.title: 'Ajustes globales'
+settings.global.description: 'Valores predeterminados para toda la aplicación. Los centros y los docentes pueden sobreescribirlos.'
+settings.centre.title: 'Ajustes del centro'
+settings.centre.description: 'Valores predeterminados para este centro. Los docentes pueden sobreescribir los que sean aplicables a su perfil.'
+settings.teacher.title: 'Mis ajustes'
+settings.teacher.description: 'Preferencias personales que tienen prioridad sobre los valores del centro y globales.'
+
+# ── Controles ─────────────────────────────────────────────────────────────────
+settings.default_label: 'Por defecto'
+settings.on: 'Activado'
+settings.off: 'Desactivado'
+settings.reset_btn: 'Restablecer al valor por defecto'
+settings.saved: 'Guardado'
+settings.no_settings_for_scope: 'No hay ajustes disponibles para este nivel.'
+settings.hub.help: 'Personaliza los ajustes predeterminados para los docentes del centro.'
+settings.hub.manage: 'Configurar'
+
+# ── Definiciones de ajustes ───────────────────────────────────────────────────
+settings.key.page_size.label: 'Resultados por página'
+settings.key.page_size.description: 'Número de elementos que se muestran en los listados.'
+
+settings.key.email_notifications.label: 'Notificaciones por email'
+settings.key.email_notifications.description: 'Activa o desactiva todos los correos automáticos de la aplicación.'
+
+settings.key.email_notification_tutor_assigned.label: 'Email al asignar tutoría docente'
+settings.key.email_notification_tutor_assigned.description: 'Envía un aviso al tutor o tutora dual docente cuando se le asigna un puesto.'
+
+settings.key.email_notification_positions_created.label: 'Email al crear puestos en una estancia'
+settings.key.email_notification_positions_created.description: 'Notifica a los docentes de enlace de la empresa cuando se crean puestos nuevos.'
+
+settings.key.email_notification_signature_reminder.label: 'Email de recordatorio de firma'
+settings.key.email_notification_signature_reminder.description: 'Recuerda al tutor o tutora dual docente los puestos pendientes de firma cuando la estancia está próxima a finalizar.'
