@@ -12,8 +12,8 @@ use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use App\Security\Voter\EducationalCentreVoter;
+use App\Service\AppSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -75,7 +75,7 @@ class StayListComponent extends AbstractController
         private readonly StayRepository $stays,
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
+        private readonly AppSettings $appSettings,
     ) {}
 
     /** @return Paginator<Stay> */
@@ -105,7 +105,7 @@ class StayListComponent extends AbstractController
             ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId, $periods, $viewer)
             : $this->stays->findNoneQuery();
 
-        $this->paginationCache = new Paginator($query, $this->page, $this->pageSize);
+        $this->paginationCache = new Paginator($query, $this->page, (int) $this->appSettings->get('page.size'));
 
         return $this->paginationCache;
     }

@@ -12,9 +12,6 @@ parameters:
     app.version:                "1.2.0"
     app.pub_date:               "2026-06-10"
 
-    # Elementos predeterminados por página en los listados
-    page.size:                  "%env(APP_PAGE_SIZE)%"
-
 services:
     # default configuration for services in *this* file
     _defaults:

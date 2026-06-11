@@ -8,9 +8,9 @@ use App\Entity\Company;
 use App\Pagination\Paginator;
 use App\Repository\CompanyRepository;
 use App\Security\Voter\CompanyVoter;
+use App\Service\AppSettings;
 use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -31,7 +31,7 @@ class CompanyListComponent extends AbstractController
     public function __construct(
         private readonly CompanyRepository $companies,
         private readonly TenantContext $tenantContext,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
+        private readonly AppSettings $appSettings,
     ) {}
 
     public function mount(): void
@@ -59,7 +59,7 @@ class CompanyListComponent extends AbstractController
         return new Paginator(
             $this->companies->createByCentreFilteredQuery($centre, trim($this->search)),
             max(1, $this->page),
-            $this->pageSize,
+            (int) $this->appSettings->get('page.size'),
         );
     }
 

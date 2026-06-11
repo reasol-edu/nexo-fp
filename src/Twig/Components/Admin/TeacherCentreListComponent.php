@@ -9,8 +9,8 @@ use App\Entity\Teacher;
 use App\Pagination\Paginator;
 use App\Repository\TeacherRepository;
 use App\Security\Voter\EducationalCentreVoter;
+use App\Service\AppSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -33,7 +33,7 @@ class TeacherCentreListComponent extends AbstractController
 
     public function __construct(
         private readonly TeacherRepository $teachers,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
+        private readonly AppSettings $appSettings,
     ) {}
 
     public function mount(EducationalCentre $centre): void
@@ -46,7 +46,7 @@ class TeacherCentreListComponent extends AbstractController
     public function getPagination(): Paginator
     {
         if ($this->centre->getActiveAcademicYear() === null) {
-            return new Paginator($this->teachers->findNoneQuery(), 1, $this->pageSize);
+            return new Paginator($this->teachers->findNoneQuery(), 1, (int) $this->appSettings->get('page.size'));
         }
 
         return new Paginator(
@@ -55,7 +55,7 @@ class TeacherCentreListComponent extends AbstractController
                 trim($this->search),
             ),
             max(1, $this->page),
-            $this->pageSize,
+            (int) $this->appSettings->get('page.size'),
         );
     }
 

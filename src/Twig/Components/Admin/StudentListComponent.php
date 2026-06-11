@@ -11,8 +11,8 @@ use App\Pagination\Paginator;
 use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
 use App\Security\Voter\EducationalCentreVoter;
+use App\Service\AppSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -39,7 +39,7 @@ class StudentListComponent extends AbstractController
     public function __construct(
         private readonly StudentRepository $students,
         private readonly GroupRepository $groups,
-        #[Autowire(env: 'int:APP_PAGE_SIZE')] private readonly int $pageSize,
+        private readonly AppSettings $appSettings,
     ) {}
 
     public function mount(EducationalCentre $centre): void
@@ -58,7 +58,7 @@ class StudentListComponent extends AbstractController
     public function getPagination(): Paginator
     {
         if ($this->centre->getActiveAcademicYear() === null) {
-            return new Paginator($this->students->findNoneQuery(), 1, $this->pageSize);
+            return new Paginator($this->students->findNoneQuery(), 1, (int) $this->appSettings->get('page.size'));
         }
 
         return new Paginator(
@@ -68,7 +68,7 @@ class StudentListComponent extends AbstractController
                 trim($this->groupId),
             ),
             max(1, $this->page),
-            $this->pageSize,
+            (int) $this->appSettings->get('page.size'),
         );
     }
 
