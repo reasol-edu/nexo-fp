@@ -51,6 +51,8 @@ final class AppSettings implements AppSettingsInterface
         $teacherMap = $this->teacherValues->findByTeacherIndexedByKey($teacher);
 
         $raw = match (true) {
+            isset($this->globalMap[$key]) && $this->globalMap[$key]->isLocked()
+                => $this->globalMap[$key]->getValue(),
             isset($teacherMap[$key])      => $teacherMap[$key]->getValue(),
             isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
             default                       => $definition->getDefaultValue(),
@@ -85,6 +87,10 @@ final class AppSettings implements AppSettingsInterface
 
         foreach ($this->allDefinitions as $key => $definition) {
             $raw = match (true) {
+                isset($this->globalMap[$key]) && $this->globalMap[$key]->isLocked()
+                    => $this->globalMap[$key]->getValue(),
+                isset($centreMap[$key]) && $centreMap[$key]->isLocked()
+                    => $centreMap[$key]->getValue(),
                 isset($teacherMap[$key])      => $teacherMap[$key]->getValue(),
                 isset($centreMap[$key])       => $centreMap[$key]->getValue(),
                 isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
