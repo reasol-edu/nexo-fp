@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v1.3.0</strong> &nbsp;·&nbsp;
+  <strong>v1.4.0</strong> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
   <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
@@ -398,7 +398,7 @@ La aplicación dispone de un sistema de configuración con tres niveles de granu
 
 Los valores se resuelven en cascada: **personal > centro > global > predeterminado**.
 
-Los administradores globales y de centro pueden **bloquear** cualquier ajuste que tengan explícitamente guardado. Un ajuste bloqueado a nivel global no puede ser modificado por los centros ni por los docentes; uno bloqueado a nivel de centro no puede ser modificado por los docentes de ese centro. Los ajustes bloqueados aparecen deshabilitados en los niveles inferiores, indicando qué nivel los ha fijado.
+Los administradores globales y de centro pueden **bloquear** cualquier ajuste que tengan explícitamente guardado. Un ajuste bloqueado a nivel global no puede ser modificado por los centros ni por los docentes; uno bloqueado a nivel de centro no puede ser modificado por los docentes de ese centro. Los ajustes bloqueados aparecen deshabilitados en los niveles inferiores, indicando qué nivel los ha fijado, y el control muestra siempre el valor fijado por el nivel bloqueante. Un ajuste bloqueado tampoco puede restablecerse al valor por defecto.
 
 Los ajustes disponibles son:
 

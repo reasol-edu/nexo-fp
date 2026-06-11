@@ -15,10 +15,12 @@
             {% set keySlug    = key|replace({'.': '_', '-': '_'}) %}
             {% set stored     = row.storedValue %}
             {% set effective  = row.effectiveValue %}
-            {% set isSaved    = lastSaved == key %}
-            {% set isError    = lastError == key %}
-            {% set isLocked   = row.isLocked %}
-            {% set parentLock = row.parentLock %}
+            {% set isSaved      = lastSaved == key %}
+            {% set isError      = lastError == key %}
+            {% set isLocked     = row.isLocked %}
+            {% set parentLock   = row.parentLock %}
+            {# Cuando hay candado padre, el control muestra el valor heredado de arriba #}
+            {% set displayValue = parentLock is not null ? effective : stored %}
 
             <li class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:gap-6
                         {{ parentLock is not null ? 'opacity-60' : '' }}">
@@ -55,19 +57,17 @@
                                    transition-colors cursor-pointer
                                    disabled:cursor-not-allowed disabled:opacity-50"
                             {{ parentLock is not null ? 'disabled' : '' }}
-                            data-controller="setting-capture"
-                            data-action="change->setting-capture#capture change->live#action:prevent"
-                            data-live-action-param="save"
-                            data-live-key-param="{{ key }}"
-                            data-live-value-param="{{ stored ?? '__default__' }}">
-                            <option value="__default__" {{ stored is null ? 'selected' : '' }}>
+                            data-controller="setting-save"
+                            data-action="change->setting-save#save"
+                            data-setting-key="{{ key }}">
+                            <option value="__default__" {{ displayValue is null ? 'selected' : '' }} {{ isLocked ? 'disabled' : '' }}>
                                 {{ 'settings.default_label'|trans({}, 'settings') }}
                                 ({{ effective == 'true' ? 'settings.on'|trans({}, 'settings') : 'settings.off'|trans({}, 'settings') }})
                             </option>
-                            <option value="true"  {{ stored == 'true'  ? 'selected' : '' }}>
+                            <option value="true"  {{ displayValue == 'true'  ? 'selected' : '' }}>
                                 {{ 'settings.on'|trans({}, 'settings') }}
                             </option>
-                            <option value="false" {{ stored == 'false' ? 'selected' : '' }}>
+                            <option value="false" {{ displayValue == 'false' ? 'selected' : '' }}>
                                 {{ 'settings.off'|trans({}, 'settings') }}
                             </option>
                         </select>
@@ -83,7 +83,7 @@
                             type="number"
                             {% if def.minValue is not null %}min="{{ def.minValue }}"{% endif %}
                             {% if def.maxValue is not null %}max="{{ def.maxValue }}"{% endif %}
-                            value="{{ stored ?? '' }}"
+                            value="{{ displayValue ?? '' }}"
                             placeholder="{{ intPlaceholder }}"
                             {{ parentLock is not null ? 'disabled' : '' }}
                             class="w-28 rounded-lg border py-1.5 px-3 text-sm text-gray-900
@@ -92,18 +92,16 @@
                                    {{ isError
                                        ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
                                        : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
-                            data-controller="setting-capture"
-                            data-action="change->setting-capture#capture change->live#action:prevent"
-                            data-live-action-param="save"
-                            data-live-key-param="{{ key }}"
-                            data-live-value-param="{{ stored ?? '' }}">
+                            data-controller="setting-save"
+                            data-action="change->setting-save#save"
+                            data-setting-key="{{ key }}">
 
                     {% else %}
                         <input
                             type="text"
                             {% if def.minValue is not null %}minlength="{{ def.minValue }}"{% endif %}
                             {% if def.maxValue is not null %}maxlength="{{ def.maxValue }}"{% endif %}
-                            value="{{ stored ?? '' }}"
+                            value="{{ displayValue ?? '' }}"
                             placeholder="{{ 'settings.default_label'|trans({}, 'settings') }}: {{ effective }}"
                             {{ parentLock is not null ? 'disabled' : '' }}
                             class="w-48 rounded-lg border py-1.5 px-3 text-sm text-gray-900
@@ -112,35 +110,22 @@
                                    {{ isError
                                        ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-500/20'
                                        : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:ring-plum-500/20' }}"
-                            data-controller="setting-capture"
-                            data-action="change->setting-capture#capture change->live#action:prevent"
-                            data-live-action-param="save"
-                            data-live-key-param="{{ key }}"
-                            data-live-value-param="{{ stored ?? '' }}">
+                            data-controller="setting-save"
+                            data-action="change->setting-save#save"
+                            data-setting-key="{{ key }}">
                     {% endif %}
 
                     {# ── Lock toggle (global and centre scopes) ── #}
                     {% if parentLock is null and scope != 'teacher' %}
+                        {% set lockDisabled = stored is null %}
                         <button type="button"
-                                class="transition-colors {{ isLocked ? 'text-amber-500 hover:text-amber-600' : 'text-gray-300 hover:text-amber-400' }}"
+                                class="transition-colors {{ isLocked ? 'text-amber-500 hover:text-amber-600' : (lockDisabled ? 'text-gray-200 cursor-not-allowed' : 'text-gray-300 hover:text-amber-400') }}"
+                                {{ lockDisabled ? 'disabled' : '' }}
                                 data-action="click->live#action:prevent"
                                 data-live-action-param="toggleLock"
                                 data-live-key-param="{{ key }}"
-                                title="{{ isLocked ? 'settings.unlock.title'|trans({}, 'settings') : 'settings.lock.title'|trans({}, 'settings') }}">
+                                title="{{ isLocked ? 'settings.unlock.title'|trans({}, 'settings') : (lockDisabled ? 'settings.lock.no_value_title'|trans({}, 'settings') : 'settings.lock.title'|trans({}, 'settings')) }}">
                             {{ ux_icon(isLocked ? 'heroicons:lock-closed' : 'heroicons:lock-open', {class: 'h-4 w-4'}) }}
-                        </button>
-                    {% endif %}
-
-                    {# ── Restablecer (only if value is stored and not locked by the current scope) ── #}
-                    {% if stored is not null and not isLocked and parentLock is null %}
-                        <button type="button"
-                                class="text-xs text-gray-400 hover:text-red-500 transition-colors"
-                                data-action="live#action:prevent"
-                                data-live-action-param="save"
-                                data-live-key-param="{{ key }}"
-                                data-live-value-param="__default__"
-                                title="{{ 'settings.reset_btn'|trans({}, 'settings') }}">
-                            {{ ux_icon('heroicons:arrow-uturn-left', {class: 'h-4 w-4'}) }}
                         </button>
                     {% endif %}
 

@@ -10,6 +10,7 @@ use App\Entity\GlobalSettingValue;
 use App\Entity\PersonName;
 use App\Entity\SettingDefinition;
 use App\Entity\Teacher;
+use App\Entity\TeacherSettingValue;
 use App\Tests\Integration\ControllerTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
@@ -123,6 +124,22 @@ class SettingsLockTest extends ControllerTestCase
         self::assertSame('false', $refreshed->getValue());
     }
 
+    public function testSaveResetIsBlockedWhenOwnValueIsLocked(): void
+    {
+        $admin       = $this->makeAdmin();
+        $globalValue = $this->seedGlobalValue('email.notifications', 'false', locked: true);
+
+        $this->loginAs($admin);
+
+        $component = $this->createLiveComponent('SettingsComponent', ['scope' => 'global'], $this->client);
+        $component->call('save', ['key' => 'email.notifications', 'value' => '__default__']);
+
+        $this->em->clear();
+        $refreshed = $this->em->find(GlobalSettingValue::class, $globalValue->getId());
+        self::assertNotNull($refreshed, 'El valor bloqueado no debe eliminarse');
+        self::assertSame('false', $refreshed->getValue());
+    }
+
     // ── UI disabled state (rendered via HTTP page request) ────────────────────
 
     public function testCentreSettingsPageShowsLockedRow(): void
@@ -168,6 +185,54 @@ class SettingsLockTest extends ControllerTestCase
         self::assertStringContainsString('Bloqueado por el centro educativo', $html);
     }
 
+    // ── Valor mostrado al bloquear: siempre el del nivel superior ────────────
+
+    public function testCentreSettingsShowsGlobalLockedValueEvenWhenCentreHasOwnValue(): void
+    {
+        [$admin, $centre] = $this->makeAdminWithCentre();
+        $this->seedGlobalValue('email.notifications', 'false', locked: true);
+        $this->seedCentreValue('email.notifications', 'true', $centre); // centre has its own differing value
+
+        $this->loginAs($admin, $centre);
+        $this->client->request('GET', '/mi-centro/ajustes');
+
+        $html = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('value="false" selected', $html);
+        self::assertStringNotContainsString('value="true"  selected', $html);
+    }
+
+    public function testTeacherSettingsShowsGlobalLockedValueEvenWhenTeacherHasOwnValue(): void
+    {
+        [$admin, $centre] = $this->makeAdminWithCentre();
+        $teacher          = (new Teacher(new PersonName('Docente', 'Display1')))->setUsername('docente.display1');
+        $this->persist($teacher);
+        $this->seedGlobalValue('email.notifications', 'false', locked: true);
+        $this->seedTeacherValue('email.notifications', 'true', $teacher);
+
+        $this->loginAs($teacher, $centre);
+        $this->client->request('GET', '/perfil/ajustes');
+
+        $html = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('value="false" selected', $html);
+        self::assertStringNotContainsString('value="true"  selected', $html);
+    }
+
+    public function testTeacherSettingsShowsCentreLockedValueEvenWhenTeacherHasOwnValue(): void
+    {
+        [$admin, $centre] = $this->makeAdminWithCentre();
+        $teacher          = (new Teacher(new PersonName('Docente', 'Display2')))->setUsername('docente.display2');
+        $this->persist($teacher);
+        $this->seedCentreValue('email.notifications', 'false', $centre, locked: true);
+        $this->seedTeacherValue('email.notifications', 'true', $teacher);
+
+        $this->loginAs($teacher, $centre);
+        $this->client->request('GET', '/perfil/ajustes');
+
+        $html = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('value="false" selected', $html);
+        self::assertStringNotContainsString('value="true"  selected', $html);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function makeAdmin(): Teacher
@@ -206,6 +271,15 @@ class SettingsLockTest extends ControllerTestCase
     ): CentreSettingValue {
         $def    = $this->em->getRepository(SettingDefinition::class)->findOneBy(['key' => $key]);
         $entity = (new CentreSettingValue())->setDefinition($def)->setCentre($centre)->setValue($value)->setLocked($locked);
+        $this->persist($entity);
+
+        return $entity;
+    }
+
+    private function seedTeacherValue(string $key, string $value, Teacher $teacher): TeacherSettingValue
+    {
+        $def    = $this->em->getRepository(SettingDefinition::class)->findOneBy(['key' => $key]);
+        $entity = (new TeacherSettingValue())->setDefinition($def)->setTeacher($teacher)->setValue($value);
         $this->persist($entity);
 
         return $entity;

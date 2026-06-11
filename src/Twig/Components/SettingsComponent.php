@@ -69,18 +69,21 @@ class SettingsComponent extends AbstractController
         $rows          = [];
 
         foreach ($defs as $def) {
-            $key         = $def->getKey();
-            $storedValue = $storedMap[$key] ?? null;
-            $stored      = $storedValue?->getValue();
+            $key            = $def->getKey();
+            $storedValue    = $storedMap[$key] ?? null;
+            $stored         = $storedValue?->getValue();
+            $parentLockInfo = $parentLockMap[$key] ?? null;
 
             $rows[] = [
                 'definition'     => $def,
                 'storedValue'    => $stored,
-                'effectiveValue' => $stored ?? $def->getDefaultValue(),
+                'effectiveValue' => $parentLockInfo !== null
+                                        ? $parentLockInfo['value']
+                                        : ($stored ?? $def->getDefaultValue()),
                 'isLocked'       => $storedValue !== null
                                         && method_exists($storedValue, 'isLocked')
                                         && $storedValue->isLocked(),
-                'parentLock'     => $parentLockMap[$key] ?? null,
+                'parentLock'     => $parentLockInfo !== null ? $parentLockInfo['origin'] : null,
             ];
         }
 
@@ -106,6 +109,11 @@ class SettingsComponent extends AbstractController
         }
 
         if ($isReset) {
+            $storedEntity = $this->loadStoredMap()[$key] ?? null;
+            if ($storedEntity !== null && method_exists($storedEntity, 'isLocked') && $storedEntity->isLocked()) {
+                return;
+            }
+
             $this->removeValue($def);
             $this->lastError = '';
         } else {
@@ -249,9 +257,8 @@ class SettingsComponent extends AbstractController
 
     /**
      * Returns a map of keys locked by a parent scope.
-     * Values are 'global' or 'centre' indicating the locking level.
      *
-     * @return array<string, 'global'|'centre'>
+     * @return array<string, array{origin: 'global'|'centre', value: string}>
      */
     private function loadParentLockMap(): array
     {
@@ -260,7 +267,7 @@ class SettingsComponent extends AbstractController
         if (in_array($this->scope, ['centre', 'teacher'], true)) {
             foreach ($this->globalValues->findAllIndexedByKey() as $key => $v) {
                 if ($v->isLocked()) {
-                    $result[$key] = 'global';
+                    $result[$key] = ['origin' => 'global', 'value' => $v->getValue()];
                 }
             }
         }
@@ -270,7 +277,7 @@ class SettingsComponent extends AbstractController
             if ($centre !== null) {
                 foreach ($this->centreValues->findByCentreIndexedByKey($centre) as $key => $v) {
                     if ($v->isLocked() && !isset($result[$key])) {
-                        $result[$key] = 'centre';
+                        $result[$key] = ['origin' => 'centre', 'value' => $v->getValue()];
                     }
                 }
             }

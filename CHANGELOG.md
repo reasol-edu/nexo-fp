@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-11
+
 ### Added
 
 - Los ajustes guardados a nivel global o de centro pueden bloquearse para impedir que los niveles inferiores los sobreescriban; al activar el candado, el valor queda fijo para todos los niveles inferiores y aparece deshabilitado en su página de ajustes, indicando qué nivel lo ha bloqueado
+- Cuando un ajuste está bloqueado por un nivel superior, el control del nivel inferior muestra el valor fijado por el nivel bloqueante aunque el nivel inferior tenga guardado un valor propio distinto
 - Makefile con targets de desarrollo (`fixtures`, `migrate`, `setup`, `test`) para estandarizar los comandos habituales en entorno local
 
 ### Fixed
 
 - Las migraciones de MySQL / MariaDB definían las columnas UUID como `CHAR(36)` en lugar de `BINARY(16)`, lo que provocaba un error al insertar datos (`Incorrect string value`) porque Doctrine almacena los UUID en binario de 16 bytes en ese motor
+- Error «Valor no válido» intermitente al seleccionar «Por defecto» en los ajustes booleanos, causado por la conversión de tipos de los parámetros de Stimulus («true» llegaba al servidor como «1»)
+- Un ajuste bloqueado en su propio nivel ya no puede restablecerse al valor por defecto ni vaciarse
 
 ## [1.3.0] - 2026-06-11
 
