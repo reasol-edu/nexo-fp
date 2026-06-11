@@ -8,7 +8,7 @@ use App\Repository\EducationalCentreRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-final class TenantContext
+final class TenantContext implements TenantContextInterface
 {
     private const SESSION_KEY = 'tenant.centre_id';
 

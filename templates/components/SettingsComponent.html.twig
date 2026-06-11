@@ -1,0 +1,117 @@
+<div {{ attributes }}>
+
+    {% set rows = this.rows %}
+
+    {% if rows is empty %}
+        <div class="flex items-center justify-center gap-2 py-10 px-6 text-center">
+            {{ ux_icon('heroicons:check-circle', {class: 'h-5 w-5 text-emerald-500'}) }}
+            <p class="text-sm text-gray-500">{{ 'settings.no_settings_for_scope'|trans({}, 'settings') }}</p>
+        </div>
+    {% else %}
+        <ul class="divide-y divide-gray-100">
+        {% for row in rows %}
+            {% set def      = row.definition %}
+            {% set key      = def.key %}
+            {% set keySlug  = key|replace({'.': '_', '-': '_'}) %}
+            {% set stored   = row.storedValue %}
+            {% set effective = row.effectiveValue %}
+            {% set isSaved  = lastSaved == key %}
+
+            <li class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:gap-6">
+
+                {# ── Label + description ── #}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900">
+                        {{ ('settings.key.' ~ keySlug ~ '.label')|trans({}, 'settings') }}
+                    </p>
+                    {% set descKey = 'settings.key.' ~ keySlug ~ '.description' %}
+                    {% set descVal = descKey|trans({}, 'settings') %}
+                    {% if descVal != descKey %}
+                        <p class="text-xs text-gray-500 mt-0.5">{{ descVal }}</p>
+                    {% endif %}
+                </div>
+
+                {# ── Control ── #}
+                <div class="flex items-center gap-3 shrink-0">
+
+                    {% if def.type.value == 'boolean' %}
+                        {# Auto-save on change for booleans — setting-capture#capture sets data-live-value-param to the selected value before the live action fires #}
+                        <select
+                            class="rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-3 pr-8 text-sm text-gray-900
+                                   focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20
+                                   transition-colors cursor-pointer"
+                            data-controller="setting-capture"
+                            data-action="change->setting-capture#capture change->live#action:prevent"
+                            data-live-action-param="save"
+                            data-live-key-param="{{ key }}"
+                            data-live-value-param="{{ stored ?? '__default__' }}">
+                            <option value="__default__" {{ stored is null ? 'selected' : '' }}>
+                                {{ 'settings.default_label'|trans({}, 'settings') }}
+                                ({{ effective == 'true' ? 'settings.on'|trans({}, 'settings') : 'settings.off'|trans({}, 'settings') }})
+                            </option>
+                            <option value="true"  {{ stored == 'true'  ? 'selected' : '' }}>
+                                {{ 'settings.on'|trans({}, 'settings') }}
+                            </option>
+                            <option value="false" {{ stored == 'false' ? 'selected' : '' }}>
+                                {{ 'settings.off'|trans({}, 'settings') }}
+                            </option>
+                        </select>
+
+                    {% elseif def.type.value == 'integer' %}
+                        <input
+                            type="number"
+                            min="1"
+                            value="{{ stored ?? '' }}"
+                            placeholder="{{ effective }}"
+                            class="w-24 rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-3 text-sm text-gray-900
+                                   placeholder-gray-400 focus:border-plum-500 focus:outline-none
+                                   focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                            data-controller="setting-capture"
+                            data-action="change->setting-capture#capture change->live#action:prevent"
+                            data-live-action-param="save"
+                            data-live-key-param="{{ key }}"
+                            data-live-value-param="{{ stored ?? '' }}">
+
+                    {% else %}
+                        <input
+                            type="text"
+                            value="{{ stored ?? '' }}"
+                            placeholder="{{ 'settings.default_label'|trans({}, 'settings') }}: {{ effective }}"
+                            class="w-48 rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-3 text-sm text-gray-900
+                                   placeholder-gray-400 focus:border-plum-500 focus:outline-none
+                                   focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                            data-controller="setting-capture"
+                            data-action="change->setting-capture#capture change->live#action:prevent"
+                            data-live-action-param="save"
+                            data-live-key-param="{{ key }}"
+                            data-live-value-param="{{ stored ?? '' }}">
+                    {% endif %}
+
+                    {# ── Restablecer (only if a value is stored) ── #}
+                    {% if stored is not null %}
+                        <button type="button"
+                                class="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                                data-action="live#action:prevent"
+                                data-live-action-param="save"
+                                data-live-key-param="{{ key }}"
+                                data-live-value-param="__default__"
+                                title="{{ 'settings.reset_btn'|trans({}, 'settings') }}">
+                            {{ ux_icon('heroicons:arrow-uturn-left', {class: 'h-4 w-4'}) }}
+                        </button>
+                    {% endif %}
+
+                    {# ── Saved feedback ── #}
+                    {% if isSaved %}
+                        <span class="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                            {{ ux_icon('heroicons:check', {class: 'h-3.5 w-3.5'}) }}
+                            {{ 'settings.saved'|trans({}, 'settings') }}
+                        </span>
+                    {% endif %}
+
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+</div>
