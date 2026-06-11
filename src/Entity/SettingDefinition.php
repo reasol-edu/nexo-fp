@@ -36,6 +36,12 @@ class SettingDefinition
     #[ORM\Column]
     private bool $teacherScope = false;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $minValue = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $maxValue = null;
+
     public function getId(): Uuid
     {
         return $this->id;
@@ -111,6 +117,83 @@ class SettingDefinition
         $this->teacherScope = $teacherScope;
 
         return $this;
+    }
+
+    public function getMinValue(): ?int
+    {
+        return $this->minValue;
+    }
+
+    public function setMinValue(?int $minValue): static
+    {
+        $this->minValue = $minValue;
+
+        return $this;
+    }
+
+    public function getMaxValue(): ?int
+    {
+        return $this->maxValue;
+    }
+
+    public function setMaxValue(?int $maxValue): static
+    {
+        $this->maxValue = $maxValue;
+
+        return $this;
+    }
+
+    /**
+     * Returns true if $value is acceptable for this definition.
+     * Booleans must be 'true' or 'false'.
+     * Integers must be numeric, non-decimal, and within [minValue, maxValue] when set.
+     * Strings must have a length within [minValue, maxValue] when set; empty is always valid.
+     */
+    public function isValueValid(string $value): bool
+    {
+        return match ($this->type) {
+            SettingType::Boolean => in_array($value, ['true', 'false'], true),
+            SettingType::Integer => $this->isIntValueValid($value),
+            SettingType::String  => $this->isStringValueValid($value),
+        };
+    }
+
+    private function isIntValueValid(string $value): bool
+    {
+        if (!is_numeric($value) || str_contains($value, '.')) {
+            return false;
+        }
+
+        $int = (int) $value;
+
+        if ($this->minValue !== null && $int < $this->minValue) {
+            return false;
+        }
+
+        if ($this->maxValue !== null && $int > $this->maxValue) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isStringValueValid(string $value): bool
+    {
+        if ($value === '') {
+            return true;
+        }
+
+        $len = mb_strlen($value);
+
+        if ($this->minValue !== null && $len < $this->minValue) {
+            return false;
+        }
+
+        if ($this->maxValue !== null && $len > $this->maxValue) {
+            return false;
+        }
+
+        return true;
     }
 
     /** Returns the typed default value (int, bool or string). */
