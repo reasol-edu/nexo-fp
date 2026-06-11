@@ -398,6 +398,8 @@ La aplicación dispone de un sistema de configuración con tres niveles de granu
 
 Los valores se resuelven en cascada: **personal > centro > global > predeterminado**.
 
+Los administradores globales y de centro pueden **bloquear** cualquier ajuste que tengan explícitamente guardado. Un ajuste bloqueado a nivel global no puede ser modificado por los centros ni por los docentes; uno bloqueado a nivel de centro no puede ser modificado por los docentes de ese centro. Los ajustes bloqueados aparecen deshabilitados en los niveles inferiores, indicando qué nivel los ha fijado.
+
 Los ajustes disponibles son:
 
 | Clave | Tipo | Ámbito | Descripción |

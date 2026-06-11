@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Los ajustes guardados a nivel global o de centro pueden bloquearse para impedir que los niveles inferiores los sobreescriban; al activar el candado, el valor queda fijo para todos los niveles inferiores y aparece deshabilitado en su página de ajustes, indicando qué nivel lo ha bloqueado
+
 ## [1.3.0] - 2026-06-11
 
 ### Added
