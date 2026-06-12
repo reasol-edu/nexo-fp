@@ -28,18 +28,37 @@
                       font-size="11" fill="#6b7280">
                     {{- stat.family_name|length > 22 ? stat.family_name|slice(0, 22) ~ '…' : stat.family_name -}}
                 </text>
-                <rect x="148" y="{{ ry }}" width="{{ wTotal }}" height="16" rx="3" fill="#e5e7eb">
+                <rect x="148" y="{{ ry }}" width="{{ wTotal }}" height="16" rx="0" fill="#e5e7eb">
                     <title>{{ stat.family_name }}: {{ stat.total }} plazas totales</title>
                 </rect>
                 {%- if stat.occupied > 0 -%}
-                <rect x="148" y="{{ ry }}" width="{{ wOccupied }}" height="16" rx="3" fill="#fbbf24">
+                <rect x="148" y="{{ ry }}" width="{{ wOccupied }}" height="16" rx="0" fill="#fbbf24">
                     <title>{{ stat.family_name }}: {{ stat.occupied }} ocupadas</title>
                 </rect>
                 {%- endif -%}
                 {%- if stat.signed > 0 -%}
-                <rect x="148" y="{{ ry }}" width="{{ wSigned }}" height="16" rx="3" fill="#34d399">
+                <rect x="148" y="{{ ry }}" width="{{ wSigned }}" height="16" rx="0" fill="#34d399">
                     <title>{{ stat.family_name }}: {{ stat.signed }} firmadas</title>
                 </rect>
+                {%- endif -%}
+                {# Labels inside each visible segment #}
+                {%- if wSigned > 14 -%}
+                <text x="{{ 148 + wSigned - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
+                      text-anchor="end" font-size="9" font-weight="bold" fill="white">
+                    {{- stat.signed -}}
+                </text>
+                {%- endif -%}
+                {%- if wOccupied - wSigned > 14 -%}
+                <text x="{{ 148 + wOccupied - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
+                      text-anchor="end" font-size="9" font-weight="bold" fill="white">
+                    {{- stat.occupied -}}
+                </text>
+                {%- endif -%}
+                {%- if wTotal - wOccupied > 14 -%}
+                <text x="{{ 148 + wTotal - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
+                      text-anchor="end" font-size="9" font-weight="bold" fill="#9ca3af">
+                    {{- stat.total -}}
+                </text>
                 {%- endif -%}
             {%- endfor -%}
         </svg>

@@ -41,7 +41,7 @@
 {% set pct_occupied = stats.total_positions > 0 ? ((stats.occupied / stats.total_positions) * 100)|round : 0 %}
 {% set pct_free     = stats.total_positions > 0 ? ((stats.free / stats.total_positions) * 100)|round : 0 %}
 
-<div {{ attributes }} class="px-6 py-8 max-w-6xl mx-auto space-y-5">
+<div {{ attributes }} class="px-6 py-8 max-w-6xl mx-auto space-y-5 js-stay-detail">
 
     {# ── Toasts de acciones en vivo ───────────────────────────────────────── #}
     <div class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none">
@@ -926,7 +926,7 @@ function onRender() {
     dismissToasts();
 }
 
-liveEl = document.querySelector('[data-controller~="live"]');
+liveEl = document.querySelector('.js-stay-detail');
 if (liveEl) {
     getComponent(liveEl).then(function (component) {
         liveComp = component;

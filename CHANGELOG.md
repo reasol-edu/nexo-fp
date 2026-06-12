@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-06-12
+
+### Fixed
+
+- El desplegable de asignación de puesto formativo a estudiante no se abría al hacer clic: el script del componente buscaba el elemento raíz con `querySelector('[data-controller~="live"]')`, que devolvía el componente `NotificationBellComponent` (renderizado antes en la cabecera) en lugar del propio `StayDetailComponent`; la delegación de eventos y la inicialización de TomSelect se ejecutaban sobre el elemento incorrecto
+- Al asignar un puesto formativo a un estudiante aparecía por defecto un tutor dual docente: los datos de demostración creaban puestos en estado borrador y sin alumno ya con `academicTutor` asignado, lo que no refleja el flujo real; esos puestos sin estudiante ya no tienen tutor predefinido
+
 ## [1.5.0] - 2026-06-12
 
 ### Added

@@ -653,12 +653,12 @@ class AppFixtures extends Fixture
 
             // pos-1: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
-                ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                ->setStay($currentStay)->setWorkcenter($wc0)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
             // pos-2: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
-                ->setStay($currentStay)->setWorkcenter($wc1)->setAcademicTutor($tutor)
+                ->setStay($currentStay)->setWorkcenter($wc1)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
             // pos-3: DRAFT, alumno asignado pero sin confirmar
@@ -724,11 +724,11 @@ class AppFixtures extends Fixture
 
             // 2 puestos DRAFT, sin alumnos
             $manager->persist((new TrainingPosition())
-                ->setStay($futureStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                ->setStay($futureStay)->setWorkcenter($wc0)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
             $manager->persist((new TrainingPosition())
-                ->setStay($futureStay)->setWorkcenter($wc1)->setAcademicTutor($tutor)
+                ->setStay($futureStay)->setWorkcenter($wc1)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
         }
     }

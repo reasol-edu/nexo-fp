@@ -153,7 +153,7 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {% for stay in items %}
                     {% set sid = stay.id.toRfc4122 %}
-                    {% set s = stats[sid] ?? {students: 0, students_with_position: 0, total_positions: 0, occupied: 0, free: 0, companies: 0, signed: 0} %}
+                    {% set s = stats[sid] ?? {students: 0, students_with_position: 0, total_positions: 0, occupied: 0, free: 0, companies: 0, signed: 0, state_draft: 0, state_pending: 0, state_done: 0} %}
                     {% set unassigned   = s.students - s.students_with_position %}
                     {% set unsigned     = s.students_with_position - (s.signed ?? 0) %}
                     {% set pct_students = s.students > 0 ? ((s.students_with_position / s.students) * 100)|round : 0 %}
@@ -225,37 +225,126 @@
                             </div>
                         </div>
 
-                        {# ── Stats ─────────────────────────────────────────────── #}
-                        <div class="px-5 py-4 space-y-2.5 border-b border-gray-100 text-sm">
+                        {# ── Stats: gráficas circulares ───────────────────────── #}
+                        {%- set _c = 150.8 -%}
+                        {%- set _r = 24 -%}
+                        {# — segmentos de estudiantes — #}
+                        {%- set _st = s.students -%}
+                        {%- set _sw = s.students_with_position -%}
+                        {%- set _sn = _st - _sw -%}
+                        {%- set _dw = _st > 0 ? (_sw / _st * _c)|round(2) : 0 -%}
+                        {%- set _dn = _st > 0 ? (_sn / _st * _c)|round(2) : 0 -%}
+                        {# — segmentos de puestos — #}
+                        {%- set _pt = s.total_positions -%}
+                        {%- set _pf = s.free -%}
+                        {%- set _pp = s.state_draft + s.state_pending -%}
+                        {%- set _pr = s.state_done > s.signed ? s.state_done - s.signed : 0 -%}
+                        {%- set _ps = s.signed -%}
+                        {%- set _df = _pt > 0 ? (_pf / _pt * _c)|round(2) : 0 -%}
+                        {%- set _dp = _pt > 0 ? (_pp / _pt * _c)|round(2) : 0 -%}
+                        {%- set _dr = _pt > 0 ? (_pr / _pt * _c)|round(2) : 0 -%}
+                        {%- set _ds = _pt > 0 ? (_ps / _pt * _c)|round(2) : 0 -%}
+                        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
 
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold tabular-nums
-                                             {{ pct_students >= 100 ? 'text-green-600' : (pct_students >= 50 ? 'text-amber-600' : 'text-gray-900') }}">
-                                    {{ s.students_with_position }}/{{ s.students }}
-                                    <span class="text-xs font-normal text-gray-400">({{ pct_students }}%)</span>
-                                </span>
+                            {# Donut — Estudiantes #}
+                            <div class="flex flex-col items-center gap-1.5 shrink-0">
+                                <svg viewBox="0 0 64 64" class="h-16 w-16" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#f3f4f6" stroke-width="8"/>
+                                    {%- if _st > 0 -%}
+                                        {%- if _sw > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
+                                                stroke-dasharray="{{ _dw }} {{ _c }}"
+                                                stroke-dashoffset="{{ _c }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _sw }} con puesto ({{ (_sw / _st * 100)|round }}%)</title>
+                                        </circle>
+                                        {%- endif -%}
+                                        {%- if _sn > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fca5a5" stroke-width="8"
+                                                stroke-dasharray="{{ _dn }} {{ _c }}"
+                                                stroke-dashoffset="{{ (_c - _dw)|round(2) }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _sn }} sin puesto</title>
+                                        </circle>
+                                        {%- endif -%}
+                                    {%- endif -%}
+                                    <text x="32" y="32" text-anchor="middle" dominant-baseline="middle"
+                                          font-size="{{ (_sw ~ '/' ~ _st)|length > 5 ? 8 : 10 }}"
+                                          font-weight="bold" fill="#374151">{{ _sw }}/{{ _st }}</text>
+                                </svg>
+                                <span class="text-xs text-gray-400">{{ 'stays.card.students'|trans({}, 'stays') }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.companies'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold text-gray-900 tabular-nums">{{ s.companies }}</span>
+                            {# Stats centrales #}
+                            <div class="flex-1 flex flex-col justify-center gap-2 min-w-0 text-xs">
+                                <div class="flex items-center justify-between gap-1 min-w-0">
+                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
+                                    <span class="font-semibold tabular-nums shrink-0
+                                                 {{ pct_students >= 100 ? 'text-green-600' : (pct_students >= 50 ? 'text-amber-600' : 'text-gray-700') }}">
+                                        {{ _sw }}/{{ _st }}&nbsp;<span class="font-normal text-gray-400">({{ pct_students }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between gap-1 min-w-0">
+                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.companies'|trans({}, 'stays') }}</span>
+                                    <span class="font-semibold text-gray-700 tabular-nums shrink-0">{{ s.companies }}</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-1 min-w-0">
+                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
+                                    <span class="font-semibold text-gray-700 tabular-nums shrink-0">
+                                        {{ s.occupied }}/{{ _pt }}&nbsp;<span class="font-normal text-gray-400">({{ pct_occupied }}%)</span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between gap-1 min-w-0">
+                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.free'|trans({}, 'stays') }}</span>
+                                    <span class="font-semibold text-gray-700 tabular-nums shrink-0">
+                                        {{ s.free }}/{{ _pt }}&nbsp;<span class="font-normal text-gray-400">({{ pct_free }}%)</span>
+                                    </span>
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold text-gray-900 tabular-nums">
-                                    {{ s.occupied }}/{{ s.total_positions }}
-                                    <span class="text-xs font-normal text-gray-400">({{ pct_occupied }}%)</span>
-                                </span>
-                            </div>
-
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs text-gray-500 shrink-0">{{ 'stays.card.free'|trans({}, 'stays') }}</span>
-                                <span class="font-semibold text-gray-900 tabular-nums">
-                                    {{ s.free }}/{{ s.total_positions }}
-                                    <span class="text-xs font-normal text-gray-400">({{ pct_free }}%)</span>
-                                </span>
+                            {# Donut — Puestos formativos #}
+                            <div class="flex flex-col items-center gap-1.5 shrink-0">
+                                <svg viewBox="0 0 64 64" class="h-16 w-16" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#f3f4f6" stroke-width="8"/>
+                                    {%- if _pt > 0 -%}
+                                        {%- if _pf > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#d1d5db" stroke-width="8"
+                                                stroke-dasharray="{{ _df }} {{ _c }}"
+                                                stroke-dashoffset="{{ _c }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _pf }} sin asignar</title>
+                                        </circle>
+                                        {%- endif -%}
+                                        {%- if _pp > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fbbf24" stroke-width="8"
+                                                stroke-dasharray="{{ _dp }} {{ _c }}"
+                                                stroke-dashoffset="{{ (_c - _df)|round(2) }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _pp }} pendientes de Séneca</title>
+                                        </circle>
+                                        {%- endif -%}
+                                        {%- if _pr > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#818cf8" stroke-width="8"
+                                                stroke-dasharray="{{ _dr }} {{ _c }}"
+                                                stroke-dashoffset="{{ (_c - _df - _dp)|round(2) }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _pr }} registrados sin firmar</title>
+                                        </circle>
+                                        {%- endif -%}
+                                        {%- if _ps > 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
+                                                stroke-dasharray="{{ _ds }} {{ _c }}"
+                                                stroke-dashoffset="{{ (_c - _df - _dp - _dr)|round(2) }}"
+                                                transform="rotate(-90 32 32)">
+                                            <title>{{ _ps }} firmados</title>
+                                        </circle>
+                                        {%- endif -%}
+                                    {%- endif -%}
+                                    <text x="32" y="32" text-anchor="middle" dominant-baseline="middle"
+                                          font-size="{{ (_ps ~ '/' ~ _pt)|length > 5 ? 8 : 10 }}"
+                                          font-weight="bold" fill="#374151">{{ _ps }}/{{ _pt }}</text>
+                                </svg>
+                                <span class="text-xs text-gray-400">{{ 'stays.card.positions'|trans({}, 'stays') }}</span>
                             </div>
 
                         </div>

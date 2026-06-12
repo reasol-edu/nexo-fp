@@ -9,7 +9,7 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "1.5.0"
+    app.version:                "1.5.1"
     app.pub_date:               "2026-06-12"
 
 services:
