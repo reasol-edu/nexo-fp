@@ -1,4 +1,7 @@
-<div {{ attributes }}>
+<div {{ attributes.defaults(stimulus_controller('filter-persist', {
+    centreId: centre.id.toRfc4122,
+    active: this.hasActiveFilters,
+})) }}>
     {% if centre.activeAcademicYear is null %}
         <div class="px-6 py-16 text-center">
             {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
