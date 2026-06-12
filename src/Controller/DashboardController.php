@@ -80,21 +80,10 @@ class DashboardController extends AbstractController
         }
 
         $alerts = array_values($alerts);
-        usort($alerts, static function (array $a, array $b): int {
-            $aEnd = $a['stay']->getEndDate();
-            $bEnd = $b['stay']->getEndDate();
-            if ($aEnd === null && $bEnd === null) {
-                return 0;
-            }
-            if ($aEnd === null) {
-                return 1;
-            }
-            if ($bEnd === null) {
-                return -1;
-            }
-
-            return $aEnd <=> $bEnd;
-        });
+        usort(
+            $alerts,
+            static fn (array $a, array $b): int => $a['stay']->getEndDate() <=> $b['stay']->getEndDate()
+        );
 
         return $alerts;
     }

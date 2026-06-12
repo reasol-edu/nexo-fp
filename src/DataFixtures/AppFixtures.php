@@ -20,6 +20,7 @@ use App\Entity\TrainingPositionState;
 use App\Entity\Worker;
 use App\Entity\Workcenter;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -27,11 +28,12 @@ class AppFixtures extends Fixture
 {
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly Connection $connection,
     ) {}
 
     public function load(ObjectManager $manager): void
     {
-        $this->wipeDatabase($manager);
+        $this->wipeDatabase();
         $manager->clear();
 
         // Persist all teachers first and flush so they get IDs in DB
@@ -64,9 +66,9 @@ class AppFixtures extends Fixture
 
     // ── Limpieza de base de datos ─────────────────────────────────────────────
 
-    private function wipeDatabase(ObjectManager $manager): void
+    private function wipeDatabase(): void
     {
-        $conn    = $manager->getConnection();
+        $conn    = $this->connection;
         $isMysql = str_contains(get_class($conn->getDatabasePlatform()), 'MySQL')
                 || str_contains(get_class($conn->getDatabasePlatform()), 'MariaDB');
 

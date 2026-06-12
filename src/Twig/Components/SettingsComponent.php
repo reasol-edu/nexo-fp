@@ -24,7 +24,6 @@ use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[AsLiveComponent]
 class SettingsComponent extends AbstractController
@@ -52,7 +51,6 @@ class SettingsComponent extends AbstractController
         private readonly TenantContext $tenant,
         private readonly Security $security,
         private readonly AppSettings $appSettings,
-        private readonly TranslatorInterface $translator,
     ) {}
 
     /**
