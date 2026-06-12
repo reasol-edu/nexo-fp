@@ -12,6 +12,7 @@ use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\Stay;
 use App\Entity\Student;
+use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\Workcenter;
 use App\Repository\TrainingPositionRepository;
@@ -201,6 +202,79 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate()));
     }
 
+    // ── findUnsignedByTutorWithStayEndingBetween ─────────────────────────────
+
+    public function testFindUnsignedByTutorWithStayEndingBetweenMatchesWindow(): void
+    {
+        [$stay] = $this->makeChain('41000030');
+        $tutor    = $this->makeTeacher('tutor.window.1');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setAcademicTutor($tutor);
+        $this->persist($tutor, $student, $position);
+
+        // endDate de makeStay: 2025-06-30
+        $results = $this->repo->findUnsignedByTutorWithStayEndingBetween(
+            $tutor,
+            new \DateTimeImmutable('2025-06-20'),
+            new \DateTimeImmutable('2025-07-04'),
+        );
+
+        self::assertCount(1, $results);
+        self::assertSame($position->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFindUnsignedByTutorWithStayEndingBetweenExcludesOutsideWindow(): void
+    {
+        [$stay] = $this->makeChain('41000031');
+        $tutor    = $this->makeTeacher('tutor.window.2');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setAcademicTutor($tutor);
+        $this->persist($tutor, $student, $position);
+
+        $results = $this->repo->findUnsignedByTutorWithStayEndingBetween(
+            $tutor,
+            new \DateTimeImmutable('2025-07-01'),
+            new \DateTimeImmutable('2025-07-15'),
+        );
+
+        self::assertCount(0, $results);
+    }
+
+    public function testFindUnsignedByTutorWithStayEndingBetweenExcludesOtherTutors(): void
+    {
+        [$stay] = $this->makeChain('41000032');
+        $tutor    = $this->makeTeacher('tutor.window.3');
+        $other    = $this->makeTeacher('tutor.window.4');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setAcademicTutor($other);
+        $this->persist($tutor, $other, $student, $position);
+
+        $results = $this->repo->findUnsignedByTutorWithStayEndingBetween(
+            $tutor,
+            new \DateTimeImmutable('2025-06-01'),
+            new \DateTimeImmutable('2025-07-31'),
+        );
+
+        self::assertCount(0, $results);
+    }
+
+    public function testFindUnsignedByTutorWithStayEndingBetweenExcludesSigned(): void
+    {
+        [$stay] = $this->makeChain('41000033');
+        $tutor    = $this->makeTeacher('tutor.window.5');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setAcademicTutor($tutor)->setSigned(true);
+        $this->persist($tutor, $student, $position);
+
+        $results = $this->repo->findUnsignedByTutorWithStayEndingBetween(
+            $tutor,
+            new \DateTimeImmutable('2025-06-01'),
+            new \DateTimeImmutable('2025-07-31'),
+        );
+
+        self::assertCount(0, $results);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
@@ -264,6 +338,11 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
     private function makePosition(Stay $stay): TrainingPosition
     {
         return (new TrainingPosition())->setStay($stay);
+    }
+
+    private function makeTeacher(string $username): Teacher
+    {
+        return (new Teacher(new PersonName('Test', 'Teacher')))->setUsername($username);
     }
 
     private function makeStudent(string $studentId): Student

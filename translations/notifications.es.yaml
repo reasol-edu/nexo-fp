@@ -1,0 +1,12 @@
+bell:
+    aria: 'Notificaciones'
+    title: 'Tareas pendientes'
+    empty: 'No tienes tareas pendientes'
+    view_all: 'Ver todas en el panel'
+
+item:
+    signature_due: '{1} 1 firma pendiente (la estancia termina pronto)|]1,Inf[ %count% firmas pendientes (la estancia termina pronto)'
+    free_positions: '{1} 1 puesto sin estudiante asignado|]1,Inf[ %count% puestos sin estudiante asignado'
+    missing_tutor: '{1} 1 puesto sin tutor académico|]1,Inf[ %count% puestos sin tutor académico'
+    missing_mentor: '{1} 1 puesto sin mentor laboral|]1,Inf[ %count% puestos sin mentor laboral'
+    students_without_position: '{1} 1 estudiante sin puesto|]1,Inf[ %count% estudiantes sin puesto'

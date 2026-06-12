@@ -181,15 +181,21 @@
     {# ── Contenido principal ─────────────────────────────────────────────────── #}
     <div class="flex min-h-full flex-col lg:pl-64">
 
-        {# Cabecera móvil #}
-        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
+        {# Cabecera #}
+        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4">
             <button type="button"
                     data-action="sidebar#toggle"
                     aria-label="{{ 'menu'|trans({}, 'navigation') }}"
-                    class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                    class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors lg:hidden">
                 {{ ux_icon('heroicons:bars-3', {class: 'h-5 w-5'}) }}
             </button>
-            <span class="text-sm font-semibold text-plum-900">{{ app_name }}</span>
+            <span class="text-sm font-semibold text-plum-900 lg:hidden">{{ app_name }}</span>
+
+            <div class="ml-auto flex items-center gap-2">
+                {% if active_centre %}
+                    <twig:NotificationBellComponent loading="defer" />
+                {% endif %}
+            </div>
         </header>
 
         <main class="flex-1">

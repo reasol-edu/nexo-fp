@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Los filtros del listado de estancias (búsqueda, familia profesional, programa y periodos) se recuerdan por centro en el navegador: al volver al listado se restauran automáticamente y el botón de limpiar filtros también borra el estado guardado
+- Campana de notificaciones en la cabecera con las tareas pendientes del docente: firmas próximas a vencer (estancias que terminan en los próximos 14 días), puestos sin estudiante, sin tutor académico o sin mentor laboral, y estudiantes sin puesto; cada elemento enlaza con su estancia
 
 ## [1.4.1] - 2026-06-12
 

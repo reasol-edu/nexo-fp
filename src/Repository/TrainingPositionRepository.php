@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Stay;
+use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
@@ -52,6 +53,33 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->setParameter('bfalse', false)
             ->orderBy('st.name.lastName', 'ASC')
             ->addOrderBy('st.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Puestos sin firmar con estudiante asignado cuyo tutor académico es el
+     * docente dado y cuya estancia termina dentro del intervalo (ambos incluidos).
+     *
+     * @return array<int, TrainingPosition>
+     */
+    public function findUnsignedByTutorWithStayEndingBetween(
+        Teacher $tutor,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        return $this->createQueryBuilder('tp')
+            ->join('tp.stay', 's')->addSelect('s')
+            ->join('tp.student', 'st')->addSelect('st')
+            ->where('tp.academicTutor = :tutor')
+            ->andWhere('tp.signed = :bfalse')
+            ->andWhere('s.endDate >= :from')
+            ->andWhere('s.endDate <= :to')
+            ->setParameter('tutor', $tutor->getId(), 'uuid')
+            ->setParameter('bfalse', false)
+            ->setParameter('from', $from, Types::DATE_IMMUTABLE)
+            ->setParameter('to', $to, Types::DATE_IMMUTABLE)
+            ->orderBy('s.endDate', 'ASC')
             ->getQuery()
             ->getResult();
     }
