@@ -156,4 +156,19 @@ class StudentRepository extends ServiceEntityRepository
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
+
+    /**
+     * Quick search by name / NIE for the global search palette.
+     *
+     * @return list<Student>
+     */
+    public function searchByCentre(EducationalCentre $centre, string $q, int $limit = 5): array
+    {
+        /** @var list<Student> $result */
+        $result = $this->createByCentreFilteredQuery($centre, $q)
+            ->setMaxResults($limit)
+            ->getResult();
+
+        return $result;
+    }
 }

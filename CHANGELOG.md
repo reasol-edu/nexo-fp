@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Campana de notificaciones en la cabecera con las tareas pendientes del docente: firmas próximas a vencer (estancias que terminan en los próximos 14 días), puestos sin estudiante, sin tutor académico o sin mentor laboral, y estudiantes sin puesto; cada elemento enlaza con su estancia
 - Nuevas gráficas en el panel: barras horizontales con el total, ocupación y firma de plazas por familia profesional, y diagrama de columnas con la evolución mensual de firmas del curso; generadas en el servidor como SVG sin dependencias JavaScript adicionales
 - Nueva página de calendario mensual de estancias (LiveComponent): navegación mes a mes, barras de estancia con colores por familia, gestión de carriles para estancias solapadas y badge ámbar con el número de plazas sin firmar al final de cada estancia
+- Paleta de búsqueda global accesible con ⌘K / Ctrl+K desde cualquier página: busca estancias, empresas, estudiantes y docentes aplicando los mismos permisos que la barra lateral; resultados en tiempo real con debounce de 250 ms; navegación por teclado con ↑ ↓ Enter y cierre con Esc
 
 ## [1.4.1] - 2026-06-12
 

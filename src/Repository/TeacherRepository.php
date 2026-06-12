@@ -200,4 +200,19 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Quick search by name / username for the global search palette.
+     *
+     * @return list<Teacher>
+     */
+    public function searchByAcademicYear(AcademicYear $year, string $q, int $limit = 5): array
+    {
+        /** @var list<Teacher> $result */
+        $result = $this->createByAcademicYearFilteredQuery($year, $q)
+            ->setMaxResults($limit)
+            ->getResult();
+
+        return $result;
+    }
 }

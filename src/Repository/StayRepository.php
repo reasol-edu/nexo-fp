@@ -376,6 +376,33 @@ class StayRepository extends ServiceEntityRepository
     }
 
     /**
+     * Full-text search of stays by name or programme name, viewer-filtered.
+     *
+     * @return list<Stay>
+     */
+    public function searchByYearForViewer(AcademicYear $year, string $q, ?Teacher $viewer = null, int $limit = 5): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->join('s.programme', 'p')->addSelect('p')
+            ->join('p.professionalFamily', 'f')->addSelect('f')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('q', '%' . $q . '%')
+            ->orderBy('s.name', 'ASC')
+            ->setMaxResults($limit);
+        $qb->andWhere($qb->expr()->orX(
+            'LOWER(s.name) LIKE LOWER(:q)',
+            'LOWER(p.name) LIKE LOWER(:q)',
+        ));
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<Stay> $result */
+        $result = $qb->getQuery()->getResult();
+
+        return $result;
+    }
+
+    /**
      * Stays whose date range overlaps with [from, to] (NULL start/end = open-ended).
      * Eager-loads programme, family, and training positions for calendar rendering.
      *

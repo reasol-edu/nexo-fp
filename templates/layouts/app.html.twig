@@ -4,7 +4,9 @@
 {% set current_route = app.request.attributes.get('_route') %}
 {% set active_centre = active_centre() %}
 {% set active_year = active_centre ? active_centre.activeAcademicYear : null %}
-<div data-controller="sidebar" class="h-full">
+<div data-controller="sidebar command-palette"
+     data-command-palette-url-value="{{ path('app_search') }}"
+     class="h-full">
 
     {# ── Backdrop móvil ──────────────────────────────────────────────────────── #}
     <div data-sidebar-target="backdrop"
@@ -202,6 +204,20 @@
 
             <div class="ml-auto flex items-center gap-2">
                 {% if active_centre %}
+                    <button type="button"
+                            data-action="command-palette#open"
+                            class="hidden sm:flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:border-plum-300 hover:text-plum-700 transition-colors"
+                            aria-label="{{ 'open'|trans({}, 'search') }}">
+                        {{ ux_icon('heroicons:magnifying-glass', {class: 'h-3.5 w-3.5'}) }}
+                        <span>{{ 'placeholder'|trans({}, 'search') }}</span>
+                        <kbd class="ml-1 rounded border border-gray-200 px-1 py-0.5 text-[10px]">⌘K</kbd>
+                    </button>
+                    <button type="button"
+                            data-action="command-palette#open"
+                            class="sm:hidden rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
+                            aria-label="{{ 'open'|trans({}, 'search') }}">
+                        {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4'}) }}
+                    </button>
                     <twig:NotificationBellComponent loading="defer" />
                 {% endif %}
             </div>
@@ -238,6 +254,8 @@
         </main>
 
     </div>
+
+    {% include 'layouts/_command_palette.html.twig' %}
 
 </div>
 

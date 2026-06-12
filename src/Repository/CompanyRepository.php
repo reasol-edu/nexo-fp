@@ -136,4 +136,19 @@ class CompanyRepository extends ServiceEntityRepository
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->getSingleScalarResult() > 0;
     }
+
+    /**
+     * Quick search by name / VAT / city for the global search palette.
+     *
+     * @return list<Company>
+     */
+    public function searchByCentre(EducationalCentre $centre, string $q, int $limit = 5): array
+    {
+        /** @var list<Company> $result */
+        $result = $this->createByCentreFilteredQuery($centre, $q)
+            ->setMaxResults($limit)
+            ->getResult();
+
+        return $result;
+    }
 }

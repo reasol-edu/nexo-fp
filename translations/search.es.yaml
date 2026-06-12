@@ -1,0 +1,8 @@
+placeholder: 'Buscar…'
+open: 'Abrir búsqueda'
+no_results: 'Sin resultados'
+groups:
+    stays: 'Estancias'
+    companies: 'Empresas'
+    students: 'Estudiantes'
+    teachers: 'Docentes'
