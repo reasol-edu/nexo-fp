@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-12
+
 ### Added
 - Recuperación de contraseña olvidada para usuarios con acceso local: el usuario introduce su nombre de usuario y recibe un enlace por el correo que tiene configurado en su cuenta; el enlace es válido 1 hora, expira al usarse y no revela si el usuario existe; los usuarios con acceso externo (Séneca/IdEA) no pueden usar este flujo
 
@@ -17,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nuevas gráficas en el panel: barras horizontales con el total, ocupación y firma de plazas por familia profesional, y diagrama de columnas con la evolución mensual de firmas del curso; generadas en el servidor como SVG sin dependencias JavaScript adicionales
 - Nueva página de calendario mensual de estancias (LiveComponent): navegación mes a mes, barras de estancia con colores por familia, gestión de carriles para estancias solapadas y badge ámbar con el número de plazas sin firmar al final de cada estancia
 - Paleta de búsqueda global accesible con ⌘K / Ctrl+K desde cualquier página: busca estancias, empresas, estudiantes y docentes aplicando los mismos permisos que la barra lateral; resultados en tiempo real con debounce de 250 ms; navegación por teclado con ↑ ↓ Enter y cierre con Esc
+
+### Fixed
+
+- Los jefes/as de departamento de familia profesional ya pueden crear estancias de las enseñanzas de su familia: el botón «Nueva estancia» aparece en el listado y el formulario muestra las enseñanzas correspondientes; el Voter, el repositorio y la plantilla se han actualizado en consecuencia
 
 ## [1.4.1] - 2026-06-12
 

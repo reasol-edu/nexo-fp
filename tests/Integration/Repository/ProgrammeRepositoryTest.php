@@ -475,6 +475,93 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         self::assertSame('DAW',  $results[2]->getName()); // Informatica/DAW
     }
 
+    // ── findCreatableByAcademicYear ───────────────────────────────────────────
+
+    public function testFindCreatableIncludesCoordinatedProgrammes(): void
+    {
+        $centre  = $this->makeCentre('41000021');
+        $year    = $this->makeYear($centre);
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $teacher = $this->makeTeacher('creat.coord.1');
+        $this->persist($centre, $year, $fam, $prog, $teacher);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
+
+        self::assertCount(1, $results);
+        self::assertSame('DAM', $results[0]->getName());
+    }
+
+    public function testFindCreatableIncludesFamilyHeadProgrammes(): void
+    {
+        $centre  = $this->makeCentre('41000022');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('creat.head.1');
+        $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($teacher);
+        $prog    = $this->makeProgramme($year, $fam, 'DAW');
+        $this->persist($centre, $year, $teacher, $fam, $prog);
+
+        $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
+
+        self::assertCount(1, $results);
+        self::assertSame('DAW', $results[0]->getName());
+    }
+
+    public function testFindCreatableMergesCoordinatorAndFamilyHeadWithoutDuplicates(): void
+    {
+        $centre  = $this->makeCentre('41000023');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('creat.both.1');
+        $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($teacher);
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $this->persist($centre, $year, $teacher, $fam, $prog);
+        $prog->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
+
+        self::assertCount(1, $results);
+    }
+
+    public function testFindCreatableReturnsEmptyForUnrelatedTeacher(): void
+    {
+        $centre  = $this->makeCentre('41000024');
+        $year    = $this->makeYear($centre);
+        $fam     = $this->makeFamily($year, 'Informatica');
+        $prog    = $this->makeProgramme($year, $fam, 'DAM');
+        $teacher = $this->makeTeacher('creat.none.1');
+        $this->persist($centre, $year, $fam, $prog, $teacher);
+
+        $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
+
+        self::assertCount(0, $results);
+    }
+
+    public function testFindCreatableIsOrderedByFamilyThenName(): void
+    {
+        $centre  = $this->makeCentre('41000025');
+        $year    = $this->makeYear($centre);
+        $teacher = $this->makeTeacher('creat.order.1');
+        $famA    = (new ProfessionalFamily())->setName('Administracion')->setAcademicYear($year)->setHead($teacher);
+        $famB    = $this->makeFamily($year, 'Informatica');
+        $progA   = $this->makeProgramme($year, $famA, 'ASIR');
+        $progB   = $this->makeProgramme($year, $famB, 'DAM');
+        $progC   = $this->makeProgramme($year, $famB, 'DAW');
+        $this->persist($centre, $year, $teacher, $famA, $famB, $progA, $progB, $progC);
+        $progB->addCoordinator($teacher);
+        $progC->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
+
+        self::assertCount(3, $results);
+        self::assertSame('ASIR', $results[0]->getName());
+        self::assertSame('DAM',  $results[1]->getName());
+        self::assertSame('DAW',  $results[2]->getName());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeCentre(string $code): EducationalCentre

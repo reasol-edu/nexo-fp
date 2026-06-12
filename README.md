@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v1.4.1</strong> &nbsp;·&nbsp;
+  <strong>v1.5.0</strong> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
   <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
@@ -80,6 +80,14 @@ Al final del panel, el bloque **Pendientes** lista las estancias activas que req
 estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa,
 y puestos finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.
 
+La cabecera incluye una **campana de notificaciones** que muestra en tiempo real las tareas
+pendientes del docente: firmas próximas a vencer, puestos sin estudiante, sin tutor académico o
+sin mentor de empresa, y estudiantes sin puesto asignado.
+
+La **búsqueda global** (⌘K / Ctrl+K) permite localizar estancias, empresas, estudiantes y
+docentes desde cualquier página, aplicando los mismos permisos que la barra lateral. Los resultados
+aparecen en tiempo real con navegación por teclado (↑ ↓ Enter) y cierre con Esc.
+
 ### Estancias
 
 Una **estancia** agrupa un conjunto de puestos formativos de una misma enseñanza dentro de un
@@ -95,6 +103,8 @@ Desde esta sección se puede:
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
 - Exportar los puestos de la estancia a **CSV** (compatible con Excel) con estudiante, empresa,
   centro de trabajo, tutorías y estado.
+- Los **filtros** (búsqueda, familia profesional, enseñanza y período) se recuerdan por centro en
+  el navegador y se restauran automáticamente al volver al listado.
 
 > Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol
 > (administrador/a de centro, coordinador/a de FP dual, jefe/a de departamento de familia profesional,
@@ -113,6 +123,17 @@ Cada puesto formativo registra:
 | Fechas                  | Inicio y fin propios del puesto (pueden diferir de la estancia)                |
 | Estado                  | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca`                     |
 | Firmado                 | Indica si el convenio está firmado                                             |
+
+### Calendario
+
+Vista mensual de todas las estancias visibles para el docente. Muestra cada estancia como una
+barra de color (un color por familia profesional) con gestión automática de carriles para estancias
+solapadas. Un badge ámbar al final de cada barra indica el número de puestos pendientes de firma.
+
+La navegación mes a mes se realiza sin recarga completa de página. Cada barra enlaza directamente
+con el detalle de la estancia.
+
+> Un docente ve en el calendario las mismas estancias que en el listado de Estancias.
 
 ### Empresas
 
@@ -303,7 +324,7 @@ Los roles son acumulativos: un docente con varios roles acumula todos sus permis
 | Acción | ADM | ED | JFP | CFD | DE | TG | D |
 |--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
 | Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
-| Crear estancia | ✅ | ✅ | ❌ | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Crear estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
 | Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
 | Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
 | Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
@@ -357,6 +378,9 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
 - **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de
   correo, recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El
   cambio no tiene efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.
+- **Recuperación de contraseña:** cuando un docente con acceso local solicita recuperar su
+  contraseña, recibe un enlace válido 1 hora en el correo que tiene registrado en su cuenta. Los
+  usuarios con acceso externo (Séneca/IdEA) no pueden usar este flujo.
 
 Las notificaciones están **desactivadas por defecto** (`MAILER_DSN=null://null`). Para activarlas,
 configura en el entorno:
