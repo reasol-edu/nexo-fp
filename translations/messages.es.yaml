@@ -41,6 +41,24 @@ profile.flash.email_verification_expired: 'El enlace de verificación ha caducad
 profile.flash.email_verification_invalid: 'El enlace de verificación no es válido.'
 profile.notice.email_pending: 'Tienes un cambio de correo pendiente de verificación: <strong>%email%</strong>. Revisa tu bandeja de entrada.'
 
+# Recuperación de contraseña
+password_reset.page_title.request: 'Recuperar contraseña'
+password_reset.page_title.reset: 'Nueva contraseña'
+password_reset.request.intro: 'Introduce tu nombre de usuario y te enviaremos un enlace para restablecer tu contraseña a la dirección de correo que tienes configurada en tu cuenta.'
+password_reset.request.username_label: 'Nombre de usuario'
+password_reset.request.submit: 'Enviar enlace'
+password_reset.request.back_to_login: 'Volver al inicio de sesión'
+password_reset.request.sent_title: 'Revisa tu correo'
+password_reset.request.sent_body: 'Si existe una cuenta con ese nombre de usuario, con un correo configurado y sin acceso externo, recibirás un mensaje con un enlace válido durante 1 hora.'
+password_reset.reset.intro: 'Elige una nueva contraseña para tu cuenta.'
+password_reset.reset.password_label: 'Nueva contraseña'
+password_reset.reset.confirm_label: 'Confirmar nueva contraseña'
+password_reset.reset.submit: 'Guardar nueva contraseña'
+password_reset.flash.success: 'Tu contraseña ha sido actualizada. Ya puedes iniciar sesión con la nueva contraseña.'
+password_reset.flash.token_invalid: 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo.'
+password_reset.error.password_required: 'Introduce una nueva contraseña.'
+ui.error.invalid_csrf: 'La sesión ha caducado. Vuelve a intentarlo.'
+
 # Paginación
 pagination.summary: 'Mostrando %from%–%to% de %total%'
 pagination.previous: 'Página anterior'

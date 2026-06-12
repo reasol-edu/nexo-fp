@@ -27,6 +27,26 @@ class ProfileMailer
         private readonly string $appName,
     ) {}
 
+    public function sendPasswordReset(Teacher $teacher, string $token): void
+    {
+        $resetUrl = $this->urlGenerator->generate(
+            'app_password_reset',
+            ['token' => $token],
+            UrlGeneratorInterface::ABSOLUTE_URL,
+        );
+
+        $fullName = $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName();
+
+        $this->send((new TemplatedEmail())
+            ->to(new Address((string) $teacher->getEmail(), $fullName))
+            ->subject($this->translator->trans('emails.password_reset.subject', [], 'emails'))
+            ->htmlTemplate('email/password_reset.html.twig')
+            ->context([
+                'teacher'   => $teacher,
+                'reset_url' => $resetUrl,
+            ]));
+    }
+
     public function sendEmailVerification(Teacher $teacher, string $pendingEmail, string $token): void
     {
         $verifyUrl = $this->urlGenerator->generate(

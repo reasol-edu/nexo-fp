@@ -26,6 +26,7 @@ security:
 
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: '^/contrasena/', roles: PUBLIC_ACCESS }
         - { path: '^/perfil/verificar-email', roles: PUBLIC_ACCESS }
         - { path: '^/admin/centros/[^/]+/(estudiantes|docentes-curso|familias)', roles: ROLE_TEACHER }
         - { path: ^/admin, roles: ROLE_ADMIN }

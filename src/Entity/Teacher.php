@@ -52,6 +52,12 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $emailVerificationTokenExpiresAt = null;
 
+    #[ORM\Column(length: 64, nullable: true, unique: true)]
+    private ?string $passwordResetToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordResetTokenExpiresAt = null;
+
     /** @var Collection<int, AcademicYear> */
     #[ORM\ManyToMany(targetEntity: AcademicYear::class, mappedBy: 'teachers', fetch: 'EXTRA_LAZY')]
     private Collection $academicYears;
@@ -208,6 +214,36 @@ class Teacher implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->emailVerificationTokenExpiresAt === null
             || $this->emailVerificationTokenExpiresAt < new \DateTimeImmutable();
+    }
+
+    public function getPasswordResetToken(): ?string
+    {
+        return $this->passwordResetToken;
+    }
+
+    public function setPasswordResetToken(?string $token): static
+    {
+        $this->passwordResetToken = $token;
+
+        return $this;
+    }
+
+    public function getPasswordResetTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->passwordResetTokenExpiresAt;
+    }
+
+    public function setPasswordResetTokenExpiresAt(?\DateTimeImmutable $expiresAt): static
+    {
+        $this->passwordResetTokenExpiresAt = $expiresAt;
+
+        return $this;
+    }
+
+    public function isPasswordResetTokenExpired(): bool
+    {
+        return $this->passwordResetTokenExpiresAt === null
+            || $this->passwordResetTokenExpiresAt < new \DateTimeImmutable();
     }
 
     /** @return Collection<int, AcademicYear> */

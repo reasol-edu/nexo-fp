@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Recuperación de contraseña olvidada para usuarios con acceso local: el usuario introduce su nombre de usuario y recibe un enlace por el correo que tiene configurado en su cuenta; el enlace es válido 1 hora, expira al usarse y no revela si el usuario existe; los usuarios con acceso externo (Séneca/IdEA) no pueden usar este flujo
+
+### Changed
 
 - Los filtros del listado de estancias (búsqueda, familia profesional, programa y periodos) se recuerdan por centro en el navegador: al volver al listado se restauran automáticamente y el botón de limpiar filtros también borra el estado guardado
 - Campana de notificaciones en la cabecera con las tareas pendientes del docente: firmas próximas a vencer (estancias que terminan en los próximos 14 días), puestos sin estudiante, sin tutor académico o sin mentor laboral, y estudiantes sin puesto; cada elemento enlaza con su estancia
