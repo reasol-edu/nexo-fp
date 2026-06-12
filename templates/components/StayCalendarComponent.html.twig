@@ -37,12 +37,36 @@
         </div>
     {% else %}
         {% for week in this.weeks %}
-            <div class="border-b border-gray-100 last:border-b-0">
+            <div class="border-b border-gray-100 last:border-b-0 min-h-24 transition-colors relative
+                        {{ loop.index is even ? 'bg-gray-50' : 'bg-white' }}
+                        hover:bg-plum-50">
 
-                {# Stay bar lanes #}
+                {# Full-height column separator lines #}
+                <div class="absolute inset-0 grid grid-cols-7 divide-x divide-gray-100 pointer-events-none z-0"
+                     aria-hidden="true">
+                    {% for i in 1..7 %}<div></div>{% endfor %}
+                </div>
+
+                {# Day numbers — top of each week row #}
+                <div class="relative z-10 grid grid-cols-7">
+                    {% for day in week.days %}
+                        <div class="py-1 px-1.5 text-right text-xs
+                                    {{ this.isCurrentMonth(day) ? 'text-gray-600' : 'text-gray-300' }}">
+                            {% if this.isToday(day) %}
+                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-plum-600 text-white text-xs font-bold">
+                                    {{ day.format('j') }}
+                                </span>
+                            {% else %}
+                                {{ day.format('j') }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {# Stay bar lanes — below day numbers #}
                 {% if week.maxLane >= 0 %}
                     {% for lane in 0..week.maxLane %}
-                        <div class="grid grid-cols-7 min-h-6 px-px">
+                        <div class="relative z-10 grid grid-cols-7 min-h-6 px-px">
                             {% for seg in week.segments %}
                                 {% if seg.lane == lane %}
                                     <a href="{{ path('app_stays_show', {id: seg.stay.id.toRfc4122}) }}"
@@ -51,11 +75,9 @@
                                               {{ not seg.isEnd ? 'rounded-r-none' : '' }}"
                                        style="grid-column: {{ seg.colStart }} / span {{ seg.colSpan }}"
                                        title="{{ seg.stay.name }}">
-                                        {% if seg.isStart %}
-                                            <span class="truncate">
-                                                {{- seg.stay.name|length > 30 ? seg.stay.name|slice(0, 30) ~ '…' : seg.stay.name -}}
-                                            </span>
-                                        {% endif %}
+                                        <span class="truncate min-w-0 flex-1">
+                                            {{- seg.stay.name -}}
+                                        </span>
                                         {% if seg.isEnd and seg.unsignedCount > 0 %}
                                             <span class="ml-auto shrink-0 rounded-full bg-amber-400 text-white text-[10px] font-bold px-1 leading-4">
                                                 {{ seg.unsignedCount }}
@@ -67,22 +89,7 @@
                         </div>
                     {% endfor %}
                 {% endif %}
-
-                {# Day numbers #}
-                <div class="grid grid-cols-7">
-                    {% for day in week.days %}
-                        <div class="py-1.5 px-2 text-right text-xs
-                                    {{ this.isCurrentMonth(day) ? 'text-gray-700' : 'text-gray-300' }}">
-                            {% if this.isToday(day) %}
-                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-plum-600 text-white text-xs font-bold float-right">
-                                    {{ day.format('j') }}
-                                </span>
-                            {% else %}
-                                {{ day.format('j') }}
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
+                <div class="relative z-10 min-h-2"></div>
 
             </div>
         {% endfor %}
