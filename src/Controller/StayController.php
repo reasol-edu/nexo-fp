@@ -85,7 +85,7 @@ class StayController extends AbstractController
 
         $allProgrammes = $canSeeAll
             ? $this->programmes->findByAcademicYearOrderedByFamilyAndName($year)
-            : $this->programmes->findCoordinatedByAcademicYear($teacher, $year);
+            : $this->programmes->findCreatableByAcademicYear($teacher, $year);
 
         /** @var array<string, array{family: \App\Entity\ProfessionalFamily, programmes: \App\Entity\Programme[]}> $byFamily */
         $byFamily = [];

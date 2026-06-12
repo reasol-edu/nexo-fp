@@ -167,4 +167,25 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Programmes the teacher can create stays for: either as coordinator or as family head.
+     *
+     * @return Programme[]
+     */
+    public function findCreatableByAcademicYear(Teacher $teacher, AcademicYear $year): array
+    {
+        return $this->createQueryBuilder('p')
+            ->distinct()
+            ->join('p.professionalFamily', 'f')
+            ->leftJoin('p.coordinators', 'c')
+            ->where('p.academicYear = :year')
+            ->andWhere('f.head = :teacher OR c.id = :teacher')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->orderBy('f.name', 'ASC')
+            ->addOrderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

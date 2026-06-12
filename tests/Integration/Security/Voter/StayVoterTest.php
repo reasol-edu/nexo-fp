@@ -297,7 +297,7 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
-    public function testCreateDeniedToFamilyHead(): void
+    public function testCreateGrantedToFamilyHead(): void
     {
         [$centre, $year, $programme, , $family] = $this->makeStayContext('41000018');
         $teacher = $this->makeTeacher('family.head.create');
@@ -306,7 +306,7 @@ class StayVoterTest extends RepositoryTestCase
         $this->flush();
 
         self::assertSame(
-            VoterInterface::ACCESS_DENIED,
+            VoterInterface::ACCESS_GRANTED,
             $this->voter->vote($this->token($teacher), $centre, [StayVoter::CREATE])
         );
     }

@@ -149,6 +149,10 @@ final class StayVoter extends Voter
             return true;
         }
 
-        return $this->programmes->isCoordinatorInCentre($user, $centre);
+        if ($this->programmes->isCoordinatorInCentre($user, $centre)) {
+            return true;
+        }
+
+        return $this->families->isFamilyHeadInCentre($user, $centre);
     }
 }
