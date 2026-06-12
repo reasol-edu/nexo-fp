@@ -83,14 +83,15 @@ final class Version20260611000000 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_tsv_teacher    ON teacher_setting_value (teacher_id)');
 
         // ── Ajustes iniciales ──────────────────────────────────────────────────
-        $this->addSql(<<<'SQL'
-            INSERT INTO setting_definition (id, key, type, default_value, global_scope, centre_scope, teacher_scope) VALUES
-                ('1a000000-0000-4000-8000-000000000001', 'page.size',                             'integer', '20',   0, 0, 1),
-                ('1a000000-0000-4000-8000-000000000002', 'email.notifications',                   'boolean', 'true', 1, 1, 1),
-                ('1a000000-0000-4000-8000-000000000003', 'email.notification.tutor_assigned',     'boolean', 'true', 1, 1, 1),
-                ('1a000000-0000-4000-8000-000000000004', 'email.notification.positions_created',  'boolean', 'true', 1, 1, 1),
-                ('1a000000-0000-4000-8000-000000000005', 'email.notification.signature_reminder', 'boolean', 'true', 1, 1, 1)
-        SQL);
+        // CAST(x'...' AS TEXT): los bytes binarios se almacenan como TEXT, igual que
+        // hace PDO al serializar UUIDs, para que los JOINs funcionen.
+        $this->addSql("INSERT INTO setting_definition (id, key, type, default_value, global_scope, centre_scope, teacher_scope) VALUES
+            (CAST(x'1A000000000040008000000000000001' AS TEXT), 'page.size',                             'integer', '20',   0, 0, 1),
+            (CAST(x'1A000000000040008000000000000002' AS TEXT), 'email.notifications',                   'boolean', 'true', 1, 1, 1),
+            (CAST(x'1A000000000040008000000000000003' AS TEXT), 'email.notification.tutor_assigned',     'boolean', 'true', 1, 1, 1),
+            (CAST(x'1A000000000040008000000000000004' AS TEXT), 'email.notification.positions_created',  'boolean', 'true', 1, 1, 1),
+            (CAST(x'1A000000000040008000000000000005' AS TEXT), 'email.notification.signature_reminder', 'boolean', 'true', 1, 1, 1)
+        ");
     }
 
     public function down(Schema $schema): void
