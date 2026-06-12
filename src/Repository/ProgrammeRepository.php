@@ -170,22 +170,37 @@ class ProgrammeRepository extends ServiceEntityRepository
 
     /**
      * Programmes the teacher can create stays for: either as coordinator or as family head.
+     * Two queries merged in PHP to avoid the MySQL DISTINCT + ORDER BY restriction.
      *
      * @return Programme[]
      */
     public function findCreatableByAcademicYear(Teacher $teacher, AcademicYear $year): array
     {
-        return $this->createQueryBuilder('p')
-            ->distinct()
+        $coordinated = $this->findCoordinatedByAcademicYear($teacher, $year);
+
+        /** @var Programme[] $headed */
+        $headed = $this->createQueryBuilder('p')
             ->join('p.professionalFamily', 'f')
-            ->leftJoin('p.coordinators', 'c')
             ->where('p.academicYear = :year')
-            ->andWhere('f.head = :teacher OR c.id = :teacher')
+            ->andWhere('f.head = :teacher')
             ->setParameter('year', $year->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->orderBy('f.name', 'ASC')
             ->addOrderBy('p.name', 'ASC')
             ->getQuery()
             ->getResult();
+
+        $all = [];
+        foreach (array_merge($coordinated, $headed) as $p) {
+            $all[$p->getId()->toRfc4122()] = $p;
+        }
+
+        usort($all, fn (Programme $a, Programme $b): int =>
+            [$a->getProfessionalFamily()->getName(), $a->getName()]
+            <=>
+            [$b->getProfessionalFamily()->getName(), $b->getName()]
+        );
+
+        return $all;
     }
 }
