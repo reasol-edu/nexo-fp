@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-06-12
+
+### Fixed
+
+- Las gráficas de rosco del listado de estancias se mostraban vacías cuando un segmento cubría el 100% del círculo: al aplicar `stroke-dasharray` con la longitud del arco igual a la circunferencia del SVG y `stroke-dashoffset` igual a esa misma circunferencia, el camino completo caía en la zona de hueco del patrón y no se pintaba nada; cuando un segmento es el único presente (100%), se sustituye el truco de `stroke-dasharray` por un círculo sólido sin patrón de trazos
+
 ## [1.5.1] - 2026-06-12
+
+### Changed
+
+- Las tarjetas de estancia muestran dos gráficas de rosco SVG en lugar de las cuatro filas de texto: la primera representa el estado de inscripción de estudiantes (con y sin puesto) y la segunda el estado de los puestos formativos (sin asignar, borrador/pendiente, registrado y firmado); en el hueco central se mantienen los indicadores numéricos de siempre
+- Las barras del gráfico de plazas por familia profesional en el panel incluyen ahora el número de plazas dentro de cada segmento, y las barras de cada fila se unen con esquinas rectas en lugar de redondeadas
 
 ### Fixed
 

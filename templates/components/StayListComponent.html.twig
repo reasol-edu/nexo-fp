@@ -232,18 +232,18 @@
                         {%- set _st = s.students -%}
                         {%- set _sw = s.students_with_position -%}
                         {%- set _sn = _st - _sw -%}
-                        {%- set _dw = _st > 0 ? (_sw / _st * _c)|round(2) : 0 -%}
-                        {%- set _dn = _st > 0 ? (_sn / _st * _c)|round(2) : 0 -%}
+                        {%- set _dw = _st > 0 ? min((_sw / _st * _c)|round(2), _c - 0.01) : 0 -%}
+                        {%- set _dn = _st > 0 ? min((_sn / _st * _c)|round(2), _c - 0.01) : 0 -%}
                         {# — segmentos de puestos — #}
                         {%- set _pt = s.total_positions -%}
                         {%- set _pf = s.free -%}
                         {%- set _pp = s.state_draft + s.state_pending -%}
                         {%- set _pr = s.state_done > s.signed ? s.state_done - s.signed : 0 -%}
                         {%- set _ps = s.signed -%}
-                        {%- set _df = _pt > 0 ? (_pf / _pt * _c)|round(2) : 0 -%}
-                        {%- set _dp = _pt > 0 ? (_pp / _pt * _c)|round(2) : 0 -%}
-                        {%- set _dr = _pt > 0 ? (_pr / _pt * _c)|round(2) : 0 -%}
-                        {%- set _ds = _pt > 0 ? (_ps / _pt * _c)|round(2) : 0 -%}
+                        {%- set _df = _pt > 0 ? min((_pf / _pt * _c)|round(2), _c - 0.01) : 0 -%}
+                        {%- set _dp = _pt > 0 ? min((_pp / _pt * _c)|round(2), _c - 0.01) : 0 -%}
+                        {%- set _dr = _pt > 0 ? min((_pr / _pt * _c)|round(2), _c - 0.01) : 0 -%}
+                        {%- set _ds = _pt > 0 ? min((_ps / _pt * _c)|round(2), _c - 0.01) : 0 -%}
                         <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
 
                             {# Donut — Estudiantes #}
@@ -252,6 +252,11 @@
                                     <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#f3f4f6" stroke-width="8"/>
                                     {%- if _st > 0 -%}
                                         {%- if _sw > 0 -%}
+                                        {%- if _sn == 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8">
+                                            <title>{{ _sw }} con puesto (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
                                                 stroke-dasharray="{{ _dw }} {{ _c }}"
                                                 stroke-dashoffset="{{ _c }}"
@@ -259,13 +264,20 @@
                                             <title>{{ _sw }} con puesto ({{ (_sw / _st * 100)|round }}%)</title>
                                         </circle>
                                         {%- endif -%}
+                                        {%- endif -%}
                                         {%- if _sn > 0 -%}
+                                        {%- if _sw == 0 -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fca5a5" stroke-width="8">
+                                            <title>{{ _sn }} sin puesto (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fca5a5" stroke-width="8"
                                                 stroke-dasharray="{{ _dn }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _dw)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
                                             <title>{{ _sn }} sin puesto</title>
                                         </circle>
+                                        {%- endif -%}
                                         {%- endif -%}
                                     {%- endif -%}
                                     <text x="32" y="32" text-anchor="middle" dominant-baseline="middle"
@@ -307,7 +319,16 @@
                                 <svg viewBox="0 0 64 64" class="h-16 w-16" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#f3f4f6" stroke-width="8"/>
                                     {%- if _pt > 0 -%}
+                                        {%- set _solo_f = _pp == 0 and _pr == 0 and _ps == 0 -%}
+                                        {%- set _solo_p = _pf == 0 and _pr == 0 and _ps == 0 -%}
+                                        {%- set _solo_r = _pf == 0 and _pp == 0 and _ps == 0 -%}
+                                        {%- set _solo_s = _pf == 0 and _pp == 0 and _pr == 0 -%}
                                         {%- if _pf > 0 -%}
+                                        {%- if _solo_f -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#d1d5db" stroke-width="8">
+                                            <title>{{ _pf }} sin asignar (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#d1d5db" stroke-width="8"
                                                 stroke-dasharray="{{ _df }} {{ _c }}"
                                                 stroke-dashoffset="{{ _c }}"
@@ -315,7 +336,13 @@
                                             <title>{{ _pf }} sin asignar</title>
                                         </circle>
                                         {%- endif -%}
+                                        {%- endif -%}
                                         {%- if _pp > 0 -%}
+                                        {%- if _solo_p -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fbbf24" stroke-width="8">
+                                            <title>{{ _pp }} pendientes de Séneca (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fbbf24" stroke-width="8"
                                                 stroke-dasharray="{{ _dp }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df)|round(2) }}"
@@ -323,7 +350,13 @@
                                             <title>{{ _pp }} pendientes de Séneca</title>
                                         </circle>
                                         {%- endif -%}
+                                        {%- endif -%}
                                         {%- if _pr > 0 -%}
+                                        {%- if _solo_r -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#818cf8" stroke-width="8">
+                                            <title>{{ _pr }} registrados sin firmar (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#818cf8" stroke-width="8"
                                                 stroke-dasharray="{{ _dr }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df - _dp)|round(2) }}"
@@ -331,13 +364,20 @@
                                             <title>{{ _pr }} registrados sin firmar</title>
                                         </circle>
                                         {%- endif -%}
+                                        {%- endif -%}
                                         {%- if _ps > 0 -%}
+                                        {%- if _solo_s -%}
+                                        <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8">
+                                            <title>{{ _ps }} firmados (100%)</title>
+                                        </circle>
+                                        {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
                                                 stroke-dasharray="{{ _ds }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df - _dp - _dr)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
                                             <title>{{ _ps }} firmados</title>
                                         </circle>
+                                        {%- endif -%}
                                         {%- endif -%}
                                     {%- endif -%}
                                     <text x="32" y="32" text-anchor="middle" dominant-baseline="middle"
