@@ -13,6 +13,7 @@ use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPositionState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -372,6 +373,38 @@ class StayRepository extends ServiceEntityRepository
         $this->addViewerFilter($qb, $viewer);
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Stays whose date range overlaps with [from, to] (NULL start/end = open-ended).
+     * Eager-loads programme, family, and training positions for calendar rendering.
+     *
+     * @return list<Stay>
+     */
+    public function findOverlappingPeriod(
+        AcademicYear $year,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        ?Teacher $viewer = null,
+    ): array {
+        $qb = $this->createQueryBuilder('s')
+            ->join('s.programme', 'p')->addSelect('p')
+            ->join('p.professionalFamily', 'f')->addSelect('f')
+            ->leftJoin('s.trainingPositions', 'tp')->addSelect('tp')
+            ->where('s.academicYear = :year')
+            ->andWhere('(s.startDate IS NULL OR s.startDate <= :to)')
+            ->andWhere('(s.endDate IS NULL OR s.endDate >= :from)')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('from', $from, Types::DATE_IMMUTABLE)
+            ->setParameter('to', $to, Types::DATE_IMMUTABLE)
+            ->orderBy('s.startDate', 'ASC')
+            ->addOrderBy('s.name', 'ASC');
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<Stay> $result */
+        $result = $qb->getQuery()->getResult();
+
+        return $result;
     }
 
     /**

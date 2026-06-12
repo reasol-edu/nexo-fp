@@ -973,6 +973,82 @@ class StayRepositoryTest extends RepositoryTestCase
         self::assertEmpty($dates);
     }
 
+    // ── findOverlappingPeriod ────────────────────────────────────────────────
+
+    public function testFindOverlappingPeriodReturnsStayOverlappingRange(): void
+    {
+        [$year, , $stay] = $this->makeChain('41000090');
+
+        $results = $this->repo->findOverlappingPeriod(
+            $year,
+            new \DateTimeImmutable('2026-06-01'),
+            new \DateTimeImmutable('2026-06-30'),
+        );
+
+        self::assertCount(1, $results);
+        self::assertSame($stay->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testFindOverlappingPeriodExcludesNonOverlappingStay(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000091')->setName('IES 41000091')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay   = $this->makeStay($year, $prog, 'FFEOE DAM 91', '2026-01-01', '2026-02-28');
+        $this->persist($centre, $year, $family, $prog, $stay);
+
+        $results = $this->repo->findOverlappingPeriod(
+            $year,
+            new \DateTimeImmutable('2026-06-01'),
+            new \DateTimeImmutable('2026-06-30'),
+        );
+
+        self::assertEmpty($results);
+    }
+
+    public function testFindOverlappingPeriodIncludesStaySpanningQueryBoundary(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000092')->setName('IES 41000092')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay   = $this->makeStay($year, $prog, 'FFEOE DAM 92', '2026-01-01', '2026-12-31');
+        $this->persist($centre, $year, $family, $prog, $stay);
+
+        $results = $this->repo->findOverlappingPeriod(
+            $year,
+            new \DateTimeImmutable('2026-06-01'),
+            new \DateTimeImmutable('2026-06-30'),
+        );
+
+        self::assertCount(1, $results);
+    }
+
+    public function testFindOverlappingPeriodViewerFilterRestrictsResults(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000093')->setName('IES 41000093')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $head   = (new Teacher(new PersonName('Fa', 'Milia')))->setUsername('head.calendar.93');
+        $famA   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year)->setHead($head);
+        $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $progB  = (new Programme())->setName('Enfermería')->setAcademicYear($year)->setProfessionalFamily($famB);
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM 93');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermería 93');
+        $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
+
+        $results = $this->repo->findOverlappingPeriod(
+            $year,
+            new \DateTimeImmutable('2026-03-01'),
+            new \DateTimeImmutable('2026-06-30'),
+            $head,
+        );
+
+        self::assertCount(1, $results);
+        self::assertSame($stayA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**

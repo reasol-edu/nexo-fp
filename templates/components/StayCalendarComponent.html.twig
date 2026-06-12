@@ -1,0 +1,91 @@
+<div {{ attributes.defaults({class: 'rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden'}) }}>
+
+    {# ── Navigation ───────────────────────────────────────────────────────── #}
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+        <button data-action="live#action" data-live-action-param="previousMonth"
+                class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 transition-colors"
+                aria-label="{{ 'prev_month'|trans({}, 'calendar') }}">
+            {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
+        </button>
+        <h2 class="flex-1 text-center text-sm font-semibold text-gray-800">
+            {{ this.monthLabel }}
+        </h2>
+        <button data-action="live#action" data-live-action-param="nextMonth"
+                class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 transition-colors"
+                aria-label="{{ 'next_month'|trans({}, 'calendar') }}">
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </button>
+        <button data-action="live#action" data-live-action-param="goToday"
+                class="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            {{ 'today'|trans({}, 'calendar') }}
+        </button>
+    </div>
+
+    {# ── Day-of-week headers ───────────────────────────────────────────────── #}
+    <div class="grid grid-cols-7 border-b border-gray-100 bg-gray-50">
+        {% for key in ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'] %}
+            <div class="py-2 text-center text-xs font-medium text-gray-500">
+                {{ key|trans({}, 'calendar') }}
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ── Weeks ────────────────────────────────────────────────────────────── #}
+    {% if this.weeks is empty %}
+        <div class="py-12 text-center text-sm text-gray-400">
+            {{ 'no_active_year'|trans({}, 'calendar') }}
+        </div>
+    {% else %}
+        {% for week in this.weeks %}
+            <div class="border-b border-gray-100 last:border-b-0">
+
+                {# Stay bar lanes #}
+                {% if week.maxLane >= 0 %}
+                    {% for lane in 0..week.maxLane %}
+                        <div class="grid grid-cols-7 min-h-6 px-px">
+                            {% for seg in week.segments %}
+                                {% if seg.lane == lane %}
+                                    <a href="{{ path('app_stays_show', {id: seg.stay.id.toRfc4122}) }}"
+                                       class="my-0.5 flex items-center truncate rounded text-xs leading-5 px-1.5 {{ seg.colorClass }}
+                                              {{ not seg.isStart ? 'rounded-l-none' : '' }}
+                                              {{ not seg.isEnd ? 'rounded-r-none' : '' }}"
+                                       style="grid-column: {{ seg.colStart }} / span {{ seg.colSpan }}"
+                                       title="{{ seg.stay.name }}">
+                                        {% if seg.isStart %}
+                                            <span class="truncate">
+                                                {{- seg.stay.name|length > 30 ? seg.stay.name|slice(0, 30) ~ '…' : seg.stay.name -}}
+                                            </span>
+                                        {% endif %}
+                                        {% if seg.isEnd and seg.unsignedCount > 0 %}
+                                            <span class="ml-auto shrink-0 rounded-full bg-amber-400 text-white text-[10px] font-bold px-1 leading-4">
+                                                {{ seg.unsignedCount }}
+                                            </span>
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {# Day numbers #}
+                <div class="grid grid-cols-7">
+                    {% for day in week.days %}
+                        <div class="py-1.5 px-2 text-right text-xs
+                                    {{ this.isCurrentMonth(day) ? 'text-gray-700' : 'text-gray-300' }}">
+                            {% if this.isToday(day) %}
+                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-plum-600 text-white text-xs font-bold float-right">
+                                    {{ day.format('j') }}
+                                </span>
+                            {% else %}
+                                {{ day.format('j') }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        {% endfor %}
+    {% endif %}
+
+</div>

@@ -1,0 +1,13 @@
+page_title: 'Calendario de estancias'
+today: 'Hoy'
+prev_month: 'Mes anterior'
+next_month: 'Mes siguiente'
+no_active_year: 'No hay un curso académico activo para este centro.'
+
+lun: 'Lun'
+mar: 'Mar'
+mie: 'Mié'
+jue: 'Jue'
+vie: 'Vie'
+sab: 'Sáb'
+dom: 'Dom'

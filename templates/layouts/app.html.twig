@@ -83,6 +83,15 @@
                 'app_stays'
             ) }}
 
+            {# Calendario #}
+            {{ _self.nav_item(
+                'calendar'|trans({}, 'navigation'),
+                path('app_calendar'),
+                'heroicons:calendar-days',
+                current_route,
+                'app_calendar'
+            ) }}
+
             {# Empresas — solo para quienes tienen permiso en el centro activo #}
             {% if active_centre and is_granted('company.section', active_centre) %}
                 {{ _self.nav_item(
