@@ -24,6 +24,9 @@ class TrainingPosition
     #[ORM\Column]
     private bool $signed = false;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $signedAt = null;
+
     #[ORM\Column(type: Types::STRING, enumType: TrainingPositionState::class)]
     private TrainingPositionState $state = TrainingPositionState::DRAFT;
 
@@ -82,7 +85,25 @@ class TrainingPosition
 
     public function setSigned(bool $signed): static
     {
+        if ($signed && !$this->signed) {
+            $this->signedAt = new \DateTimeImmutable();
+        } elseif (!$signed) {
+            $this->signedAt = null;
+        }
+
         $this->signed = $signed;
+
+        return $this;
+    }
+
+    public function getSignedAt(): ?\DateTimeImmutable
+    {
+        return $this->signedAt;
+    }
+
+    public function setSignedAt(?\DateTimeImmutable $signedAt): static
+    {
+        $this->signedAt = $signedAt;
 
         return $this;
     }

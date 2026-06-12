@@ -41,6 +41,14 @@ pending_missing_tutor: '{1} 1 plaza sin tutoría docente|]1,Inf[ %count% plazas 
 pending_missing_mentor: '{1} 1 plaza sin tutoría de empresa|]1,Inf[ %count% plazas sin tutoría de empresa'
 pending_done_unsigned: '{1} 1 plaza completada sin firmar|]1,Inf[ %count% plazas completadas sin firmar'
 
+positions_by_family: 'Plazas por familia profesional'
+signatures_by_month: 'Firmas por mes'
+chart_legend_total: 'Total'
+chart_legend_occupied: 'Ocupadas'
+chart_legend_signed: 'Firmadas'
+no_family_data: 'No hay datos de plazas por familia'
+no_signatures_data: 'No hay firmas registradas este curso'
+
 upcoming_stays: 'Estancias activas y próximas'
 no_upcoming_stays: 'No hay estancias activas ni próximas'
 stay_current: 'En curso'

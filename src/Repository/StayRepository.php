@@ -211,6 +211,64 @@ class StayRepository extends ServiceEntityRepository
     }
 
     /**
+     * Position counters grouped by professional family, ordered by family name.
+     *
+     * @return list<array{family_name: string, total: int, occupied: int, signed: int}>
+     */
+    public function countPositionsByFamily(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select(
+                'f.name AS family_name',
+                'COUNT(tp.id) AS total',
+                'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
+                'SUM(CASE WHEN tp.signed = :btrue THEN 1 ELSE 0 END) AS signed',
+            )
+            ->join('s.programme', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->leftJoin('s.trainingPositions', 'tp')
+            ->where('s.academicYear = :year')
+            ->groupBy('f.id, f.name')
+            ->orderBy('f.name', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('btrue', true);
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{family_name: string, total: string|int, occupied: string|int|null, signed: string|int|null}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static fn (array $row): array => [
+            'family_name' => $row['family_name'],
+            'total'       => (int) $row['total'],
+            'occupied'    => (int) $row['occupied'],
+            'signed'      => (int) $row['signed'],
+        ], $rows);
+    }
+
+    /**
+     * Signature timestamps of all signed positions of the year, ascending.
+     * Month grouping is done in PHP for portability across database engines.
+     *
+     * @return list<\DateTimeImmutable>
+     */
+    public function findSignedDatesForYear(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('tp.signedAt AS signed_at')
+            ->join('s.trainingPositions', 'tp')
+            ->where('s.academicYear = :year')
+            ->andWhere('tp.signedAt IS NOT NULL')
+            ->orderBy('tp.signedAt', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{signed_at: \DateTimeImmutable}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return array_map(static fn (array $row): \DateTimeImmutable => $row['signed_at'], $rows);
+    }
+
+    /**
      * Stays not yet finished whose positions need attention, with per-stay counters.
      *
      * @return list<array{stay: Stay, free: int, missing_tutor: int, missing_mentor: int, done_unsigned: int}>

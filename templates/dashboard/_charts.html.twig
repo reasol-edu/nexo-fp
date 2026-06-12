@@ -1,0 +1,80 @@
+{#
+ # Macros for server-side SVG charts on the dashboard.
+ # family_bars   – horizontal bars: total (gray) / occupied (amber) / signed (emerald)
+ # signatures_columns – monthly column sparkline (indigo)
+ #}
+
+{%- macro family_bars(stats) -%}
+    {%- set maxTotal = 0 -%}
+    {%- for stat in stats -%}
+        {%- if stat.total > maxTotal -%}{%- set maxTotal = stat.total -%}{%- endif -%}
+    {%- endfor -%}
+
+    {%- if stats|length == 0 or maxTotal == 0 -%}
+        <p class="py-8 text-center text-sm text-gray-400">
+            {{- 'no_family_data'|trans({}, 'dashboard') -}}
+        </p>
+    {%- else -%}
+        {%- set n = stats|length -%}
+        {%- set svgH = n * 32 + 16 -%}
+        <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
+             class="w-full" role="img" aria-label="{{ 'positions_by_family'|trans({}, 'dashboard') }}">
+            {%- for stat in stats -%}
+                {%- set ry = loop.index0 * 32 + 8 -%}
+                {%- set wTotal    = stat.total    / maxTotal * 320 -%}
+                {%- set wOccupied = stat.occupied / maxTotal * 320 -%}
+                {%- set wSigned   = stat.signed   / maxTotal * 320 -%}
+                <text x="138" y="{{ ry + 8 }}" dominant-baseline="middle" text-anchor="end"
+                      font-size="11" fill="#6b7280">
+                    {{- stat.family_name|length > 22 ? stat.family_name|slice(0, 22) ~ '…' : stat.family_name -}}
+                </text>
+                <rect x="148" y="{{ ry }}" width="{{ wTotal }}" height="16" rx="3" fill="#e5e7eb">
+                    <title>{{ stat.family_name }}: {{ stat.total }} plazas totales</title>
+                </rect>
+                {%- if stat.occupied > 0 -%}
+                <rect x="148" y="{{ ry }}" width="{{ wOccupied }}" height="16" rx="3" fill="#fbbf24">
+                    <title>{{ stat.family_name }}: {{ stat.occupied }} ocupadas</title>
+                </rect>
+                {%- endif -%}
+                {%- if stat.signed > 0 -%}
+                <rect x="148" y="{{ ry }}" width="{{ wSigned }}" height="16" rx="3" fill="#34d399">
+                    <title>{{ stat.family_name }}: {{ stat.signed }} firmadas</title>
+                </rect>
+                {%- endif -%}
+            {%- endfor -%}
+        </svg>
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro signatures_columns(months) -%}
+    {%- if months|length == 0 -%}
+        <p class="py-8 text-center text-sm text-gray-400">
+            {{- 'no_signatures_data'|trans({}, 'dashboard') -}}
+        </p>
+    {%- else -%}
+        {%- set maxCount = 0 -%}
+        {%- for m in months -%}
+            {%- if m.count > maxCount -%}{%- set maxCount = m.count -%}{%- endif -%}
+        {%- endfor -%}
+        {%- set n = months|length -%}
+        {%- set svgW = n * 28 + 16 -%}
+        <svg viewBox="0 0 {{ svgW }} 88" xmlns="http://www.w3.org/2000/svg"
+             class="w-full" role="img" aria-label="{{ 'signatures_by_month'|trans({}, 'dashboard') }}">
+            {%- for m in months -%}
+                {%- set bx = loop.index0 * 28 + 6 -%}
+                {%- set bh = maxCount > 0 ? m.count / maxCount * 60 : 0 -%}
+                {%- set by = 64 - bh -%}
+                {%- if bh > 0 -%}
+                    <rect x="{{ bx }}" y="{{ by }}" width="16" height="{{ bh }}" rx="2" fill="#818cf8">
+                        <title>{{ m.label }}: {{ m.count }} firma{{ m.count != 1 ? 's' : '' }}</title>
+                    </rect>
+                {%- else -%}
+                    <rect x="{{ bx }}" y="63" width="16" height="1" fill="#e5e7eb"/>
+                {%- endif -%}
+                <text x="{{ bx + 8 }}" y="80" text-anchor="middle" font-size="8" fill="#9ca3af">
+                    {{- m.label -}}
+                </text>
+            {%- endfor -%}
+        </svg>
+    {%- endif -%}
+{%- endmacro -%}

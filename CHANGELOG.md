@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Los filtros del listado de estancias (búsqueda, familia profesional, programa y periodos) se recuerdan por centro en el navegador: al volver al listado se restauran automáticamente y el botón de limpiar filtros también borra el estado guardado
 - Campana de notificaciones en la cabecera con las tareas pendientes del docente: firmas próximas a vencer (estancias que terminan en los próximos 14 días), puestos sin estudiante, sin tutor académico o sin mentor laboral, y estudiantes sin puesto; cada elemento enlaza con su estancia
+- Nuevas gráficas en el panel: barras horizontales con el total, ocupación y firma de plazas por familia profesional, y diagrama de columnas con la evolución mensual de firmas del curso; generadas en el servidor como SVG sin dependencias JavaScript adicionales
 
 ## [1.4.1] - 2026-06-12
 

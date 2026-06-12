@@ -891,6 +891,88 @@ class StayRepositoryTest extends RepositoryTestCase
         self::assertSame($stayA->getId()->toRfc4122(), $rows[0]['stay']->getId()->toRfc4122());
     }
 
+    // ── countPositionsByFamily ───────────────────────────────────────────────
+
+    public function testCountPositionsByFamilyReturnsTotalsPerFamily(): void
+    {
+        $centre   = (new EducationalCentre())->setCode('41000080')->setName('IES 41000080')->setCity('Sevilla');
+        $year     = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog     = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay     = $this->makeStay($year, $prog, 'FFEOE DAM 80');
+        $student  = (new Student(new PersonName('Ana', 'Garcia')))->setStudentId('S-80A');
+        $posA     = (new TrainingPosition())->setStay($stay)->setStudent($student);
+        $posB     = (new TrainingPosition())->setStay($stay);
+        $posA->setSigned(true)->setSignedAt(new \DateTimeImmutable('2025-10-01'));
+        $this->persist($centre, $year, $family, $prog, $stay, $student, $posA, $posB);
+
+        $rows = $this->repo->countPositionsByFamily($year);
+
+        self::assertCount(1, $rows);
+        self::assertSame('Informática', $rows[0]['family_name']);
+        self::assertSame(2, $rows[0]['total']);
+        self::assertSame(1, $rows[0]['occupied']);
+        self::assertSame(1, $rows[0]['signed']);
+    }
+
+    public function testCountPositionsByFamilyViewerFilterRestrictsResults(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000081')->setName('IES 41000081')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $head   = (new Teacher(new PersonName('Jefa', 'Fam')))->setUsername('head.family.81');
+        $famA   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year)->setHead($head);
+        $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $progB  = (new Programme())->setName('Enfermería')->setAcademicYear($year)->setProfessionalFamily($famB);
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM 81');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermería 81');
+        $posA   = (new TrainingPosition())->setStay($stayA);
+        $posB   = (new TrainingPosition())->setStay($stayB);
+        $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB, $posA, $posB);
+
+        $rows = $this->repo->countPositionsByFamily($year, $head);
+
+        self::assertCount(1, $rows);
+        self::assertSame('Informática', $rows[0]['family_name']);
+    }
+
+    // ── findSignedDatesForYear ───────────────────────────────────────────────
+
+    public function testFindSignedDatesForYearReturnsSignedDates(): void
+    {
+        $centre  = (new EducationalCentre())->setCode('41000082')->setName('IES 41000082')->setCity('Sevilla');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay    = $this->makeStay($year, $prog, 'FFEOE DAM 82');
+        $posA    = (new TrainingPosition())->setStay($stay);
+        $posB    = (new TrainingPosition())->setStay($stay);
+        $posA->setSigned(true)->setSignedAt(new \DateTimeImmutable('2025-10-01'));
+        $posB->setSigned(true)->setSignedAt(new \DateTimeImmutable('2025-11-15'));
+        $this->persist($centre, $year, $family, $prog, $stay, $posA, $posB);
+
+        $dates = $this->repo->findSignedDatesForYear($year);
+
+        self::assertCount(2, $dates);
+        self::assertSame('2025-10-01', $dates[0]->format('Y-m-d'));
+        self::assertSame('2025-11-15', $dates[1]->format('Y-m-d'));
+    }
+
+    public function testFindSignedDatesForYearExcludesUnsignedPositions(): void
+    {
+        $centre  = (new EducationalCentre())->setCode('41000083')->setName('IES 41000083')->setCity('Sevilla');
+        $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay    = $this->makeStay($year, $prog, 'FFEOE DAM 83');
+        $pos     = (new TrainingPosition())->setStay($stay);
+        $this->persist($centre, $year, $family, $prog, $stay, $pos);
+
+        $dates = $this->repo->findSignedDatesForYear($year);
+
+        self::assertEmpty($dates);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
