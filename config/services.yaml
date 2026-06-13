@@ -9,8 +9,8 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "1.5.2"
-    app.pub_date:               "2026-06-12"
+    app.version:                "1.6.0"
+    app.pub_date:               "2026-06-13"
 
 services:
     # default configuration for services in *this* file
