@@ -369,6 +369,23 @@ class ProfileControllerTest extends ControllerTestCase
         self::assertSelectorExists('[data-pending-email-notice]');
     }
 
+    public function testPendingEmailNoticeEscapesHtml(): void
+    {
+        // A pending email carrying an HTML payload must never reach the page
+        // unescaped (regression for the stored-XSS in the pending-email notice).
+        $teacher = $this->makeTeacher('teacher.xss');
+        $teacher->setPendingEmail('"<script>alert(1)</script>"@x.local');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $this->client->request('GET', '/perfil');
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $this->client->getResponse()->getContent();
+        self::assertStringNotContainsString('<script>alert(1)</script>', $html);
+        self::assertStringContainsString('&lt;script&gt;', $html);
+    }
+
     // ── usuario externo (Séneca) ──────────────────────────────────────────────
 
     public function testPasswordFieldsAreNotRenderedForExternalUser(): void
