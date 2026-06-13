@@ -394,11 +394,31 @@ MAILER_FROM=no-responder@tudominio.es
 DEFAULT_URI=https://nexo.tudominio.es
 ```
 
-Los emails se envían de forma síncrona durante la petición. Si el servidor SMTP es lento, se puede
-enviar en segundo plano definiendo un transporte asíncrono de Messenger y descomentando el routing
-de `SendEmailMessage` en `config/packages/messenger.yaml` (requiere un worker ejecutando
-`php bin/console messenger:consume`). Los fallos de envío se registran en el log sin interrumpir
-nunca la operación en curso.
+Los emails se envían **en segundo plano** mediante Messenger (transporte `async`, almacenado en la
+tabla `messenger_messages` de la base de datos): la verificación de cambio de correo y las
+notificaciones de tutoría/firma se encolan y un *worker* las procesa de forma asíncrona, sin
+penalizar el tiempo de respuesta de la petición. La **recuperación de contraseña** es la excepción
+y se envía de forma síncrona por ser urgente (el enlace caduca en 1 hora). Los fallos de envío se
+registran en el log sin interrumpir nunca la operación en curso.
+
+El *worker* debe estar en ejecución para que los correos encolados se entreguen:
+
+```bash
+php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
+```
+
+En los despliegues con **ejecutable binario** no es necesario lanzarlo a mano: los scripts de
+arranque (`dist/start.sh`, `dist/start.ps1`, `dist/start.bat`) inician el consumidor junto al
+servidor y lo detienen al finalizar. En Windows se recomienda usar `start.ps1` como lanzador.
+
+Tras agotar los 3 reintentos, los mensajes fallidos pasan al transporte `failed`. Para
+inspeccionarlos y gestionarlos:
+
+```bash
+php bin/console messenger:failed:show              # listar mensajes fallidos
+php bin/console messenger:failed:retry             # reintentar (interactivo)
+php bin/console messenger:failed:remove <id>       # descartar un mensaje
+```
 
 Los destinatarios sin dirección de email registrada se omiten de forma silenciosa.
 

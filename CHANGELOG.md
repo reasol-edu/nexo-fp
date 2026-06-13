@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- El aviso de cambio de correo pendiente en el perfil escapaba el correo introducido por el usuario con `|raw`, lo que permitía inyectar HTML/JavaScript a través de un correo con partes locales entrecomilladas (`"<script>"@dominio`) aceptadas por `FILTER_VALIDATE_EMAIL`; ahora el correo se escapa antes de insertarse y solo el marcado fijo del mensaje se renderiza sin escapar
+- Protección contra fuerza bruta en el inicio de sesión (`login_throttling`): máximo 5 intentos fallidos por usuario e IP cada 15 minutos
+- Límite de peticiones en la solicitud de recuperación de contraseña (5 cada 15 minutos por IP) para evitar el bombardeo de correos y la enumeración de usuarios por tiempo de respuesta
+- Límite de peticiones en la búsqueda global ⌘K (60 por minuto y usuario)
+- Cookie de sesión endurecida con `cookie_secure: auto`, `cookie_httponly: true` y `cookie_samesite: lax`
+- El controlador de búsqueda exige explícitamente el rol `ROLE_TEACHER` (defensa en profundidad)
+
+### Added
+
+- Envío de correos en segundo plano mediante Messenger: la verificación de cambio de correo y las notificaciones de tutoría/firma se encolan en un transporte asíncrono (`doctrine://`) con 3 reintentos; la recuperación de contraseña sigue siendo síncrona por ser urgente (token de 1 hora). Los ejecutables binarios lanzan el consumidor (`messenger:consume`) desde sus scripts de arranque y lo detienen al finalizar
+- Nueva migración de la tabla `messenger_messages` (SQLite, PostgreSQL y MySQL) creada con `auto_setup=0` para evitar DDL durante una petición
+- Protección frente al doble envío de formularios: un controlador Stimulus deshabilita el botón al enviar (creación/edición de estancias, puestos y gestión de estudiantes)
+- En instalaciones SQLite se activan los PRAGMA `journal_mode=WAL` y `busy_timeout` para reducir la contención de escritura entre el servidor web y el consumidor de la cola
+
+### Changed
+
+- La desasignación de un puesto formativo pide confirmación mediante el mismo patrón de modal que el resto de acciones destructivas
+- El listado de estancias muestra un botón «Limpiar filtros» cuando una búsqueda no devuelve resultados
+- Los meses del calendario de estancias dejan de estar codificados en español y se obtienen de las traducciones
+- Mejoras de accesibilidad: `aria-label` en botones de solo icono, `aria-current="page"` en la navegación activa, migas de pan completas en las páginas de creación e indicador de carga al navegar entre meses del calendario
+- El campo de enseñanza del formulario de estancia indica que es obligatorio, el cuadro de búsqueda ⌘K limita la entrada a 100 caracteres, los nombres largos se truncan en tarjetas y detalle, y los formularios muestran un resumen de errores de validación
+- Los trabajadores de las empresas se precargan en una sola consulta en el detalle de estancia, eliminando una consulta por puesto (N+1)
+
+### Fixed
+
+- El detalle de una estancia inexistente devolvía un error 500 (`RuntimeException`) en lugar de una página 404
+- Al solicitar una página posterior a la última del listado de estancias se mostraba una lista vacía; ahora se ajusta automáticamente a la última página válida
+
 ## [1.5.2] - 2026-06-12
 
 ### Fixed
