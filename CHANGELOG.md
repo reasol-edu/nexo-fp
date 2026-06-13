@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-06-13
+
+### Changed
+
+- Las transiciones de estado de los puestos formativos (borrador → pendiente de Séneca → registrado) se gestionan ahora con una máquina de estados (Symfony Workflow), que centraliza las transiciones permitidas y la guarda de que un puesto solo puede salir de borrador cuando tiene asignados el tutor dual docente y el tutor dual de empresa
+
 ## [1.6.0] - 2026-06-13
 
 ### Security
