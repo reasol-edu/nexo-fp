@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -22,6 +23,7 @@ class PasswordResetController extends AbstractController
         private readonly ProfileMailer $mailer,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
+        private readonly RateLimiterFactoryInterface $passwordResetLimiter,
     ) {}
 
     #[Route('/contrasena/recuperar', name: 'app_password_reset_request', methods: ['GET', 'POST'])]
@@ -37,6 +39,14 @@ class PasswordResetController extends AbstractController
                     'error' => $this->translator->trans('ui.error.invalid_csrf', [], 'messages'),
                     'sent'  => false,
                 ]);
+            }
+
+            $limiter = $this->passwordResetLimiter->create($request->getClientIp() ?? 'anon');
+            if (!$limiter->consume()->isAccepted()) {
+                return $this->render('security/password_reset_request.html.twig', [
+                    'error' => $this->translator->trans('password_reset.error.too_many_requests', [], 'messages'),
+                    'sent'  => false,
+                ], new Response(status: Response::HTTP_TOO_MANY_REQUESTS));
             }
 
             $username = trim($request->request->getString('username'));

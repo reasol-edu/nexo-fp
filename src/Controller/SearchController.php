@@ -11,8 +11,11 @@ use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_TEACHER')]
 class SearchController extends AbstractController
 {
     public function __construct(
@@ -21,11 +24,17 @@ class SearchController extends AbstractController
         private readonly StudentRepository $studentRepository,
         private readonly CompanyRepository $companyRepository,
         private readonly TeacherRepository $teacherRepository,
+        private readonly RateLimiterFactoryInterface $searchLimiter,
     ) {}
 
     #[Route('/buscar', name: 'app_search', methods: ['GET'])]
     public function search(Request $request): JsonResponse
     {
+        $limiter = $this->searchLimiter->create($this->getUser()?->getUserIdentifier() ?? $request->getClientIp() ?? 'anon');
+        if (!$limiter->consume()->isAccepted()) {
+            return $this->json(['groups' => []], JsonResponse::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $centre = $this->tenantContext->getSelectedCentre();
         if ($centre === null) {
             return $this->json(['groups' => []]);

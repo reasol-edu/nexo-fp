@@ -119,6 +119,56 @@ class SearchControllerTest extends ControllerTestCase
         self::assertStringContainsString('Buscable', $data['groups']['students'][0]['label']);
     }
 
+    public function testQueryAtMaxLengthBoundaryIsProcessed(): void
+    {
+        [$centre, $admin, , $prog] = $this->makeChain('41000077', 'search.admin.77');
+
+        // Stay name of 101 chars; searching its first 100 chars must still match.
+        $longName = str_repeat('A', 101);
+        $stay     = (new Stay())
+            ->setName($longName)
+            ->setAcademicYear($centre->getActiveAcademicYear())
+            ->setProgramme($prog)
+            ->setStartDate(new \DateTimeImmutable('-30 days'))
+            ->setEndDate(new \DateTimeImmutable('+30 days'));
+        $this->persist($stay);
+        $this->flush();
+
+        $this->loginAs($admin, $centre);
+
+        $q = substr($longName, 0, 100);
+        $this->client->request('GET', '/buscar?q=' . urlencode($q));
+
+        self::assertResponseIsSuccessful();
+        $data   = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $labels = array_column($data['groups']['stays'] ?? [], 'label');
+        self::assertContains($longName, $labels);
+    }
+
+    public function testQueryExceedingMaxLengthReturnsEmptyGroups(): void
+    {
+        [$centre, $admin, , $prog] = $this->makeChain('41000078', 'search.admin.78');
+
+        $longName = str_repeat('B', 101);
+        $stay     = (new Stay())
+            ->setName($longName)
+            ->setAcademicYear($centre->getActiveAcademicYear())
+            ->setProgramme($prog)
+            ->setStartDate(new \DateTimeImmutable('-30 days'))
+            ->setEndDate(new \DateTimeImmutable('+30 days'));
+        $this->persist($stay);
+        $this->flush();
+
+        $this->loginAs($admin, $centre);
+
+        // The full 101-char query exceeds the max length guard and is rejected.
+        $this->client->request('GET', '/buscar?q=' . urlencode($longName));
+
+        self::assertResponseIsSuccessful();
+        $data = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertSame(['groups' => []], $data);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
