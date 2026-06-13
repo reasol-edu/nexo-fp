@@ -1,0 +1,26 @@
+framework:
+    workflows:
+        training_position:
+            type: state_machine
+            audit_trail:
+                enabled: false
+            marking_store:
+                type: method
+                property: state
+            supports:
+                - App\Entity\TrainingPosition
+            initial_marking: DRAFT
+            places:
+                - DRAFT
+                - PENDING
+                - DONE
+            transitions:
+                to_draft:
+                    from: [PENDING, DONE]
+                    to: DRAFT
+                to_pending:
+                    from: [DRAFT, DONE]
+                    to: PENDING
+                to_done:
+                    from: [DRAFT, PENDING]
+                    to: DONE

@@ -674,6 +674,47 @@ class StayControllerTest extends ControllerTestCase
         ]);
 
         self::assertResponseIsSuccessful(); // permanece en el formulario
+
+        // El estado NO debe haber cambiado: la guarda del workflow lo bloquea.
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertSame(TrainingPositionState::DRAFT, $reloaded->getState());
+    }
+
+    public function testEditPositionTransitionsToPendingWithBothTutors(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $tutor      = $this->makeTeacher('tutora.ok')->setEmail('tutora.ok@test.local');
+        $worker     = new \App\Entity\Worker(new PersonName('Maria', 'Garcia'));
+        $worker->setNationalIdNumber('12345678A');
+        $company->addWorker($worker);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position, $tutor, $worker);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'              => $token,
+            'workcenter_id'       => $workcenter->getId()->toRfc4122(),
+            'academic_tutor_id'   => $tutor->getId()->toRfc4122(),
+            'workplace_mentor_id' => $worker->getId()->toRfc4122(),
+            'state'               => 'PENDING',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertSame(TrainingPositionState::PENDING, $reloaded->getState());
     }
 
     public function testEditPositionSignedRequiresDoneState(): void

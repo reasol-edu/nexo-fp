@@ -23,10 +23,12 @@ use App\Service\StayNotifier;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/estancias')]
@@ -47,6 +49,8 @@ class StayController extends AbstractController
         private readonly PdfService $pdf,
         private readonly CsvExporter $csvExporter,
         private readonly StayNotifier $notifier,
+        #[Target('training_position')]
+        private readonly WorkflowInterface $trainingPositionWorkflow,
     ) {}
 
     #[Route('', name: 'app_stays_index')]
@@ -842,13 +846,6 @@ class StayController extends AbstractController
 
             $state = TrainingPositionState::tryFrom($values['state']) ?? TrainingPositionState::DRAFT;
 
-            if ($state !== TrainingPositionState::DRAFT
-                && ($academicTutor === null || $workplaceMentor === null)
-                && !isset($errors['academic_tutor_id'], $errors['workplace_mentor_id'])
-            ) {
-                $errors['state'] = $this->t('stays.error.state_requires_tutors');
-            }
-
             if ($values['signed'] && $state !== TrainingPositionState::DONE) {
                 $errors['signed'] = $this->t('stays.error.signed_requires_done');
             }
@@ -862,14 +859,26 @@ class StayController extends AbstractController
                     $position->addProgrammeYear($py);
                 }
 
+                // Apply assignment changes first so the state-machine guards
+                // evaluate the new tutors before deciding the transition.
                 $position->setWorkcenter($workcenter)
                          ->setDetails($values['details'] !== '' ? $values['details'] : null)
                          ->setStudent($student)
                          ->setAcademicTutor($academicTutor)
-                         ->setWorkplaceMentor($workplaceMentor)
-                         ->setState($state)
-                         ->setSigned($values['signed']);
+                         ->setWorkplaceMentor($workplaceMentor);
 
+                $transition = 'to_' . strtolower($state->value);
+                if ($state === $position->getState()) {
+                    $position->setSigned($values['signed']);
+                } elseif ($this->trainingPositionWorkflow->can($position, $transition)) {
+                    $this->trainingPositionWorkflow->apply($position, $transition);
+                    $position->setSigned($values['signed']);
+                } else {
+                    $errors['state'] = $this->t('stays.error.state_requires_tutors');
+                }
+            }
+
+            if (empty($errors)) {
                 $this->em->flush();
 
                 if ($academicTutor !== null && $academicTutor->getId()->toRfc4122() !== $currentTutorId) {
