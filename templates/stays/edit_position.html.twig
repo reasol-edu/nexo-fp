@@ -21,8 +21,19 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
-        <form method="post" class="px-6 py-6 space-y-5">
+        <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
             <input type="hidden" name="_token" value="{{ csrf_token('edit_position_' ~ position.id.toRfc4122) }}">
+
+            {% if errors is defined and errors|length > 0 %}
+                <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                    <p class="text-sm font-medium text-red-800 mb-1">{{ 'stays.form.error_summary'|trans({}, 'stays') }}</p>
+                    <ul class="list-disc list-inside text-xs text-red-700 space-y-0.5">
+                        {% for msg in errors %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
             {% if is_assignment_locked %}
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -281,7 +292,7 @@ const WORKERS_BY_COMPANY = {
     {% for cid, workers in workers_by_company %}
     {{ cid|json_encode|raw }}: [
         {% for w in workers %}
-        { value: {{ w.id.toRfc4122|json_encode|raw }}, text: {{ (w.name.lastName ~ ' ' ~ w.name.firstName)|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }} },
+        { value: {{ w.id.toRfc4122|json_encode|raw }}, text: {{ (w.name.lastName ~ ' ' ~ w.name.firstName)|json_encode(constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_HEX_TAG'))|raw }} },
         {% endfor %}
     ],
     {% endfor %}

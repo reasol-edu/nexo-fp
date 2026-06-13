@@ -87,7 +87,7 @@
                             </span>
                         {% endif %}
                     </div>
-                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">{{ stay.name }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 leading-tight line-clamp-2 min-w-0" title="{{ stay.name }}">{{ stay.name }}</h1>
                     <p class="mt-0.5 text-sm text-gray-500">{{ stay.programme.name }}</p>
                 </div>
 
@@ -102,20 +102,20 @@
                        target="_blank"
                        class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
                               text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
-                       title="{{ 'stays.report.btn'|trans({}, 'stays') }}">
+                       title="{{ 'stays.report.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.report.btn'|trans({}, 'stays') }}">
                         {{ ux_icon('heroicons:document-arrow-down', {class: 'h-4 w-4'}) }}
                     </a>
                     <a href="{{ path('app_stays_export', {id: stay.id.toRfc4122}) }}"
                        class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
                               text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
-                       title="{{ 'stays.export.btn'|trans({}, 'stays') }}">
+                       title="{{ 'stays.export.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.export.btn'|trans({}, 'stays') }}">
                         {{ ux_icon('heroicons:table-cells', {class: 'h-4 w-4'}) }}
                     </a>
                     {% if can_manage %}
                         <a href="{{ path('app_stays_edit', {id: stay.id.toRfc4122}) }}"
                            class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
                                   text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
-                           title="{{ 'stays.edit.title'|trans({}, 'stays') }}">
+                           title="{{ 'stays.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.edit.title'|trans({}, 'stays') }}">
                             {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                         </a>
                         <form method="post"
@@ -126,7 +126,7 @@
                             <button type="button"
                                     class="js-confirm-trigger inline-flex items-center gap-1 rounded-xl border border-red-200 px-3 py-2
                                            text-sm text-red-500 hover:border-red-300 hover:text-red-700 hover:bg-red-50 transition-colors"
-                                    title="{{ 'stays.delete.btn'|trans({}, 'stays') }}">
+                                    title="{{ 'stays.delete.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.delete.btn'|trans({}, 'stays') }}">
                                 {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
                             </button>
                         </form>
@@ -197,7 +197,7 @@
                         class="js-quick-toggle inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
                                px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs
                                hover:border-gray-400 hover:bg-gray-50 transition-colors shrink-0"
-                        title="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}">
+                        title="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}">
                     {{ ux_icon('heroicons:bolt', {class: 'h-3.5 w-3.5'}) }}
                     {{ 'stays.quick_mode.toggle'|trans({}, 'stays') }}
                 </button>
@@ -287,7 +287,7 @@
                                                 <form class="js-assign-form" data-student-id="{{ sid }}">
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
-                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
+                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
                                                         {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
@@ -401,20 +401,23 @@
                                     <td class="px-3 py-3 text-right w-24">
                                         <div class="inline-flex items-center gap-1">
                                             {% if position.state.value == 'DRAFT' %}
-                                                <button type="button"
-                                                        data-action="live#action"
-                                                        data-live-action-param="unassignPosition"
-                                                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
-                                                        class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
-                                                               text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                                                        title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
-                                                    {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
-                                                </button>
+                                                <div class="js-confirm-form"
+                                                     data-confirm="{{ 'stays.position.unassign.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                                                     data-confirm-label="{{ 'stays.position.unassign.confirm_btn'|trans({}, 'stays')|e('html_attr') }}"
+                                                     data-live-action="unassignPosition"
+                                                     data-live-params="{{ {positionId: position.id.toRfc4122}|json_encode|e('html_attr') }}">
+                                                    <button type="button"
+                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                                   text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                            title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                        {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                    </button>
+                                                </div>
                                             {% endif %}
                                             <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
                                                       text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                                 {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                             </a>
                                         </div>
@@ -460,7 +463,7 @@
                                                 <form class="js-assign-form" data-student-id="{{ sid }}">
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
-                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
+                                                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
                                                         {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
@@ -572,20 +575,23 @@
                                     <td class="px-3 py-3 text-right w-24">
                                         <div class="inline-flex items-center gap-1">
                                             {% if position.state.value == 'DRAFT' %}
-                                                <button type="button"
-                                                        data-action="live#action"
-                                                        data-live-action-param="unassignPosition"
-                                                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
-                                                        class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
-                                                               text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                                                        title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
-                                                    {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
-                                                </button>
+                                                <div class="js-confirm-form"
+                                                     data-confirm="{{ 'stays.position.unassign.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                                                     data-confirm-label="{{ 'stays.position.unassign.confirm_btn'|trans({}, 'stays')|e('html_attr') }}"
+                                                     data-live-action="unassignPosition"
+                                                     data-live-params="{{ {positionId: position.id.toRfc4122}|json_encode|e('html_attr') }}">
+                                                    <button type="button"
+                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                                   text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                            title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                        {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                    </button>
+                                                </div>
                                             {% endif %}
                                             <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
                                                       text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                                 {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                             </a>
                                         </div>
@@ -684,7 +690,7 @@
                                         <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                            class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
                                                   text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                           title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                                           title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                             {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                         </a>
                                         <form method="post"
@@ -695,7 +701,7 @@
                                             <button type="button"
                                                     class="js-confirm-trigger inline-flex items-center rounded-lg border border-red-200 p-1.5
                                                            text-red-400 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                    title="{{ 'stays.position.delete.btn'|trans({}, 'stays') }}">
+                                                    title="{{ 'stays.position.delete.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.delete.btn'|trans({}, 'stays') }}">
                                                 {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
                                             </button>
                                         </form>
@@ -743,17 +749,24 @@ function setupEventDelegation() {
             e.stopPropagation();
             const form = confirmTrigger.closest('.js-confirm-form');
             if (!form || form.querySelector('.js-confirm-panel')) return;
+            const isLive = !!form.dataset.liveAction;
             const panel = document.createElement('div');
             panel.className = 'js-confirm-panel absolute z-20 right-0 mt-1 w-64 rounded-xl border border-red-200 bg-white shadow-lg p-3 text-sm';
             panel.innerHTML =
                 '<p class="text-gray-700 mb-2.5 leading-snug">' + (form.dataset.confirm ?? '') + '</p>' +
                 '<div class="flex items-center justify-end gap-2">' +
                 '  <button type="button" class="js-confirm-cancel rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">' + LABEL_CANCEL + '</button>' +
-                '  <button type="submit" class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + LABEL_CONFIRM + '</button>' +
+                '  <button type="' + (isLive ? 'button' : 'submit') + '" class="js-confirm-go rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + (form.dataset.confirmLabel || LABEL_CONFIRM) + '</button>' +
                 '</div>';
             form.style.position = 'relative';
             form.appendChild(panel);
             panel.querySelector('.js-confirm-cancel').addEventListener('click', function () { panel.remove(); });
+            if (isLive) {
+                panel.querySelector('.js-confirm-go').addEventListener('click', function () {
+                    panel.remove();
+                    if (liveComp) liveComp.action(form.dataset.liveAction, JSON.parse(form.dataset.liveParams || '{}'));
+                });
+            }
             function onOutside(ev) {
                 if (!panel.isConnected) { document.removeEventListener('click', onOutside); return; }
                 if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener('click', onOutside); }

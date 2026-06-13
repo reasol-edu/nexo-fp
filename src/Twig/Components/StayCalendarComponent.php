@@ -7,6 +7,7 @@ use App\Entity\Teacher;
 use App\Repository\StayRepository;
 use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -40,6 +41,7 @@ class StayCalendarComponent extends AbstractController
     public function __construct(
         private readonly StayRepository $stayRepository,
         private readonly TenantContext $tenantContext,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     public function mount(): void
@@ -79,13 +81,7 @@ class StayCalendarComponent extends AbstractController
 
     public function getMonthLabel(): string
     {
-        static $names = [
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
-            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
-        ];
-
-        return ucfirst($names[$this->month]) . ' ' . $this->year;
+        return $this->translator->trans('month.' . $this->month, [], 'calendar') . ' ' . $this->year;
     }
 
     /**

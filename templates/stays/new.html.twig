@@ -11,6 +11,7 @@
                 {{ 'stays.title'|trans({}, 'stays') }}
             </a>
             {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <span class="text-gray-700" aria-current="page">{{ 'stays.new.title'|trans({}, 'stays') }}</span>
         </div>
         <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.new.title'|trans({}, 'stays') }}</h1>
         {% if centre.activeAcademicYear %}
@@ -19,8 +20,19 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
-        <form method="post" class="px-6 py-6 space-y-5">
+        <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
             <input type="hidden" name="_token" value="{{ csrf_token('new_stay') }}">
+
+            {% if errors is defined and errors|length > 0 %}
+                <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                    <p class="text-sm font-medium text-red-800 mb-1">{{ 'stays.form.error_summary'|trans({}, 'stays') }}</p>
+                    <ul class="list-disc list-inside text-xs text-red-700 space-y-0.5">
+                        {% for msg in errors %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
             {# Nombre #}
             <div>
@@ -46,6 +58,7 @@
             <div>
                 <label for="programme_id" class="block text-sm font-medium text-gray-700 mb-1.5">
                     {{ 'stays.field.programme'|trans({}, 'stays') }}
+                    <span class="text-red-400 ml-0.5">*</span>
                 </label>
                 <select id="programme_id" name="programme_id"
                         data-ts-has-error="{{ errors.programme_id is defined ? '1' : '' }}"

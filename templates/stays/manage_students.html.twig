@@ -64,7 +64,7 @@
             <p class="text-sm text-gray-500">{{ 'stays.students.no_eligible'|trans({}, 'stays') }}</p>
         </div>
     {% else %}
-        <form method="post" id="manage-students-form">
+        <form method="post" id="manage-students-form" data-controller="form-submit">
             <input type="hidden" name="_token" value="{{ csrf_token('manage_students_' ~ stay.id.toRfc4122) }}">
 
             <div class="space-y-4">

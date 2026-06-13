@@ -31,6 +31,7 @@
     </div>
 
     {# ── Weeks ────────────────────────────────────────────────────────────── #}
+    <div data-loading="addClass(opacity-50 pointer-events-none)" class="transition-opacity">
     {% if this.weeks is empty %}
         <div class="py-12 text-center text-sm text-gray-400">
             {{ 'no_active_year'|trans({}, 'calendar') }}
@@ -94,5 +95,6 @@
             </div>
         {% endfor %}
     {% endif %}
+    </div>
 
 </div>

@@ -58,6 +58,7 @@
             {% macro nav_item(label, route, icon, current_route, prefix) %}
                 {% set is_active = current_route starts with prefix %}
                 <a href="{{ route }}"
+                   {{ is_active ? 'aria-current="page"' : '' }}
                    class="{{ is_active ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}
                           group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150">
                     {{ ux_icon(icon, {class: 'h-5 w-5 shrink-0'}) }}

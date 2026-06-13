@@ -57,6 +57,7 @@ password_reset.reset.submit: 'Guardar nueva contraseña'
 password_reset.flash.success: 'Tu contraseña ha sido actualizada. Ya puedes iniciar sesión con la nueva contraseña.'
 password_reset.flash.token_invalid: 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo.'
 password_reset.error.password_required: 'Introduce una nueva contraseña.'
+password_reset.error.too_many_requests: 'Demasiadas solicitudes. Inténtalo de nuevo en unos minutos.'
 ui.error.invalid_csrf: 'La sesión ha caducado. Vuelve a intentarlo.'
 
 # Paginación

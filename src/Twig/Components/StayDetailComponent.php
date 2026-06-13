@@ -12,6 +12,7 @@ use App\Repository\GroupRepository;
 use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
+use App\Repository\WorkerRepository;
 use App\Security\Voter\StayVoter;
 use App\Service\StayNotifier;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,6 +41,7 @@ class StayDetailComponent extends AbstractController
         private readonly TrainingPositionRepository $positions,
         private readonly GroupRepository $groups,
         private readonly TeacherRepository $teachers,
+        private readonly WorkerRepository $workers,
         private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
         private readonly StayNotifier $notifier,
@@ -54,7 +56,7 @@ class StayDetailComponent extends AbstractController
 
         $stay = $this->stays->findById($this->stayId);
         if ($stay === null) {
-            throw new \RuntimeException('Stay not found: ' . $this->stayId);
+            throw $this->createNotFoundException('Stay not found: ' . $this->stayId);
         }
 
         $canManage    = $this->isGranted(StayVoter::MANAGE, $stay);
@@ -151,21 +153,14 @@ class StayDetailComponent extends AbstractController
 
         $programmeTeachers = $this->teachers->findByProgrammeOrderedByName($stay->getProgramme());
 
-        $workersByCompanyId = [];
+        $companiesNeedingWorkers = [];
         foreach ($studentPositionMap as $tp) {
             if ($tp->getWorkplaceMentor() === null && $tp->getWorkcenter() !== null) {
                 $company = $tp->getWorkcenter()->getCompany();
-                $cid     = $company->getId()->toRfc4122();
-                if (!isset($workersByCompanyId[$cid])) {
-                    $workers = $company->getWorkers()->toArray();
-                    usort($workers, fn ($a, $b) =>
-                        $a->getName()->getLastName() <=> $b->getName()->getLastName()
-                        ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
-                    );
-                    $workersByCompanyId[$cid] = $workers;
-                }
+                $companiesNeedingWorkers[$company->getId()->toRfc4122()] = $company;
             }
         }
+        $workersByCompanyId = $this->workers->findGroupedByCompanies(array_values($companiesNeedingWorkers));
 
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
