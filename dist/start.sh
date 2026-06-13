@@ -30,6 +30,7 @@ export APP_EXTERNAL_URL="${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/
 export APP_EXTERNAL_URL_FORCE_SECURITY="${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
 export MAILER_DSN="${MAILER_DSN:-null://null}"
 export MAILER_FROM="${MAILER_FROM:-no-responder@example.com}"
+export MESSENGER_TRANSPORT_DSN="${MESSENGER_TRANSPORT_DSN:-doctrine://default?auto_setup=0}"
 
 # -- Carpeta de datos -----------------------------------------------------------
 mkdir -p "${DATA}"
@@ -55,6 +56,7 @@ APP_EXTERNAL_URL=${APP_EXTERNAL_URL}
 APP_EXTERNAL_URL_FORCE_SECURITY=${APP_EXTERNAL_URL_FORCE_SECURITY}
 MAILER_DSN=${MAILER_DSN}
 MAILER_FROM=${MAILER_FROM}
+MESSENGER_TRANSPORT_DSN=${MESSENGER_TRANSPORT_DSN}
 EOF
 
 # -- Caché: limpiar posibles compilaciones parciales de arranques anteriores -----
@@ -76,10 +78,31 @@ if [[ "${LOAD_FIXTURES:-false}" == "true" ]]; then
     "${FP}" php-cli bin/console doctrine:fixtures:load --no-interaction --append
 fi
 
+# -- Worker de Messenger (envío de emails en segundo plano) ---------------------
+# FrankenPHP es monoproceso y el Caddyfile no puede supervisar workers, así que
+# lanzamos el consumidor en segundo plano. El --time-limit recicla el proceso
+# periódicamente; el bucle lo relanza si termina o falla.
+cd "${APP}"
+(
+    while true; do
+        "${FP}" php-cli bin/console messenger:consume async --time-limit=3600 --memory-limit=128M --quiet || true
+        sleep 2
+    done
+) &
+WORKER_PID=$!
+
+cleanup() {
+    if [[ -n "${WORKER_PID:-}" ]]; then
+        pkill -P "${WORKER_PID}" 2>/dev/null || true
+        kill "${WORKER_PID}" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
 # -- Arrancar servidor ----------------------------------------------------------
 cd "${ROOT}"
 echo ""
 echo "  Nexo FP disponible en → http://localhost:${PORT}"
 echo "  Pulsa Ctrl+C para detener."
 echo ""
-exec "${FP}" run --config Caddyfile
+"${FP}" run --config Caddyfile

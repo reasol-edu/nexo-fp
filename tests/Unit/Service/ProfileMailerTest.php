@@ -13,6 +13,8 @@ use Psr\Log\NullLogger;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\BodyRendererInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -104,10 +106,77 @@ class ProfileMailerTest extends TestCase
             ->sendEmailVerification($teacher, 'nuevo@ejemplo.local', self::TOKEN);
     }
 
+    // ── sendPasswordReset (transporte directo, síncrono) ──────────────────────
+
+    public function testSendPasswordResetUsesDirectTransportNotMessageBus(): void
+    {
+        $teacher = $this->makeTeacher('luisa@actual.local');
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects(self::once())->method('send');
+
+        $this->makeProfileMailer($mailer, transport: $transport)
+            ->sendPasswordReset($teacher, self::TOKEN);
+    }
+
+    public function testSendPasswordResetRendersBodyBeforeSending(): void
+    {
+        $teacher = $this->makeTeacher('luisa@actual.local');
+
+        $bodyRenderer = $this->createMock(BodyRendererInterface::class);
+        $bodyRenderer->expects(self::once())->method('render');
+
+        $this->makeProfileMailer(self::createStub(MailerInterface::class), bodyRenderer: $bodyRenderer)
+            ->sendPasswordReset($teacher, self::TOKEN);
+    }
+
+    public function testSendPasswordResetBuildsEmailToTeacherAddress(): void
+    {
+        $teacher = $this->makeTeacher('luisa@actual.local');
+
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects(self::once())
+            ->method('send')
+            ->with(self::callback(function (TemplatedEmail $email): bool {
+                self::assertSame('luisa@actual.local', $email->getTo()[0]->getAddress());
+                self::assertSame('email/password_reset.html.twig', $email->getHtmlTemplate());
+                self::assertSame(self::VERIFY_URL, $email->getContext()['reset_url']);
+                self::assertSame('no-responder@test.local', $email->getFrom()[0]->getAddress());
+
+                return true;
+            }));
+
+        $this->makeProfileMailer(self::createStub(MailerInterface::class), transport: $transport)
+            ->sendPasswordReset($teacher, self::TOKEN);
+    }
+
+    public function testSendPasswordResetLogsTransportExceptionWithoutPropagating(): void
+    {
+        $teacher = $this->makeTeacher('luisa@actual.local');
+
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects(self::once())
+            ->method('send')
+            ->willThrowException(new TransportException('SMTP caído'));
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())->method('error');
+
+        $this->makeProfileMailer(self::createStub(MailerInterface::class), $logger, transport: $transport)
+            ->sendPasswordReset($teacher, self::TOKEN);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private function makeProfileMailer(MailerInterface $mailer, ?LoggerInterface $logger = null): ProfileMailer
-    {
+    private function makeProfileMailer(
+        MailerInterface $mailer,
+        ?LoggerInterface $logger = null,
+        ?TransportInterface $transport = null,
+        ?BodyRendererInterface $bodyRenderer = null,
+    ): ProfileMailer {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn(self::VERIFY_URL);
 
@@ -116,6 +185,8 @@ class ProfileMailerTest extends TestCase
 
         return new ProfileMailer(
             $mailer,
+            $transport ?? self::createStub(TransportInterface::class),
+            $bodyRenderer ?? self::createStub(BodyRendererInterface::class),
             $urlGenerator,
             $translator,
             $logger ?? new NullLogger(),

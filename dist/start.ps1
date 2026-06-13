@@ -31,6 +31,7 @@ if (-not $env:APP_EXTERNAL_URL)            { $env:APP_EXTERNAL_URL = "https://se
 if (-not $env:APP_EXTERNAL_URL_FORCE_SECURITY) { $env:APP_EXTERNAL_URL_FORCE_SECURITY = "true" }
 if (-not $env:MAILER_DSN)                  { $env:MAILER_DSN = "null://null" }
 if (-not $env:MAILER_FROM)                 { $env:MAILER_FROM = "no-responder@example.com" }
+if (-not $env:MESSENGER_TRANSPORT_DSN)     { $env:MESSENGER_TRANSPORT_DSN = "doctrine://default?auto_setup=0" }
 
 # -- Carpeta de datos ------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
@@ -59,6 +60,7 @@ APP_EXTERNAL_URL=$($env:APP_EXTERNAL_URL)
 APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
 MAILER_DSN=$($env:MAILER_DSN)
 MAILER_FROM=$($env:MAILER_FROM)
+MESSENGER_TRANSPORT_DSN=$($env:MESSENGER_TRANSPORT_DSN)
 "@
 [System.IO.File]::WriteAllText((Join-Path $App ".env"), $envContent, [System.Text.UTF8Encoding]::new($false))
 
@@ -89,10 +91,23 @@ try {
     Pop-Location
 }
 
+# -- Worker de Messenger (envío de emails en segundo plano) ---------------------
+# FrankenPHP es monoproceso y el Caddyfile no puede supervisar workers. Lanzamos
+# el consumidor como proceso aparte y lo detenemos al cerrar el servidor.
+$Worker = Start-Process -FilePath $FP `
+    -ArgumentList @("php-cli", "bin/console", "messenger:consume", "async", "--memory-limit=128M", "--quiet") `
+    -WorkingDirectory $App -PassThru -NoNewWindow
+
 # -- Arrancar servidor -----------------------------------------------------------
 Set-Location $Root
 Write-Host ""
 Write-Host "  Nexo FP disponible en -> http://localhost:$Port"
 Write-Host "  Pulsa Ctrl+C para detener."
 Write-Host ""
-& $FP run --config Caddyfile
+try {
+    & $FP run --config Caddyfile
+} finally {
+    if ($Worker -and -not $Worker.HasExited) {
+        Stop-Process -Id $Worker.Id -Force -ErrorAction SilentlyContinue
+    }
+}

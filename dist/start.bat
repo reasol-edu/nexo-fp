@@ -31,6 +31,7 @@ if "%APP_EXTERNAL_URL%"==""            set APP_EXTERNAL_URL=https://seneca.junta
 if "%APP_EXTERNAL_URL_FORCE_SECURITY%"=="" set APP_EXTERNAL_URL_FORCE_SECURITY=true
 if "%MAILER_DSN%"==""                  set MAILER_DSN=null://null
 if "%MAILER_FROM%"==""                 set MAILER_FROM=no-responder@example.com
+if "%MESSENGER_TRANSPORT_DSN%"==""     set MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0
 
 :: -- Carpeta de datos --------------------------------------------------------
 if not exist "%DATA%" mkdir "%DATA%"
@@ -56,6 +57,7 @@ set /p APP_SECRET=<"%DATA%\.secret"
     echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%
     echo MAILER_DSN=%MAILER_DSN%
     echo MAILER_FROM=%MAILER_FROM%
+    echo MESSENGER_TRANSPORT_DSN=%MESSENGER_TRANSPORT_DSN%
 ) > "%APP%\.env"
 
 :: -- Caché: limpiar posibles compilaciones parciales de arranques anteriores --
@@ -73,6 +75,11 @@ echo Aplicando migraciones...
 :: -- Datos por defecto --------------------------------------------------------
 echo Inicializando datos por defecto...
 "%FP%" php-cli bin\console app:setup --no-interaction
+
+:: -- Worker de Messenger (envío de emails en segundo plano) -------------------
+:: FrankenPHP es monoproceso; lanzamos el consumidor en segundo plano. Para una
+:: gestión más robusta del ciclo de vida del worker, usa start.ps1 en Windows.
+start "nexo-fp-worker" /b /d "%APP%" "%FP%" php-cli bin\console messenger:consume async --memory-limit=128M --quiet
 
 :: -- Arrancar servidor --------------------------------------------------------
 cd /d "%ROOT%"

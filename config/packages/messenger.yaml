@@ -1,25 +1,25 @@
 framework:
     messenger:
-        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
-        # failure_transport: failed
+        failure_transport: failed
 
         transports:
-            # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'   # doctrine://default?auto_setup=0
+                retry_strategy:
+                    max_retries: 3
+                    delay: 30000
+                    multiplier: 4
+            failed: 'doctrine://default?queue_name=failed&auto_setup=0'
             sync: 'sync://'
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
-            # Para enviar los emails en segundo plano (recomendado con SMTP lentos),
-            # define un transporte async (p. ej. doctrine://default) y descomenta:
-            # 'Symfony\Component\Mailer\Messenger\SendEmailMessage': async
+            # Los emails (verificación de email, notificaciones de tutoría/firma) se
+            # envían en segundo plano. El reset de contraseña NO usa el bus: se envía
+            # de forma síncrona vía TransportInterface por ser urgente (token de 1 h).
+            'Symfony\Component\Mailer\Messenger\SendEmailMessage': async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            routing:
+                'Symfony\Component\Mailer\Messenger\SendEmailMessage': sync
