@@ -50,6 +50,17 @@ class EducationalCentreVoterTest extends RepositoryTestCase
         );
     }
 
+    public function testAbstainsWhenSubjectIsNull(): void
+    {
+        $teacher = $this->makeTeacher('t2null');
+        $this->persist($teacher);
+
+        self::assertSame(
+            VoterInterface::ACCESS_ABSTAIN,
+            $this->voter->vote($this->token($teacher), null, [EducationalCentreVoter::SECTION])
+        );
+    }
+
     // ── Administrador global ─────────────────────────────────────────────────
 
     public function testGlobalAdminIsGrantedSection(): void
