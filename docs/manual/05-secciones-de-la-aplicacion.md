@@ -35,7 +35,9 @@ concreto. Desde esta sección se puede:
 - Inscribir o retirar estudiantes de la estancia.
 - Asignar estudiantes y tutores directamente desde el detalle, con un modo de **asignación rápida** que
   muestra los selectores en todas las filas a la vez.
-- Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
+- Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones. Para cada empresa
+  se incluye el CIF y, si están registrados, el representante (nombre, DNI y cargo); junto al tutor/a dual
+  de empresa se muestra su DNI.
 - Exportar los puestos de la estancia a **CSV** (compatible con Excel) con estudiante, empresa, centro de
   trabajo, tutorías y estado.
 - Los **filtros** (búsqueda, familia profesional, enseñanza y período) se recuerdan por centro en el
@@ -81,11 +83,13 @@ detalle de la estancia.
 Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 
 - Datos de la empresa: nombre, CIF/NIF, localidad y circunstancias excepcionales.
+- **Representante** de la empresa (nombre, apellidos, DNI/NIE y cargo); todos los campos son opcionales.
 - **Centros de trabajo** (sedes o filiales) donde los estudiantes realizarán su formación.
 - **Empleados** de la empresa que pueden actuar como tutores de empresa.
 - **Docentes de enlace** asignados a cada empresa.
 
-El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo.
+El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo; la exportación
+incluye también el representante (nombre, DNI/NIE y cargo).
 
 > Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual, jefes/as
 > de departamento de familia profesional y docentes de enlace.
