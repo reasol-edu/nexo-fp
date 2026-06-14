@@ -1044,6 +1044,62 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    // ── PDF report ──────────────────────────────────────────────────────────────
+
+    public function testReportReturnsPdfForManager(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        [$level, $group, $student] = $this->makeGroupWithStudent($programme);
+        $stay->addStudent($student);
+        $position->setStudent($student);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position, $level, $group, $student);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122() . '/informe');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'application/pdf');
+        self::assertStringStartsWith('%PDF', (string) $this->client->getResponse()->getContent());
+    }
+
+    public function testReportDeniedToUnrelatedTeacher(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $teacher = $this->makeTeacher('unrelated.teacher');
+        $stay    = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $this->persist($admin, $teacher, $centre, $year, $family, $programme, $stay);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122() . '/informe');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testReportReturns404ForStayOfInactiveYear(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $oldYear   = (new AcademicYear())->setName('2023-2024')->setEducationalCentre($centre);
+        $oldFamily = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($oldYear);
+        $oldProg   = (new Programme())->setName('DAW')->setProfessionalFamily($oldFamily)->setAcademicYear($oldYear);
+        $oldStay   = $this->makeStay('Estancia antigua', $oldYear, $oldProg);
+        $this->persist($admin, $centre, $year, $family, $programme, $oldYear, $oldFamily, $oldProg, $oldStay);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/estancias/' . $oldStay->getId()->toRfc4122() . '/informe');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     // ── email notifications ───────────────────────────────────────────────────
 
     public function testEditPositionAssigningTutorSendsEmail(): void

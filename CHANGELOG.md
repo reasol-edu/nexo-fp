@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - El mensaje de error al marcar un puesto como firmado citaba un estado inexistente («Completado»); ahora indica el estado correcto («Registrado en Séneca»)
-- Al desvincular un empleado de una empresa se mostraba siempre el mensaje de éxito aunque el empleado no estuviera vinculado a esa empresa; ahora solo se confirma cuando realmente se desvincula y, en caso contrario, se muestra un aviso
+- Al desvincular un empleado de una empresa se mostraba siempre el mensaje de éxito aunque el empleado no estuviera vinculado a esa empresa; ahora solo se confirma cuando realmente se desvincula y, en caso contrario, se avisa con un mensaje de error
 - Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
 
 ## [2.0.0] - 2026-06-14

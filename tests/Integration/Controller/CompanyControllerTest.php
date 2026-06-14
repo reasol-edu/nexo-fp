@@ -390,6 +390,71 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertSelectorExists('input[data-model="on(change)|firstName"]');
     }
 
+    // ── remove worker ──────────────────────────────────────────────────────────
+
+    public function testRemoveWorkerDeletesLinkAndShowsSuccess(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $worker  = $this->makeWorker('12345678A', 'Ana', 'López');
+        $company->addWorker($worker);
+        $this->persist($centre, $teacher, $worker, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $workerId  = $worker->getId()->toRfc4122();
+        $crawler   = $this->client->request('GET', '/empresas/' . $companyId);
+
+        $token = $crawler->filter('form[action$="/empleados/' . $workerId . '/eliminar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId . '/empleados/' . $workerId . '/eliminar', [
+            '_token' => $token,
+        ]);
+
+        self::assertResponseRedirects('/empresas/' . $companyId);
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('desvinculado correctamente', $crawler->html());
+
+        $this->em->clear();
+        $reloaded = $this->em->find(Company::class, $companyId);
+        self::assertCount(0, $reloaded->getWorkers());
+    }
+
+    public function testRemoveWorkerNotLinkedShowsWarningAndRemovesNothing(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $other   = $this->makeCompany($centre, 'Otra S.L.', 'B87654321');
+        $worker  = $this->makeWorker('12345678A', 'Ana', 'López');
+        $other->addWorker($worker);
+        $this->persist($centre, $teacher, $worker, $company, $other);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $otherId   = $other->getId()->toRfc4122();
+        $workerId  = $worker->getId()->toRfc4122();
+
+        // El token CSRF se indexa por el id del trabajador, así que lo tomamos de la
+        // página de la empresa que sí lo tiene vinculado y lo enviamos a la otra.
+        $crawler = $this->client->request('GET', '/empresas/' . $otherId);
+        $token   = $crawler->filter('form[action$="/empleados/' . $workerId . '/eliminar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId . '/empleados/' . $workerId . '/eliminar', [
+            '_token' => $token,
+        ]);
+
+        self::assertResponseRedirects('/empresas/' . $companyId);
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('no estaba vinculado', $crawler->html());
+        self::assertStringNotContainsString('desvinculado correctamente', $crawler->html());
+
+        $this->em->clear();
+        $reloaded = $this->em->find(Company::class, $otherId);
+        self::assertCount(1, $reloaded->getWorkers());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username): Teacher
