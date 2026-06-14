@@ -29,16 +29,16 @@
                     {{- stat.family_name|length > 22 ? stat.family_name|slice(0, 22) ~ '…' : stat.family_name -}}
                 </text>
                 <rect x="148" y="{{ ry }}" width="{{ wTotal }}" height="16" rx="0" fill="#e5e7eb">
-                    <title>{{ stat.family_name }}: {{ stat.total }} plazas totales</title>
+                    <title>{{ stat.family_name }}: {{ 'chart_tooltip_total'|trans({'%count%': stat.total}, 'dashboard') }}</title>
                 </rect>
                 {%- if stat.occupied > 0 -%}
                 <rect x="148" y="{{ ry }}" width="{{ wOccupied }}" height="16" rx="0" fill="#fbbf24">
-                    <title>{{ stat.family_name }}: {{ stat.occupied }} ocupadas</title>
+                    <title>{{ stat.family_name }}: {{ 'chart_tooltip_occupied'|trans({'%count%': stat.occupied}, 'dashboard') }}</title>
                 </rect>
                 {%- endif -%}
                 {%- if stat.signed > 0 -%}
                 <rect x="148" y="{{ ry }}" width="{{ wSigned }}" height="16" rx="0" fill="#34d399">
-                    <title>{{ stat.family_name }}: {{ stat.signed }} firmadas</title>
+                    <title>{{ stat.family_name }}: {{ 'chart_tooltip_signed'|trans({'%count%': stat.signed}, 'dashboard') }}</title>
                 </rect>
                 {%- endif -%}
                 {# Labels inside each visible segment #}
@@ -85,7 +85,7 @@
                 {%- set by = 64 - bh -%}
                 {%- if bh > 0 -%}
                     <rect x="{{ bx }}" y="{{ by }}" width="16" height="{{ bh }}" rx="2" fill="#818cf8">
-                        <title>{{ m.label }}: {{ m.count }} firma{{ m.count != 1 ? 's' : '' }}</title>
+                        <title>{{ m.label }}: {{ 'chart_tooltip_signatures'|trans({'%count%': m.count}, 'dashboard') }}</title>
                     </rect>
                 {%- else -%}
                     <rect x="{{ bx }}" y="63" width="16" height="1" fill="#e5e7eb"/>

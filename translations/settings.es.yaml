@@ -1,9 +1,9 @@
 # ── Títulos y secciones ───────────────────────────────────────────────────────
 settings.title: 'Ajustes'
 settings.global.title: 'Ajustes globales'
-settings.global.description: 'Valores predeterminados para toda la aplicación. Los centros y los docentes pueden sobreescribirlos.'
+settings.global.description: 'Valores predeterminados para toda la aplicación. Los centros y los docentes pueden sobrescribirlos.'
 settings.centre.title: 'Ajustes del centro'
-settings.centre.description: 'Valores predeterminados para este centro. Los docentes pueden sobreescribir los que sean aplicables a su perfil.'
+settings.centre.description: 'Valores predeterminados para este centro. Los docentes pueden sobrescribir los que sean aplicables a su perfil.'
 settings.teacher.title: 'Mis ajustes'
 settings.teacher.description: 'Preferencias personales que tienen prioridad sobre los valores del centro y globales.'
 

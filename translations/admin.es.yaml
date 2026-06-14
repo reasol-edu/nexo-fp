@@ -395,7 +395,7 @@ groups.action.edit: 'Editar'
 groups.action.delete: 'Eliminar'
 groups.delete_confirm: '¿Eliminar este grupo? Esta acción no se puede deshacer.'
 groups.flash.name_required: 'El nombre del grupo es obligatorio.'
-groups.col.students: 'Alumnos'
+groups.col.students: 'Estudiantes'
 groups.col.teachers: 'Docentes'
 
 group.edit.title: 'Editar grupo'

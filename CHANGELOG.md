@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»
+- Trasladados a los ficheros de traducción los textos que estaban fijados en plantillas y comandos (tooltips de las gráficas del panel y del listado de estancias, pie de página del informe PDF y descripción del comando `app:setup`), de modo que toda la interfaz sea traducible
+
+### Fixed
+
+- El mensaje de error al marcar un puesto como firmado citaba un estado inexistente («Completado»); ahora indica el estado correcto («Registrado en Séneca»)
+- Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
+
 ## [2.0.0] - 2026-06-14
 
 ### Added

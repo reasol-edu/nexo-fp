@@ -54,7 +54,7 @@ class DashboardControllerTest extends ControllerTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Pendientes', $crawler->html());
-        self::assertStringContainsString('1 plaza sin estudiante', $crawler->html());
+        self::assertStringContainsString('1 puesto sin estudiante', $crawler->html());
         self::assertStringContainsString($stay->getName(), $crawler->html());
     }
 

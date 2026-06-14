@@ -264,28 +264,28 @@
                                         {%- if _sw > 0 -%}
                                         {%- if _sn == 0 -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8">
-                                            <title>{{ _sw }} con puesto (100%)</title>
+                                            <title>{{ 'stays.card.donut.with_position'|trans({'%count%': _sw}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
                                                 stroke-dasharray="{{ _dw }} {{ _c }}"
                                                 stroke-dashoffset="{{ _c }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _sw }} con puesto ({{ (_sw / _st * 100)|round }}%)</title>
+                                            <title>{{ 'stays.card.donut.with_position'|trans({'%count%': _sw}, 'stays') }} ({{ (_sw / _st * 100)|round }}%)</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}
                                         {%- if _sn > 0 -%}
                                         {%- if _sw == 0 -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fca5a5" stroke-width="8">
-                                            <title>{{ _sn }} sin puesto (100%)</title>
+                                            <title>{{ 'stays.card.donut.without_position'|trans({'%count%': _sn}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fca5a5" stroke-width="8"
                                                 stroke-dasharray="{{ _dn }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _dw)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _sn }} sin puesto</title>
+                                            <title>{{ 'stays.card.donut.without_position'|trans({'%count%': _sn}, 'stays') }}</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}
@@ -336,56 +336,56 @@
                                         {%- if _pf > 0 -%}
                                         {%- if _solo_f -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#d1d5db" stroke-width="8">
-                                            <title>{{ _pf }} sin asignar (100%)</title>
+                                            <title>{{ 'stays.card.donut.unassigned'|trans({'%count%': _pf}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#d1d5db" stroke-width="8"
                                                 stroke-dasharray="{{ _df }} {{ _c }}"
                                                 stroke-dashoffset="{{ _c }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _pf }} sin asignar</title>
+                                            <title>{{ 'stays.card.donut.unassigned'|trans({'%count%': _pf}, 'stays') }}</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}
                                         {%- if _pp > 0 -%}
                                         {%- if _solo_p -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fbbf24" stroke-width="8">
-                                            <title>{{ _pp }} pendientes de Séneca (100%)</title>
+                                            <title>{{ 'stays.card.donut.pending'|trans({'%count%': _pp}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#fbbf24" stroke-width="8"
                                                 stroke-dasharray="{{ _dp }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _pp }} pendientes de Séneca</title>
+                                            <title>{{ 'stays.card.donut.pending'|trans({'%count%': _pp}, 'stays') }}</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}
                                         {%- if _pr > 0 -%}
                                         {%- if _solo_r -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#818cf8" stroke-width="8">
-                                            <title>{{ _pr }} registrados sin firmar (100%)</title>
+                                            <title>{{ 'stays.card.donut.registered'|trans({'%count%': _pr}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#818cf8" stroke-width="8"
                                                 stroke-dasharray="{{ _dr }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df - _dp)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _pr }} registrados sin firmar</title>
+                                            <title>{{ 'stays.card.donut.registered'|trans({'%count%': _pr}, 'stays') }}</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}
                                         {%- if _ps > 0 -%}
                                         {%- if _solo_s -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8">
-                                            <title>{{ _ps }} firmados (100%)</title>
+                                            <title>{{ 'stays.card.donut.signed'|trans({'%count%': _ps}, 'stays') }} (100%)</title>
                                         </circle>
                                         {%- else -%}
                                         <circle cx="32" cy="32" r="{{ _r }}" fill="none" stroke="#34d399" stroke-width="8"
                                                 stroke-dasharray="{{ _ds }} {{ _c }}"
                                                 stroke-dashoffset="{{ (_c - _df - _dp - _dr)|round(2) }}"
                                                 transform="rotate(-90 32 32)">
-                                            <title>{{ _ps }} firmados</title>
+                                            <title>{{ 'stays.card.donut.signed'|trans({'%count%': _ps}, 'stays') }}</title>
                                         </circle>
                                         {%- endif -%}
                                         {%- endif -%}

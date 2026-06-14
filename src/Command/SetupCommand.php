@@ -16,7 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-#[AsCommand(name: 'app:setup', description: 'Inicializa la aplicación con datos por defecto si la base de datos está vacía')]
+#[AsCommand(name: 'app:setup')]
 class SetupCommand extends Command
 {
     public function __construct(
@@ -26,6 +26,11 @@ class SetupCommand extends Command
         private readonly TranslatorInterface $translator,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->setDescription($this->translator->trans('setup.description', domain: 'command'));
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

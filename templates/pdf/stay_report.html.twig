@@ -21,7 +21,7 @@
     <sethtmlpageheader name="stayReportHeader" value="on" show-this-page="1" />
 
     <htmlpagefooter name="stayReportFooter">
-        <div class="pdf-footer">Página {PAGENO} de {nbpg}</div>
+        <div class="pdf-footer">{{ 'stays.report.page_of'|trans({}, 'stays') }}</div>
     </htmlpagefooter>
     <sethtmlpagefooter name="stayReportFooter" value="on" />
 
