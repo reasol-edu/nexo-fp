@@ -433,9 +433,10 @@ class CompanyController extends AbstractController
         if ($worker !== null && $company->getWorkers()->contains($worker)) {
             $company->removeWorker($worker);
             $this->em->flush();
+            $this->addFlash('success', $this->t('worker.flash.removed'));
+        } else {
+            $this->addFlash('warning', $this->t('worker.flash.not_found'));
         }
-
-        $this->addFlash('success', $this->t('worker.flash.removed'));
 
         return $this->redirectToRoute('app_companies_edit', ['id' => $id]);
     }

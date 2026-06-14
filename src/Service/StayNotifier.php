@@ -114,7 +114,7 @@ class StayNotifier
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
-            $this->logger->error('No se pudo enviar el email "{subject}": {error}', [
+            $this->logger->error('Could not send email "{subject}": {error}', [
                 'subject' => $email->getSubject(),
                 'error'   => $e->getMessage(),
             ]);
@@ -124,7 +124,7 @@ class StayNotifier
     private function hasEmail(Teacher $teacher, string $kind): bool
     {
         if ($teacher->getEmail() === null || $teacher->getEmail() === '') {
-            $this->logger->info('Notificación "{kind}" omitida: el docente {username} no tiene email.', [
+            $this->logger->info('Notification "{kind}" skipped: teacher {username} has no email.', [
                 'kind'     => $kind,
                 'username' => $teacher->getUsername(),
             ]);
