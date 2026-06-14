@@ -9,7 +9,8 @@
 </p>
 
 <p align="center">
-  <strong>v1.6.1</strong> &nbsp;·&nbsp;
+  <strong>v2.0.0</strong> &nbsp;·&nbsp;
+  <a href="https://reasol-edu.github.io/nexo-fp/">Documentación</a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
   <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
@@ -31,26 +32,49 @@ completamente separados. Cada docente selecciona el centro activo al iniciar ses
 datos de ese centro. Los administradores globales pueden gestionar todos los centros desde la
 sección **Administración**.
 
-Forma parte del proyecto de innovación educativa REASOL (PIN-219/23 y PIN-354/24) financiado por la
-Consejería de Desarrollo Educativo y Formación Profesional de la Junta de Andalucía.
+> Nexo FP forma parte del proyecto de innovación educativa REASOL (PIN-219/23 y PIN-354/24) financiado
+> por la Consejería de Desarrollo Educativo y Formación Profesional de la Junta de Andalucía.
+
 Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para la guía de contribución y [CHANGELOG.md](CHANGELOG.md)
 para el historial de cambios.
 
 ---
 
-## Contenidos
+## Documentación
 
-- [Inicio rápido](#inicio-rápido)
-- [Secciones de la aplicación](#secciones-de-la-aplicación)
-- [Roles de los docentes](#roles-de-los-docentes)
-- [Flujo de trabajo](#flujo-de-trabajo)
-- [Tabla de permisos](#tabla-de-permisos)
-- [Notificaciones por email](#notificaciones-por-email)
-- [Ajustes](#ajustes)
-- [Comandos de consola](#comandos-de-consola)
-- [Desarrollo local](#desarrollo-local)
-- [Despliegue con Docker](#despliegue-con-docker)
-- [Ejecución como binario nativo](#ejecución-como-binario-nativo)
+La documentación detallada vive en el **[manual de Nexo FP](docs/manual/)** (`docs/manual/`), que es la
+fuente única de verdad. Cubre instalación, roles y permisos, el flujo de trabajo completo, la referencia
+de cada pantalla, notificaciones, ajustes, comandos de consola y despliegue.
+
+La versión web navegable de la última versión estable está publicada en
+**<https://reasol-edu.github.io/nexo-fp/>**.
+
+El manual se redacta en Markdown y se genera en dos formatos con el mismo contenido:
+
+- **PDF**: `make docs-pdf` → `docs/manual/nexo-fp-manual.pdf`.
+- **Web navegable** (con buscador): `make docs-web` / `make docs-serve`.
+
+Las versiones publicadas del manual (PDF), la presentación (PDF) y la web navegable (ZIP) se generan
+automáticamente en cada release y están disponibles, con el número de versión en el nombre
+(`nexo-fp-manual-vX.Y.Z.pdf`, `nexo-fp-presentacion-vX.Y.Z.pdf`, `nexo-fp-manual-web-vX.Y.Z.zip`), entre
+los activos del [GitHub Release](https://github.com/reasol-edu/nexo-fp/releases). Los comandos `make`
+anteriores sirven para previsualización local.
+
+Capítulos:
+
+| Capítulo | Contenido |
+|----------|-----------|
+| [Introducción](docs/manual/index.md) | Qué es Nexo FP y cómo usar el manual |
+| [Instalación y requisitos](docs/manual/01-instalacion-y-requisitos.md) | Modos de despliegue y requisitos |
+| [Primeros pasos](docs/manual/02-primeros-pasos.md) | Preparar el curso académico |
+| [Roles y permisos](docs/manual/03-roles-y-permisos.md) | Perfiles y tabla de permisos |
+| [Flujo de trabajo](docs/manual/04-flujo-de-trabajo.md) | El recorrido completo de un curso |
+| [Secciones de la aplicación](docs/manual/05-secciones-de-la-aplicacion.md) | Referencia de cada pantalla |
+| [Notificaciones por email](docs/manual/06-notificaciones-y-email.md) | Avisos automáticos y SMTP |
+| [Ajustes](docs/manual/07-ajustes.md) | Configuración jerárquica |
+| [Comandos de consola](docs/manual/08-comandos-de-consola.md) | Administración por terminal |
+| [Despliegue](docs/manual/09-despliegue.md) | Docker y binario nativo |
+| [Operación y mantenimiento](docs/manual/10-operacion-y-mantenimiento.md) | Backups, colas, recordatorios |
 
 ---
 
@@ -62,481 +86,13 @@ docker compose up -d
 ```
 
 Accede a **http://localhost** con `admin` / `admin`.
-Para otras opciones de despliegue consulta [Despliegue con Docker](#despliegue-con-docker)
-o [Ejecución como binario nativo](#ejecución-como-binario-nativo).
 
----
-
-## Secciones de la aplicación
-
-### Inicio
-
-Panel resumen del curso académico activo. Muestra el número de estancias abiertas, puestos
-formativos creados, estudiantes inscritos y el estado general de las asignaciones. Cada tarjeta
-de métricas enlaza con su sección correspondiente y, según los permisos del docente, se muestran
-**accesos rápidos** para crear una estancia, importar estudiantes o registrar una empresa.
-
-Al final del panel, el bloque **Pendientes** lista las estancias activas que requieren atención:
-estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa,
-y puestos finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.
-
-La cabecera incluye una **campana de notificaciones** que muestra en tiempo real las tareas
-pendientes del docente: firmas próximas a vencer, puestos sin estudiante, sin tutor académico o
-sin mentor de empresa, y estudiantes sin puesto asignado.
-
-La **búsqueda global** (⌘K / Ctrl+K) permite localizar estancias, empresas, estudiantes y
-docentes desde cualquier página, aplicando los mismos permisos que la barra lateral. Los resultados
-aparecen en tiempo real con navegación por teclado (↑ ↓ Enter) y cierre con Esc.
-
-### Estancias
-
-Una **estancia** agrupa un conjunto de puestos formativos de una misma enseñanza dentro de un
-periodo concreto (por ejemplo, "DAW - 2º curso, marzo-mayo 2027").
-
-Desde esta sección se puede:
-
-- Crear y editar estancias con nombre, enseñanza y fechas de inicio y fin.
-- Añadir, editar y eliminar **puestos formativos** dentro de cada estancia.
-- Inscribir o retirar estudiantes de la estancia.
-- Asignar estudiantes y tutores directamente desde el detalle, con un modo de
-  **asignación rápida** que muestra los selectores en todas las filas a la vez.
-- Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones.
-- Exportar los puestos de la estancia a **CSV** (compatible con Excel) con estudiante, empresa,
-  centro de trabajo, tutorías y estado.
-- Los **filtros** (búsqueda, familia profesional, enseñanza y período) se recuerdan por centro en
-  el navegador y se restauran automáticamente al volver al listado.
-
-> Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol
-> (administrador/a de centro, coordinador/a de FP dual, jefe/a de departamento de familia profesional,
-> tutor/a o docente de un grupo, o docente de enlace del centro). Las estancias de otras enseñanzas
-> no aparecen ni son accesibles.
-
-Cada puesto formativo registra:
-
-| Campo                   | Descripción                                                                    |
-|-------------------------|--------------------------------------------------------------------------------|
-| Centro de trabajo       | Sede de la empresa donde se realizará la estancia                              |
-| Estudiante              | Alumno/a asignado/a al puesto                                                  |
-| Tutor/a dual docente    | Profesor/a responsable del seguimiento académico                               |
-| Tutor/a dual de empresa | Empleado/a responsable en la empresa                                           |
-| Nivel                   | Curso(s) de la enseñanza al que corresponde el puesto ("1º", "2º" o "1º y 2º") |
-| Fechas                  | Inicio y fin propios del puesto (pueden diferir de la estancia)                |
-| Estado                  | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca`                     |
-| Firmado                 | Indica si el convenio está firmado                                             |
-
-### Calendario
-
-Vista mensual de todas las estancias visibles para el docente. Muestra cada estancia como una
-barra de color (un color por familia profesional) con gestión automática de carriles para estancias
-solapadas. Un badge ámbar al final de cada barra indica el número de puestos pendientes de firma.
-
-La navegación mes a mes se realiza sin recarga completa de página. Cada barra enlaza directamente
-con el detalle de la estancia.
-
-> Un docente ve en el calendario las mismas estancias que en el listado de Estancias.
-
-### Empresas
-
-Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
-
-- Datos de la empresa: nombre, CIF/NIF, localidad y circunstancias excepcionales.
-- **Centros de trabajo** (sedes o filiales) donde los estudiantes realizarán su formación.
-- **Empleados** de la empresa que pueden actuar como tutores de empresa.
-- **Docentes de enlace** asignados a cada empresa.
-
-El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo.
-
-> Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual,
-> jefes/as de departamento de familia profesional y docentes de enlace.
-
-### Centro Educativo
-
-Aquí se implementa la gestión interna del centro. Reúne en un único espacio:
-
-- **Docentes del curso:** alta, baja e importación del personal adscrito al curso activo.
-- **Estudiantes:** alta, edición, baja, importación masiva desde CSV y exportación a CSV
-  respetando los filtros de búsqueda y grupo activos.
-- **Oferta formativa:** estructura jerárquica completa:
-  - Familias profesionales
-  - Enseñanzas (ciclos formativos)
-  - Niveles (cursos dentro de cada enseñanza)
-  - Grupos (con asignación de tutor y docentes)
-- **Cursos académicos:** crear y activar cursos del centro.
-
-### Administración
-
-Sección exclusiva para administradores globales. Permite:
-
-- Gestionar todos los **docentes** del sistema (alta, baja, activación, asignación de rol de administrador,
-  tipo de autenticación).
-- Gestionar **centros educativos**: crearlos, asignarles el equipo directivo y gestionar sus cursos académicos.
-
----
-
-## Roles de los docentes
-
-Todos los usuarios del sistema son docentes (`Teacher`). El nivel de acceso depende de los roles
-y responsabilidades asignados:
-
-### Administrador global (`ROLE_ADMIN`)
-
-Acceso completo a la aplicación, incluida la sección **Administración**. Puede gestionar todos los
-docentes y centros del sistema, y suplantar la identidad de cualquier usuario para soporte.
-
-Se crea al menos uno durante el primer arranque (`admin` / `admin`). Se pueden crear más con
-`bin/console app:create-admin`.
-
-### Administrador de centro
-
-Docente designado como responsable de un centro educativo concreto. Tiene acceso completo a ese
-centro: puede gestionar la oferta formativa, el alumnado, los docentes del curso, las empresas y
-las estancias. No tiene acceso a la sección de administración global.
-
-### Docente
-
-Rol base de todos los usuarios autenticados. Accede al panel de inicio y a su propio perfil.
-Si está asignado a un grupo como tutor o docente de ese grupo, puede **ver** las estancias de
-la enseñanza correspondiente y consultar sus puestos formativos, pero no puede modificarlas.
-
-### Coordinador/a de FP dual
-
-Docente asignado como coordinador/a de una o varias enseñanzas. Tiene acceso a la sección
-**Empresas** (puede ver y editar todas las empresas del centro) y puede crear, modificar y
-eliminar estancias de las enseñanzas que coordina, así como gestionar sus puestos formativos
-y las asignaciones de estudiantes y tutores. Al crear una nueva estancia, solo puede seleccionar
-enseñanzas de las que es coordinador/a.
-
-### Docente de enlace
-
-Docente asignado/a a una o varias empresas del centro. Puede acceder a la sección **Empresas** y
-editar los datos de aquellas empresas de las que es enlace: centros de trabajo, empleados y
-docentes de enlace. Su acceso a la sección **Estancias** está limitado a las estancias con puestos
-formativos en sus empresas; consulta la [Tabla de permisos](#tabla-de-permisos) para el detalle.
-
-### Jefe/a de departamento de familia profesional
-
-Docente designado/a como jefe/a de departamento de una familia profesional. Tiene acceso a la
-sección **Empresas** (puede ver y editar cualquier empresa del centro) y puede ver y gestionar
-—editar, gestionar puestos y eliminar— las estancias de las enseñanzas pertenecientes a su
-familia profesional.
-
----
-
-## Flujo de trabajo
-
-El proceso habitual en Nexo FP sigue estas fases, desde la configuración inicial del curso hasta
-el cierre de las estancias:
-
-### 1 — Configurar el curso
-
-El administrador de centro accede a **Centro Educativo** y prepara el curso activo:
-
-1. Crea o activa el **curso académico**.
-2. Estructura la **oferta formativa**: familias → enseñanzas → niveles → grupos.
-3. Asigna **tutores y docentes** a cada grupo.
-4. Importa o da de alta a los **estudiantes** y los distribuye en sus grupos.
-5. Añade al resto de **docentes del curso** para que puedan acceder a la plataforma.
-
-### 2 — Registrar empresas y centros de trabajo
-
-Antes de crear puestos, el personal con acceso a **Empresas** registra:
-
-1. Las **empresas** colaboradoras con sus datos básicos.
-2. Los **centros de trabajo** (sedes) de cada empresa.
-3. Los **empleados** que actuarán como tutores de empresa.
-4. Los **docentes de enlace** asignados a cada empresa.
-
-### 3 — Crear estancias y puestos formativos
-
-Con la oferta formativa y las empresas preparadas, los docentes con permisos crean las estancias:
-
-1. En **Estancias → Nueva estancia**, se selecciona la enseñanza y se define el nombre y las
-   fechas.
-2. Dentro de la estancia, se añaden los **puestos formativos**: para cada puesto se indica el
-   centro de trabajo y el nivel al que corresponde.
-3. Se inscriben los **estudiantes** en la estancia para que puedan asignarse a los puestos.
-
-### 4 — Asignar estudiantes y tutores
-
-Una vez creados los puestos, se completa cada uno con su asignación:
-
-1. Se selecciona el **estudiante** que ocupará el puesto.
-2. Se designa el **tutor/a docente** (responsable académico).
-3. Se designa el **tutor/a de empresa** (responsable en la empresa).
-4. Se ajustan las fechas del puesto si difieren de las de la estancia.
-
-Mientras el puesto está en estado **Borrador**, todos los campos son editables.
-
-### 5 — Tramitar en Séneca
-
-Cuando una asignación está lista para enviarse al sistema regional:
-
-1. El estado del puesto pasa a **Pendiente de Séneca**.
-2. Una vez confirmada la recepción en Séneca, se marca como **Registrado en Séneca** y el
-   convenio se indica como firmado.
-3. Los puestos en estado `Registrado` quedan bloqueados para evitar modificaciones accidentales.
-
-### 6 — Generar informes
-
-En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle
-completo de todos los puestos, estudiantes, tutores y fechas, o exportar los datos a **CSV**
-para trabajarlos en una hoja de cálculo.
-
----
-
-## Tabla de permisos
-
-La siguiente tabla resume qué puede hacer cada perfil en cada sección de la aplicación.
-
-Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es parcial se indica
-el ámbito: **"Su familia prof."** = estancias o enseñanzas de su familia profesional;
-**"Sus enseñanzas"** = las que coordina; **"Sus empresas"** = las que tiene asignadas como enlace.
-Los roles son acumulativos: un docente con varios roles acumula todos sus permisos.
-
-| Abrev. | Rol |
-|--------|-----|
-| **ADM** | Administrador/a global |
-| **ED** | Administrador/a de centro |
-| **JFP** | Jefe/a de departamento de familia profesional |
-| **CFD** | Coordinador/a de FP dual |
-| **DE** | Docente de enlace |
-| **TG** | Tutor/a de grupo / Docente de grupo |
-| **D** | Docente (sin rol específico en el centro) |
-
-### Centro educativo
-
-| Acción | ADM | ED | JFP | CFD | DE | TG | D |
-|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Acceder a la sección | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar docentes del curso | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar estudiantes | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar oferta formativa¹ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Crear y activar cursos académicos | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-
-¹ Familias profesionales, enseñanzas, niveles y grupos.
-
-> **Nota sobre el docente de enlace (DE):** puede ver las estancias que tienen puestos formativos en sus empresas asignadas, añadir nuevos puestos desde sus empresas a esas estancias, y editar o eliminar únicamente los puestos de sus empresas **que no tengan estudiante asignado**. No puede crear estancias, editarlas en conjunto ni gestionar la inscripción de estudiantes.
->
-> **Nota sobre el docente base (D):** un docente sin ningún rol específico en el centro (no es tutor/a ni docente de ningún grupo, ni enlace de ninguna empresa, ni jefe/a de familia profesional, ni coordinador/a) no tiene acceso a estancias, empresas ni al área de Centro Educativo.
-
-### Estancias
-
-| Acción | ADM | ED | JFP | CFD | DE | TG | D |
-|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
-| Crear estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
-| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
-| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Descargar informe PDF / exportar CSV | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
-
-### Empresas
-
-| Acción | ADM | ED | JFP | CFD | DE | TG | D |
-|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Acceder a la sección | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Ver y buscar empresas | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Crear empresa | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Editar empresa² | ✅ | ✅ | ✅ | ✅ | Sus empresas | ❌ | ❌ |
-| Eliminar empresa | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-
-² Incluye centros de trabajo, empleados y docentes de enlace asignados.
-³ Solo estancias/puestos donde intervienen sus empresas asignadas.
-⁴ Solo puestos sin estudiante asignado. Los puestos con estudiante asignado no pueden ser modificados ni eliminados por el docente de enlace.
-
-### Administración global
-
-| Acción | ADM | ED | JFP | CFD | DE | TG | D |
-|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Acceder a la sección | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar docentes del sistema | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar centros educativos | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-
-### Otras acciones y permisos generales
-
-| Acción | ADM | ED | JFP | CFD | DE | TG | D |
-|--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Acceder a la plataforma | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Ver panel de inicio | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Gestionar el propio perfil | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Acceder como otro usuario (suplantación) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-
----
-
-## Notificaciones por email
-
-La aplicación puede enviar notificaciones automáticas por email en estos casos:
-
-- **Asignación de tutoría:** cuando a un puesto formativo se le asigna un tutor/a dual docente
-  (o se cambia el existente), el tutor/a recibe un email con el enlace a la estancia.
-- **Nuevos puestos formativos:** al crear puestos en una estancia, los docentes de enlace de la
-  empresa reciben un aviso (excepto quien los creó).
-- **Recordatorios de firma:** mediante el comando [`app:send-reminders`](#appsend-reminders),
-  cada tutor/a dual docente recibe un recordatorio de sus puestos pendientes de firma cuando la
-  estancia está próxima a finalizar.
-- **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de
-  correo, recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El
-  cambio no tiene efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.
-- **Recuperación de contraseña:** cuando un docente con acceso local solicita recuperar su
-  contraseña, recibe un enlace válido 1 hora en el correo que tiene registrado en su cuenta. Los
-  usuarios con acceso externo (Séneca/IdEA) no pueden usar este flujo.
-
-Las notificaciones están **desactivadas por defecto** (`MAILER_DSN=null://null`). Para activarlas,
-configura en el entorno:
-
-```dotenv
-# Transporte SMTP (u otro soportado por symfony/mailer)
-MAILER_DSN=smtp://usuario:clave@servidor:587
-# Dirección remitente de los emails automáticos
-MAILER_FROM=no-responder@tudominio.es
-# URL pública de la aplicación, usada en los enlaces de los emails
-DEFAULT_URI=https://nexo.tudominio.es
-```
-
-Los emails se envían **en segundo plano** mediante Messenger (transporte `async`, almacenado en la
-tabla `messenger_messages` de la base de datos): la verificación de cambio de correo y las
-notificaciones de tutoría/firma se encolan y un *worker* las procesa de forma asíncrona, sin
-penalizar el tiempo de respuesta de la petición. La **recuperación de contraseña** es la excepción
-y se envía de forma síncrona por ser urgente (el enlace caduca en 1 hora). Los fallos de envío se
-registran en el log sin interrumpir nunca la operación en curso.
-
-El *worker* debe estar en ejecución para que los correos encolados se entreguen:
-
-```bash
-php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
-```
-
-En los despliegues con **ejecutable binario** no es necesario lanzarlo a mano: los scripts de
-arranque (`dist/start.sh`, `dist/start.ps1`, `dist/start.bat`) inician el consumidor junto al
-servidor y lo detienen al finalizar. En Windows se recomienda usar `start.ps1` como lanzador.
-
-Tras agotar los 3 reintentos, los mensajes fallidos pasan al transporte `failed`. Para
-inspeccionarlos y gestionarlos:
-
-```bash
-php bin/console messenger:failed:show              # listar mensajes fallidos
-php bin/console messenger:failed:retry             # reintentar (interactivo)
-php bin/console messenger:failed:remove <id>       # descartar un mensaje
-```
-
-Los destinatarios sin dirección de email registrada se omiten de forma silenciosa.
-
-Cada tipo de notificación puede habilitarse o deshabilitarse individualmente desde la sección
-**Ajustes**, con tres niveles de granularidad: global (para toda la aplicación), por centro
-educativo y por docente. El valor más específico tiene prioridad. Si un docente desactiva las
-notificaciones desde su perfil, no recibirá emails independientemente de la configuración global
-o del centro.
-
----
-
-## Ajustes
-
-La aplicación dispone de un sistema de configuración con tres niveles de granularidad:
-
-| Nivel | URL | Quién puede acceder |
-|-------|-----|---------------------|
-| Global | `/admin/ajustes` | Administradores globales |
-| Centro educativo | `/mi-centro/ajustes` | Administradores de centro |
-| Personal | `/perfil/ajustes` | Todos los docentes autenticados |
-
-Los valores se resuelven en cascada: **personal > centro > global > predeterminado**.
-
-Los administradores globales y de centro pueden **bloquear** cualquier ajuste que tengan explícitamente guardado. Un ajuste bloqueado a nivel global no puede ser modificado por los centros ni por los docentes; uno bloqueado a nivel de centro no puede ser modificado por los docentes de ese centro. Los ajustes bloqueados aparecen deshabilitados en los niveles inferiores, indicando qué nivel los ha fijado, y el control muestra siempre el valor fijado por el nivel bloqueante. Un ajuste bloqueado tampoco puede restablecerse al valor por defecto.
-
-Los ajustes disponibles son:
-
-| Clave | Tipo | Ámbito | Descripción |
-|-------|------|--------|-------------|
-| `page.size` | Entero (5–100) | Personal | Elementos por página en los listados |
-| `email.notifications` | Booleano | Global, centro, personal | Interruptor maestro de notificaciones |
-| `email.notification.tutor_assigned` | Booleano | Global, centro, personal | Aviso al asignar una tutoría |
-| `email.notification.positions_created` | Booleano | Global, centro, personal | Aviso al crear puestos formativos |
-| `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
-
----
-
-## Comandos de consola
-
-La aplicación incluye varios comandos de consola para la administración del sistema. Se ejecutan con `php bin/console <comando>` en desarrollo, o con el binario nativo (`nexo-fp php-cli bin/console <comando>` en Linux/macOS, `nexo-fp.exe php-cli bin/console <comando>` en Windows).
-
----
-
-### `app:setup`
-
-Inicializa la aplicación con datos de ejemplo si la base de datos está vacía. Si ya existe algún docente registrado, el comando no hace nada y muestra un aviso.
-
-**Cuándo usarlo:** primera puesta en marcha en un entorno de desarrollo o pruebas para disponer de un usuario `admin`/`admin` y un centro educativo de ejemplo listos para usar.
-
-```bash
-php bin/console app:setup
-```
-
-No acepta argumentos ni opciones. Es idempotente: se puede ejecutar varias veces sin riesgo.
-
----
-
-### `app:create-educational-centre`
-
-Crea un nuevo centro educativo y su primer curso académico (el curso actual, calculado automáticamente).
-
-```bash
-php bin/console app:create-educational-centre [<código>] [<nombre>] [<ciudad>]
-```
-
-| Argumento | Descripción                               | Requisito |
-|-----------|-------------------------------------------|-----------|
-| `código`  | Código del centro (p. ej. `23700281`)     | Se solicita de forma interactiva si no se indica |
-| `nombre`  | Nombre del centro (p. ej. `IES Oretania`) | Se solicita de forma interactiva si no se indica |
-| `ciudad`  | Ciudad del centro (p. ej. `Linares`)      | Se solicita de forma interactiva si no se indica |
-
-El comando falla si ya existe un centro con el mismo código.
-
----
-
-### `app:create-admin`
-
-Crea un docente con privilegios de administrador global.
-
-```bash
-php bin/console app:create-admin <nombre_de_usuario> [<contraseña>]
-```
-
-| Argumento          | Descripción                        | Requisito |
-|--------------------|------------------------------------|-----------|
-| `nombre_de_usuario` | Nombre de usuario para el login   | **Obligatorio** |
-| `contraseña`        | Contraseña en texto plano          | Se solicita de forma oculta e interactiva si no se indica |
-
-El comando falla si el nombre de usuario ya está registrado. La contraseña se almacena siempre hasheada.
-
----
-
-### `app:send-reminders`
-
-Envía un recordatorio por email a cada tutor/a dual docente con puestos formativos pendientes de firma en estancias que finalizan exactamente dentro de N días.
-
-```bash
-php bin/console app:send-reminders [--days=N]
-```
-
-| Opción   | Descripción                                      | Valor por defecto |
-|----------|--------------------------------------------------|-------------------|
-| `--days` | Días que faltan para el fin de la estancia       | `7`               |
-
-Requiere tener configurado el envío de correo (`MAILER_DSN` y `MAILER_FROM` en el entorno) y `DEFAULT_URI` con la URL pública de la aplicación para que los enlaces de los emails funcionen. Los puestos cuyo tutor no tiene email registrado se omiten con un aviso.
-
-Está pensado para ejecutarse una vez al día mediante cron; al filtrar por la fecha exacta de fin, cada puesto recibe un único recordatorio:
-
-```cron
-# Todos los días a las 8:00
-0 8 * * * cd /ruta/a/nexo-fp && php bin/console app:send-reminders --days=7
-```
+Para el resto de modos de despliegue (binario nativo y desarrollo local) y su configuración detallada,
+consulta el capítulo [Despliegue](docs/manual/09-despliegue.md) del manual.
 
 ---
 
 ## Requisitos
-
-Según el modo de despliegue elegido, los requisitos son distintos:
 
 | Modo | Requisitos |
 |------|-----------|
@@ -554,8 +110,8 @@ Requisitos: PHP 8.4+, Composer y Docker Compose (solo para la base de datos).
 # 1. Clona el repositorio y copia el entorno
 cp .env.example .env          # ajusta si es necesario
 
-# 2. Levanta PostgreSQL (el servicio app queda deshabilitado en dev)
-docker compose up -d
+# 2. Levanta solo PostgreSQL con el overlay de desarrollo
+docker compose -f compose.yaml -f compose.dev.yaml up -d
 
 # 3. Instala dependencias e inicializa la base de datos
 composer install
@@ -568,7 +124,7 @@ symfony server:start          # o: php -S localhost:8000 -t public/
 
 Accede a **http://localhost:8080** con `admin` / `admin`.
 
-> El fichero `compose.override.yaml` está activo automáticamente en desarrollo y expone PostgreSQL en el puerto 5432. El servicio PHP (`app`) solo se levanta al pasar `--profile production`.
+> El overlay `compose.dev.yaml` (que se combina con `-f`) expone PostgreSQL en el puerto 5432 y deja el servicio PHP (`app`) tras el perfil `production`, de modo que el comando anterior solo arranca la base de datos. En producción se usa únicamente `compose.yaml` (`docker compose up -d`), que sí levanta la aplicación.
 
 ### Cargar datos de demostración
 
@@ -590,190 +146,34 @@ make test
 php vendor/bin/phpstan analyse
 ```
 
----
+### Generar la presentación
 
-## Despliegue con Docker
-
-Este es el modo recomendado para entornos de producción. La imagen incluye [FrankenPHP] como
-servidor de aplicaciones y usa [PostgreSQL] 16 como base de datos.
-
-### Preparación
-
-Copia el fichero de ejemplo y edita los valores:
+El proyecto incluye una presentación de introducción a Nexo FP en
+[`docs/slides/`](docs/slides/), escrita en [Marp]. Para exportarla a PDF:
 
 ```bash
-cp .env.example .env
+make slides
 ```
 
-Los campos obligatorios son:
+El comando requiere **Node.js** (usa `npx @marp-team/marp-cli`, sin instalación global) y genera
+`docs/slides/nexo-fp.pdf`. Cambiando la extensión de salida puedes obtener otros formatos
+(`.pptx`, `.html`). Consulta [`docs/slides/README.md`](docs/slides/README.md) para más detalles.
 
-- **`APP_SECRET`** — clave aleatoria de 64 caracteres hexadecimales. Genera una con:
-  ```bash
-  php -r 'echo bin2hex(random_bytes(32));'
-  ```
-- **`DB_PASSWORD`** — contraseña de la base de datos PostgreSQL.
+### Generar el manual
 
-### Arranque
+El [manual de Nexo FP](docs/manual/) se redacta en Markdown (`docs/manual/`) y se compila a PDF y a una
+web navegable:
 
 ```bash
-docker compose up -d
+make docs-pdf    # PDF -> docs/manual/nexo-fp-manual.pdf
+make docs-web    # web -> docs/manual-site/
+make docs-serve  # previsualización en http://127.0.0.1:8000
+make docs        # PDF + web
 ```
 
-La primera vez que se inicia, el contenedor realiza automáticamente:
-
-1. Ejecuta las migraciones de base de datos.
-2. Crea el usuario administrador inicial (`admin` / `admin`) y el centro de prueba `IES Test`.
-3. Precalienta la caché de Symfony.
-
-La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
-
-### Datos de demostración
-
-Para arrancar con datos de prueba (usuarios, centros, empresas y estancias precargadas),
-añade al fichero `.env`:
-
-```dotenv
-LOAD_FIXTURES=true
-```
-
-El contenedor cargará los fixtures automáticamente en cada arranque. Consulta [DEMO.md](DEMO.md)
-para ver los usuarios y contraseñas disponibles. ⚠️ Esta opción borra todos los datos existentes.
-
-### HTTPS con Let's Encrypt
-
-Para habilitar HTTPS automático, edita `.env` con tu dominio real:
-
-```dotenv
-SERVER_NAME=nexo.tudominio.es
-DEFAULT_URI=https://nexo.tudominio.es
-HTTP_PORT=80
-HTTPS_PORT=443
-```
-
-FrankenPHP (Caddy) gestionará el certificado TLS sin configuración adicional.
-
-### Datos persistentes
-
-Los datos se almacenan en el directorio `./data/` del proyecto:
-
-- `./data/postgres/` — base de datos PostgreSQL.
-- `./data/var/` — caché, logs y sesiones de Symfony.
-
-### Actualización
-
-```bash
-docker compose pull   # o: docker compose build
-docker compose up -d
-```
-
-Las migraciones se aplican automáticamente en cada arranque.
-
-### Comandos útiles
-
-```bash
-# Ver logs en tiempo real
-docker compose logs -f app
-
-# Abrir una shell en el contenedor
-docker compose exec app sh
-
-# Crear un centro educativo adicional
-docker compose exec app php bin/console app:create-educational-centre
-
-# Crear un administrador adicional
-docker compose exec app php bin/console app:create-admin
-```
-
----
-
-## Ejecución como binario nativo
-
-El modo binario nativo está pensado para instalaciones sencillas sin Docker. Incluye un ejecutable
-de [FrankenPHP] que embebe el servidor web y PHP, y usa [SQLite] como base de datos, por lo que no
-necesita ningún software adicional instalado en el sistema.
-
-### Descarga
-
-Descarga el paquete correspondiente a tu sistema operativo desde la página de releases del proyecto
-y descomprímelo. El paquete contiene:
-
-```
-nexo-fp/
-├── app/            ← código de la aplicación
-├── data/           ← generado automáticamente (BD, caché, secreto)
-├── frankenphp      ← ejecutable (frankenphp.exe en Windows)
-├── Caddyfile       ← configuración del servidor web
-├── start.sh        ← script de arranque (Linux / macOS)
-├── start.bat       ← script de arranque (Windows CMD)
-└── start.ps1       ← script de arranque (Windows PowerShell)
-```
-
-### Primer arranque
-
-**Linux / macOS:**
-
-```bash
-chmod +x frankenphp start.sh
-./start.sh
-```
-
-**Windows (CMD):**
-
-```bat
-start.bat
-```
-
-**Windows (PowerShell):**
-
-```powershell
-.\start.ps1
-```
-
-Se puede especificar un puerto distinto al predeterminado (8080):
-
-```bash
-./start.sh 9000          # Linux / macOS
-start.bat 9000           # Windows CMD
-.\start.ps1 -Port 9000   # Windows PowerShell
-```
-
-La primera vez que se inicia, el script realiza automáticamente:
-
-1. Genera un `APP_SECRET` aleatorio y lo guarda en `data/.secret`.
-2. Crea la base de datos SQLite en `data/nexo-fp.db`.
-3. Ejecuta las migraciones.
-4. Crea el usuario administrador inicial (`admin` / `admin`) y el centro de prueba `IES Test`.
-5. Precalienta la caché de Symfony.
-
-La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado).
-
-### Datos persistentes
-
-Todo lo generado en tiempo de ejecución se guarda en el directorio `data/` dentro del paquete.
-Para hacer una copia de seguridad basta con copiar ese directorio.
-
-### macOS: aviso de Gatekeeper
-
-La primera vez que se ejecuta en macOS, el sistema puede bloquear el binario por no estar firmado.
-El script `start.sh` elimina la cuarentena automáticamente, pero si el problema persiste ejecuta:
-
-```bash
-xattr -d com.apple.quarantine frankenphp
-```
-
-### Variables de entorno opcionales
-
-Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script:
-
-| Variable | Descripción | Valor por defecto |
-|----------|-------------|-------------------|
-| `PORT` | Puerto de escucha | `8080` |
-| `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca | `true` |
-| `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
-| `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
-| `MAILER_DSN` | Transporte de correo para las [notificaciones por email](#notificaciones-por-email) | `null://null` (desactivado) |
-| `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
-| `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes). Ver [DEMO.md](DEMO.md). | `false` |
+El PDF requiere **pandoc** y **Node.js** (usa `npx pagedjs-cli`, el mismo motor Chromium que las slides).
+La web requiere **MkDocs Material** (`pip install -r docs/manual/requirements.txt`). Consulta
+[`docs/manual/README.md`](docs/manual/README.md) para más detalles.
 
 ---
 
@@ -782,8 +182,5 @@ Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script
 Esta aplicación se ofrece bajo licencia [AGPL versión 3].
 
 [Symfony]: http://symfony.com/
-[Composer]: http://getcomposer.org
-[FrankenPHP]: https://frankenphp.dev
-[PostgreSQL]: https://www.postgresql.org
-[SQLite]: https://www.sqlite.org
+[Marp]: https://marp.app
 [AGPL versión 3]: http://www.gnu.org/licenses/agpl.html

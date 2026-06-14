@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-06-14
+
+### Added
+
+- Manual de usuario completo redactado en Markdown (`docs/manual/`) como fuente única de verdad: instalación y requisitos, primeros pasos, roles y permisos, flujo de trabajo, referencia de cada sección de la aplicación, notificaciones por email, ajustes, comandos de consola, despliegue y operación
+- Generación automática de la documentación a partir de los mismos ficheros Markdown, en dos formatos: PDF (pandoc + pagedjs-cli) y web navegable con buscador (MkDocs Material), mediante los objetivos `make docs-pdf`, `make docs-web`, `make docs-serve` y `make docs`
+- Publicación automática de la web del manual en GitHub Pages (<https://reasol-edu.github.io/nexo-fp/>), restringida a la última versión estable: los tags de prelanzamiento y los re-etiquetados de versiones anteriores no despliegan
+- Presentación de introducción a Nexo FP para profesorado, escrita en Marp (`docs/slides/`) y exportable a PDF con `make slides`
+- Capturas de pantalla del entorno de demostración en la referencia de secciones del manual
+- La documentación (PDF del manual, PDF de la presentación y ZIP de la web navegable) se construye en CI y se adjunta a cada GitHub Release con el número de versión en el nombre
+
+### Changed
+
+- Reordenadas las tarjetas de la sección «Centro educativo»: Docentes, Oferta formativa, Estudiantes y Ajustes
+- Los tutores/as y docentes de grupo ven el detalle de las estancias de sus enseñanzas y los puestos formativos de sus estudiantes, pero ya no ven los puestos formativos sin asignar (puestos libres): ese bloque queda reservado a quienes gestionan la estancia (administración, coordinación o jefatura de departamento) y a los docentes de enlace de las empresas implicadas, tanto en el detalle como en el informe PDF y en la exportación CSV
+
+### Fixed
+
+- El despliegue con Docker Compose (`docker compose up -d`) solo arrancaba el contenedor de base de datos: el overlay de desarrollo se cargaba automáticamente también en producción (al llamarse `compose.override.yaml`) y dejaba el servicio de aplicación tras el perfil `production`. Ahora ese overlay es `compose.dev.yaml` y se combina explícitamente con `-f` solo en desarrollo, de modo que en producción `docker compose up -d` levanta la aplicación y la base de datos, y deja de exponer el puerto de PostgreSQL en el host
+
 ## [1.6.1] - 2026-06-13
 
 ### Changed

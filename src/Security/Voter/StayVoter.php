@@ -23,6 +23,8 @@ final class StayVoter extends Voter
 {
     /** Ver una estancia en el listado y acceder a su contenido. Sujeto: Stay */
     public const VIEW   = 'stay.view';
+    /** Ver los puestos formativos sin estudiante asignado de una estancia. Sujeto: Stay */
+    public const VIEW_UNASSIGNED = 'stay.view_unassigned';
     /** Gestionar una estancia completa (editar, eliminar, gestionar estudiantes). Sujeto: Stay */
     public const MANAGE = 'stay.manage';
     /** Añadir un nuevo puesto formativo a la estancia. Sujeto: Stay */
@@ -42,7 +44,7 @@ final class StayVoter extends Voter
     protected function supports(string $attribute, mixed $subject): bool
     {
         return match ($attribute) {
-            self::VIEW, self::MANAGE, self::ADD_POSITION => $subject instanceof Stay,
+            self::VIEW, self::VIEW_UNASSIGNED, self::MANAGE, self::ADD_POSITION => $subject instanceof Stay,
             self::CREATE                                  => $subject instanceof EducationalCentre,
             self::MANAGE_POSITION                         => $subject instanceof TrainingPosition,
             default => false,
@@ -62,6 +64,7 @@ final class StayVoter extends Voter
 
         return match ($attribute) {
             self::VIEW            => $this->canView($user, $subject),
+            self::VIEW_UNASSIGNED => $this->canViewUnassigned($user, $subject),
             self::MANAGE          => $this->canManage($user, $subject),
             self::ADD_POSITION    => $this->canAddPosition($user, $subject),
             self::MANAGE_POSITION => $this->canManagePosition($user, $subject),
@@ -91,6 +94,23 @@ final class StayVoter extends Voter
         }
 
         return $this->companies->hasLiaisonPositionInStay($user, $stay);
+    }
+
+    /**
+     * Los puestos formativos sin estudiante (puestos «libres») solo son visibles
+     * para quienes gestionan la asignación: dirección, coordinación, jefatura de
+     * familia y los docentes de enlace del centro. Un docente o tutor de grupo ve
+     * la estancia, pero no la bolsa de puestos libres.
+     */
+    private function canViewUnassigned(Teacher $user, Stay $stay): bool
+    {
+        if ($this->canManage($user, $stay)) {
+            return true;
+        }
+
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
+
+        return $this->companies->hasLiaisonInCentre($user, $centre);
     }
 
     private function canManage(Teacher $user, Stay $stay): bool

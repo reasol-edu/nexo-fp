@@ -1,7 +1,8 @@
 ###> nexo-fp production stack ################################################
 # Uso:
 #   Producción  →  docker compose up -d
-#   Desarrollo  →  docker compose up database -d   (usa Symfony CLI para PHP)
+#   Desarrollo  →  docker compose -f compose.yaml -f compose.dev.yaml up -d
+#                  (solo la base de datos; PHP se sirve con Symfony CLI)
 #
 # Variables de entorno: copia .env.example a .env y ajusta los valores.
 ##############################################################################

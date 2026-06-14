@@ -351,6 +351,7 @@ class StayController extends AbstractController
 
         $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
 
+        $canViewUnassigned = $this->isGranted(StayVoter::VIEW_UNASSIGNED, $stay);
         $allPositions = $this->positions->findByStayOrdered($stay);
 
         $studentPositionMap  = [];
@@ -358,7 +359,7 @@ class StayController extends AbstractController
         foreach ($allPositions as $tp) {
             if ($tp->getStudent() !== null) {
                 $studentPositionMap[$tp->getStudent()->getId()->toRfc4122()] = $tp;
-            } else {
+            } elseif ($canViewUnassigned) {
                 $unassignedPositions[] = $tp;
             }
         }
@@ -433,9 +434,14 @@ class StayController extends AbstractController
 
         $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
 
+        $canViewUnassigned = $this->isGranted(StayVoter::VIEW_UNASSIGNED, $stay);
+
         $rows = [];
         foreach ($this->positions->findByStayOrdered($stay) as $position) {
             $student    = $position->getStudent();
+            if ($student === null && !$canViewUnassigned) {
+                continue;
+            }
             $tutor      = $position->getAcademicTutor();
             $mentor     = $position->getWorkplaceMentor();
             $workcenter = $position->getWorkcenter();

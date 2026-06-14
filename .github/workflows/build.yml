@@ -177,10 +177,90 @@ jobs:
           name: nexo-fp-${{ matrix.platform }}
           path: nexo-fp-*.${{ matrix.archive }}
 
-# ── Job 3: crear release en GitHub (solo para tags) ──────────────────────────
+# ── Job 3: generar la documentación (manual, presentación y web) ─────────────
+  docs:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_pages: ${{ steps.stable.outputs.deploy }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # todos los tags para calcular el estable más alto
+
+      - name: ¿Tag estable e igual o más nuevo?
+        id: stable
+        run: |
+          REF="${{ github.ref_name }}"
+          if [[ "${{ github.ref_type }}" != "tag" ]] || [[ "$REF" == *-* ]]; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Despliega si REF es igual o más nuevo que cualquier otra versión
+          # estable; es decir, no existe ninguna etiqueta estable estrictamente
+          # superior (permite re-publicar la misma versión).
+          NEWER=$(git tag --list 'v*' | grep -vE '[-]' | sort -V \
+                    | awk -v r="$REF" 'found {print} $0 == r {found=1}')
+          if [[ -z "$NEWER" ]]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Instalar pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
+      - name: Instalar MkDocs Material
+        run: pip install -r docs/manual/requirements.txt
+
+      - name: Determinar versión
+        id: ver
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ github.event.inputs.version || 'dev' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generar manual, presentación y web
+        env:
+          # Reutiliza el Chrome preinstalado del runner para pagedjs-cli y marp-cli
+          # (evita descargar un Chromium aparte).
+          CHROME_PATH: /usr/bin/google-chrome
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: make slides docs-pdf docs-web
+
+      - name: Ensamblar activos con sufijo de versión
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          mkdir -p _docs-dist
+          cp docs/manual/nexo-fp-manual.pdf "_docs-dist/nexo-fp-manual-${VERSION}.pdf"
+          cp docs/slides/nexo-fp.pdf        "_docs-dist/nexo-fp-presentacion-${VERSION}.pdf"
+          (cd docs/manual-site && zip -r "../../_docs-dist/nexo-fp-manual-web-${VERSION}.zip" .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nexo-fp-docs
+          path: _docs-dist/*
+
+      - name: Subir artefacto de Pages (solo última versión estable)
+        if: steps.stable.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/manual-site
+
+# ── Job 4: crear release en GitHub (solo para tags) ──────────────────────────
   release:
     if: github.ref_type == 'tag'
-    needs: package
+    needs: [package, docs]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -198,4 +278,24 @@ jobs:
           files: |
             nexo-fp-*.tar.gz
             nexo-fp-*.zip
+            nexo-fp-manual-*.pdf
+            nexo-fp-presentacion-*.pdf
+            nexo-fp-manual-web-*.zip
           generate_release_notes: true
+
+# ── Job 5: publicar la web en GitHub Pages (solo última versión estable) ─────
+  deploy-pages:
+    needs: docs
+    if: needs.docs.outputs.deploy_pages == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

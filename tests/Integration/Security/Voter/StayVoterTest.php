@@ -727,6 +727,121 @@ class StayVoterTest extends RepositoryTestCase
         );
     }
 
+    // ── VIEW_UNASSIGNED ────────────────────────────────────────────────────────
+
+    public function testViewUnassignedGrantedToGlobalAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000200');
+        $admin = $this->makeTeacher('vu.admin', admin: true);
+        $this->persist($centre, $year, $family, $programme, $stay, $admin);
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($admin), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedGrantedToCentreAdmin(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000201');
+        $teacher = $this->makeTeacher('vu.cadmin');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $centre->addAdmin($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedGrantedToCoordinator(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000202');
+        $teacher = $this->makeTeacher('vu.coord');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedGrantedToFamilyHead(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000203');
+        $teacher = $this->makeTeacher('vu.fhead');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+        $family->setHead($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedGrantedToLiaison(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000204');
+        $teacher = $this->makeTeacher('vu.liaison');
+        $company = $this->makeCompany($centre, 'Empresa VU S.L.');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $company);
+        $company->addLiaison($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedDeniedToGroupTutor(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000205');
+        $teacher       = $this->makeTeacher('vu.tutor');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group         = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->addTutor($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedDeniedToGroupTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000206');
+        $teacher       = $this->makeTeacher('vu.teacher');
+        $programmeYear = $this->makeProgrammeYear($programme);
+        $group         = $this->makeGroup($programmeYear);
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher, $programmeYear, $group);
+        $group->addTeacher($teacher);
+        $this->flush();
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
+    public function testViewUnassignedDeniedToUnrelatedTeacher(): void
+    {
+        [$centre, $year, $programme, $stay, $family] = $this->makeStayContext('41000207');
+        $teacher = $this->makeTeacher('vu.unrelated');
+        $this->persist($centre, $year, $family, $programme, $stay, $teacher);
+
+        self::assertSame(
+            VoterInterface::ACCESS_DENIED,
+            $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED])
+        );
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /** @return array{0: EducationalCentre, 1: AcademicYear, 2: Programme, 3: Stay, 4: ProfessionalFamily} */

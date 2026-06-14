@@ -1,0 +1,53 @@
+site_name: Manual de usuario de Nexo FP
+site_description: Gestión de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)
+site_url: https://reasol-edu.github.io/nexo-fp/
+docs_dir: .
+site_dir: ../manual-site
+use_directory_urls: false
+
+exclude_docs: |
+  README.md
+  requirements.txt
+  _build.html
+  *.pdf
+
+theme:
+  name: material
+  language: es
+  palette:
+    primary: deep purple
+    accent: deep purple
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - toc.integrate
+
+extra_css:
+  - assets/theme.css
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Introducción: index.md
+  - Instalación y requisitos: 01-instalacion-y-requisitos.md
+  - Primeros pasos: 02-primeros-pasos.md
+  - Roles y permisos: 03-roles-y-permisos.md
+  - Flujo de trabajo: 04-flujo-de-trabajo.md
+  - Secciones de la aplicación: 05-secciones-de-la-aplicacion.md
+  - Notificaciones por email: 06-notificaciones-y-email.md
+  - Ajustes: 07-ajustes.md
+  - Comandos de consola: 08-comandos-de-consola.md
+  - Despliegue: 09-despliegue.md
+  - Operación y mantenimiento: 10-operacion-y-mantenimiento.md

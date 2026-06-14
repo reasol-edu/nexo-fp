@@ -1,0 +1,97 @@
+/*
+ * Estilos de impresión del manual (solo PDF, vía Paged.js).
+ * Define la maquetación paginada: portada, índice, cabeceras/pies,
+ * numeración de página y saltos por capítulo. Complementa a theme.css.
+ */
+
+@page {
+  size: A4;
+  margin: 22mm 18mm 20mm;
+  @top-right {
+    content: "Manual de usuario de Nexo FP";
+    color: #6b7280;
+    font-size: 9pt;
+  }
+  @bottom-center {
+    content: counter(page);
+    color: #6b7280;
+    font-size: 9pt;
+  }
+}
+
+/* La portada (bloque de título de Pandoc) no lleva cabecera ni numeración. */
+@page cover {
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+}
+
+html { font-size: 11pt; }
+
+/* ----- Portada ----- */
+#title-block-header {
+  page: cover;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  border-bottom: none;
+}
+
+#title-block-header .title {
+  font-size: 34pt;
+  color: #6d5b97;
+  border: none;
+  margin-bottom: 0.2em;
+}
+
+#title-block-header .subtitle {
+  font-size: 16pt;
+  color: #574879;
+  font-weight: normal;
+}
+
+#title-block-header .author,
+#title-block-header .date {
+  color: #6b7280;
+  font-size: 12pt;
+}
+
+/* ----- Índice ----- */
+nav#TOC {
+  break-after: page;
+}
+
+nav#TOC::before {
+  content: "Índice";
+  display: block;
+  font-size: 20pt;
+  color: #6d5b97;
+  border-bottom: 2px solid #efe9f6;
+  padding-bottom: 0.2em;
+  margin-bottom: 0.6em;
+}
+
+nav#TOC ul { list-style: none; padding-left: 1em; }
+nav#TOC > ul { padding-left: 0; }
+nav#TOC a { text-decoration: none; color: #1e1b2e; }
+
+/* Número de página junto a cada entrada del índice (Paged.js). */
+nav#TOC a::after {
+  content: target-counter(attr(href), page);
+  float: right;
+  color: #6b7280;
+}
+
+/* ----- Saltos de página por capítulo ----- */
+h1 { break-before: page; }
+#title-block-header + nav#TOC + h1,
+nav#TOC + h1 { break-before: avoid; }
+
+h2, h3, h4 { break-after: avoid; }
+table, pre, blockquote, figure { break-inside: avoid; }
+img { break-inside: avoid; }
+
+/* Evita líneas viudas/huérfanas. */
+p { orphans: 3; widows: 3; }

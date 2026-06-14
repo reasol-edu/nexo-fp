@@ -18,6 +18,7 @@
 {%- set stay                           = d.stay -%}
 {%- set can_manage                     = d.can_manage -%}
 {%- set can_add_position               = d.can_add_position -%}
+{%- set can_view_unassigned            = d.can_view_unassigned -%}
 {%- set manageable_position_ids        = d.manageable_position_ids -%}
 {%- set stats                          = d.stats -%}
 {%- set by_group                       = d.by_group -%}
@@ -610,7 +611,8 @@
 
     </div>
 
-    {# ── Puestos sin asignar ──────────────────────────────────────────────── #}
+    {# ── Puestos sin asignar (solo gestores y docentes de enlace) ─────────── #}
+    {% if can_view_unassigned %}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
 
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
@@ -716,6 +718,7 @@
         {% endif %}
 
     </div>
+    {% endif %}
 
 <script type="module" data-live-ignore>
 import TomSelect from 'tom-select';

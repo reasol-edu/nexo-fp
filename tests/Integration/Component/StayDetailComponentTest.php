@@ -242,9 +242,44 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertNotNull($reloaded->getWorkplaceMentor());
     }
 
+    public function testManagerSeesUnassignedPositionsBlock(): void
+    {
+        [$admin, $stay] = $this->makeScenario();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        // The free position's workcenter only renders inside the
+        // unassigned-positions block, which is reserved for managers/liaisons.
+        $html = (string) $component->render();
+        self::assertStringContainsString('Centro Principal', $html);
+    }
+
+    public function testGroupTeacherCannotSeeUnassignedPositionsBlock(): void
+    {
+        [, $stay, , , $group] = $this->makeScenario();
+
+        $teacher = (new Teacher(new PersonName('Docente', 'Grupo')))->setUsername('docente.grupo');
+        $group->addTeacher($teacher);
+        $this->persist($teacher);
+        $this->flush();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($teacher);
+
+        $html = (string) $component->render();
+        self::assertStringNotContainsString('Centro Principal', $html);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /** @return array{0: Teacher, 1: Stay, 2: Student, 3: TrainingPosition} */
+    /** @return array{0: Teacher, 1: Stay, 2: Student, 3: TrainingPosition, 4: Group} */
     private function makeScenario(): array
     {
         $admin  = (new Teacher(new PersonName('Admin', 'User')))->setUsername('admin.1')->setAdmin(true);
@@ -276,6 +311,6 @@ class StayDetailComponentTest extends ControllerTestCase
         $centre->setActiveAcademicYear($year);
         $this->flush();
 
-        return [$admin, $stay, $student, $position];
+        return [$admin, $stay, $student, $position, $group];
     }
 }

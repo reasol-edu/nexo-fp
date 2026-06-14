@@ -507,6 +507,79 @@ class StayVoterTest extends TestCase
         self::assertSame(VoterInterface::ACCESS_DENIED, $result);
     }
 
+    // ── VIEW_UNASSIGNED: acceso por rol ──────────────────────────────────────
+
+    public function testSupportsViewUnassignedWithStay(): void
+    {
+        $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->stay(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertNotSame(VoterInterface::ACCESS_ABSTAIN, $result);
+    }
+
+    public function testAbstainsWhenViewUnassignedReceivesCentre(): void
+    {
+        $result = $this->voter->vote($this->token($this->teacher(admin: true)), $this->centre(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_ABSTAIN, $result);
+    }
+
+    public function testViewUnassignedGrantedToCentreAdmin(): void
+    {
+        $teacher = $this->teacher();
+        $stay    = $this->stay();
+        $stay->getAcademicYear()->getEducationalCentre()->addAdmin($teacher);
+
+        $this->programmes->expects($this->never())->method('isCoordinatorOf');
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+
+        $result = $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testViewUnassignedGrantedToCoordinator(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(true);
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testViewUnassignedGrantedToFamilyHead(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(true);
+        $this->companies->expects($this->never())->method('hasLiaisonInCentre');
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testViewUnassignedGrantedToLiaison(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+        $this->companies->method('hasLiaisonInCentre')->willReturn(true);
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testViewUnassignedDeniedToGroupTeacher(): void
+    {
+        $this->programmes->method('isCoordinatorOf')->willReturn(false);
+        $this->families->method('isFamilyHeadOfProgramme')->willReturn(false);
+        $this->companies->method('hasLiaisonInCentre')->willReturn(false);
+
+        $result = $this->voter->vote($this->token($this->teacher()), $this->stay(), [StayVoter::VIEW_UNASSIGNED]);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $result);
+    }
+
     // ── CREATE: acceso por rol ───────────────────────────────────────────────
 
     public function testCreateGrantedToCentreAdmin(): void
