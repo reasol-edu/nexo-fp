@@ -177,6 +177,10 @@ class CompanyController extends AbstractController
             'vat_number'                => $company->getVatNumber(),
             'city'                      => $company->getCity(),
             'exceptional_circumstances' => $company->getExceptionalCircumstances() ?? '',
+            'representative_first_name' => $company->getRepresentativeFirstName() ?? '',
+            'representative_last_name'  => $company->getRepresentativeLastName() ?? '',
+            'representative_national_id' => $company->getRepresentativeNationalId() ?? '',
+            'representative_role'       => $company->getRepresentativeRole() ?? '',
         ];
 
         /** @var \App\Entity\Teacher[] $selectedLiaisons */
@@ -192,6 +196,10 @@ class CompanyController extends AbstractController
                 'vat_number'                => trim($request->request->getString('vat_number')),
                 'city'                      => trim($request->request->getString('city')),
                 'exceptional_circumstances' => trim($request->request->getString('exceptional_circumstances')),
+                'representative_first_name' => trim($request->request->getString('representative_first_name')),
+                'representative_last_name'  => trim($request->request->getString('representative_last_name')),
+                'representative_national_id' => trim($request->request->getString('representative_national_id')),
+                'representative_role'       => trim($request->request->getString('representative_role')),
             ];
 
             $errors = $this->validateCompany($values);
@@ -223,7 +231,11 @@ class CompanyController extends AbstractController
                 $company->setName($values['name'])
                     ->setVatNumber($values['vat_number'])
                     ->setCity($values['city'])
-                    ->setExceptionalCircumstances($values['exceptional_circumstances'] !== '' ? $values['exceptional_circumstances'] : null);
+                    ->setExceptionalCircumstances($values['exceptional_circumstances'] !== '' ? $values['exceptional_circumstances'] : null)
+                    ->setRepresentativeFirstName($values['representative_first_name'] !== '' ? $values['representative_first_name'] : null)
+                    ->setRepresentativeLastName($values['representative_last_name'] !== '' ? $values['representative_last_name'] : null)
+                    ->setRepresentativeNationalId($values['representative_national_id'] !== '' ? $values['representative_national_id'] : null)
+                    ->setRepresentativeRole($values['representative_role'] !== '' ? $values['representative_role'] : null);
 
                 foreach ($company->getLiaisons()->toArray() as $liaison) {
                     $company->removeLiaison($liaison);

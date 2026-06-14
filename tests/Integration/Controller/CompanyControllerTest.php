@@ -207,6 +207,74 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertSame('Malaga', $updated->getCity());
     }
 
+    public function testEditCompanyPostSavesRepresentative(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa Original', 'B12345678');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $crawler   = $this->client->request('GET', '/empresas/' . $companyId);
+        $token     = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId, [
+            '_token'                     => $token,
+            'name'                       => 'Empresa Original',
+            'vat_number'                 => 'B12345678',
+            'city'                       => 'Sevilla',
+            'representative_first_name'  => 'Carmen',
+            'representative_last_name'   => 'Serrano',
+            'representative_national_id' => '12345678Z',
+            'representative_role'        => 'Administradora',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        /** @var Company $updated */
+        $updated = $this->em->find(Company::class, $company->getId());
+        self::assertSame('Carmen', $updated->getRepresentativeFirstName());
+        self::assertSame('Serrano', $updated->getRepresentativeLastName());
+        self::assertSame('12345678Z', $updated->getRepresentativeNationalId());
+        self::assertSame('Administradora', $updated->getRepresentativeRole());
+    }
+
+    public function testEditCompanyPostWithEmptyRepresentativeStoresNull(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa Original', 'B12345678')
+            ->setRepresentativeFirstName('Carmen')
+            ->setRepresentativeRole('Gerente');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $crawler   = $this->client->request('GET', '/empresas/' . $companyId);
+        $token     = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId, [
+            '_token'                     => $token,
+            'name'                       => 'Empresa Original',
+            'vat_number'                 => 'B12345678',
+            'city'                       => 'Sevilla',
+            'representative_first_name'  => '',
+            'representative_last_name'   => '',
+            'representative_national_id' => '',
+            'representative_role'        => '',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        /** @var Company $updated */
+        $updated = $this->em->find(Company::class, $company->getId());
+        self::assertNull($updated->getRepresentativeFirstName());
+        self::assertNull($updated->getRepresentativeRole());
+    }
+
     public function testEditCompanyPostWithInvalidCsrfIsDenied(): void
     {
         $centre  = $this->makeCentre('41000001');

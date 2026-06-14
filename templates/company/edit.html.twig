@@ -105,6 +105,53 @@
 
             </div>
 
+            {# Representante de la empresa #}
+            <div class="pt-3 border-t border-gray-100">
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'company.representative.label'|trans({}, 'companies') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'company.representative.help'|trans({}, 'companies') }}</p>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-4">
+                    <div>
+                        <twig:Form:Field
+                            id="representative_first_name"
+                            name="representative_first_name"
+                            label="{{ 'company.field.representative_first_name'|trans({}, 'companies') }}"
+                            value="{{ errors is not empty ? app.request.request.get('representative_first_name') : values.representative_first_name }}"
+                            :error="errors.representativeFirstName ?? null"
+                        />
+                    </div>
+                    <div>
+                        <twig:Form:Field
+                            id="representative_last_name"
+                            name="representative_last_name"
+                            label="{{ 'company.field.representative_last_name'|trans({}, 'companies') }}"
+                            value="{{ errors is not empty ? app.request.request.get('representative_last_name') : values.representative_last_name }}"
+                            :error="errors.representativeLastName ?? null"
+                        />
+                    </div>
+                    <div>
+                        <twig:Form:Field
+                            id="representative_national_id"
+                            name="representative_national_id"
+                            label="{{ 'company.field.representative_national_id'|trans({}, 'companies') }}"
+                            value="{{ errors is not empty ? app.request.request.get('representative_national_id') : values.representative_national_id }}"
+                            :error="errors.representativeNationalId ?? null"
+                            :mono="true"
+                        />
+                    </div>
+                    <div>
+                        <twig:Form:Field
+                            id="representative_role"
+                            name="representative_role"
+                            label="{{ 'company.field.representative_role'|trans({}, 'companies') }}"
+                            value="{{ errors is not empty ? app.request.request.get('representative_role') : values.representative_role }}"
+                            :error="errors.representativeRole ?? null"
+                        />
+                    </div>
+                </div>
+            </div>
+
             {# Docentes de enlace #}
             <div class="pt-3 border-t border-gray-100">
                 <label class="block text-sm font-medium text-gray-700 mb-0.5">
