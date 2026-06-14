@@ -3,12 +3,12 @@
 
     body {
         font-family: 'DejaVu Sans', Arial, sans-serif;
-        font-size: 9pt;
-        color: #111827;
-        line-height: 1.4;
+        font-size: 6.5pt;
+        color: #1f2937;
+        line-height: 1.35;
     }
 
-    /* ── Cabecera de página ── */
+    /* ── Cabecera de página (no se reduce) ── */
     .page-header {
         border-bottom: 2px solid #5b21b6;
         padding-bottom: 10px;
@@ -31,54 +31,62 @@
     }
     .page-header .centre-info {
         font-size: 8.5pt;
-        color: #374151;
+        color: #5b21b6;
         margin-top: 4px;
         font-weight: bold;
+        letter-spacing: 0.3pt;
     }
 
     /* ── Secciones ── */
     h2 {
-        font-size: 10pt;
+        font-size: 7pt;
         font-weight: bold;
         color: #3b0764;
-        border-bottom: 1px solid #d1d5db;
-        padding-bottom: 4px;
-        margin-bottom: 8px;
-        margin-top: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.4pt;
+        border-bottom: 1px solid #c4b5fd;
+        padding-bottom: 3px;
+        margin-bottom: 7px;
+        margin-top: 13px;
     }
     h3 {
-        font-size: 9pt;
+        font-size: 6.5pt;
         font-weight: bold;
-        color: #1f2937;
-        background-color: #e5e7eb;
-        padding: 4px 8px;
-        margin-bottom: 6px;
-        margin-top: 10px;
+        color: #4c1d95;
+        background-color: #f3f0fb;
+        border-left: 3px solid #7c3aed;
+        padding: 3px 7px;
+        margin-bottom: 5px;
+        margin-top: 9px;
     }
 
-    /* ── Grid de estadísticas ── */
+    /* ── Rejilla de estadísticas ── */
     .stats-grid {
         width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 14px;
+        border-collapse: separate;
+        border-spacing: 5px 0;
+        margin-bottom: 13px;
     }
     .stats-grid td {
         width: 25%;
-        border: 1px solid #d1d5db;
-        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        border-top: 2px solid #7c3aed;
+        padding: 7px 9px;
         text-align: center;
         vertical-align: middle;
-        background-color: #f9fafb;
+        background-color: #fbfaff;
     }
     .stats-grid .stat-value {
-        font-size: 14pt;
+        font-size: 10pt;
         font-weight: bold;
-        color: #111827;
+        color: #4c1d95;
         display: block;
     }
     .stats-grid .stat-label {
-        font-size: 7.5pt;
-        color: #374151;
+        font-size: 5pt;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.3pt;
         display: block;
         margin-top: 2px;
     }
@@ -87,54 +95,71 @@
     table.data-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 10px;
-        font-size: 8pt;
+        margin-bottom: 9px;
+        font-size: 5.5pt;
+    }
+    table.data-table thead {
+        display: table-header-group;
     }
     table.data-table thead tr {
         background-color: #4c1d95;
     }
     table.data-table thead th {
-        padding: 6px 7px;
+        padding: 4px 6px;
         text-align: left;
         vertical-align: middle;
         font-weight: bold;
+        font-size: 5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.3pt;
         color: #ffffff;
     }
+    table.data-table tbody tr {
+        page-break-inside: avoid;
+    }
     table.data-table tbody tr:nth-child(even) {
-        background-color: #f3f4f6;
+        background-color: #faf9fc;
     }
     table.data-table tbody tr:nth-child(odd) {
         background-color: #ffffff;
     }
     table.data-table tbody td {
-        padding: 7px 7px;
-        border-bottom: 1px solid #e5e7eb;
-        vertical-align: middle;
-        color: #111827;
+        padding: 4px 6px;
+        border-bottom: 1px solid #eceaf3;
+        vertical-align: top;
+        line-height: 1.25;
+        color: #1f2937;
+    }
+
+    /* ── Texto secundario dentro de una celda ── */
+    .cell-sub {
+        color: #6b7280;
+        font-size: 5pt;
     }
 
     /* ── Estados de fila (fondo claro, texto negro legible) ── */
-    tr.row-signed td   { background-color: #d0f3d9 !important; color: #111827 !important; }
-    tr.row-unsigned td { background-color: #fdfbc9 !important; color: #111827 !important; }
-    tr.row-nopos td    { background-color: #fefefe !important; color: #111827 !important; }
+    tr.row-signed td   { background-color: #d8f3e0 !important; color: #1f2937 !important; }
+    tr.row-unsigned td { background-color: #fdfbd0 !important; color: #1f2937 !important; }
+    tr.row-nopos td    { background-color: #ffffff !important; color: #1f2937 !important; }
 
     /* ── Badges ── */
     .badge {
         display: inline-block;
-        padding: 1px 6px;
-        border-radius: 10px;
-        font-size: 7pt;
+        padding: 1px 5px;
+        border-radius: 8px;
+        font-size: 5pt;
         font-weight: bold;
-        color: #111827;
+        letter-spacing: 0.2pt;
+        color: #1f2937;
     }
-    .badge-green  { background-color: #86efac; }
-    .badge-amber  { background-color: #fcd34d; }
-    .badge-red    { background-color: #fca5a5; }
-    .badge-blue   { background-color: #93c5fd; }
-    .badge-gray   { background-color: #d1d5db; }
-    .badge-purple { background-color: #c4b5fd; }
+    .badge-green  { background-color: #bbf7d0; }
+    .badge-amber  { background-color: #fde68a; }
+    .badge-red    { background-color: #fecaca; }
+    .badge-blue   { background-color: #bfdbfe; }
+    .badge-gray   { background-color: #e5e7eb; }
+    .badge-purple { background-color: #ddd6fe; }
 
-    /* ── Pie de página ── */
+    /* ── Pie de página (no se reduce) ── */
     .pdf-footer {
         font-size: 7.5pt;
         color: #6b7280;

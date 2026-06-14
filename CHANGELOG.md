@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rediseñado el informe PDF de la estancia: el contenido se muestra más compacto para que quepan más datos por página (manteniendo el tamaño del encabezamiento y del pie), y la columna «Empresa / Centro de trabajo» incluye ahora el CIF y el representante (nombre, DNI y cargo) y la de «Tutor/a dual de empresa» muestra el DNI del tutor
 - Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»
 - Trasladados a los ficheros de traducción los textos que estaban fijados en plantillas y comandos (tooltips de las gráficas del panel y del listado de estancias, pie de página del informe PDF y descripción del comando `app:setup`), de modo que toda la interfaz sea traducible
 

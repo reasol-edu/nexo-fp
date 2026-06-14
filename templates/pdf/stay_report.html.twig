@@ -8,9 +8,9 @@
 {% macro company_cell(tp) %}
     {% set company = tp.workcenter.company %}
     {{ company.name }}<br>
-    <span style="color:#6b7280;font-size:7.5pt">{{ 'stays.report.company_vat'|trans({}, 'stays') }}: {{ company.vatNumber }}</span><br>
+    <span class="cell-sub">{{ 'stays.report.company_vat'|trans({}, 'stays') }}: {{ company.vatNumber }}</span><br>
     {% if company.representativeFirstName or company.representativeLastName or company.representativeNationalId or company.representativeRole %}
-        <span style="color:#6b7280;font-size:7.5pt">
+        <span class="cell-sub">
             {{- 'stays.report.representative'|trans({}, 'stays') }}:
             {%- if company.representativeLastName or company.representativeFirstName %}
                 {{- ' ' }}{{ company.representativeLastName }}
@@ -21,12 +21,12 @@
             {%- if company.representativeRole %} · {{ company.representativeRole }}{% endif -%}
         </span><br>
     {% endif %}
-    <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+    <span class="cell-sub">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
 {% endmacro %}
 
 {% macro mentor_cell(tp) %}
     {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}<br>
-    <span style="color:#6b7280;font-size:7.5pt">{{ 'stays.report.national_id'|trans({}, 'stays') }}: {{ tp.workplaceMentor.nationalIdNumber }}</span>
+    <span class="cell-sub">{{ 'stays.report.national_id'|trans({}, 'stays') }}: {{ tp.workplaceMentor.nationalIdNumber }}</span>
 {% endmacro %}
 
 <body>
@@ -228,7 +228,7 @@
                 {% for tp in unassigned_positions %}
                     <tr>
                         <td>{{ tp.workcenter.company.name }}</td>
-                        <td>{{ tp.workcenter.name }}<br><span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.city }}</span></td>
+                        <td>{{ tp.workcenter.name }}<br><span class="cell-sub">{{ tp.workcenter.city }}</span></td>
                         <td>
                             {% for py in tp.programmeYears %}
                                 <span class="badge badge-purple">{{ py.name }}</span>
