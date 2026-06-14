@@ -534,6 +534,12 @@ class AppFixtures extends Fixture
         $workerSurnames = ['Vega', 'Cano', 'Bravo', 'Pardo', 'Rueda', 'Oliva', 'Mena', 'Cruz',
                            'Salas', 'Nieto', 'Yuste', 'Lagos'];
 
+        $repFirstNames = ['Carmen', 'Andrés', 'Lucía', 'Joaquín', 'Pilar', 'Tomás',
+                          'Rosa', 'Ignacio', 'Marta', 'Álvaro', 'Inés', 'Raúl'];
+        $repLastNames  = ['Serrano', 'Gallego', 'Ferrer', 'Aguilar', 'Cordero', 'Vidal',
+                          'Roldán', 'Calvo', 'Prieto', 'Sáez', 'Bermúdez', 'Castaño'];
+        $repRoles      = ['Administrador/a', 'Gerente', 'Responsable de RR. HH.', 'Director/a'];
+
         $companies   = [];
         $workcenters = [];
 
@@ -543,6 +549,15 @@ class AppFixtures extends Fixture
                 ->setVatNumber($cif)
                 ->setCity($city)
                 ->setEducationalCentre($centre);
+
+            // Una de cada cuatro empresas se deja sin representante (campo opcional).
+            if ($idx % 4 !== 3) {
+                $company
+                    ->setRepresentativeFirstName($repFirstNames[$idx % count($repFirstNames)])
+                    ->setRepresentativeLastName($repLastNames[$idx % count($repLastNames)])
+                    ->setRepresentativeNationalId(sprintf('%08dR', $idx + ($isMonterrubio2 ? 30000000 : 40000000)))
+                    ->setRepresentativeRole($repRoles[$idx % count($repRoles)]);
+            }
 
             // Assign liaisons
             foreach ($liaisonGroups as [$from, $to, $liaisonUsernames]) {

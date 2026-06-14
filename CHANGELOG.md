@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales
+
 ### Changed
 
 - Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»

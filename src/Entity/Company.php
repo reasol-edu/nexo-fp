@@ -37,6 +37,22 @@ class Company
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $exceptionalCircumstances = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
+    private ?string $representativeFirstName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
+    private ?string $representativeLastName = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Length(max: 20)]
+    private ?string $representativeNationalId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
+    private ?string $representativeRole = null;
+
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private EducationalCentre $educationalCentre;
@@ -106,6 +122,54 @@ class Company
     public function setExceptionalCircumstances(?string $exceptionalCircumstances): static
     {
         $this->exceptionalCircumstances = $exceptionalCircumstances;
+
+        return $this;
+    }
+
+    public function getRepresentativeFirstName(): ?string
+    {
+        return $this->representativeFirstName;
+    }
+
+    public function setRepresentativeFirstName(?string $representativeFirstName): static
+    {
+        $this->representativeFirstName = $representativeFirstName;
+
+        return $this;
+    }
+
+    public function getRepresentativeLastName(): ?string
+    {
+        return $this->representativeLastName;
+    }
+
+    public function setRepresentativeLastName(?string $representativeLastName): static
+    {
+        $this->representativeLastName = $representativeLastName;
+
+        return $this;
+    }
+
+    public function getRepresentativeNationalId(): ?string
+    {
+        return $this->representativeNationalId;
+    }
+
+    public function setRepresentativeNationalId(?string $representativeNationalId): static
+    {
+        $this->representativeNationalId = $representativeNationalId;
+
+        return $this;
+    }
+
+    public function getRepresentativeRole(): ?string
+    {
+        return $this->representativeRole;
+    }
+
+    public function setRepresentativeRole(?string $representativeRole): static
+    {
+        $this->representativeRole = $representativeRole;
 
         return $this;
     }
