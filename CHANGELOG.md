@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales
+- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales. El representante aparece también en la exportación CSV de empresas
 
 ### Changed
 

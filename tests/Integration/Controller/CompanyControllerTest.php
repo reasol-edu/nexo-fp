@@ -389,7 +389,11 @@ class CompanyControllerTest extends ControllerTestCase
     {
         $centre  = $this->makeCentre('41000001');
         $teacher = $this->makeAdmin('admin.1');
-        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678')
+            ->setRepresentativeFirstName('Carmen')
+            ->setRepresentativeLastName('Serrano')
+            ->setRepresentativeNationalId('99999999R')
+            ->setRepresentativeRole('Administradora');
         $worker  = $this->makeWorker('12345678A', 'Ana', 'López');
         $company->addWorker($worker);
         $this->persist($centre, $teacher, $worker, $company);
@@ -405,6 +409,9 @@ class CompanyControllerTest extends ControllerTestCase
         $content = $this->getStreamedContent();
         self::assertStringContainsString('Empresa S.L.', $content);
         self::assertStringContainsString('B12345678', $content);
+        self::assertStringContainsString('Serrano, Carmen', $content);
+        self::assertStringContainsString('99999999R', $content);
+        self::assertStringContainsString('Administradora', $content);
     }
 
     public function testExportAppliesSearchFilter(): void

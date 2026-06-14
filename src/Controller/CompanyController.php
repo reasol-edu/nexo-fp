@@ -141,6 +141,15 @@ class CompanyController extends AbstractController
             }
             sort($liaisonNames);
 
+            $repLast  = $company->getRepresentativeLastName();
+            $repFirst = $company->getRepresentativeFirstName();
+            $repName  = match (true) {
+                $repLast !== null && $repFirst !== null => $repLast . ', ' . $repFirst,
+                $repLast !== null                       => $repLast,
+                $repFirst !== null                      => $repFirst,
+                default                                 => '',
+            };
+
             $rows[] = [
                 $company->getName(),
                 $company->getVatNumber(),
@@ -148,6 +157,9 @@ class CompanyController extends AbstractController
                 $row['workcenter_count'],
                 count($company->getWorkers()),
                 implode('; ', $liaisonNames),
+                $repName,
+                $company->getRepresentativeNationalId() ?? '',
+                $company->getRepresentativeRole() ?? '',
             ];
         }
 
@@ -160,6 +172,9 @@ class CompanyController extends AbstractController
                 $this->t('companies.export.col.workcenters'),
                 $this->t('companies.export.col.workers'),
                 $this->t('companies.liaisons'),
+                $this->t('companies.export.col.representative'),
+                $this->t('companies.export.col.representative_id'),
+                $this->t('companies.export.col.representative_role'),
             ],
             $rows,
         );

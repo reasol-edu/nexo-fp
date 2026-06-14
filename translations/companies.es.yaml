@@ -18,6 +18,9 @@ companies.back: 'Volver a empresas'
 companies.export: 'Exportar CSV'
 companies.export.col.workcenters: 'Centros de trabajo'
 companies.export.col.workers: 'Empleados'
+companies.export.col.representative: 'Representante'
+companies.export.col.representative_id: 'DNI/NIE del representante'
+companies.export.col.representative_role: 'Cargo del representante'
 
 # Formulario de empresa
 company.new.title: 'Nueva empresa'
