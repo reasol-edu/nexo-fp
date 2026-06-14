@@ -4,7 +4,33 @@
     <meta charset="UTF-8">
     {% include 'pdf/_styles.html.twig' %}
 </head>
+
+{% macro company_cell(tp) %}
+    {% set company = tp.workcenter.company %}
+    {{ company.name }}<br>
+    <span style="color:#6b7280;font-size:7.5pt">{{ 'stays.report.company_vat'|trans({}, 'stays') }}: {{ company.vatNumber }}</span><br>
+    {% if company.representativeFirstName or company.representativeLastName or company.representativeNationalId or company.representativeRole %}
+        <span style="color:#6b7280;font-size:7.5pt">
+            {{- 'stays.report.representative'|trans({}, 'stays') }}:
+            {%- if company.representativeLastName or company.representativeFirstName %}
+                {{- ' ' }}{{ company.representativeLastName }}
+                {%- if company.representativeLastName and company.representativeFirstName %}, {% endif -%}
+                {{ company.representativeFirstName }}
+            {%- endif -%}
+            {%- if company.representativeNationalId %} · {{ company.representativeNationalId }}{% endif -%}
+            {%- if company.representativeRole %} · {{ company.representativeRole }}{% endif -%}
+        </span><br>
+    {% endif %}
+    <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+{% endmacro %}
+
+{% macro mentor_cell(tp) %}
+    {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}<br>
+    <span style="color:#6b7280;font-size:7.5pt">{{ 'stays.report.national_id'|trans({}, 'stays') }}: {{ tp.workplaceMentor.nationalIdNumber }}</span>
+{% endmacro %}
+
 <body>
+    {% import _self as cells %}
 
     <htmlpageheader name="stayReportHeader">
         <div class="page-header">
@@ -82,8 +108,7 @@
                         <td>{{ student.name.lastName }}, {{ student.name.firstName }}</td>
                         <td>
                             {% if tp and tp.workcenter %}
-                                {{ tp.workcenter.company.name }}<br>
-                                <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+                                {{ cells.company_cell(tp) }}
                             {% else %}
                                 <span style="color:#9ca3af">—</span>
                             {% endif %}
@@ -97,7 +122,7 @@
                         </td>
                         <td>
                             {% if tp and tp.workplaceMentor %}
-                                {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}
+                                {{ cells.mentor_cell(tp) }}
                             {% else %}
                                 <span style="color:#9ca3af">—</span>
                             {% endif %}
@@ -150,8 +175,7 @@
                         <td>{{ student.name.lastName }}, {{ student.name.firstName }}</td>
                         <td>
                             {% if tp and tp.workcenter %}
-                                {{ tp.workcenter.company.name }}<br>
-                                <span style="color:#6b7280;font-size:7.5pt">{{ tp.workcenter.name }}, {{ tp.workcenter.city }}</span>
+                                {{ cells.company_cell(tp) }}
                             {% else %}<span style="color:#9ca3af">—</span>{% endif %}
                         </td>
                         <td>
@@ -161,7 +185,7 @@
                         </td>
                         <td>
                             {% if tp and tp.workplaceMentor %}
-                                {{ tp.workplaceMentor.name.lastName }}, {{ tp.workplaceMentor.name.firstName }}
+                                {{ cells.mentor_cell(tp) }}
                             {% else %}<span style="color:#9ca3af">—</span>{% endif %}
                         </td>
                         <td>

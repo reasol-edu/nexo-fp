@@ -18,6 +18,7 @@ use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
+use App\Entity\Worker;
 use App\Tests\Integration\ControllerTestCase;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 
@@ -1098,6 +1099,46 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('GET', '/estancias/' . $oldStay->getId()->toRfc4122() . '/informe');
 
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testReportTemplateShowsCompanyExtrasAndMentorId(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre)
+            ->setRepresentativeFirstName('Carmen')
+            ->setRepresentativeLastName('Serrano')
+            ->setRepresentativeNationalId('99999999R')
+            ->setRepresentativeRole('Administradora');
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $mentor     = (new Worker(new PersonName('Luis', 'Prieto')))->setNationalIdNumber('11111111H');
+        $position->setWorkplaceMentor($mentor);
+        [$level, $group, $student] = $this->makeGroupWithStudent($programme);
+        $stay->addStudent($student);
+        $position->setStudent($student);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $mentor, $position, $level, $group, $student);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+
+        $html = self::getContainer()->get('twig')->render('pdf/stay_report.html.twig', [
+            'stay'                 => $stay,
+            'centre'               => $centre,
+            'academic_year'        => $year,
+            'stats'                => [],
+            'by_group'             => [['group' => $group, 'students' => [$student]]],
+            'ungrouped_students'   => [],
+            'student_position_map' => [$student->getId()->toRfc4122() => $position],
+            'unassigned_positions' => [],
+        ]);
+
+        // Columna Empresa: CIF + representante (nombre/DNI/cargo)
+        self::assertStringContainsString('B12345678', $html);
+        self::assertStringContainsString('Serrano, Carmen', $html);
+        self::assertStringContainsString('99999999R', $html);
+        self::assertStringContainsString('Administradora', $html);
+        // Columna Tutor/a dual de empresa: DNI del mentor
+        self::assertStringContainsString('11111111H', $html);
     }
 
     // ── email notifications ───────────────────────────────────────────────────

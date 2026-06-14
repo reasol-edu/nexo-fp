@@ -188,6 +188,9 @@ stays.report.col.state: 'Estado'
 stays.report.col.signed: 'Firmado'
 stays.report.col.levels: 'Niveles'
 stays.report.col.notes: 'Observaciones'
+stays.report.company_vat: 'CIF'
+stays.report.representative: 'Repr.'
+stays.report.national_id: 'DNI'
 
 # Exportación CSV
 stays.export.btn: 'Exportar CSV'
