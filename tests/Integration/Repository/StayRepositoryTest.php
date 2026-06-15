@@ -936,6 +936,73 @@ class StayRepositoryTest extends RepositoryTestCase
         self::assertSame('Informática', $rows[0]['family_name']);
     }
 
+    // ── countStudentsByFamilyState ───────────────────────────────────────────
+
+    public function testCountStudentsByFamilyStateClassifiesStudents(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000090')->setName('IES 41000090')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $prog   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $stay   = $this->makeStay($year, $prog, 'FFEOE DAM 90');
+
+        $sDraft      = (new Student(new PersonName('Bo', 'Rrador')))->setStudentId('S-90A');
+        $sPending    = (new Student(new PersonName('Pen', 'Diente')))->setStudentId('S-90B');
+        $sRegistered = (new Student(new PersonName('Re', 'Gistrado')))->setStudentId('S-90C');
+        $sSigned     = (new Student(new PersonName('Fir', 'Mado')))->setStudentId('S-90D');
+        $sUnassigned = (new Student(new PersonName('Sin', 'Plaza')))->setStudentId('S-90E');
+
+        $pDraft      = (new TrainingPosition())->setStay($stay)->setStudent($sDraft)->setState(TrainingPositionState::DRAFT);
+        $pPending    = (new TrainingPosition())->setStay($stay)->setStudent($sPending)->setState(TrainingPositionState::PENDING);
+        $pRegistered = (new TrainingPosition())->setStay($stay)->setStudent($sRegistered)->setState(TrainingPositionState::DONE)->setSigned(false);
+        $pSigned     = (new TrainingPosition())->setStay($stay)->setStudent($sSigned)->setState(TrainingPositionState::DONE)->setSigned(true);
+
+        $this->persist($centre, $year, $family, $prog, $stay,
+            $sDraft, $sPending, $sRegistered, $sSigned, $sUnassigned,
+            $pDraft, $pPending, $pRegistered, $pSigned);
+        $stay->addStudent($sDraft);
+        $stay->addStudent($sPending);
+        $stay->addStudent($sRegistered);
+        $stay->addStudent($sSigned);
+        $stay->addStudent($sUnassigned);
+        $this->flush();
+
+        $rows = $this->repo->countStudentsByFamilyState($year);
+
+        self::assertCount(1, $rows);
+        self::assertSame('Informática', $rows[0]['family_name']);
+        self::assertSame(1, $rows[0]['unassigned']);
+        self::assertSame(1, $rows[0]['draft']);
+        self::assertSame(1, $rows[0]['pending']);
+        self::assertSame(1, $rows[0]['registered']);
+        self::assertSame(1, $rows[0]['signed']);
+    }
+
+    public function testCountStudentsByFamilyStateViewerFilterRestrictsResults(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000091')->setName('IES 41000091')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $head   = (new Teacher(new PersonName('Jefa', 'Fam')))->setUsername('head.family.91');
+        $famA   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year)->setHead($head);
+        $famB   = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
+        $progA  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($famA);
+        $progB  = (new Programme())->setName('Enfermería')->setAcademicYear($year)->setProfessionalFamily($famB);
+        $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM 91');
+        $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermería 91');
+        $sA     = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-91A');
+        $sB     = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-91B');
+        $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB, $sA, $sB);
+        $stayA->addStudent($sA);
+        $stayB->addStudent($sB);
+        $this->flush();
+
+        $rows = $this->repo->countStudentsByFamilyState($year, $head);
+
+        self::assertCount(1, $rows);
+        self::assertSame('Informática', $rows[0]['family_name']);
+        self::assertSame(1, $rows[0]['unassigned']);
+    }
+
     // ── findSignedDatesForYear ───────────────────────────────────────────────
 
     public function testFindSignedDatesForYearReturnsSignedDates(): void

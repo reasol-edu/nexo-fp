@@ -99,6 +99,34 @@ class DashboardControllerTest extends ControllerTestCase
         self::assertStringNotContainsString('Nueva empresa', $crawler->html());
     }
 
+    // ── gráficos por familia (solo administradores) ────────────────────────────
+
+    public function testDashboardShowsByFamilyChartsForCentreAdmin(): void
+    {
+        [$centre, $admin] = $this->makeCentreWithStay('41000006', 'ana.admin.6');
+        $this->loginAs($admin, $centre);
+
+        $crawler = $this->client->request('GET', '/');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Estudiantes por familia profesional', $crawler->html());
+        self::assertStringContainsString('Puestos por familia profesional', $crawler->html());
+    }
+
+    public function testDashboardHidesByFamilyChartsForTeacherWithoutPermissions(): void
+    {
+        [$centre, , ] = $this->makeCentreWithStay('41000007', 'ana.admin.7');
+        $teacher = (new Teacher(new PersonName('Sin', 'Permisos')))->setUsername('teacher.noperm.7');
+        $this->persist($teacher);
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Estudiantes por familia profesional', $crawler->html());
+        self::assertStringNotContainsString('Puestos por familia profesional', $crawler->html());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**

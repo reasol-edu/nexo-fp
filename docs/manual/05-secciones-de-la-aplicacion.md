@@ -11,6 +11,17 @@ creados, estudiantes inscritos y el estado general de las asignaciones. Cada tar
 con su sección correspondiente y, según los permisos del docente, se muestran **accesos rápidos** para
 crear una estancia, importar estudiantes o registrar una empresa.
 
+La gráfica **Estado de los puestos** desglosa los puestos del curso en cuatro categorías: *Borrador*,
+*Pendiente de Séneca*, *Registrado en Séneca* (registrado pero aún sin firmar) y *Firmado* (registrado en
+Séneca y con el convenio firmado).
+
+Los **administradores globales y de centro** disponen además de dos gráficas por familia profesional:
+**Estudiantes por familia profesional**, que clasifica al alumnado de las estancias según el estado de su
+puesto (sin asignar, borrador, pendiente, registrado y firmado), y **Puestos por familia profesional**,
+con el total de puestos, los ocupados y los firmados. El resto de docentes no ven estas dos gráficas.
+
+![Gráficas por familia profesional: estudiantes por estado y puestos totales, ocupados y firmados](img/inicio-familias.png)
+
 Al final del panel, el bloque **Pendientes** lista las estancias activas que requieren atención:
 estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa, y puestos
 finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.

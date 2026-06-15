@@ -162,13 +162,15 @@
             {% set total_pos = stats.state_draft + stats.state_pending + stats.state_done %}
 
             {% if total_pos > 0 %}
-                {% set draft_len   = (stats.state_draft   / total_pos) * circum %}
-                {% set pending_len = (stats.state_pending / total_pos) * circum %}
-                {% set done_len    = (stats.state_done    / total_pos) * circum %}
+                {% set draft_len      = (stats.state_draft          / total_pos) * circum %}
+                {% set pending_len    = (stats.state_pending        / total_pos) * circum %}
+                {% set registered_len = (stats.state_done_unsigned  / total_pos) * circum %}
+                {% set signed_len     = (stats.state_done_signed    / total_pos) * circum %}
 
-                {% set draft_pct   = (stats.state_draft   / total_pos * 100)|round %}
-                {% set pending_pct = (stats.state_pending / total_pos * 100)|round %}
-                {% set done_pct    = (stats.state_done    / total_pos * 100)|round %}
+                {% set draft_pct      = (stats.state_draft          / total_pos * 100)|round %}
+                {% set pending_pct    = (stats.state_pending        / total_pos * 100)|round %}
+                {% set registered_pct = (stats.state_done_unsigned  / total_pos * 100)|round %}
+                {% set signed_pct     = (stats.state_done_signed    / total_pos * 100)|round %}
             {% endif %}
 
             <div class="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-around">
@@ -184,13 +186,23 @@
 
                         {% if total_pos > 0 %}
                         <g transform="rotate(-90 60 60)">
-                            {# DONE — verde #}
-                            {% if done_len > 0 %}
+                            {# FIRMADO (registrado en Séneca y firmado) — plum #}
+                            {% if signed_len > 0 %}
+                            <circle cx="60" cy="60" r="50"
+                                    fill="none"
+                                    stroke="#876baf"
+                                    stroke-width="14"
+                                    stroke-dasharray="{{ signed_len }} {{ circum - signed_len }}"
+                                    stroke-dashoffset="{{ -(draft_len + pending_len + registered_len) }}"
+                                    stroke-linecap="butt"/>
+                            {% endif %}
+                            {# REGISTRADO (en Séneca, sin firmar) — verde #}
+                            {% if registered_len > 0 %}
                             <circle cx="60" cy="60" r="50"
                                     fill="none"
                                     stroke="#10b981"
                                     stroke-width="14"
-                                    stroke-dasharray="{{ done_len }} {{ circum - done_len }}"
+                                    stroke-dasharray="{{ registered_len }} {{ circum - registered_len }}"
                                     stroke-dashoffset="{{ -(draft_len + pending_len) }}"
                                     stroke-linecap="butt"/>
                             {% endif %}
@@ -233,7 +245,7 @@
                 <div class="flex flex-col gap-3 min-w-0">
                     {% if total_pos > 0 %}
                     <div class="flex items-center gap-3">
-                        <span class="h-3 w-3 shrink-0 rounded-sm bg-amber-400"></span>
+                        <span class="h-3 w-3 shrink-0 rounded-sm bg-amber-500"></span>
                         <div class="min-w-0">
                             <p class="text-sm font-medium text-gray-700">{{ 'state_draft'|trans({}, 'dashboard') }}</p>
                             <p class="text-xs text-gray-400">{{ 'legend_positions'|trans({'%count%': stats.state_draft}, 'dashboard') }} · {{ draft_pct }}%</p>
@@ -250,24 +262,18 @@
                         <span class="h-3 w-3 shrink-0 rounded-sm bg-emerald-500"></span>
                         <div class="min-w-0">
                             <p class="text-sm font-medium text-gray-700">{{ 'state_done'|trans({}, 'dashboard') }}</p>
-                            <p class="text-xs text-gray-400">{{ 'legend_positions'|trans({'%count%': stats.state_done}, 'dashboard') }} · {{ done_pct }}%</p>
+                            <p class="text-xs text-gray-400">{{ 'legend_positions'|trans({'%count%': stats.state_done_unsigned}, 'dashboard') }} · {{ registered_pct }}%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="h-3 w-3 shrink-0 rounded-sm bg-plum-500"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-700">{{ 'state_signed'|trans({}, 'dashboard') }}</p>
+                            <p class="text-xs text-gray-400">{{ 'legend_positions'|trans({'%count%': stats.state_done_signed}, 'dashboard') }} · {{ signed_pct }}%</p>
                         </div>
                     </div>
                     {% else %}
                     <p class="text-sm text-gray-400 italic">{{ 'no_positions'|trans({}, 'dashboard') }}</p>
-                    {% endif %}
-
-                    {# Puestos firmados #}
-                    {% if stats.total_positions > 0 %}
-                    <div class="pt-2 mt-1 border-t border-gray-100">
-                        <div class="flex items-center gap-2 text-xs text-gray-500">
-                            {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5 text-plum-500'}) }}
-                            <span>
-                                <strong class="font-semibold text-gray-700">{{ stats.signed }}</strong>
-                                {{ 'positions_signed'|trans({}, 'dashboard') }}
-                            </span>
-                        </div>
-                    </div>
                     {% endif %}
                 </div>
 
@@ -351,16 +357,50 @@
 
     </div>
 
-    {# ── Gráficos: puestos por familia + firmas por mes ───────────────────── #}
-    {% from 'dashboard/_charts.html.twig' import family_bars, signatures_columns %}
+    {# ── Gráficos por familia (solo administradores globales y de centro) ──── #}
+    {% if can_students_section %}
+    {% from 'dashboard/_charts.html.twig' import family_bars, student_state_bars %}
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
 
+        {# Estudiantes en estancias por familia profesional #}
         <div class="lg:col-span-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h2 class="text-sm font-semibold text-gray-700">
+                    {{ 'students_by_family'|trans({}, 'dashboard') }}
+                </h2>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500">
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block h-2.5 w-4 rounded-sm bg-gray-400"></span>
+                        {{ 'chart_legend_unassigned'|trans({}, 'dashboard') }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block h-2.5 w-4 rounded-sm bg-amber-500"></span>
+                        {{ 'state_draft'|trans({}, 'dashboard') }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block h-2.5 w-4 rounded-sm bg-blue-500"></span>
+                        {{ 'state_pending'|trans({}, 'dashboard') }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block h-2.5 w-4 rounded-sm bg-emerald-500"></span>
+                        {{ 'state_done'|trans({}, 'dashboard') }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block h-2.5 w-4 rounded-sm bg-plum-500"></span>
+                        {{ 'state_signed'|trans({}, 'dashboard') }}
+                    </span>
+                </div>
+            </div>
+            {{ student_state_bars(studentFamilyStats) }}
+        </div>
+
+        {# Puestos por familia profesional #}
+        <div class="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h2 class="text-sm font-semibold text-gray-700">
                     {{ 'positions_by_family'|trans({}, 'dashboard') }}
                 </h2>
-                <div class="flex items-center gap-3 text-xs text-gray-500">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500">
                     <span class="flex items-center gap-1.5">
                         <span class="inline-block h-2.5 w-4 rounded-sm bg-gray-200"></span>
                         {{ 'chart_legend_total'|trans({}, 'dashboard') }}
@@ -378,14 +418,8 @@
             {{ family_bars(familyStats) }}
         </div>
 
-        <div class="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-            <h2 class="text-sm font-semibold text-gray-700 mb-4">
-                {{ 'signatures_by_month'|trans({}, 'dashboard') }}
-            </h2>
-            {{ signatures_columns(signaturesByMonth) }}
-        </div>
-
     </div>
+    {% endif %}
 
     {# ── Pendientes ────────────────────────────────────────────────────────── #}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">

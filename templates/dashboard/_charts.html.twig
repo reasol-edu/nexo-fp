@@ -1,7 +1,7 @@
 {#
  # Macros for server-side SVG charts on the dashboard.
- # family_bars   – horizontal bars: total (gray) / occupied (amber) / signed (emerald)
- # signatures_columns – monthly column sparkline (indigo)
+ # family_bars        – horizontal bars: total (gray) / occupied (amber) / signed (emerald)
+ # student_state_bars – stacked horizontal bars of students by family and position state
  #}
 
 {%- macro family_bars(stats) -%}
@@ -65,34 +65,58 @@
     {%- endif -%}
 {%- endmacro -%}
 
-{%- macro signatures_columns(months) -%}
-    {%- if months|length == 0 -%}
+{%- macro student_state_bars(stats) -%}
+    {%- set segments = [
+        {'key': 'unassigned', 'color': '#9ca3af', 'tooltip': 'chart_tooltip_unassigned'},
+        {'key': 'draft',      'color': '#f59e0b', 'tooltip': 'chart_tooltip_draft'},
+        {'key': 'pending',    'color': '#3b82f6', 'tooltip': 'chart_tooltip_pending'},
+        {'key': 'registered', 'color': '#10b981', 'tooltip': 'chart_tooltip_registered'},
+        {'key': 'signed',     'color': '#876baf', 'tooltip': 'chart_tooltip_signed_student'},
+    ] -%}
+    {%- set maxTotal = 0 -%}
+    {%- for stat in stats -%}
+        {%- set rowTotal = stat.unassigned + stat.draft + stat.pending + stat.registered + stat.signed -%}
+        {%- if rowTotal > maxTotal -%}{%- set maxTotal = rowTotal -%}{%- endif -%}
+    {%- endfor -%}
+
+    {%- if stats|length == 0 or maxTotal == 0 -%}
         <p class="py-8 text-center text-sm text-gray-400">
-            {{- 'no_signatures_data'|trans({}, 'dashboard') -}}
+            {{- 'no_student_data'|trans({}, 'dashboard') -}}
         </p>
     {%- else -%}
-        {%- set maxCount = 0 -%}
-        {%- for m in months -%}
-            {%- if m.count > maxCount -%}{%- set maxCount = m.count -%}{%- endif -%}
-        {%- endfor -%}
-        {%- set n = months|length -%}
-        {%- set svgW = n * 28 + 16 -%}
-        <svg viewBox="0 0 {{ svgW }} 88" xmlns="http://www.w3.org/2000/svg"
-             class="w-full" role="img" aria-label="{{ 'signatures_by_month'|trans({}, 'dashboard') }}">
-            {%- for m in months -%}
-                {%- set bx = loop.index0 * 28 + 6 -%}
-                {%- set bh = maxCount > 0 ? m.count / maxCount * 60 : 0 -%}
-                {%- set by = 64 - bh -%}
-                {%- if bh > 0 -%}
-                    <rect x="{{ bx }}" y="{{ by }}" width="16" height="{{ bh }}" rx="2" fill="#818cf8">
-                        <title>{{ m.label }}: {{ 'chart_tooltip_signatures'|trans({'%count%': m.count}, 'dashboard') }}</title>
-                    </rect>
-                {%- else -%}
-                    <rect x="{{ bx }}" y="63" width="16" height="1" fill="#e5e7eb"/>
-                {%- endif -%}
-                <text x="{{ bx + 8 }}" y="80" text-anchor="middle" font-size="8" fill="#9ca3af">
-                    {{- m.label -}}
+        {%- set n = stats|length -%}
+        {%- set svgH = n * 32 + 16 -%}
+        <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
+             class="w-full" role="img" aria-label="{{ 'students_by_family'|trans({}, 'dashboard') }}">
+            {%- for stat in stats -%}
+                {%- set ry = loop.index0 * 32 + 8 -%}
+                {%- set rowTotal = stat.unassigned + stat.draft + stat.pending + stat.registered + stat.signed -%}
+                <text x="138" y="{{ ry + 8 }}" dominant-baseline="middle" text-anchor="end"
+                      font-size="11" fill="#6b7280">
+                    {{- stat.family_name|length > 22 ? stat.family_name|slice(0, 22) ~ '…' : stat.family_name -}}
                 </text>
+                {%- if rowTotal == 0 -%}
+                    <rect x="148" y="{{ ry }}" width="2" height="16" fill="#e5e7eb"/>
+                {%- else -%}
+                    {%- set cursor = 148 -%}
+                    {%- for seg in segments -%}
+                        {%- set value = attribute(stat, seg.key) -%}
+                        {%- if value > 0 -%}
+                            {%- set w = value / maxTotal * 320 -%}
+                            <rect x="{{ cursor }}" y="{{ ry }}" width="{{ w }}" height="16" fill="{{ seg.color }}">
+                                <title>{{ stat.family_name }}: {{ (seg.tooltip)|trans({'%count%': value}, 'dashboard') }}</title>
+                            </rect>
+                            {%- if w > 14 -%}
+                            <text x="{{ cursor + w / 2 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
+                                  text-anchor="middle" font-size="9" font-weight="bold"
+                                  fill="{{ seg.key == 'unassigned' ? '#374151' : 'white' }}">
+                                {{- value -}}
+                            </text>
+                            {%- endif -%}
+                            {%- set cursor = cursor + w -%}
+                        {%- endif -%}
+                    {%- endfor -%}
+                {%- endif -%}
             {%- endfor -%}
         </svg>
     {%- endif -%}

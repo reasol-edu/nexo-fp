@@ -144,7 +144,8 @@ class StayRepository extends ServiceEntityRepository
      * @return array{
      *     total_stays: int, current_stays: int, future_stays: int, past_stays: int,
      *     total_positions: int, occupied: int, free: int, signed: int,
-     *     state_draft: int, state_pending: int, state_done: int, companies: int
+     *     state_draft: int, state_pending: int, state_done: int,
+     *     state_done_signed: int, state_done_unsigned: int, companies: int
      * }
      */
     public function findDashboardStats(AcademicYear $year, ?Teacher $viewer = null): array
@@ -176,6 +177,8 @@ class StayRepository extends ServiceEntityRepository
                 'SUM(CASE WHEN tp.state = :s_draft THEN 1 ELSE 0 END) AS state_draft',
                 'SUM(CASE WHEN tp.state = :s_pending THEN 1 ELSE 0 END) AS state_pending',
                 'SUM(CASE WHEN tp.state = :s_done THEN 1 ELSE 0 END) AS state_done',
+                'SUM(CASE WHEN tp.state = :s_done AND tp.signed = :btrue THEN 1 ELSE 0 END) AS state_done_signed',
+                'SUM(CASE WHEN tp.state = :s_done AND tp.signed = :bfalse THEN 1 ELSE 0 END) AS state_done_unsigned',
                 'COUNT(DISTINCT IDENTITY(wc.company)) AS companies',
             )
             ->from(Stay::class, 's')
@@ -184,12 +187,13 @@ class StayRepository extends ServiceEntityRepository
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
             ->setParameter('btrue', true)
+            ->setParameter('bfalse', false)
             ->setParameter('s_draft', TrainingPositionState::DRAFT->value)
             ->setParameter('s_pending', TrainingPositionState::PENDING->value)
             ->setParameter('s_done', TrainingPositionState::DONE->value);
         $this->addViewerFilter($posQb, $viewer);
 
-        /** @var array{total_positions: string, occupied: string, signed: string, state_draft: string, state_pending: string, state_done: string, companies: string} $posRow */
+        /** @var array{total_positions: string, occupied: string, signed: string, state_draft: string, state_pending: string, state_done: string, state_done_signed: string, state_done_unsigned: string, companies: string} $posRow */
         $posRow = $posQb->getQuery()->getSingleResult();
 
         $total = (int) $posRow['total_positions'];
@@ -207,6 +211,8 @@ class StayRepository extends ServiceEntityRepository
             'state_draft'    => (int) $posRow['state_draft'],
             'state_pending'  => (int) $posRow['state_pending'],
             'state_done'     => (int) $posRow['state_done'],
+            'state_done_signed'   => (int) $posRow['state_done_signed'],
+            'state_done_unsigned' => (int) $posRow['state_done_unsigned'],
             'companies'      => (int) $posRow['companies'],
         ];
     }
@@ -244,6 +250,89 @@ class StayRepository extends ServiceEntityRepository
             'occupied'    => (int) $row['occupied'],
             'signed'      => (int) $row['signed'],
         ], $rows);
+    }
+
+    /**
+     * Student counters grouped by professional family, classified by the state of
+     * their assigned training position. Students enrolled in a stay without an
+     * assigned position are counted as "unassigned". Counts are distinct students.
+     *
+     * @return list<array{family_name: string, unassigned: int, draft: int, pending: int, registered: int, signed: int}>
+     */
+    public function countStudentsByFamilyState(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        // Query 1: enrolled students per family (the universe).
+        $enrolledQb = $this->createQueryBuilder('s')
+            ->select('f.id AS family_id', 'f.name AS family_name', 'COUNT(DISTINCT st.id) AS enrolled')
+            ->join('s.programme', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->join('s.students', 'st')
+            ->where('s.academicYear = :year')
+            ->groupBy('f.id, f.name')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($enrolledQb, $viewer);
+
+        /** @var list<array{family_id: string, family_name: string, enrolled: string|int}> $enrolledRows */
+        $enrolledRows = $enrolledQb->getQuery()->getResult();
+
+        // Query 2: distinct assigned students per family, grouped by position state
+        // and signed flag. Buckets are derived in PHP for portability across engines.
+        $assignedQb = $this->createQueryBuilder('s')
+            ->select(
+                'f.id AS family_id',
+                'tp.state AS state',
+                'tp.signed AS signed',
+                'COUNT(DISTINCT tps.id) AS cnt',
+            )
+            ->join('s.programme', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->join('s.trainingPositions', 'tp')
+            ->join('tp.student', 'tps')
+            ->where('s.academicYear = :year')
+            ->groupBy('f.id, tp.state, tp.signed')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($assignedQb, $viewer);
+
+        /** @var list<array{family_id: string, state: TrainingPositionState|string, signed: bool|int, cnt: string|int}> $assignedRows */
+        $assignedRows = $assignedQb->getQuery()->getResult();
+
+        $bucketsByFamily = [];
+        foreach ($assignedRows as $row) {
+            $familyId = (string) $row['family_id'];
+            $bucketsByFamily[$familyId] ??= ['draft' => 0, 'pending' => 0, 'registered' => 0, 'signed' => 0];
+            $cnt    = (int) $row['cnt'];
+            $signed = (bool) $row['signed'];
+            $state  = $row['state'] instanceof TrainingPositionState ? $row['state'] : TrainingPositionState::from((string) $row['state']);
+
+            $bucket = match ($state) {
+                TrainingPositionState::DRAFT   => 'draft',
+                TrainingPositionState::PENDING => 'pending',
+                TrainingPositionState::DONE    => $signed ? 'signed' : 'registered',
+            };
+            $bucketsByFamily[$familyId][$bucket] += $cnt;
+        }
+
+        $result = [];
+        foreach ($enrolledRows as $row) {
+            $familyId = (string) $row['family_id'];
+            $buckets  = $bucketsByFamily[$familyId] ?? ['draft' => 0, 'pending' => 0, 'registered' => 0, 'signed' => 0];
+
+            $assignedCount = $buckets['draft'] + $buckets['pending'] + $buckets['registered'] + $buckets['signed'];
+            $unassigned    = max(0, (int) $row['enrolled'] - $assignedCount);
+
+            $result[] = [
+                'family_name' => $row['family_name'],
+                'unassigned'  => $unassigned,
+                'draft'       => $buckets['draft'],
+                'pending'     => $buckets['pending'],
+                'registered'  => $buckets['registered'],
+                'signed'      => $buckets['signed'],
+            ];
+        }
+
+        usort($result, static fn (array $a, array $b): int => strcmp($a['family_name'], $b['family_name']));
+
+        return $result;
     }
 
     /**
