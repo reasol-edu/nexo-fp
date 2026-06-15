@@ -5,26 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-
-- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales. El representante aparece también en la exportación CSV de empresas
-
-### Changed
-
-- Rediseñado el informe PDF de la estancia: el contenido se muestra más compacto para que quepan más datos por página (manteniendo el tamaño del encabezamiento y del pie), y la columna «Empresa / Centro de trabajo» incluye ahora el CIF y el representante (nombre, DNI y cargo) y la de «Tutor/a dual de empresa» muestra el DNI del tutor
-- Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»
-- Trasladados a los ficheros de traducción los textos que estaban fijados en plantillas y comandos (tooltips de las gráficas del panel y del listado de estancias, pie de página del informe PDF y descripción del comando `app:setup`), de modo que toda la interfaz sea traducible
-
-### Fixed
-
-- El mensaje de error al marcar un puesto como firmado citaba un estado inexistente («Completado»); ahora indica el estado correcto («Registrado en Séneca»)
-- Al desvincular un empleado de una empresa se mostraba siempre el mensaje de éxito aunque el empleado no estuviera vinculado a esa empresa; ahora solo se confirma cuando realmente se desvincula y, en caso contrario, se avisa con un mensaje de error
-- Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
-- Al desasignar un puesto formativo ahora se borran también el tutor/a dual docente y el tutor/a dual de empresa antes de devolverlo a la lista de puestos sin asignar
-- En el detalle de la estancia no aparecía el desplegable para elegir tutor/a dual de empresa en los puestos en borrador con estudiante asignado y sin mentor; la consulta que cargaba los empleados por empresa no resolvía los identificadores UUID y devolvía siempre una lista vacía
-
 ## [2.0.0] - 2026-06-14
 
 ### Added
@@ -35,15 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Presentación de introducción a Nexo FP para profesorado, escrita en Marp (`docs/slides/`) y exportable a PDF con `make slides`
 - Capturas de pantalla del entorno de demostración en la referencia de secciones del manual
 - La documentación (PDF del manual, PDF de la presentación y ZIP de la web navegable) se construye en CI y se adjunta a cada GitHub Release con el número de versión en el nombre
+- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales. El representante aparece también en la exportación CSV de empresas
 
 ### Changed
 
 - Reordenadas las tarjetas de la sección «Centro educativo»: Docentes, Oferta formativa, Estudiantes y Ajustes
 - Los tutores/as y docentes de grupo ven el detalle de las estancias de sus enseñanzas y los puestos formativos de sus estudiantes, pero ya no ven los puestos formativos sin asignar (puestos libres): ese bloque queda reservado a quienes gestionan la estancia (administración, coordinación o jefatura de departamento) y a los docentes de enlace de las empresas implicadas, tanto en el detalle como en el informe PDF y en la exportación CSV
+- Rediseñado el informe PDF de la estancia: el contenido se muestra más compacto para que quepan más datos por página (manteniendo el tamaño del encabezamiento y del pie), y la columna «Empresa / Centro de trabajo» incluye ahora el CIF y el representante (nombre, DNI y cargo) y la de «Tutor/a dual de empresa» muestra el DNI del tutor
+- Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»
+- Trasladados a los ficheros de traducción los textos que estaban fijados en plantillas y comandos (tooltips de las gráficas del panel y del listado de estancias, pie de página del informe PDF y descripción del comando `app:setup`), de modo que toda la interfaz sea traducible
 
 ### Fixed
 
 - El despliegue con Docker Compose (`docker compose up -d`) solo arrancaba el contenedor de base de datos: el overlay de desarrollo se cargaba automáticamente también en producción (al llamarse `compose.override.yaml`) y dejaba el servicio de aplicación tras el perfil `production`. Ahora ese overlay es `compose.dev.yaml` y se combina explícitamente con `-f` solo en desarrollo, de modo que en producción `docker compose up -d` levanta la aplicación y la base de datos, y deja de exponer el puerto de PostgreSQL en el host
+- El mensaje de error al marcar un puesto como firmado citaba un estado inexistente («Completado»); ahora indica el estado correcto («Registrado en Séneca»)
+- Al desvincular un empleado de una empresa se mostraba siempre el mensaje de éxito aunque el empleado no estuviera vinculado a esa empresa; ahora solo se confirma cuando realmente se desvincula y, en caso contrario, se avisa con un mensaje de error
+- Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
+- Al desasignar un puesto formativo ahora se borran también el tutor/a dual docente y el tutor/a dual de empresa antes de devolverlo a la lista de puestos sin asignar
+- En el detalle de la estancia no aparecía el desplegable para elegir tutor/a dual de empresa en los puestos en borrador con estudiante asignado y sin mentor; la consulta que cargaba los empleados por empresa no resolvía los identificadores UUID y devolvía siempre una lista vacía
 
 ## [1.6.1] - 2026-06-13
 
