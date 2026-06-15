@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Scripts de demostración en el paquete del binario nativo (`demo.sh`, `demo.command`, `demo.bat` y `demo.ps1`) que arrancan la aplicación con los datos de ejemplo ya cargados, equivalentes a los `start.*` con `LOAD_FIXTURES=true`. En macOS, `demo.command` puede abrirse con doble clic desde el Finder
+
+### Fixed
+
+- El script de arranque de Windows (`start.bat`) no cargaba los datos de demostración aunque se definiera `LOAD_FIXTURES=true`: le faltaba el paso que ejecuta las fixtures, presente en `start.sh` y `start.ps1`
+
 ## [2.0.0] - 2026-06-14
 
 ### Added

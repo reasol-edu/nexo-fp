@@ -155,11 +155,20 @@ jobs:
             cp dist/php.ini   "${PKG}/php.ini"
             cp dist/start.bat "${PKG}/start.bat"
             cp dist/start.ps1 "${PKG}/start.ps1"
+            cp dist/demo.bat  "${PKG}/demo.bat"
+            cp dist/demo.ps1  "${PKG}/demo.ps1"
           else
             cp "fp_extracted/${{ matrix.binary }}" "${PKG}/${{ matrix.binary }}"
             chmod +x "${PKG}/${{ matrix.binary }}"
             cp dist/start.sh "${PKG}/start.sh"
             chmod +x "${PKG}/start.sh"
+            cp dist/demo.sh "${PKG}/demo.sh"
+            chmod +x "${PKG}/demo.sh"
+            # macOS: lanzador de demostración abrible con doble clic en el Finder
+            if [[ "${{ matrix.platform }}" == macos* ]]; then
+              cp dist/demo.command "${PKG}/demo.command"
+              chmod +x "${PKG}/demo.command"
+            fi
           fi
 
           echo "PKG=${PKG}" >> "$GITHUB_ENV"

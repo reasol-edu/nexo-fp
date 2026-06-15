@@ -76,6 +76,12 @@ echo Aplicando migraciones...
 echo Inicializando datos por defecto...
 "%FP%" php-cli bin\console app:setup --no-interaction
 
+:: -- Datos de demostracion (opcional) -----------------------------------------
+if /i "%LOAD_FIXTURES%"=="true" (
+    echo Cargando datos de demostracion...
+    "%FP%" php-cli bin\console doctrine:fixtures:load --no-interaction --append
+)
+
 :: -- Worker de Messenger (envío de emails en segundo plano) -------------------
 :: FrankenPHP es monoproceso; lanzamos el consumidor en segundo plano. Para una
 :: gestión más robusta del ciclo de vida del worker, usa start.ps1 en Windows.
