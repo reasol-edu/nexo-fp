@@ -4,6 +4,7 @@ FROM dunglas/frankenphp:php8.4-alpine AS builder
 RUN apk add --no-cache git
 
 RUN install-php-extensions \
+    gd \
     intl \
     opcache \
     pdo_pgsql \

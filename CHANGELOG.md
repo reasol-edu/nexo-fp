@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-06-15
+## [2.0.0] - 2026-06-14
 
 ### Added
 
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Presentación de introducción a Nexo FP para profesorado, escrita en Marp (`docs/slides/`) y exportable a PDF con `make slides`
 - Capturas de pantalla del entorno de demostración en la referencia de secciones del manual
 - La documentación (PDF del manual, PDF de la presentación y ZIP de la web navegable) se construye en CI y se adjunta a cada GitHub Release con el número de versión en el nombre
-- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales. El representante aparece también en la exportación CSV de empresas
+- Cada empresa puede registrar un representante (nombre, apellidos y DNI) y su cargo (por ejemplo, «Administrador»); todos los campos son opcionales. Sus datos se indican tanto al crear como al editar la empresa y aparecen también en la exportación CSV de empresas
 
 ### Changed
 
