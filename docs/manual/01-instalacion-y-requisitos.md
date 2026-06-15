@@ -10,8 +10,9 @@ Nexo FP puede ejecutarse de tres formas, según la infraestructura disponible y 
 
 En los tres casos, las **migraciones de base de datos se aplican automáticamente** al arrancar.
 
-> ¿No tienes conocimientos técnicos y no sabes qué modo elegir? Si solo quieres probarlo o usarlo en tu ordenador, elige
-> **Binario nativo**. Busca cómo hacerlo en el capítulo [Despliegue](09-despliegue.md).
+> ¿No tienes conocimientos técnicos y no sabes qué modo elegir? Si solo quieres probarlo o usarlo en tu
+> ordenador, elige **Binario nativo**. Tienes una guía paso a paso, sin jerga, en
+> [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
 
 ## Requisitos
 

@@ -4,10 +4,24 @@ Este documento describe los datos que carga el comando de fixtures de demostraci
 
 ## Cargar los fixtures
 
-> ⚠️ Ambas opciones borran todos los datos existentes antes de insertar los de demostración,
+> ⚠️ Todas las opciones borran los datos existentes antes de insertar los de demostración,
 > por lo que es seguro ejecutarlas varias veces.
 
-### Opción A — Arranque automático (recomendado)
+### Opción A — Scripts de demostración (binario nativo, recomendado)
+
+En el paquete del binario nativo basta con usar los scripts `demo.*` en lugar de los `start.*`.
+Son idénticos al arranque normal pero cargan los fixtures automáticamente:
+
+```bash
+./demo.sh                 # Linux / macOS
+demo.bat                  # Windows CMD
+.\demo.ps1                # Windows PowerShell
+```
+
+En macOS también puedes hacer **doble clic en `demo.command`** (la primera vez: clic derecho → *Abrir*).
+Aceptan un puerto opcional, igual que los scripts de arranque (`./demo.sh 9000`).
+
+### Opción B — Variable de entorno
 
 Establece `LOAD_FIXTURES=true` antes de arrancar la aplicación:
 
@@ -33,7 +47,7 @@ LOAD_FIXTURES=true ./start.sh
 $env:LOAD_FIXTURES = "true"; .\start.ps1
 ```
 
-### Opción B — Manual (entorno de desarrollo)
+### Opción C — Manual (entorno de desarrollo)
 
 ```bash
 make fixtures

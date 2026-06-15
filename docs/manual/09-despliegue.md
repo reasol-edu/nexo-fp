@@ -4,6 +4,58 @@ Este capítulo detalla los dos modos de despliegue pensados para uso real: **bin
 infraestructura) y **Docker Compose** (servidor). Para el modo de desarrollo local, consulta
 [Instalación y requisitos](01-instalacion-y-requisitos.md).
 
+## Prueba rápida en tu ordenador (sin conocimientos técnicos)
+
+¿Solo quieres ver cómo funciona Nexo FP en tu propio equipo? No necesitas instalar nada ni saber de
+informática. En **tres pasos** tendrás la aplicación funcionando con datos de ejemplo (centros, empresas,
+profesorado y estancias ya creados).
+
+### Paso 1 · Descarga el archivo de tu equipo
+
+Entra en la **[página de descargas (Releases)](https://github.com/reasol-edu/nexo-fp/releases)** y, en la
+última versión, descarga el archivo que corresponda a tu ordenador:
+
+| Tu ordenador | Archivo a descargar |
+|--------------|---------------------|
+| **Windows** | `nexo-fp-…-windows-x86_64.zip` |
+| **Mac con chip Apple** (M1, M2, M3, M4…) | `nexo-fp-…-macos-arm64.tar.gz` |
+| **Mac con procesador Intel** | `nexo-fp-…-macos-x86_64.tar.gz` |
+| **Linux** (PC habitual) | `nexo-fp-…-linux-x86_64.tar.gz` |
+| **Linux ARM** (p. ej. Raspberry Pi) | `nexo-fp-…-linux-aarch64.tar.gz` |
+
+> **¿No sabes qué Mac tienes?** Abre el menú Apple () arriba a la izquierda → **Acerca de este Mac**.
+> Si aparece «Chip Apple M…» elige el archivo *arm64*; si aparece «Procesador Intel», el *x86_64*.
+
+### Paso 2 · Descomprime el archivo
+
+- **Windows / Mac:** haz doble clic en el archivo descargado; se creará una carpeta `nexo-fp-…`.
+- **Linux:** clic derecho → *Extraer aquí* (o, en una terminal, `tar xzf nexo-fp-….tar.gz`).
+
+### Paso 3 · Arranca con datos de demostración
+
+Abre la carpeta que se ha creado y:
+
+- **Windows:** haz doble clic en **`demo.bat`**.
+- **Mac:** haz doble clic en **`demo.command`**.
+- **Linux:** abre una terminal en la carpeta y ejecuta `./demo.sh`.
+
+Espera unos segundos (la primera vez tarda un poco en prepararse) y abre tu navegador en
+**[http://localhost:8080](http://localhost:8080)**. Entra con usuario **`admin`** y contraseña
+**`admin`**.
+
+![Pantalla de inicio de sesión de Nexo FP con el usuario «admin» introducido](img/login.png)
+
+> **Aviso de seguridad en Mac.** La primera vez, macOS puede decir que la aplicación es de un
+> «desarrollador no identificado». Es normal (el programa no está firmado). En lugar de hacer doble clic,
+> haz **clic derecho sobre `demo.command` → Abrir** y confirma en el aviso: solo hace falta la primera vez.
+
+Para **detener** la aplicación, cierra la ventana negra (terminal) que se abrió, o pulsa `Ctrl + C` en
+ella.
+
+> ⚠️ El modo demostración **borra cualquier dato anterior** y carga datos de ejemplo cada vez que
+> arrancas con `demo.*`. Para empezar con una instalación vacía y real, usa los scripts `start.*` en vez
+> de `demo.*` (ver más abajo).
+
 ## Ejecución como binario nativo
 
 El modo binario nativo está pensado para instalaciones sencillas sin Docker. Incluye un ejecutable de
@@ -24,7 +76,11 @@ nexo-fp/
 ├── Caddyfile       ← configuración del servidor web
 ├── start.sh        ← script de arranque (Linux / macOS)
 ├── start.bat       ← script de arranque (Windows CMD)
-└── start.ps1       ← script de arranque (Windows PowerShell)
+├── start.ps1       ← script de arranque (Windows PowerShell)
+├── demo.sh         ← arranque cargando datos de demostración (Linux / macOS)
+├── demo.command    ← igual que demo.sh, abrible con doble clic (solo macOS)
+├── demo.bat        ← arranque cargando datos de demostración (Windows CMD)
+└── demo.ps1        ← arranque cargando datos de demostración (Windows PowerShell)
 ```
 
 ### Primer arranque
@@ -65,6 +121,24 @@ La primera vez que se inicia, el script realiza automáticamente:
 5. Precalienta la caché de Symfony.
 
 La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado).
+
+### Arranque con datos de demostración
+
+Para probar la aplicación con datos de ejemplo (usuarios, centros, empresas y estancias precargadas),
+usa los scripts `demo.*` en lugar de `start.*`. Son equivalentes al arranque normal pero cargan los
+fixtures automáticamente (`LOAD_FIXTURES=true`):
+
+```bash
+./demo.sh                 # Linux / macOS
+demo.bat                  # Windows CMD
+.\demo.ps1                # Windows PowerShell
+```
+
+En macOS también puedes hacer **doble clic en `demo.command`** desde el Finder (la primera vez: clic
+derecho → *Abrir*, para saltar el aviso de Gatekeeper).
+
+Los scripts `demo.*` aceptan un puerto, igual que los de arranque (`./demo.sh 9000`). ⚠️ Cargar los datos
+de demostración **borra los datos existentes**.
 
 ### macOS: aviso de Gatekeeper
 

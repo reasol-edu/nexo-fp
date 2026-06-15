@@ -363,6 +363,7 @@ Cada persona gestiona su cuenta en **Mi perfil**:
 En `dist/` hay un lanzador por sistema operativo:
 
 - `start.sh` (Linux/macOS) · `start.ps1` (PowerShell) · `start.bat` (Windows)
+- **¿Solo probarlo?** Usa `demo.*` (en Mac, doble clic en `demo.command`): arranca con datos de ejemplo.
 
 Al ejecutarlo:
 
