@@ -11,7 +11,11 @@ Este documento describe los datos que carga el comando de fixtures de demostraci
 
 Establece `LOAD_FIXTURES=true` antes de arrancar la aplicación:
 
-**Docker** — añade al fichero `.env`:
+**Docker** — en tu fichero `.env.local` (copiado de `.env.example`) cambia el valor de
+la variable que ya existe; no añadas una línea nueva, porque una clave duplicada haría
+que Docker Compose use la última aparición y podría seguir valiendo `false`. Recuerda
+exportar `COMPOSE_ENV_FILES=.env.local` (o usar `--env-file .env.local`) para que Compose
+lo lea:
 
 ```dotenv
 LOAD_FIXTURES=true

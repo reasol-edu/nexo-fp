@@ -27,7 +27,8 @@ El modo recomendado para producción. La imagen incluye [FrankenPHP](https://fra
 servidor de aplicaciones y usa [PostgreSQL](https://www.postgresql.org) 16 como base de datos.
 
 ```bash
-cp .env.example .env   # edita APP_SECRET y DB_PASSWORD
+cp .env.example .env.local            # edita APP_SECRET y DB_PASSWORD
+export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local (no el .env versionado)
 docker compose up -d
 ```
 
@@ -43,7 +44,8 @@ Compose (solo para la base de datos).
 
 ```bash
 # 1. Clona el repositorio y copia el entorno
-cp .env.example .env          # ajusta si es necesario
+cp .env.example .env.local            # ajusta si es necesario
+export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local
 
 # 2. Levanta solo PostgreSQL con el overlay de desarrollo
 docker compose -f compose.yaml -f compose.dev.yaml up -d

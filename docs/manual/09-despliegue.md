@@ -96,11 +96,23 @@ aplicaciones y usa [PostgreSQL](https://www.postgresql.org) 16 como base de dato
 
 ### Preparación
 
-Copia el fichero de ejemplo y edita los valores:
+Copia el fichero de ejemplo y edita los valores. Usa `.env.local` (Git lo ignora, así que tus
+secretos no se versionan y el `.env` del repositorio queda intacto):
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
+
+Indica a Docker Compose que use ese fichero exportándolo una vez en tu sesión. Así todos los comandos
+`docker compose` de este capítulo lo leerán sin necesidad de repetir ningún flag:
+
+```bash
+export COMPOSE_ENV_FILES=.env.local
+```
+
+> Como alternativa, añade `--env-file .env.local` a cada comando `docker compose`. Para que el arranque
+> automático del servidor (p. ej. con systemd) también lo use, define `COMPOSE_ENV_FILES=.env.local` en
+> el entorno del servicio.
 
 Los campos obligatorios son:
 
@@ -128,8 +140,9 @@ La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
 
 ### Datos de demostración
 
-Para arrancar con datos de prueba (usuarios, centros, empresas y estancias precargadas), añade al fichero
-`.env`:
+Para arrancar con datos de prueba (usuarios, centros, empresas y estancias precargadas), cambia en tu
+`.env.local` el valor de la variable que ya existe (no añadas una línea nueva: una clave duplicada haría
+que Docker Compose use la última aparición y podría seguir valiendo `false`):
 
 ```dotenv
 LOAD_FIXTURES=true
@@ -140,7 +153,7 @@ datos existentes**.
 
 ### HTTPS con Let's Encrypt
 
-Para habilitar HTTPS automático, edita `.env` con tu dominio real:
+Para habilitar HTTPS automático, edita `.env.local` con tu dominio real:
 
 ```dotenv
 SERVER_NAME=nexo.tudominio.es

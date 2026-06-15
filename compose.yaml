@@ -1,10 +1,16 @@
 ###> nexo-fp production stack ################################################
+# Variables de entorno: copia .env.example a .env.local, ajusta los valores e
+# indica a Docker Compose que use ese fichero (no se versiona). Exporta una
+# vez por sesión:
+#
+#   export COMPOSE_ENV_FILES=.env.local
+#
+# (alternativamente, añade --env-file .env.local a cada comando docker compose).
+#
 # Uso:
 #   Producción  →  docker compose up -d
 #   Desarrollo  →  docker compose -f compose.yaml -f compose.dev.yaml up -d
 #                  (solo la base de datos; PHP se sirve con Symfony CLI)
-#
-# Variables de entorno: copia .env.example a .env y ajusta los valores.
 ##############################################################################
 
 services:
@@ -32,6 +38,7 @@ services:
       APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
       APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
       APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+      LOAD_FIXTURES:                "${LOAD_FIXTURES:-false}"
     volumes:
       # Datos persistentes de Symfony (caché, logs, sesiones) → ./data/var
       - ./data/var:/app/var

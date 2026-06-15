@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- La configuración del despliegue con Docker pasa a `.env.local` (ignorado por Git) en lugar del `.env` versionado, siguiendo la convención de Symfony: ahora se copia `.env.example` a `.env.local` y se indica a Docker Compose que lo lea con `COMPOSE_ENV_FILES=.env.local` (o `--env-file .env.local`). Así los secretos no se versionan y el `.env` del proyecto queda intacto
+
 ### Fixed
 
+- Con Docker, establecer `LOAD_FIXTURES=true` en el `.env` no cargaba los datos de demostración porque la variable no se reenviaba al contenedor; ahora se declara en el bloque `environment:` del servicio `app` de `compose.yaml`
 - En la pantalla de inicio de sesión, el tabulador desde el campo de usuario salta ahora directamente a la contraseña: el enlace «¿Olvidaste tu contraseña?» se ha movido en el orden de tabulación a continuación del campo de contraseña sin perder su accesibilidad (sigue siendo enlazable y enfocable por teclado)
 
 ## [2.0.0] - 2026-06-14

@@ -380,7 +380,8 @@ Al ejecutarlo:
 <!-- _class: tight -->
 
 ```bash
-cp .env.example .env      # define APP_SECRET y DB_PASSWORD
+cp .env.example .env.local            # define APP_SECRET y DB_PASSWORD
+export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local
 docker compose up -d
 ```
 
