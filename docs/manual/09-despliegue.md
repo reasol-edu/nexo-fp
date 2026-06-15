@@ -15,6 +15,10 @@ profesorado y estancias ya creados).
 Entra en la **[página de descargas (Releases)](https://github.com/reasol-edu/nexo-fp/releases)** y, en la
 última versión, descarga el archivo que corresponda a tu ordenador:
 
+![Página de Releases del proyecto en GitHub: la última versión con la lista de archivos descargables (Assets)](img/releases.png)
+
+Los archivos descargables están en el apartado **Assets** de la última versión:
+
 | Tu ordenador | Archivo a descargar |
 |--------------|---------------------|
 | **Windows** | `nexo-fp-…-windows-x86_64.zip` |
@@ -45,9 +49,22 @@ Espera unos segundos (la primera vez tarda un poco en prepararse) y abre tu nave
 
 ![Pantalla de inicio de sesión de Nexo FP con el usuario «admin» introducido](img/login.png)
 
-> **Aviso de seguridad en Mac.** La primera vez, macOS puede decir que la aplicación es de un
-> «desarrollador no identificado». Es normal (el programa no está firmado). En lugar de hacer doble clic,
-> haz **clic derecho sobre `demo.command` → Abrir** y confirma en el aviso: solo hace falta la primera vez.
+> **Aviso de seguridad en macOS.** Como la aplicación no está firmada con un certificado de Apple, la
+> primera vez macOS la bloqueará con un mensaje del tipo *«No se puede abrir "demo.command" porque
+> proviene de un desarrollador no identificado»* (en versiones recientes, *«Apple no ha podido verificar
+> que "demo.command" esté libre de software malicioso»*). Es normal. Para autorizarla:
+>
+> 1. En el **Finder**, haz **clic secundario** sobre `demo.command` (clic con el botón derecho del
+>    ratón, o mantén pulsada la tecla **Control** ⌃ mientras haces clic) y elige **Abrir** en el menú
+>    contextual.
+> 2. En el cuadro de diálogo que aparece, vuelve a pulsar **Abrir** para confirmar.
+>
+> Si usas **macOS Sequoia (15) o posterior** y el bloqueo no te ofrece la opción de abrir, ve al menú
+> Apple () → **Ajustes del Sistema** → **Privacidad y seguridad**, baja hasta la sección **Seguridad**
+> y pulsa **Abrir igualmente** junto al aviso sobre `demo.command`; confírmalo con **Touch ID** o tu
+> contraseña de administrador.
+>
+> Solo hace falta hacerlo la primera vez: después, `demo.command` se abrirá con normalidad.
 
 Para **detener** la aplicación, cierra la ventana negra (terminal) que se abrió, o pulsa `Ctrl + C` en
 ella.

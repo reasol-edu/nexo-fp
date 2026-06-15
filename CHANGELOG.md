@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Scripts de demostración en el paquete del binario nativo (`demo.sh`, `demo.command`, `demo.bat` y `demo.ps1`) que arrancan la aplicación con los datos de ejemplo ya cargados, equivalentes a los `start.*` con `LOAD_FIXTURES=true`. En macOS, `demo.command` puede abrirse con doble clic desde el Finder
-- Guía «Prueba rápida en tu ordenador (sin conocimientos técnicos)» en el capítulo de despliegue del manual, con una tabla de qué archivo descargar según el equipo, tres pasos para arrancar con datos de ejemplo, captura de la pantalla de inicio de sesión y aviso sobre Gatekeeper en macOS
+- Guía «Prueba rápida en tu ordenador (sin conocimientos técnicos)» en el capítulo de despliegue del manual, con una tabla de qué archivo descargar según el equipo, tres pasos para arrancar con datos de ejemplo, capturas de la página de Releases y de la pantalla de inicio de sesión, e instrucciones detalladas para el aviso de Gatekeeper en macOS
 
 ### Fixed
 
