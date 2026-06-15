@@ -64,7 +64,15 @@ class CompanyController extends AbstractController
         $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
 
         $errors = [];
-        $values = ['name' => '', 'vat_number' => '', 'city' => ''];
+        $values = [
+            'name'                       => '',
+            'vat_number'                 => '',
+            'city'                       => '',
+            'representative_first_name'  => '',
+            'representative_last_name'   => '',
+            'representative_national_id' => '',
+            'representative_role'        => '',
+        ];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_company', $request->request->getString('_token'))) {
@@ -72,9 +80,13 @@ class CompanyController extends AbstractController
             }
 
             $values = [
-                'name'       => trim($request->request->getString('name')),
-                'vat_number' => trim($request->request->getString('vat_number')),
-                'city'       => trim($request->request->getString('city')),
+                'name'                       => trim($request->request->getString('name')),
+                'vat_number'                 => trim($request->request->getString('vat_number')),
+                'city'                       => trim($request->request->getString('city')),
+                'representative_first_name'  => trim($request->request->getString('representative_first_name')),
+                'representative_last_name'   => trim($request->request->getString('representative_last_name')),
+                'representative_national_id' => trim($request->request->getString('representative_national_id')),
+                'representative_role'        => trim($request->request->getString('representative_role')),
             ];
 
             $errors = $this->validateCompany($values);
@@ -91,6 +103,10 @@ class CompanyController extends AbstractController
                     ->setName($values['name'])
                     ->setVatNumber($values['vat_number'])
                     ->setCity($values['city'])
+                    ->setRepresentativeFirstName($values['representative_first_name'] !== '' ? $values['representative_first_name'] : null)
+                    ->setRepresentativeLastName($values['representative_last_name'] !== '' ? $values['representative_last_name'] : null)
+                    ->setRepresentativeNationalId($values['representative_national_id'] !== '' ? $values['representative_national_id'] : null)
+                    ->setRepresentativeRole($values['representative_role'] !== '' ? $values['representative_role'] : null)
                     ->setEducationalCentre($centre);
 
                 $errors = $this->mapViolations($this->validator->validate($company));

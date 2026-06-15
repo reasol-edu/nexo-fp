@@ -90,6 +90,40 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testNewCompanyPostSavesRepresentative(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $this->persist($centre, $teacher);
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/empresas/nueva', [
+            '_token'                     => $token,
+            'name'                       => 'Empresa Test S.L.',
+            'vat_number'                 => 'B12345678',
+            'city'                       => 'Sevilla',
+            'representative_first_name'  => 'Carmen',
+            'representative_last_name'   => 'Serrano',
+            'representative_national_id' => '12345678Z',
+            'representative_role'        => 'Administradora',
+        ]);
+
+        self::assertResponseRedirects();
+        $location = (string) $this->client->getResponse()->headers->get('Location');
+        self::assertSame(1, preg_match('#/empresas/([0-9a-f-]{36})#', $location, $m));
+
+        $this->em->clear();
+        /** @var Company $created */
+        $created = $this->em->find(Company::class, \Symfony\Component\Uid\Uuid::fromString($m[1]));
+        self::assertSame('Carmen', $created->getRepresentativeFirstName());
+        self::assertSame('Serrano', $created->getRepresentativeLastName());
+        self::assertSame('12345678Z', $created->getRepresentativeNationalId());
+        self::assertSame('Administradora', $created->getRepresentativeRole());
+    }
+
     public function testNewCompanyPostWithInvalidCsrfIsDenied(): void
     {
         $centre  = $this->makeCentre('41000001');

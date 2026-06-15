@@ -111,7 +111,7 @@
                     {{ 'company.representative.label'|trans({}, 'companies') }}
                 </label>
                 <p class="text-xs text-gray-400 mb-2">{{ 'company.representative.help'|trans({}, 'companies') }}</p>
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-4">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                     <div>
                         <twig:Form:Field
                             id="representative_first_name"
@@ -121,7 +121,7 @@
                             :error="errors.representativeFirstName ?? null"
                         />
                     </div>
-                    <div>
+                    <div class="sm:col-span-2">
                         <twig:Form:Field
                             id="representative_last_name"
                             name="representative_last_name"
@@ -140,7 +140,7 @@
                             :mono="true"
                         />
                     </div>
-                    <div>
+                    <div class="sm:col-span-2">
                         <twig:Form:Field
                             id="representative_role"
                             name="representative_role"

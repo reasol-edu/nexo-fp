@@ -58,6 +58,53 @@
 
             </div>
 
+            {# Representante de la empresa #}
+            <div class="pt-3 border-t border-gray-100">
+                <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                    {{ 'company.representative.label'|trans({}, 'companies') }}
+                </label>
+                <p class="text-xs text-gray-400 mb-2">{{ 'company.representative.help'|trans({}, 'companies') }}</p>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div>
+                        <twig:Form:Field
+                            id="representative_first_name"
+                            name="representative_first_name"
+                            label="{{ 'company.field.representative_first_name'|trans({}, 'companies') }}"
+                            value="{{ values.representative_first_name }}"
+                            :error="errors.representativeFirstName ?? null"
+                        />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <twig:Form:Field
+                            id="representative_last_name"
+                            name="representative_last_name"
+                            label="{{ 'company.field.representative_last_name'|trans({}, 'companies') }}"
+                            value="{{ values.representative_last_name }}"
+                            :error="errors.representativeLastName ?? null"
+                        />
+                    </div>
+                    <div>
+                        <twig:Form:Field
+                            id="representative_national_id"
+                            name="representative_national_id"
+                            label="{{ 'company.field.representative_national_id'|trans({}, 'companies') }}"
+                            value="{{ values.representative_national_id }}"
+                            :error="errors.representativeNationalId ?? null"
+                            :mono="true"
+                        />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <twig:Form:Field
+                            id="representative_role"
+                            name="representative_role"
+                            label="{{ 'company.field.representative_role'|trans({}, 'companies') }}"
+                            value="{{ values.representative_role }}"
+                            :error="errors.representativeRole ?? null"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-2">
                 <a href="{{ path('app_companies_index') }}"
                    class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700
