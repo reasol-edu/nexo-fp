@@ -5,18 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-### Changed
-
-- La configuración del despliegue con Docker pasa a `.env.local` (ignorado por Git) en lugar del `.env` versionado, siguiendo la convención de Symfony: ahora se copia `.env.example` a `.env.local` y se indica a Docker Compose que lo lea con `COMPOSE_ENV_FILES=.env.local` (o `--env-file .env.local`). Así los secretos no se versionan y el `.env` del proyecto queda intacto
-
-### Fixed
-
-- Con Docker, establecer `LOAD_FIXTURES=true` en el `.env` no cargaba los datos de demostración porque la variable no se reenviaba al contenedor; ahora se declara en el bloque `environment:` del servicio `app` de `compose.yaml`
-- En la pantalla de inicio de sesión, el tabulador desde el campo de usuario salta ahora directamente a la contraseña: el enlace «¿Olvidaste tu contraseña?» se ha movido en el orden de tabulación a continuación del campo de contraseña sin perder su accesibilidad (sigue siendo enlazable y enfocable por teclado)
-
-## [2.0.0] - 2026-06-14
+## [2.0.0] - 2026-06-15
 
 ### Added
 
@@ -35,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rediseñado el informe PDF de la estancia: el contenido se muestra más compacto para que quepan más datos por página (manteniendo el tamaño del encabezamiento y del pie), y la columna «Empresa / Centro de trabajo» incluye ahora el CIF y el representante (nombre, DNI y cargo) y la de «Tutor/a dual de empresa» muestra el DNI del tutor
 - Unificada la terminología de la interfaz con la de la sección «Estancias»: el panel de inicio y las notificaciones usan ahora «puesto/puestos» (en lugar de «plaza/plazas»), «estudiantes» (en lugar de «alumnos») y los estados «Pendiente de Séneca» y «Registrado en Séneca» (en lugar de «Pendiente» y «Completada»); las notificaciones hablan de «tutor dual docente» y «tutor dual de empresa»
 - Trasladados a los ficheros de traducción los textos que estaban fijados en plantillas y comandos (tooltips de las gráficas del panel y del listado de estancias, pie de página del informe PDF y descripción del comando `app:setup`), de modo que toda la interfaz sea traducible
+- Rediseñado el panel de inicio: la gráfica «Estado de los puestos» pasa a tener cuatro categorías —Borrador, Pendiente de Séneca, Registrado en Séneca (registrado pero sin firmar) y Firmado (registrado y firmado)—, con una paleta de colores coherente con el resto de la aplicación. Se ha sustituido la estadística de firmas por mes por dos gráficas de barras por familia profesional, visibles solo para administradores globales y de centro: «Estudiantes por familia profesional» (clasificados por estado del puesto: sin asignar, borrador, pendiente, registrado y firmado) y «Puestos por familia profesional» (total, ocupados y firmados)
+- La configuración del despliegue con Docker pasa a `.env.local` (ignorado por Git) en lugar del `.env` versionado, siguiendo la convención de Symfony: ahora se copia `.env.example` a `.env.local` y se indica a Docker Compose que lo lea con `COMPOSE_ENV_FILES=.env.local` (o `--env-file .env.local`). Así los secretos no se versionan y el `.env` del proyecto queda intacto
 
 ### Fixed
 
@@ -44,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
 - Al desasignar un puesto formativo ahora se borran también el tutor/a dual docente y el tutor/a dual de empresa antes de devolverlo a la lista de puestos sin asignar
 - En el detalle de la estancia no aparecía el desplegable para elegir tutor/a dual de empresa en los puestos en borrador con estudiante asignado y sin mentor; la consulta que cargaba los empleados por empresa no resolvía los identificadores UUID y devolvía siempre una lista vacía
+- Con Docker, establecer `LOAD_FIXTURES=true` en el `.env` no cargaba los datos de demostración porque la variable no se reenviaba al contenedor; ahora se declara en el bloque `environment:` del servicio `app` de `compose.yaml`
+- En la pantalla de inicio de sesión, el tabulador desde el campo de usuario salta ahora directamente a la contraseña: el enlace «¿Olvidaste tu contraseña?» se ha movido en el orden de tabulación a continuación del campo de contraseña sin perder su accesibilidad (sigue siendo enlazable y enfocable por teclado)
 
 ## [1.6.1] - 2026-06-13
 
