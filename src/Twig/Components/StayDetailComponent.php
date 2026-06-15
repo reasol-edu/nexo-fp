@@ -247,6 +247,8 @@ class StayDetailComponent extends AbstractController
 
         $student = $position->getStudent();
         $position->setStudent(null);
+        $position->setAcademicTutor(null);
+        $position->setWorkplaceMentor(null);
         $this->em->flush();
 
         $this->toast('stays.toast.position_unassigned', [

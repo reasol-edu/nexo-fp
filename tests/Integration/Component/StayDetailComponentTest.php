@@ -277,6 +277,34 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertStringNotContainsString('Centro Principal', $html);
     }
 
+    public function testUnassignPositionClearsTutors(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+
+        $tutor = (new Teacher(new PersonName('Docente', 'Tutor')))->setUsername('tutor.docente');
+        $company = $position->getWorkcenter()->getCompany();
+        $mentor  = (new Worker(new PersonName('Carlos', 'Tutor')))->setNationalIdNumber('12345678Z');
+        $company->addWorker($mentor);
+        $position->setAcademicTutor($tutor)->setWorkplaceMentor($mentor);
+        $this->persist($tutor, $mentor);
+        $this->flush();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        $component->call('unassignPosition', ['positionId' => $position->getId()->toRfc4122()]);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertNull($reloaded->getStudent());
+        self::assertNull($reloaded->getAcademicTutor());
+        self::assertNull($reloaded->getWorkplaceMentor());
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** @return array{0: Teacher, 1: Stay, 2: Student, 3: TrainingPosition, 4: Group} */
