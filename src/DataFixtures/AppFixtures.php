@@ -607,6 +607,10 @@ class AppFixtures extends Fixture
         $teacherList = array_values($teachers);
         $wcCount     = count($workcenters);
 
+        // Los puestos que no están en borrador necesitan tutor dual de empresa;
+        // se toma el primer trabajador del centro de trabajo correspondiente.
+        $mentorOf = static fn (Workcenter $wc): ?Worker => $wc->getCompany()->getWorkers()->first() ?: null;
+
         foreach ($programmes as $progIdx => $programme) {
             $py1GroupIdx = $progIdx * 2;
             $py2GroupIdx = $progIdx * 2 + 1;
@@ -638,10 +642,12 @@ class AppFixtures extends Fixture
             foreach (range(0, 4) as $si) {
                 if (isset($students1[$si])) {
                     $pastStay->addStudent($students1[$si]);
+                    $wc = $workcenters[($progIdx + $si) % $wcCount];
                     $manager->persist((new TrainingPosition())
                         ->setStay($pastStay)
-                        ->setWorkcenter($workcenters[($progIdx + $si) % $wcCount])
+                        ->setWorkcenter($wc)
                         ->setAcademicTutor($tutor)
+                        ->setWorkplaceMentor($mentorOf($wc))
                         ->addProgrammeYear($py1)
                         ->setStudent($students1[$si])
                         ->setState(TrainingPositionState::DONE)
@@ -690,6 +696,7 @@ class AppFixtures extends Fixture
                 $currentStay->addStudent($students2[1]);
                 $manager->persist((new TrainingPosition())
                     ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                    ->setWorkplaceMentor($mentorOf($wc0))
                     ->addProgrammeYear($py2)->setStudent($students2[1])
                     ->setState(TrainingPositionState::PENDING));
             }
@@ -699,6 +706,7 @@ class AppFixtures extends Fixture
                 $currentStay->addStudent($students2[2]);
                 $manager->persist((new TrainingPosition())
                     ->setStay($currentStay)->setWorkcenter($wc2)->setAcademicTutor($tutor)
+                    ->setWorkplaceMentor($mentorOf($wc2))
                     ->addProgrammeYear($py2)->setStudent($students2[2])
                     ->setState(TrainingPositionState::PENDING)->setSigned(true));
             }
@@ -708,6 +716,7 @@ class AppFixtures extends Fixture
                 $currentStay->addStudent($students2[3]);
                 $manager->persist((new TrainingPosition())
                     ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                    ->setWorkplaceMentor($mentorOf($wc0))
                     ->addProgrammeYear($py2)->setStudent($students2[3])
                     ->setState(TrainingPositionState::DONE)->setSigned(true));
             }
@@ -717,6 +726,7 @@ class AppFixtures extends Fixture
                 $currentStay->addStudent($students2[4]);
                 $manager->persist((new TrainingPosition())
                     ->setStay($currentStay)->setWorkcenter($wc3)->setAcademicTutor($tutor)
+                    ->setWorkplaceMentor($mentorOf($wc3))
                     ->addProgrammeYear($py2)->setStudent($students2[4])
                     ->setState(TrainingPositionState::DONE)->setSigned(true));
             }
