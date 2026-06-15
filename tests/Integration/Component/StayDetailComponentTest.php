@@ -327,7 +327,94 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertNull($reloaded->getWorkplaceMentor());
     }
 
+    public function testMentorDropdownHiddenWhenCompanyHasNoWorkers(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringNotContainsString('setWorkplaceMentor', $html);
+    }
+
+    public function testMentorDropdownHiddenWhenMentorAlreadyAssigned(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+
+        $company = $position->getWorkcenter()->getCompany();
+        $mentor  = (new Worker(new PersonName('Carlos', 'Tutor')))->setNationalIdNumber('12345678Z');
+        $company->addWorker($mentor);
+        $position->setWorkplaceMentor($mentor);
+        $this->persist($mentor);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringNotContainsString('setWorkplaceMentor', $html);
+        self::assertStringContainsString('Carlos Tutor', $html);
+    }
+
+    public function testAcademicTutorDropdownShownWhenAssignedWithoutTutor(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringContainsString('setAcademicTutor', $html);
+    }
+
+    public function testAcademicTutorDropdownHiddenWhenTutorAlreadyAssigned(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+
+        $tutor = (new Teacher(new PersonName('Docente', 'Tutor')))->setUsername('tutor.docente');
+        $position->setAcademicTutor($tutor);
+        $this->persist($tutor);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringNotContainsString('setAcademicTutor', $html);
+        self::assertStringContainsString('Docente Tutor', $html);
+    }
+
+    public function testAssignPositionDropdownShownWhenCompatiblePositionAvailable(): void
+    {
+        [$admin, $stay] = $this->makeScenario();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringContainsString('data-student-id', $html);
+    }
+
+    public function testAssignPositionDropdownHiddenWhenNoCompatiblePosition(): void
+    {
+        [$admin, $stay, $student, $position, $group] = $this->makeScenario();
+        $position->setStudent($student);
+
+        $other = (new Student(new PersonName('Beatriz', 'Lopez')))->setStudentId('2024-002');
+        $group->addStudent($other);
+        $stay->addStudent($other);
+        $this->persist($other);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringNotContainsString('data-student-id', $html);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function renderHtml(Teacher $admin, Stay $stay): string
+    {
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        return (string) $component->render();
+    }
+
 
     /** @return array{0: Teacher, 1: Stay, 2: Student, 3: TrainingPosition, 4: Group} */
     private function makeScenario(): array
