@@ -44,6 +44,7 @@ RUN php bin/console asset-map:compile
 FROM dunglas/frankenphp:php8.4-alpine AS production
 
 RUN install-php-extensions \
+    gd \
     intl \
     opcache \
     pdo_pgsql \
