@@ -277,6 +277,28 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertStringNotContainsString('Centro Principal', $html);
     }
 
+    public function testDraftAssignedPositionWithoutMentorShowsMentorDropdown(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+
+        $company = $position->getWorkcenter()->getCompany();
+        $worker  = (new Worker(new PersonName('Carlos', 'Tutor')))->setNationalIdNumber('12345678Z');
+        $company->addWorker($worker);
+        $this->persist($worker);
+        $this->flush();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        $html = (string) $component->render();
+        self::assertStringContainsString('setWorkplaceMentor', $html);
+        self::assertStringContainsString('Tutor Carlos', $html);
+    }
+
     public function testUnassignPositionClearsTutors(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();

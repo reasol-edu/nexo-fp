@@ -35,14 +35,24 @@ class WorkerRepository extends ServiceEntityRepository
             return [];
         }
 
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('c', 'w')
+            ->from(Company::class, 'c')
+            ->join('c.workers', 'w')
+            ->orderBy('w.name.lastName', 'ASC')
+            ->addOrderBy('w.name.firstName', 'ASC');
+
+        // El identificador de Company es un UUID; el binding de entidades en una
+        // cláusula IN no resuelve correctamente, así que se compara por id.
+        $conds = [];
+        foreach ($companies as $i => $company) {
+            $conds[]                   = "c.id = :cid_{$i}";
+            $qb->setParameter("cid_{$i}", $company->getId(), 'uuid');
+        }
+        $qb->where(implode(' OR ', $conds));
+
         /** @var list<Company> $rows */
-        $rows = $this->getEntityManager()->createQuery(
-            'SELECT c, w
-             FROM ' . Company::class . ' c
-             JOIN c.workers w
-             WHERE c IN (:companies)
-             ORDER BY w.name.lastName ASC, w.name.firstName ASC'
-        )->setParameter('companies', $companies)->getResult();
+        $rows = $qb->getQuery()->getResult();
 
         $grouped = [];
         foreach ($rows as $company) {

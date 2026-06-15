@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Al desvincular un empleado de una empresa se mostraba siempre el mensaje de éxito aunque el empleado no estuviera vinculado a esa empresa; ahora solo se confirma cuando realmente se desvincula y, en caso contrario, se avisa con un mensaje de error
 - Corregidas erratas ortográficas y etiquetas inconsistentes en la interfaz: «sobreescribir» → «sobrescribir», «Correo-e profesional» → «Email profesional», «Alumnos» → «Estudiantes» y un saludo de bienvenida en forma inclusiva
 - Al desasignar un puesto formativo ahora se borran también el tutor/a dual docente y el tutor/a dual de empresa antes de devolverlo a la lista de puestos sin asignar
+- En el detalle de la estancia no aparecía el desplegable para elegir tutor/a dual de empresa en los puestos en borrador con estudiante asignado y sin mentor; la consulta que cargaba los empleados por empresa no resolvía los identificadores UUID y devolvía siempre una lista vacía
 
 ## [2.0.0] - 2026-06-14
 
