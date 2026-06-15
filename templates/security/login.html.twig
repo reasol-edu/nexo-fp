@@ -105,16 +105,13 @@
                 </div>
 
                 {# Contraseña con toggle #}
-                <div data-controller="password-visibility">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="password" class="block text-sm font-medium text-gray-700">
-                            {{ 'password_label'|trans({}, 'login') }}
-                        </label>
-                        <a href="{{ path('app_password_reset_request') }}"
-                           class="text-xs text-plum-600 hover:text-plum-800 transition-colors">
-                            {{ 'forgot_password'|trans({}, 'login') }}
-                        </a>
-                    </div>
+                {# El enlace «¿Olvidaste tu contraseña?» va en el DOM tras el input
+                   (recolocado arriba a la derecha con CSS) para que el tabulador
+                   pase del usuario directamente a la contraseña sin perder el foco. #}
+                <div data-controller="password-visibility" class="relative">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ 'password_label'|trans({}, 'login') }}
+                    </label>
                     <div class="relative">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                             <svg class="w-4.5 h-4.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -152,6 +149,10 @@
                             </svg>
                         </button>
                     </div>
+                    <a href="{{ path('app_password_reset_request') }}"
+                       class="absolute top-0 right-0 text-xs text-plum-600 hover:text-plum-800 transition-colors">
+                        {{ 'forgot_password'|trans({}, 'login') }}
+                    </a>
                 </div>
 
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
