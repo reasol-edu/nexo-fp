@@ -1,6 +1,6 @@
 # Introducción
 
-**Nexo FP** es una aplicación web, desarrollada con [Symfony](https://symfony.com/), para organizar y
+[**Nexo FP**](https://github.com/reasol-edu/nexo-fp) es una aplicación web, desarrollada con [Symfony](https://symfony.com/), para organizar y
 preparar la **Fase de Formación en Empresa u Organismo Equiparado** de la Formación Profesional.
 Centraliza la información de estudiantes, empresas, puestos formativos y tutores, y permite llevar el
 seguimiento del proceso de asignación desde que se crea un puesto hasta que se registra en Séneca.
