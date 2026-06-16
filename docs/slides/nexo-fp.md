@@ -163,7 +163,7 @@ En **Centro educativo › Oferta formativa**:
 
 ---
 
-## 2 · Estructura docente de la enseñanza
+## 3 · Estructura docente de la enseñanza
 
 ![bg right:52%](img/05_admin_ensenanza.png)
 
@@ -177,7 +177,7 @@ Al editar una **enseñanza**:
 
 ---
 
-## 3 · Estudiantes
+## 4 · Estudiantes
 
 ![bg right:54%](img/06_admin_estudiantes.png)
 
@@ -189,7 +189,7 @@ En **Centro educativo › Estudiantes**:
 
 ---
 
-## 4 · Empresas, centros de trabajo y mentores
+## 5 · Empresas, centros de trabajo y mentores
 
 ![bg right:50%](img/08_empresa_detalle.png)
 
@@ -202,7 +202,7 @@ En **Empresas**:
 
 ---
 
-## 5 · Crear una estancia
+## 6 · Crear una estancia
 
 ![bg right:54%](img/09_estancia_nueva.png)
 
@@ -216,7 +216,7 @@ Una **estancia** agrupa los puestos de una enseñanza en un período:
 
 ---
 
-## 5 · El listado de estancias
+## 7 · El listado de estancias
 
 ![bg right:50%](img/10_estancias_lista.png)
 
@@ -226,7 +226,7 @@ Una **estancia** agrupa los puestos de una enseñanza en un período:
 
 ---
 
-## 6 · Detalle de la estancia: los puestos
+## 8 · Detalle de la estancia: los puestos
 
 ![bg right:52%](img/11_estancia_detalle.png)
 
@@ -241,7 +241,7 @@ todas las filas) y se exporta el **informe PDF** y los puestos a **CSV**.
 
 ---
 
-## 7 · Asignar un puesto
+## 9 · Asignar un puesto
 
 ![bg right:50%](img/12_puesto_editar.png)
 
@@ -255,7 +255,7 @@ Al **editar un puesto** se define:
 
 ---
 
-## 8 · Estados del puesto y firma
+## 10 · Estados del puesto y firma
 
 <!-- _class: tight -->
 
