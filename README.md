@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v2.0.1</strong> &nbsp;·&nbsp;
+  <strong>v2.0.2</strong> &nbsp;·&nbsp;
   <a href="https://reasol-edu.github.io/nexo-fp/">Documentación</a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-2.0.1-5b21b6" alt="Versión 2.0.1">
+  <img src="https://img.shields.io/badge/versión-2.0.2-5b21b6" alt="Versión 2.0.2">
   <img src="https://img.shields.io/badge/licencia-AGPL--3.0-blue" alt="Licencia AGPL-3.0">
   <img src="https://img.shields.io/badge/PHP-8.4+-777bb4" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/Symfony-7-black" alt="Symfony 7">
