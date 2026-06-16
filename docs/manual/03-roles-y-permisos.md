@@ -17,7 +17,7 @@ de comandos con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin) 
 
 ### Administrador de centro 
 
-Docente designado como responsable de un centro educativo concreto. Normalmentem se corresponderá con personas 
+Docente designado como responsable de un centro educativo concreto. Normalmente se corresponderá con personas 
 del equipo directivo. Tiene acceso completo a ese centro: oferta formativa, alumnado, docentes del curso, empresas y 
 estancias. No tiene acceso a la sección de administración global.
 

@@ -32,7 +32,7 @@ DEFAULT_URI=https://nexo.tudominio.es
 
 ## Envío asíncrono
 
-Los emails se envían **en segundo plano** : la verificación de cambio de correo y las notificaciones de
+Los emails se envían **en segundo plano**: la verificación de cambio de correo y las notificaciones de
 tutoría/firma se encolan y un *worker* las procesa de forma asíncrona, sin penalizar el tiempo de
 respuesta. La **recuperación de contraseña** es la excepción y se envía de forma síncrona por ser urgente
 (el enlace caduca en 1 hora). Los fallos de envío se registran en el log sin interrumpir nunca la

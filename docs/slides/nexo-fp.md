@@ -5,7 +5,7 @@ author: Nexo FP
 lang: es
 paginate: true
 header: 'Nexo FP'
-footer: 'v2.0.0 · Gestión de la FFEOE'
+footer: 'v2.0.1 · Gestión de la FFEOE'
 style: |
   :root {
     --nx-ink: #1e1b2e;

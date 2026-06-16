@@ -8,9 +8,14 @@ Tareas habituales para mantener una instalación de Nexo FP en marcha.
   `data/` del paquete. Para hacer una copia de seguridad basta con **copiar ese directorio** (incluye la
   base de datos `data/nexo-fp.db` y el secreto `data/.secret`).
 - **Docker (PostgreSQL):** la base de datos está en `./data/postgres/`. Para una copia consistente, usa
-  `pg_dump` sobre el contenedor:
+  `pg_dump` sobre el contenedor de la base de datos (servicio `database`, con el usuario y la base
+  `nexo` que define `compose.yaml`):
   ```bash
-  docker compose exec app pg_dump ... > backup.sql
+  docker compose exec -T database pg_dump -U nexo nexo > backup.sql
+  ```
+  Para restaurarla en una instalación limpia:
+  ```bash
+  docker compose exec -T database psql -U nexo nexo < backup.sql
   ```
 
 ## Correos en cola (Messenger)

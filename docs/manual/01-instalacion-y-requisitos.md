@@ -60,7 +60,7 @@ php bin/console app:setup
 symfony server:start          # o: php -S localhost:8000 -t public/
 ```
 
-Accede a **http://localhost:8080** con `admin` / `admin`.
+Accede a **https://localhost:8000** (o **http://localhost:8000** con `php -S`) con `admin` / `admin`.
 
 > El overlay `compose.dev.yaml` se combina con `-f` y expone PostgreSQL en el puerto 5432, dejando el
 > servicio PHP (`app`) tras el perfil `production`; por eso el comando anterior solo arranca la base de
