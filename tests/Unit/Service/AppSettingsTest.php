@@ -291,6 +291,91 @@ class AppSettingsTest extends TestCase
         $service->getForTeacher('page.size', $teacher);
     }
 
+    // ── getForCentre: cascade centre → global → default (no teacher) ─────────
+
+    public function testGetForCentreUsesCentreValueFirst(): void
+    {
+        $def    = $this->makeDef('email.notification.signature_reminder.days', SettingType::Integer, '7');
+        $centre = $this->createStub(EducationalCentre::class);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $centreRepo->method('findByCentreIndexedByKey')
+            ->willReturn(['email.notification.signature_reminder.days' => $this->makeCentreValue('14')]);
+
+        $service = $this->makeServiceWithCentreRepo(
+            defs:       ['email.notification.signature_reminder.days' => $def],
+            globals:    ['email.notification.signature_reminder.days' => $this->makeGlobalValue('10')],
+            centreRepo: $centreRepo,
+        );
+
+        self::assertSame(14, $service->getForCentre('email.notification.signature_reminder.days', $centre));
+    }
+
+    public function testGetForCentreFallsBackToGlobalValue(): void
+    {
+        $def    = $this->makeDef('email.notification.signature_reminder.days', SettingType::Integer, '7');
+        $centre = $this->createStub(EducationalCentre::class);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $centreRepo->method('findByCentreIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithCentreRepo(
+            defs:       ['email.notification.signature_reminder.days' => $def],
+            globals:    ['email.notification.signature_reminder.days' => $this->makeGlobalValue('10')],
+            centreRepo: $centreRepo,
+        );
+
+        self::assertSame(10, $service->getForCentre('email.notification.signature_reminder.days', $centre));
+    }
+
+    public function testGetForCentreFallsBackToDefault(): void
+    {
+        $def    = $this->makeDef('email.notification.signature_reminder.days', SettingType::Integer, '7');
+        $centre = $this->createStub(EducationalCentre::class);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $centreRepo->method('findByCentreIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithCentreRepo(
+            defs:       ['email.notification.signature_reminder.days' => $def],
+            globals:    [],
+            centreRepo: $centreRepo,
+        );
+
+        self::assertSame(7, $service->getForCentre('email.notification.signature_reminder.days', $centre));
+    }
+
+    public function testGetForCentreRespectsGlobalLock(): void
+    {
+        $def    = $this->makeDef('email.notification.signature_reminder.days', SettingType::Integer, '7');
+        $centre = $this->createStub(EducationalCentre::class);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $centreRepo->method('findByCentreIndexedByKey')
+            ->willReturn(['email.notification.signature_reminder.days' => $this->makeCentreValue('14')]);
+
+        $service = $this->makeServiceWithCentreRepo(
+            defs:       ['email.notification.signature_reminder.days' => $def],
+            globals:    ['email.notification.signature_reminder.days' => $this->makeGlobalValue('3', locked: true)],
+            centreRepo: $centreRepo,
+        );
+
+        // Global lock must override the centre value
+        self::assertSame(3, $service->getForCentre('email.notification.signature_reminder.days', $centre));
+    }
+
+    public function testGetForCentreReturnsNullForUnknownKey(): void
+    {
+        $centre = $this->createStub(EducationalCentre::class);
+
+        $centreRepo = $this->createStub(CentreSettingValueRepository::class);
+        $centreRepo->method('findByCentreIndexedByKey')->willReturn([]);
+
+        $service = $this->makeServiceWithCentreRepo(defs: [], globals: [], centreRepo: $centreRepo);
+
+        self::assertNull($service->getForCentre('nonexistent.key', $centre));
+    }
+
     // ── Lock: global locked overrides all ─────────────────────────────────────
 
     public function testGetRespectsGlobalLock(): void
@@ -425,6 +510,32 @@ class AppSettingsTest extends TestCase
         } else {
             $tenant->method('getSelectedCentre')->willReturn(null);
         }
+
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn(null);
+
+        return new AppSettings($defsRepo, $globalRepo, $centreRepo, $teacherRepo, $tenant, $security);
+    }
+
+    /**
+     * @param array<string, SettingDefinition>  $defs
+     * @param array<string, GlobalSettingValue> $globals
+     */
+    private function makeServiceWithCentreRepo(
+        array $defs,
+        array $globals,
+        CentreSettingValueRepository $centreRepo,
+    ): AppSettings {
+        $defsRepo   = $this->createStub(SettingDefinitionRepository::class);
+        $defsRepo->method('findAllIndexedByKey')->willReturn($defs);
+
+        $globalRepo = $this->createStub(GlobalSettingValueRepository::class);
+        $globalRepo->method('findAllIndexedByKey')->willReturn($globals);
+
+        $teacherRepo = $this->createStub(TeacherSettingValueRepository::class);
+
+        $tenant = $this->createStub(TenantContextInterface::class);
+        $tenant->method('getSelectedCentre')->willReturn(null);
 
         $security = $this->createStub(Security::class);
         $security->method('getUser')->willReturn(null);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\EducationalCentre;
 use App\Entity\SettingType;
 use App\Entity\Teacher;
 use App\Repository\CentreSettingValueRepository;
@@ -54,6 +55,32 @@ final class AppSettings implements AppSettingsInterface
             isset($this->globalMap[$key]) && $this->globalMap[$key]->isLocked()
                 => $this->globalMap[$key]->getValue(),
             isset($teacherMap[$key])      => $teacherMap[$key]->getValue(),
+            isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
+            default                       => $definition->getDefaultValue(),
+        };
+
+        return match ($definition->getType()) {
+            SettingType::Boolean => $raw === 'true',
+            SettingType::Integer => (int) $raw,
+            SettingType::String  => $raw,
+        };
+    }
+
+    public function getForCentre(string $key, EducationalCentre $centre): mixed
+    {
+        $this->ensureBaseLoaded();
+
+        $definition = $this->allDefinitions[$key] ?? null;
+        if ($definition === null) {
+            return null;
+        }
+
+        $centreMap = $this->centreValues->findByCentreIndexedByKey($centre);
+
+        $raw = match (true) {
+            isset($this->globalMap[$key]) && $this->globalMap[$key]->isLocked()
+                => $this->globalMap[$key]->getValue(),
+            isset($centreMap[$key])       => $centreMap[$key]->getValue(),
             isset($this->globalMap[$key]) => $this->globalMap[$key]->getValue(),
             default                       => $definition->getDefaultValue(),
         };

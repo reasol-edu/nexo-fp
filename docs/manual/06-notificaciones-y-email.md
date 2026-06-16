@@ -6,9 +6,15 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
   cambia el existente), el tutor/a recibe un email con el enlace a la estancia.
 - **Nuevos puestos formativos:** al crear puestos en una estancia, los docentes de enlace de la empresa
   reciben un aviso (excepto quien los creó).
-- **Recordatorios de firma:** mediante el comando
-  [`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders), cada tutor/a dual docente recibe un
-  recordatorio de sus puestos pendientes de firma cuando la estancia está próxima a finalizar.
+- **Recordatorios de firma:** aviso **diario** por cada puesto formativo en estado «Registrado en Séneca»
+  que aún no esté firmado y cuya estancia **comience** dentro de los próximos *X* días (configurable, 7 por
+  defecto). Se envía a todas las personas con responsabilidad sobre el puesto —el **tutor/a dual docente**,
+  la **coordinación de FP dual** de la enseñanza y la **jefatura de la familia profesional**—, con un único
+  correo por persona que agrupa las estancias y, en cada una, sus estudiantes (centro de trabajo y tutores
+  asignados). Quien es solo tutor/a ve únicamente sus estudiantes; coordinación y jefatura ven todos los de
+  su área de responsabilidad. Se sigue avisando cada día hasta que el puesto se firma, incluso si la
+  estancia ya ha comenzado. El envío es **automático** (sin cron externo); también puede lanzarse a mano con
+  [`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders).
 - **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de correo,
   recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El cambio no tiene
   efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.
@@ -73,11 +79,18 @@ respuesta. La **recuperación de contraseña** es la excepción y se envía de f
 (el enlace caduca en 1 hora). Los fallos de envío se registran en el log sin interrumpir nunca la
 operación en curso.
 
-El *worker* debe estar en ejecución para que los correos encolados se entreguen:
+El *worker* debe estar en ejecución para que los correos encolados se entreguen y para que se dispare el
+aviso diario de firma. Consume dos transportes: `async` (los correos) y `scheduler_default` (la
+programación automática del recordatorio):
 
 ```bash
-php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
+php bin/console messenger:consume async scheduler_default --time-limit=3600 --memory-limit=128M
 ```
+
+El recordatorio de firma se programa con el componente **Symfony Scheduler** (disparo diario a las 8:00) y
+lo ejecuta este mismo *worker*, por lo que **no hace falta configurar un cron externo** del sistema
+operativo. La programación es *stateful*: si el *worker* estuvo apagado a la hora del disparo, recupera la
+última ejecución pendiente al arrancar, y el control de idempotencia diaria evita reenvíos.
 
 No es necesario lanzarlo a mano en los despliegues estándar:
 

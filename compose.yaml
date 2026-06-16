@@ -61,7 +61,7 @@ services:
     environment:
       <<: *app-environment
     entrypoint: ["php"]
-    command: ["bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=128M"]
+    command: ["bin/console", "messenger:consume", "async", "scheduler_default", "--time-limit=3600", "--memory-limit=128M"]
     volumes:
       - ./data/var:/app/var
     depends_on:

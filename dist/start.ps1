@@ -95,7 +95,7 @@ try {
 # FrankenPHP es monoproceso y el Caddyfile no puede supervisar workers. Lanzamos
 # el consumidor como proceso aparte y lo detenemos al cerrar el servidor.
 $Worker = Start-Process -FilePath $FP `
-    -ArgumentList @("php-cli", "bin/console", "messenger:consume", "async", "--memory-limit=128M", "--quiet") `
+    -ArgumentList @("php-cli", "bin/console", "messenger:consume", "async", "scheduler_default", "--memory-limit=128M", "--quiet") `
     -WorkingDirectory $App -PassThru -NoNewWindow
 
 # -- Arrancar servidor -----------------------------------------------------------

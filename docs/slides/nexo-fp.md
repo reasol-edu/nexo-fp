@@ -314,7 +314,8 @@ Nexo FP genera la documentación que se necesita fuera de la aplicación:
 - **Avisos por email** automáticos:
   - al **crear puestos** (a los docentes de enlace de la empresa),
   - al **asignar tutoría docente**,
-  - **recordatorio de firma** cuando la estancia está próxima a finalizar.
+  - **recordatorio diario de firma** antes de que comience la estancia, al **tutor docente, la coordinación
+    y la jefatura de familia** (programado solo; sin cron externo).
 
 > Cada centro y cada docente puede **activar o desactivar** estos avisos en sus ajustes.
 
@@ -370,7 +371,7 @@ Al ejecutarlo:
 1. Arranca **FrankenPHP** (servidor de aplicaciones autocontenido).
 2. Usa **SQLite** como base de datos (un solo fichero, fácil de copiar).
 3. Aplica migraciones y deja la aplicación lista en el navegador.
-4. Lanza en segundo plano el **worker de correos** (envío asíncrono).
+4. Lanza en segundo plano el **worker** (envío asíncrono de correos y recordatorio diario programado).
 
 > Copiar el fichero de base de datos = copia de seguridad completa.
 
@@ -427,7 +428,7 @@ Comandos de consola:
 - `app:setup` — admin inicial + centro de prueba (primer arranque).
 - `app:create-admin` — crear administradores.
 - `app:create-educational-centre` — alta de centros.
-- `app:send-reminders` — recordatorios de firma (programable por cron).
+- `app:send-reminders` — recordatorio de firma (automático; el comando es para uso manual).
 
 **Ajustes jerárquicos**: Global → Centro → Docente. Cada nivel puede
 **bloquear** un valor o dejar que el inferior lo cambie.
@@ -446,7 +447,7 @@ Comandos de consola:
   php bin/console messenger:failed:retry
   php bin/console messenger:failed:remove <id>
   ```
-- **Recordatorios** automáticos vía `app:send-reminders` (por ejemplo, a diario a las 8:00).
+- **Recordatorio de firma** automático cada día (Symfony Scheduler, vía el *worker*); sin cron externo.
 
 > El envío asíncrono mantiene la aplicación **rápida**: el usuario no espera al correo.
 

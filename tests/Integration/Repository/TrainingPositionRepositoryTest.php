@@ -14,6 +14,7 @@ use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
 use App\Repository\TrainingPositionRepository;
 use App\Tests\Integration\RepositoryTestCase;
@@ -156,50 +157,83 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $this->repo->findByStayOrdered($stay));
     }
 
-    // ── findUnsignedWithStayEndingOn ─────────────────────────────────────────
+    // ── findRegisteredUnsignedStartingWithinForCentre ────────────────────────
 
-    public function testFindUnsignedWithStayEndingOnMatchesExactDate(): void
+    public function testFindRegisteredUnsignedStartingWithinMatchesRegisteredUnsigned(): void
     {
-        [$stay] = $this->makeChain('41000020');
+        [$stay, $centre] = $this->makeChain('41000020');
         $student  = $this->makeStudent('2024-001');
-        $position = $this->makePosition($stay)->setStudent($student);
+        $position = $this->makePosition($stay)->setStudent($student)->setState(TrainingPositionState::DONE);
         $this->persist($student, $position);
 
-        $results = $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate());
+        $results = $this->repo->findRegisteredUnsignedStartingWithinForCentre(
+            $centre,
+            $stay->getStartDate(),
+        );
 
         self::assertCount(1, $results);
         self::assertSame($position->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
     }
 
-    public function testFindUnsignedWithStayEndingOnExcludesOtherDates(): void
+    public function testFindRegisteredUnsignedStartingWithinIncludesAlreadyStarted(): void
     {
-        [$stay] = $this->makeChain('41000021');
+        [$stay, $centre] = $this->makeChain('41000021');
         $student  = $this->makeStudent('2024-001');
-        $position = $this->makePosition($stay)->setStudent($student);
+        $position = $this->makePosition($stay)->setStudent($student)->setState(TrainingPositionState::DONE);
         $this->persist($student, $position);
 
-        $dayBefore = $stay->getEndDate()->modify('-1 day');
+        // El límite es muy posterior al inicio (estancia ya comenzada): sigue avisando.
+        $limit = $stay->getStartDate()->modify('+60 days');
 
-        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($dayBefore));
+        self::assertCount(1, $this->repo->findRegisteredUnsignedStartingWithinForCentre($centre, $limit));
     }
 
-    public function testFindUnsignedWithStayEndingOnExcludesSignedPositions(): void
+    public function testFindRegisteredUnsignedStartingWithinExcludesBeyondLimit(): void
     {
-        [$stay] = $this->makeChain('41000022');
+        [$stay, $centre] = $this->makeChain('41000022');
         $student  = $this->makeStudent('2024-001');
-        $position = $this->makePosition($stay)->setStudent($student)->setSigned(true);
+        $position = $this->makePosition($stay)->setStudent($student)->setState(TrainingPositionState::DONE);
         $this->persist($student, $position);
 
-        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate()));
+        $dayBefore = $stay->getStartDate()->modify('-1 day');
+
+        self::assertCount(0, $this->repo->findRegisteredUnsignedStartingWithinForCentre($centre, $dayBefore));
     }
 
-    public function testFindUnsignedWithStayEndingOnExcludesPositionsWithoutStudent(): void
+    public function testFindRegisteredUnsignedStartingWithinExcludesSignedPositions(): void
     {
-        [$stay] = $this->makeChain('41000023');
-        $position = $this->makePosition($stay);
-        $this->persist($position);
+        [$stay, $centre] = $this->makeChain('41000023');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::DONE)
+            ->setSigned(true);
+        $this->persist($student, $position);
 
-        self::assertCount(0, $this->repo->findUnsignedWithStayEndingOn($stay->getEndDate()));
+        self::assertCount(0, $this->repo->findRegisteredUnsignedStartingWithinForCentre($centre, $stay->getStartDate()));
+    }
+
+    public function testFindRegisteredUnsignedStartingWithinExcludesNonRegisteredStates(): void
+    {
+        [$stay, $centre] = $this->makeChain('41000024');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setState(TrainingPositionState::PENDING);
+        $this->persist($student, $position);
+
+        self::assertCount(0, $this->repo->findRegisteredUnsignedStartingWithinForCentre($centre, $stay->getStartDate()));
+    }
+
+    public function testFindRegisteredUnsignedStartingWithinExcludesOtherCentres(): void
+    {
+        [$stay] = $this->makeChain('41000025');
+        $student  = $this->makeStudent('2024-001');
+        $position = $this->makePosition($stay)->setStudent($student)->setState(TrainingPositionState::DONE);
+        $this->persist($student, $position);
+
+        $otherCentre = $this->makeCentre('41000026');
+        $this->persist($otherCentre);
+
+        self::assertCount(0, $this->repo->findRegisteredUnsignedStartingWithinForCentre($otherCentre, $stay->getStartDate()));
     }
 
     // ── findUnsignedByTutorWithStayEndingBetween ─────────────────────────────

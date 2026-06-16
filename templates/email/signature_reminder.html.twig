@@ -1,34 +1,51 @@
 {% extends 'email/_layout.html.twig' %}
 
 {% block content %}
-    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': tutor.name.firstName}, 'emails') }}</p>
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': recipient.name.firstName}, 'emails') }}</p>
 
     <p style="margin: 0 0 16px;">
-        {{ 'emails.signature_reminder.intro'|trans({'%count%': positions|length, '%days%': days_left}, 'emails') }}
+        {{ 'emails.signature_reminder.intro'|trans({}, 'emails') }}
     </p>
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px; font-size: 13px; border-collapse: collapse;">
-        <tr>
-            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.student'|trans({}, 'emails') }}</th>
-            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.workcenter'|trans({}, 'emails') }}</th>
-            <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.stay'|trans({}, 'emails') }}</th>
-        </tr>
-        {% for position in positions %}
+    {% for group in groups %}
+        <p style="margin: 16px 0 8px; font-weight: bold;">
+            <a href="{{ stay_urls[group.stay.id.toRfc4122] }}" style="color: #6d28d9; text-decoration: none;">
+                {{ 'emails.signature_reminder.stay_heading'|trans({'%stay%': group.stay.name, '%date%': group.stay.startDate|date('d/m/Y')}, 'emails') }}
+            </a>
+        </p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px; font-size: 13px; border-collapse: collapse;">
             <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
-                    {{ position.student.name.lastName }}, {{ position.student.name.firstName }}
-                </td>
-                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
-                    {% if position.workcenter %}
-                        {{ position.workcenter.company.name }} — {{ position.workcenter.name }}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
-                    <a href="{{ stay_urls[position.stay.id.toRfc4122] }}" style="color: #6d28d9;">{{ position.stay.name }}</a>
-                </td>
+                <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.student'|trans({}, 'emails') }}</th>
+                <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.workcenter'|trans({}, 'emails') }}</th>
+                <th align="left" style="padding: 8px; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: bold;">{{ 'emails.signature_reminder.col.tutors'|trans({}, 'emails') }}</th>
             </tr>
-        {% endfor %}
-    </table>
+            {% for position in group.positions %}
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                        {{ position.student.name.lastName }}, {{ position.student.name.firstName }}
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                        {% if position.workcenter %}
+                            {{ position.workcenter.company.name }} — {{ position.workcenter.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">
+                        {% if position.academicTutor or position.workplaceMentor %}
+                            {% if position.academicTutor %}
+                                {{ position.academicTutor.name.lastName }}, {{ position.academicTutor.name.firstName }}<br>
+                            {% endif %}
+                            {% if position.workplaceMentor %}
+                                {{ position.workplaceMentor.name.lastName }}, {{ position.workplaceMentor.name.firstName }}
+                            {% endif %}
+                        {% else %}
+                            {{ 'emails.signature_reminder.no_tutors'|trans({}, 'emails') }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
 {% endblock %}

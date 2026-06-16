@@ -114,36 +114,45 @@ class StayNotifierTest extends TestCase
         $this->makeNotifier($mailer)->notifyLiaisonsPositionsCreated($stay, $company, 3, $creator);
     }
 
-    // ── sendSignatureReminder ─────────────────────────────────────────────────
+    // ── sendSignatureReminderDigest ───────────────────────────────────────────
 
-    public function testSendSignatureReminderBuildsStayUrlMap(): void
+    public function testSendSignatureReminderDigestBuildsStayUrlMap(): void
     {
-        $tutor    = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
-        $position = $this->makePosition();
-        $stayId   = $position->getStay()->getId()->toRfc4122();
+        $recipient = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
+        $position  = $this->makePosition();
+        $stay      = $position->getStay();
+        $stayId    = $stay->getId()->toRfc4122();
 
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects(self::once())
             ->method('send')
-            ->with(self::callback(function (TemplatedEmail $email) use ($stayId): bool {
+            ->with(self::callback(function (TemplatedEmail $email) use ($stayId, $recipient): bool {
                 self::assertSame('luisa@test.local', $email->getTo()[0]->getAddress());
                 self::assertSame('email/signature_reminder.html.twig', $email->getHtmlTemplate());
-                self::assertSame(7, $email->getContext()['days_left']);
+                self::assertSame($recipient, $email->getContext()['recipient']);
+                self::assertCount(1, $email->getContext()['groups']);
                 self::assertArrayHasKey($stayId, $email->getContext()['stay_urls']);
 
                 return true;
             }));
 
-        $this->makeNotifier($mailer)->sendSignatureReminder($tutor, [$position], 7);
+        $sent = $this->makeNotifier($mailer)->sendSignatureReminderDigest(
+            $recipient,
+            [['stay' => $stay, 'positions' => [$position]]],
+        );
+
+        self::assertTrue($sent);
     }
 
-    public function testSendSignatureReminderDoesNothingWithoutPositions(): void
+    public function testSendSignatureReminderDigestDoesNothingWithoutGroups(): void
     {
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects(self::never())->method('send');
 
-        $this->makeNotifier($mailer)
-            ->sendSignatureReminder($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'), [], 7);
+        $sent = $this->makeNotifier($mailer)
+            ->sendSignatureReminderDigest($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'), []);
+
+        self::assertFalse($sent);
     }
 
     // ── Settings-based suppression ────────────────────────────────────────────
@@ -180,10 +189,10 @@ class StayNotifierTest extends TestCase
         $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
     }
 
-    public function testSendSignatureReminderIsSkippedWhenSpecificKeyDisabled(): void
+    public function testSendSignatureReminderDigestIsSkippedWhenSpecificKeyDisabled(): void
     {
-        $tutor    = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
-        $position = $this->makePosition();
+        $recipient = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
+        $position  = $this->makePosition();
 
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects(self::never())->method('send');
@@ -193,7 +202,12 @@ class StayNotifierTest extends TestCase
             fn(string $key) => $key !== 'email.notification.signature_reminder'
         );
 
-        $this->makeNotifier($mailer, settings: $settings)->sendSignatureReminder($tutor, [$position], 7);
+        $sent = $this->makeNotifier($mailer, settings: $settings)->sendSignatureReminderDigest(
+            $recipient,
+            [['stay' => $position->getStay(), 'positions' => [$position]]],
+        );
+
+        self::assertFalse($sent);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

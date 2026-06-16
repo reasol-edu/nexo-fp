@@ -52,8 +52,10 @@ El comando falla si el nombre de usuario ya está registrado. La contraseña se 
 
 ## app:send-reminders
 
-Envía un recordatorio por email a cada tutor/a dual docente con puestos formativos pendientes de firma en
-estancias que finalizan exactamente dentro de N días.
+Envía el aviso diario de puestos formativos «Registrados en Séneca» sin firmar cuyas estancias comienzan
+dentro de los próximos días, a las personas con responsabilidad sobre cada puesto (tutor/a dual docente,
+coordinación de FP dual y jefatura de la familia profesional). Es el mismo trabajo que se ejecuta
+automáticamente cada día; este comando permite lanzarlo a mano.
 
 ```bash
 php bin/console app:send-reminders [--days=N]
@@ -61,16 +63,15 @@ php bin/console app:send-reminders [--days=N]
 
 | Opción | Descripción | Valor por defecto |
 |--------|-------------|-------------------|
-| `--days` | Días que faltan para el fin de la estancia | `7` |
+| `--days` | Sobre-escribe los días de antelación en todos los centros | Ajuste `email.notification.signature_reminder.days` por centro (7 si no está definido) |
+
+Sin `--days`, cada centro usa su propio valor del ajuste
+[`email.notification.signature_reminder.days`](07-ajustes.md). Con `--days` se fuerza ese número de días
+para todos los centros (debe ser un entero ≥ 1).
 
 Requiere tener configurado el envío de correo (`MAILER_DSN` y `MAILER_FROM`) y `DEFAULT_URI` con la URL
-pública de la aplicación para que los enlaces de los emails funcionen. Los puestos cuyo tutor no tiene
-email registrado se omiten con un aviso.
+pública de la aplicación para que los enlaces de los emails funcionen.
 
-Está pensado para ejecutarse una vez al día mediante cron; al filtrar por la fecha exacta de fin, cada
-puesto recibe un único recordatorio:
-
-```cron
-# Todos los días a las 8:00
-0 8 * * * cd /ruta/a/nexo-fp && php bin/console app:send-reminders --days=7
-```
+> **No es necesario configurar cron.** El recordatorio se programa con Symfony Scheduler y lo dispara el
+> *worker* de Messenger una vez al día (consulta [Notificaciones por email](06-notificaciones-y-email.md)).
+> El comando queda como complemento para ejecución manual o puntual.

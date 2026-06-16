@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
 
 interface AppSettingsInterface
@@ -13,4 +14,7 @@ interface AppSettingsInterface
 
     /** Returns the resolved value for a specific teacher (teacher → global → default, no centre). */
     public function getForTeacher(string $key, Teacher $teacher): mixed;
+
+    /** Returns the resolved value for a specific centre (centre → global → default, no teacher). */
+    public function getForCentre(string $key, EducationalCentre $centre): mixed;
 }

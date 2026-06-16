@@ -30,10 +30,11 @@ php bin/console messenger:failed:retry             # reintentar (interactivo)
 php bin/console messenger:failed:remove <id>       # descartar un mensaje
 ```
 
-El *worker* que procesa la cola debe estar en ejecución:
+El *worker* que procesa la cola debe estar en ejecución. Consume el transporte de correos (`async`) y el
+de la programación automática (`scheduler_default`):
 
 ```bash
-php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
+php bin/console messenger:consume async scheduler_default --time-limit=3600 --memory-limit=128M
 ```
 
 En los despliegues con **Docker Compose** (servicio `worker`) y con **binario nativo** (scripts de
@@ -42,12 +43,18 @@ ejecuciones manuales o de desarrollo.
 
 ## Recordatorios de firma
 
-El comando [`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders) avisa a los tutores de los
-puestos pendientes de firma. Está pensado para programarse con cron, una vez al día:
+El aviso diario de puestos registrados sin firmar se **programa automáticamente** con Symfony Scheduler y
+lo dispara el *worker* anterior (transporte `scheduler_default`) una vez al día a las 8:00. **No es
+necesario configurar cron**: basta con que el *worker* esté en marcha. La programación es *stateful*, así
+que recupera el último disparo perdido si el *worker* estuvo detenido, y el control de idempotencia diaria
+evita reenvíos.
+
+Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzarse el comando
+[`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders) manualmente o desde cron:
 
 ```cron
-# Todos los días a las 8:00
-0 8 * * * cd /ruta/a/nexo-fp && php bin/console app:send-reminders --days=7
+# Alternativa al Scheduler: todos los días a las 8:00
+0 8 * * * cd /ruta/a/nexo-fp && php bin/console app:send-reminders
 ```
 
 ## Actualización

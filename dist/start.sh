@@ -85,7 +85,7 @@ fi
 cd "${APP}"
 (
     while true; do
-        "${FP}" php-cli bin/console messenger:consume async --time-limit=3600 --memory-limit=128M --quiet || true
+        "${FP}" php-cli bin/console messenger:consume async scheduler_default --time-limit=3600 --memory-limit=128M --quiet || true
         sleep 2
     done
 ) &

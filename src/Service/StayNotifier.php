@@ -82,29 +82,36 @@ class StayNotifier
         }
     }
 
-    /** @param list<TrainingPosition> $positions */
-    public function sendSignatureReminder(Teacher $tutor, array $positions, int $daysLeft): void
+    /**
+     * Envía a un destinatario el recordatorio de puestos registrados sin firmar,
+     * agrupado por estancia. Devuelve true si se ha enviado (false si el
+     * destinatario no tiene email o lo tiene desactivado, o no hay grupos).
+     *
+     * @param list<array{stay: Stay, positions: list<TrainingPosition>}> $groups
+     */
+    public function sendSignatureReminderDigest(Teacher $recipient, array $groups): bool
     {
-        if ($positions === [] || !$this->hasEmail($tutor, 'signature_reminder')) {
-            return;
+        if ($groups === [] || !$this->hasEmail($recipient, 'signature_reminder')) {
+            return false;
         }
 
         $stayUrls = [];
-        foreach ($positions as $position) {
-            $stayId = $position->getStay()->getId()->toRfc4122();
-            $stayUrls[$stayId] ??= $this->stayUrl($position->getStay());
+        foreach ($groups as $group) {
+            $stayId = $group['stay']->getId()->toRfc4122();
+            $stayUrls[$stayId] ??= $this->stayUrl($group['stay']);
         }
 
         $this->send((new TemplatedEmail())
-            ->to(new Address((string) $tutor->getEmail(), $this->fullName($tutor)))
+            ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
             ->subject($this->translator->trans('emails.signature_reminder.subject', [], 'emails'))
             ->htmlTemplate('email/signature_reminder.html.twig')
             ->context([
-                'tutor'     => $tutor,
-                'positions' => $positions,
-                'days_left' => $daysLeft,
+                'recipient' => $recipient,
+                'groups'    => $groups,
                 'stay_urls' => $stayUrls,
             ]));
+
+        return true;
     }
 
     private function send(TemplatedEmail $email): void

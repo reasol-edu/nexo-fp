@@ -241,8 +241,8 @@ La primera vez que se inicia, el contenedor realiza automáticamente lo siguient
 La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
 
 El stack levanta tres contenedores: `app` (servidor FrankenPHP), `database` (PostgreSQL) y `worker`, que
-procesa el envío asíncrono de los correos en segundo plano (consulta
-[Notificaciones por email](06-notificaciones-y-email.md#envio-asincrono)).
+procesa el envío asíncrono de los correos y dispara el recordatorio diario de firma programado con
+Symfony Scheduler (consulta [Notificaciones por email](06-notificaciones-y-email.md#envio-asincrono)).
 
 > ⚠️ **Seguridad — cambia la contraseña por defecto.** El usuario inicial `admin` / `admin` se crea solo
 > para el primer acceso. En cuanto entres, ve a **Mi perfil → Contraseña** y establece una contraseña

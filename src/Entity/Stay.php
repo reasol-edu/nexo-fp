@@ -43,6 +43,9 @@ class Stay
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     private \DateTimeImmutable $endDate;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastSignatureReminderSentAt = null;
+
     /** @var Collection<int, TrainingPosition> */
     #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $trainingPositions;
@@ -138,6 +141,18 @@ class Stay
     public function setEndDate(\DateTimeImmutable $endDate): static
     {
         $this->endDate = $endDate;
+
+        return $this;
+    }
+
+    public function getLastSignatureReminderSentAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSignatureReminderSentAt;
+    }
+
+    public function setLastSignatureReminderSentAt(?\DateTimeImmutable $lastSignatureReminderSentAt): static
+    {
+        $this->lastSignatureReminderSentAt = $lastSignatureReminderSentAt;
 
         return $this;
     }

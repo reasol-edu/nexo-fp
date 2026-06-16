@@ -85,7 +85,7 @@ if /i "%LOAD_FIXTURES%"=="true" (
 :: -- Worker de Messenger (envío de emails en segundo plano) -------------------
 :: FrankenPHP es monoproceso; lanzamos el consumidor en segundo plano. Para una
 :: gestión más robusta del ciclo de vida del worker, usa start.ps1 en Windows.
-start "nexo-fp-worker" /b /d "%APP%" "%FP%" php-cli bin\console messenger:consume async --memory-limit=128M --quiet
+start "nexo-fp-worker" /b /d "%APP%" "%FP%" php-cli bin\console messenger:consume async scheduler_default --memory-limit=128M --quiet
 
 :: -- Arrancar servidor --------------------------------------------------------
 cd /d "%ROOT%"

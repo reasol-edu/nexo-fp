@@ -28,3 +28,4 @@ restablecerse al valor por defecto.
 | `email.notification.tutor_assigned` | Booleano | Global, centro, personal | Aviso al asignar una tutoría |
 | `email.notification.positions_created` | Booleano | Global, centro, personal | Aviso al crear puestos formativos |
 | `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
+| `email.notification.signature_reminder.days` | Entero (1–365) | Global, centro | Días de antelación con los que se empieza a avisar de la firma pendiente (por defecto 7) |
