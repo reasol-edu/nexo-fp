@@ -9,6 +9,7 @@ use App\Repository\TeacherRepository;
 use App\Entity\Teacher;
 use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -24,6 +25,7 @@ class SearchController extends AbstractController
         private readonly StudentRepository $studentRepository,
         private readonly CompanyRepository $companyRepository,
         private readonly TeacherRepository $teacherRepository,
+        #[Target('search')]
         private readonly RateLimiterFactoryInterface $searchLimiter,
     ) {}
 

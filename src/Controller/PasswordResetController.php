@@ -8,6 +8,7 @@ use App\Repository\TeacherRepository;
 use App\Service\ProfileMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -23,6 +24,7 @@ class PasswordResetController extends AbstractController
         private readonly ProfileMailer $mailer,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
+        #[Target('password_reset')]
         private readonly RateLimiterFactoryInterface $passwordResetLimiter,
     ) {}
 
