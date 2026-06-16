@@ -44,6 +44,29 @@ Desde **Centro Educativo → Estudiantes** se dan de alta los estudiantes, manua
 **importación masiva por CSV desde Séneca**, y se distribuyen en sus grupos. El listado permite 
 búsqueda por NIE o nombre, filtro por grupo y **exportación a CSV**.
 
+### Formato del CSV de importación
+
+La importación está pensada para el fichero que **exporta Séneca** con el alumnado matriculado. La
+**primera fila** debe contener los encabezados de columna y el fichero debe incluir, al menos, estas
+columnas (los nombres deben coincidir exactamente):
+
+| Columna | Uso en Nexo FP |
+|---------|----------------|
+| `Estado Matrícula` | Filtra las filas: solo se importan las que tienen este campo **vacío** (matrícula activa). Las filas con cualquier valor (baja, traslado, anulada…) se omiten. |
+| `Nº Id. Escolar` | Identificador del estudiante (NIE). **Obligatorio**; es la clave para no duplicar. |
+| `Nombre` | Nombre del estudiante. |
+| `Primer apellido` | Primer apellido (obligatorio). |
+| `Segundo apellido` | Segundo apellido (opcional; se une al primero). |
+| `Unidad` | Grupo al que pertenece. Debe coincidir con un grupo del curso activo (sin distinguir mayúsculas). |
+
+Notas sobre el comportamiento:
+
+- Los estudiantes que ya existen (mismo `Nº Id. Escolar`) se **actualizan**; los nuevos se **crean**.
+- Si la `Unidad` no coincide con ningún grupo del curso, el estudiante se importa **sin grupo** y al
+  final se muestra la lista de unidades no reconocidas. Por eso es importante que los grupos se llamen
+  **exactamente** igual que en Séneca (ver el paso 2).
+- El fichero puede estar codificado en UTF-8 o Windows-1252 (se detecta automáticamente).
+
 ## 5. Añadir al resto de docentes del curso académico (equipo directivo)
 
 Por último, añade al resto de **personal adscrito al curso** para que pueda acceder a la plataforma

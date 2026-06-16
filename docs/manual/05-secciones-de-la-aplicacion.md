@@ -112,8 +112,9 @@ incluye también el representante (nombre, DNI/NIE y cargo).
 Gestión interna del centro. Reúne en un único espacio:
 
 - **Docentes del curso:** alta, baja e importación del personal adscrito al curso activo.
-- **Estudiantes:** alta, edición, baja, importación masiva desde CSV y exportación a CSV respetando los
-  filtros de búsqueda y grupo activos.
+- **Estudiantes:** alta, edición, baja, importación masiva desde CSV (formato de exportación de Séneca;
+  ver [Primeros pasos](02-primeros-pasos.md#formato-del-csv-de-importacion)) y exportación a CSV
+  respetando los filtros de búsqueda y grupo activos.
 - **Oferta formativa:** estructura jerárquica completa (familias profesionales → enseñanzas → niveles →
   grupos, con asignación de tutor y docentes a cada grupo).
 - **Cursos académicos:** crear y activar cursos del centro.
