@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-06-16
+
+### Changed
+
+- Guía rápida en el README para usuarios sin conocimientos técnicos: un párrafo antes de «Documentación» que explica cómo descargar el binario, arrancarlo con datos de ejemplo y acceder a la aplicación, enlazando al paso a paso del manual
+- Captura del panel de inicio del manual (`docs/manual/img/inicio.png`) regenerada con la versión actual
+
 ## [2.0.2] - 2026-06-16
 
 ### Changed
