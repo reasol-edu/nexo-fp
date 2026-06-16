@@ -52,6 +52,20 @@ para el historial de cambios.
 
 ---
 
+## ¿Solo quieres probarlo?
+
+¿No eres una persona técnica y solo quieres ver cómo funciona Nexo FP en tu propio ordenador? No
+necesitas instalar nada ni saber de informática. Entra en la
+**[página de descargas](https://github.com/reasol-edu/nexo-fp/releases)**, descarga el archivo de tu
+sistema (Windows, Mac o Linux), descomprímelo y haz doble clic en el script de demostración
+(`demo.bat` en Windows, `demo.command` en Mac, `demo.sh` en Linux). En unos segundos tendrás la
+aplicación funcionando con datos de ejemplo: abre tu navegador en **<http://localhost:8080>** y entra
+con el usuario `admin` y la contraseña `admin`. Tienes el paso a paso ilustrado en
+[Prueba rápida en tu ordenador](docs/manual/09-despliegue.md#prueba-rápida-en-tu-ordenador-sin-conocimientos-técnicos)
+del manual.
+
+---
+
 ## Documentación
 
 La documentación detallada vive en el **[manual de Nexo FP](docs/manual/)** (`docs/manual/`), que es la
