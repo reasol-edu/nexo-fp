@@ -2,7 +2,7 @@ page_title: 'Inicio'
 welcome_message: 'Te damos la bienvenida a la aplicación.'
 logout: 'Cerrar sesión'
 
-greeting: 'Buenos días, %name%'
+greeting: 'Hola, %name%'
 summary_for: 'Resumen del curso %year%'
 no_academic_year: 'No hay un curso académico activo configurado.'
 
