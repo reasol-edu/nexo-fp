@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-16
+
+### Added
+
+- Aviso diario de firma pendiente, multi-destinatario: por cada puesto formativo en estado «Registrado en Séneca» que aún no esté firmado y cuya estancia comience dentro de los próximos X días, se envía un recordatorio a todas las personas con responsabilidad sobre el puesto —el tutor dual docente, la coordinación de FP dual de la enseñanza y la jefatura de la familia profesional—. El mensaje se personaliza y agrupa por persona (un único correo diario), listando las estancias y, por estancia, sus estudiantes con el centro de trabajo y los tutores asignados. El alcance depende del rol: quien es solo tutor ve únicamente sus estudiantes; coordinación y jefatura de familia ven todos los de su área de responsabilidad
+- Nuevo ajuste configurable `email.notification.signature_reminder.days` (global y por centro, valor por defecto 7, rango 1–365) que fija los días de antelación con los que se empieza a avisar
+- Programación automática del aviso mediante el componente Symfony Scheduler (disparo diario a las 8:00), ejecutado por el mismo worker de Messenger que ya envía los correos, tanto en Docker como en el binario nativo. Ya no es necesario configurar un cron externo del sistema operativo
+- Seguimiento del último aviso enviado por estancia (`last_signature_reminder_sent_at`), que además garantiza la idempotencia diaria: si el planificador recupera un disparo perdido, las estancias ya avisadas hoy no se vuelven a notificar
+
+### Changed
+
+- El recordatorio de firma pasa de basarse en la fecha de fin de la estancia (un único aviso a los tutores) a basarse en la fecha de inicio, con avisos diarios hasta que el puesto se firme —incluso si la estancia ya ha comenzado— para priorizar que todo esté firmado antes de empezar
+- El comando `app:send-reminders` se mantiene para ejecución manual y usa el ajuste por centro; la opción `--days` ahora es opcional y, si se indica, sobre-escribe ese valor
+
 ## [2.0.3] - 2026-06-16
 
 ### Changed
