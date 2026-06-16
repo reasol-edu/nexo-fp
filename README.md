@@ -5,7 +5,7 @@
 <h1 align="center">Nexo FP</h1>
 
 <p align="center">
-  Plataforma web para gestionar la formación en empresas de la Formación Profesional
+  Plataforma web para gestionar la planificación y asignación de las estancias del alumnado en empresas de la FFEOE
 </p>
 
 <p align="center">

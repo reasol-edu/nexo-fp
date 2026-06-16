@@ -1,13 +1,18 @@
 # Introducción
 
 **Nexo FP** es una aplicación web, desarrollada con [Symfony](https://symfony.com/), para organizar y
-gestionar la **Fase de Formación en Empresa u Organismo Equiparado** de la Formación Profesional.
+preparar la **Fase de Formación en Empresa u Organismo Equiparado** de la Formación Profesional.
 Centraliza la información de estudiantes, empresas, puestos formativos y tutores, y permite llevar el
 seguimiento del proceso de asignación desde que se crea un puesto hasta que se registra en Séneca.
 
 La aplicación se ha diseñado para ser intuitiva y fácil de usar, con un enfoque en la eficiencia y la
 reducción de errores administrativos. Permite generar informes detallados en PDF y facilita la
 comunicación entre el centro educativo y las empresas.
+
+> **¿Quieres simplemente probar de forma rápida la aplicación?** Sigue la guía
+> [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos):
+> en tres pasos, sin conocimientos técnicos, descargas el binario y lo arrancas con datos de demostración
+> ya cargados.
 
 ## Multicentro
 

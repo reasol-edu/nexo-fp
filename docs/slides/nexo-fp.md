@@ -41,15 +41,15 @@ style: |
 
 # Nexo FP
 
-## Gestión de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)
+## Preparación de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)
 
 Una aplicación web para planificar y asignar las estancias del alumnado en empresas.
 
-*Presentación para profesorado de FP · versión 2.0.0*
+*Presentación para profesorado de FP · versión 2.0.1*
 
 ---
 
-## El problema que resuelve
+## El problema
 
 Hoy, la gestión de la FFEOE suele estar **repartida** en hojas de cálculo, correos y documentos sueltos:
 

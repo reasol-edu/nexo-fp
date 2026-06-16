@@ -1,5 +1,5 @@
 site_name: Manual de usuario de Nexo FP
-site_description: Gestión de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)
+site_description: Gestión de la planificación y asignación de las estancias del alumnado en empresas de la FFEOE
 site_url: https://reasol-edu.github.io/nexo-fp/
 docs_dir: .
 site_dir: ../manual-site
