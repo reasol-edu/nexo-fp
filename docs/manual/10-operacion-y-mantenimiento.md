@@ -54,3 +54,23 @@ puestos pendientes de firma. Está pensado para programarse con cron, una vez al
   solas al arrancar.
 - **Binario nativo:** descarga el nuevo paquete y conserva el directorio `data/` de la instalación
   anterior; al arrancar, aplicará las migraciones pendientes sobre la base de datos existente.
+
+## Protección de datos (RGPD)
+
+Nexo FP almacena **datos personales** de alumnado (nombre, NIE) y profesorado, y datos de las empresas
+colaboradoras. El **centro educativo es el responsable del tratamiento** de esos datos; conviene tenerlo
+en cuenta al operar la aplicación:
+
+- **Acceso mínimo necesario.** Los permisos están diseñados para que cada docente vea solo los datos que
+  necesita (consulta [Roles y permisos](03-roles-y-permisos.md)). Revisa periódicamente quién tiene rol
+  de administrador global o de centro.
+- **Copias de seguridad.** Las copias contienen datos personales: guárdalas en un lugar seguro, cifradas
+  si es posible, y elimínalas cuando dejen de ser necesarias.
+- **Conservación y borrado.** Da de baja al alumnado y elimina los cursos académicos que ya no deban
+  conservarse según la política de tu centro. Al desmontar una instalación, borra el directorio `data/`
+  (binario) o el volumen `./data/postgres/` (Docker) para no dejar datos residuales.
+- **Comunicaciones.** Los emails automáticos incluyen enlaces a la aplicación y nombres de personas;
+  asegúrate de configurar un remitente y un servidor de correo del propio centro
+  (consulta [Notificaciones por email](06-notificaciones-y-email.md)).
+- **Acceso por red.** En instalaciones accesibles desde Internet, usa siempre **HTTPS** y contraseñas
+  robustas; nunca dejes el usuario `admin` / `admin` por defecto.
