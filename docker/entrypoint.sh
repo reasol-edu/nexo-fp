@@ -12,8 +12,8 @@ if [ "${LOAD_FIXTURES:-false}" = "true" ]; then
     php bin/console doctrine:fixtures:load --no-interaction --append --env=prod
 fi
 
-echo "[nexo-fp] Precalentando caché..."
-php bin/console cache:warmup --env=prod --no-interaction || true
+echo "[nexo-fp] Regenerando caché..."
+php bin/console cache:clear --env=prod --no-interaction
 
 echo "[nexo-fp] Iniciando FrankenPHP..."
 exec "$@"
