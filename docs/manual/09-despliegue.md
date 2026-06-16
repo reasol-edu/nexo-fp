@@ -139,6 +139,12 @@ La primera vez que se inicia, el script realiza automáticamente:
 
 La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado).
 
+> ⚠️ **Seguridad — cambia la contraseña por defecto.** El usuario inicial `admin` / `admin` se crea solo
+> para el primer acceso. En cuanto entres, ve a **Mi perfil → Contraseña** y establece una contraseña
+> robusta. En instalaciones reales, crea además tu propio administrador con
+> [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin). Nunca dejes `admin` / `admin` en una
+> instalación accesible por red.
+
 ### Arranque con datos de demostración
 
 Para probar la aplicación con datos de ejemplo (usuarios, centros, empresas y estancias precargadas),
@@ -228,6 +234,12 @@ La primera vez que se inicia, el contenedor realiza automáticamente lo siguient
 3. Inicializa la caché de Symfony.
 
 La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
+
+> ⚠️ **Seguridad — cambia la contraseña por defecto.** El usuario inicial `admin` / `admin` se crea solo
+> para el primer acceso. En cuanto entres, ve a **Mi perfil → Contraseña** y establece una contraseña
+> robusta. En producción, crea además tu propio administrador con
+> [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin). Nunca dejes `admin` / `admin` en una
+> instalación accesible por red.
 
 ### Datos de demostración
 

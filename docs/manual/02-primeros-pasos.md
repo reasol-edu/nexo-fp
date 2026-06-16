@@ -10,6 +10,10 @@ para dejar listo para su uso un curso académico está detallado en el capítulo
 Todo en Nexo FP gira en torno al **curso académico activo** de cada centro: al cambiar de curso, cambia
 el contexto de trabajo. Desde **Centro Educativo** se gestiona el contenido del curso académico activo.
 
+> ⚠️ **Antes de empezar, cambia la contraseña por defecto.** El primer acceso se hace con `admin` /
+> `admin`. Entra y, en **Mi perfil → Contraseña**, establece una contraseña robusta. No dejes nunca las
+> credenciales por defecto en una instalación accesible por red.
+
 ## 2. Estructurar la oferta formativa del curso académico (equipo directivo)
 
 La oferta formativa es una estructura jerárquica que se construye de arriba a abajo:
