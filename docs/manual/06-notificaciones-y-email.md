@@ -30,6 +30,41 @@ MAILER_FROM=no-responder@tudominio.es
 DEFAULT_URI=https://nexo.tudominio.es
 ```
 
+### Usar una cuenta de Gmail
+
+Nexo FP incluye el transporte de Gmail, así que puedes enviar los correos a través de una cuenta de
+**Gmail** o **Google Workspace** con el esquema `gmail://`:
+
+```dotenv
+MAILER_DSN=gmail://USUARIO:CONTRASEÑA_DE_APLICACION@default
+MAILER_FROM=tu-cuenta@gmail.com
+```
+
+> ⚠️ **Necesitas una «contraseña de aplicación», no la contraseña normal de la cuenta.** Google no permite
+> autenticarse por SMTP con la contraseña habitual; hay que generar una contraseña de aplicación
+> específica, y para ello la cuenta **debe tener activada la verificación en dos pasos**.
+
+Pasos para obtenerla:
+
+1. Activa la **verificación en dos pasos** en la cuenta de Google (en **Seguridad**), si no la tienes ya.
+2. Entra en **Contraseñas de aplicaciones** (<https://myaccount.google.com/apppasswords>), ponle un nombre
+   (por ejemplo, «Nexo FP») y genera una.
+3. Google muestra una clave de **16 caracteres**. Cópiala **sin los espacios** y úsala como
+   `CONTRASEÑA_DE_APLICACION` en el DSN.
+
+Notas sobre el DSN:
+
+- `USUARIO` es tu dirección de Gmail. Como el carácter `@` separa las partes del DSN, si incluyes el
+  dominio debes escribirlo codificado como `%40` (por ejemplo, `tu-cuenta%40gmail.com`). En cuentas
+  `@gmail.com` basta con la parte anterior a `@gmail.com`.
+- Si la contraseña de aplicación contiene caracteres especiales, codifícalos igualmente (por ejemplo, `@`
+  → `%40`). Las contraseñas de aplicación de Google solo llevan letras, así que normalmente no hace falta.
+- Gmail reescribe el remitente a la cuenta autenticada, por lo que conviene que `MAILER_FROM` coincida con
+  esa dirección.
+
+> Ten en cuenta los **límites de envío** de Google (orientativos: ~500 correos/día en cuentas gratuitas y
+> ~2000/día en Google Workspace). Para volúmenes mayores, usa un servicio SMTP transaccional.
+
 ## Envío asíncrono
 
 Los emails se envían **en segundo plano**: la verificación de cambio de correo y las notificaciones de
