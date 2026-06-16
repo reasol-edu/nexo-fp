@@ -490,7 +490,8 @@ Educativo y Formación Profesional** de la **Junta de Andalucía**.
 
 **Recursos**
 
-Repositorio y documentación: `README.md` del proyecto
-Datos de demostración y escenarios: `DEMO.md`
+Manual en línea: **reasol-edu.github.io/nexo-fp**
+Descargas y versiones: **github.com/reasol-edu/nexo-fp/releases**
+Repositorio: **github.com/reasol-edu/nexo-fp**
 
 *¿Preguntas?*
