@@ -16,6 +16,19 @@
   <a href="http://www.gnu.org/licenses/agpl.html">AGPL-3.0</a>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/versión-2.0.1-5b21b6" alt="Versión 2.0.1">
+  <img src="https://img.shields.io/badge/licencia-AGPL--3.0-blue" alt="Licencia AGPL-3.0">
+  <img src="https://img.shields.io/badge/PHP-8.4+-777bb4" alt="PHP 8.4+">
+  <img src="https://img.shields.io/badge/Symfony-7-black" alt="Symfony 7">
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/manual/img/inicio.png" alt="Panel de inicio de Nexo FP con las métricas del curso y las estancias activas" width="800">
+</p>
+
 ---
 
 Nexo FP es una aplicación web desarrollada con [Symfony] que permite organizar y gestionar la
