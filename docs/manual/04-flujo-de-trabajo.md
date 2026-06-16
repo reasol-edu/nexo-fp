@@ -23,6 +23,8 @@ Antes de crear puestos, el personal con acceso a **Empresas** registra:
 3. Los **empleados** que actuarán como tutores de empresa (mentores).
 4. Los **docentes de enlace** asignados a cada empresa.
 
+![Directorio de empresas colaboradoras con sus docentes de enlace](img/empresas.png)
+
 ## 3 — Crear estancias y puestos formativos
 
 Una **estancia** agrupa un conjunto de puestos formativos de una misma enseñanza dentro de un periodo
@@ -32,6 +34,8 @@ concreto (por ejemplo, «DAW - 2.º curso, marzo-mayo 2027»).
 2. Dentro de la estancia, se añaden los **puestos formativos**: para cada puesto se indica el centro de
    trabajo y el nivel al que corresponde.
 3. Se inscriben los **estudiantes** en la estancia para que puedan asignarse a los puestos.
+
+![Listado de estancias con filtros por familia, enseñanza y período](img/estancias.png)
 
 > Una misma enseñanza puede tener **varias estancias que se solapen** en el tiempo: no todos los grupos
 > realizan la fase de formación a la vez. Es una situación legítima y la aplicación no la impide.
