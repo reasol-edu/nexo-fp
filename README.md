@@ -17,10 +17,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-2.0.2-5b21b6" alt="Versión 2.0.2">
   <img src="https://img.shields.io/badge/licencia-AGPL--3.0-blue" alt="Licencia AGPL-3.0">
   <img src="https://img.shields.io/badge/PHP-8.4+-777bb4" alt="PHP 8.4+">
-  <img src="https://img.shields.io/badge/Symfony-7-black" alt="Symfony 7">
+  <img src="https://img.shields.io/badge/Symfony-8-black" alt="Symfony 8">
 </p>
 
 ---
@@ -31,7 +30,7 @@
 
 ---
 
-Nexo FP es una aplicación web desarrollada con [Symfony] que permite organizar y gestionar la
+Nexo FP es una aplicación web desarrollada con [Symfony] que permite planificar y preparar la
 **Fase de Formación en Empresa u Organismo Equiparado**. Centraliza la
 información de estudiantes, empresas, puestos formativos y tutores, y permite llevar el seguimiento
 del proceso de asignación desde que se crea un puesto hasta que se registra en Séneca.
@@ -56,7 +55,7 @@ para el historial de cambios.
 ## Documentación
 
 La documentación detallada vive en el **[manual de Nexo FP](docs/manual/)** (`docs/manual/`), que es la
-fuente única de verdad. Cubre instalación, roles y permisos, el flujo de trabajo completo, la referencia
+fuente de referencia principal. Cubre instalación, roles y permisos, el flujo de trabajo completo, la referencia
 de cada pantalla, notificaciones, ajustes, comandos de consola y despliegue.
 
 La versión web navegable de la última versión estable está publicada en
