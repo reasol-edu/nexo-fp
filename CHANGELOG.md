@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Mejora general de la documentación: se corrigen los enlaces entre secciones del manual en PDF; se añaden los capítulos de resolución de problemas (FAQ) y glosario; se documenta el acceso con Séneca/iSéneca, el formato del CSV de importación de estudiantes, la nota de protección de datos (RGPD) y la referencia unificada de variables de entorno; se incorpora el aviso de cambio de la contraseña por defecto `admin`/`admin`; se añaden capturas al capítulo de flujo de trabajo, insignias y captura destacada al README; y se corrige la numeración de los pasos y se añaden las URLs de recursos en la presentación
+
 ### Fixed
 
 - Eliminado un aviso de obsolescencia de Symfony 8.1 al arrancar: los rate limiters de recuperación de contraseña y de búsqueda se inyectaban confiando solo en el nombre del parámetro; ahora se seleccionan con el atributo `#[Target]`
