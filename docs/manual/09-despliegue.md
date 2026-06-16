@@ -212,9 +212,9 @@ Indica a Docker Compose que use ese fichero exportándolo una vez en tu sesión.
 export COMPOSE_ENV_FILES=.env.local
 ```
 
-> Como alternativa, añade `--env-file .env.local` a cada comando `docker compose`. Para que el arranque
-> automático del servidor (p. ej. con systemd) también lo use, define `COMPOSE_ENV_FILES=.env.local` en
-> el entorno del servicio.
+> Como alternativa, añade `--env-file .env.local` a cada comando `docker compose`. Si quieres que la
+> aplicación se inicie sola al reiniciar el servidor, consulta
+> [Arranque automático al reiniciar el servidor](#arranque-automatico-al-reiniciar-el-servidor).
 
 Los campos obligatorios son:
 
@@ -282,6 +282,66 @@ Los datos se almacenan en el directorio `./data/` del proyecto:
 
 - `./data/postgres/` — base de datos PostgreSQL.
 - `./data/var/` — caché, logs y sesiones de Symfony.
+
+### Arranque automático al reiniciar el servidor
+
+Los tres servicios del `compose.yaml` llevan `restart: unless-stopped`, así que **el demonio de Docker
+vuelve a levantarlos solo tras un reinicio del servidor**, sin ninguna configuración adicional de Nexo FP.
+Para el caso habitual basta con dos cosas:
+
+1. Que Docker se inicie con el sistema:
+   ```bash
+   sudo systemctl enable --now docker
+   ```
+2. Haber arrancado el stack al menos una vez con `docker compose up -d` y no haberlo detenido
+   explícitamente con `docker compose stop` o `docker compose down`.
+
+> ⚠️ **`.env.local` solo se lee al hacer `up`.** Las variables de `.env.local` se graban en los
+> contenedores **cuando se crean** (`docker compose up -d`). Los reinicios automáticos reutilizan esos
+> contenedores tal cual y **no vuelven a leer el fichero**. Por eso, si más adelante editas `.env.local`
+> (o el propio `compose.yaml`), debes volver a ejecutar `docker compose up -d` para que los cambios surtan
+> efecto; un simple reinicio del servidor no los recogerá.
+
+Si además quieres que el stack se **recree** desde cero en cada arranque —por ejemplo, para que siempre
+aplique los últimos valores de `.env.local` aunque previamente se hubiera hecho `down`— define una unidad
+de **systemd**:
+
+```ini
+# /etc/systemd/system/nexo-fp.service
+[Unit]
+Description=Nexo FP (Docker Compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/nexo-fp          # ruta donde están compose.yaml y .env.local
+Environment=COMPOSE_ENV_FILES=.env.local
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now nexo-fp.service
+```
+
+`Environment=COMPOSE_ENV_FILES=.env.local` (ruta relativa a `WorkingDirectory`) es lo que hace que el
+arranque automático use tu fichero de variables; equivale al `export` que harías en tu sesión. Como
+alternativa, usa `ExecStart=/usr/bin/docker compose --env-file .env.local up -d`. Comprueba la ruta del
+ejecutable de Docker con `which docker` (en algunas distribuciones es `/usr/local/bin/docker`).
+
+| Situación | Solo `restart: unless-stopped` | Unidad de systemd |
+|---|:---:|:---:|
+| Reinicio del servidor | ✅ | ✅ |
+| Tras `docker compose down` | ❌ no vuelve | ✅ se recrea |
+| Recoge cambios de `.env.local` / `compose.yaml` sin intervención | ❌ requiere `up` manual | ✅ en cada arranque |
 
 ### Actualización
 
