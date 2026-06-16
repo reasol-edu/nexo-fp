@@ -53,7 +53,7 @@ docs-pdf:
 		--metadata lang=es \
 		-c assets/theme.css -c assets/print.css \
 		-o docs/manual/_build.html \
-		docs/manual/index.md docs/manual/0*.md docs/manual/10-*.md
+		docs/manual/index.md docs/manual/[0-9][0-9]-*.md
 	cd docs/manual && CHROME="$${PUPPETEER_EXECUTABLE_PATH:-$$(for c in \
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
 		"/Applications/Chromium.app/Contents/MacOS/Chromium" \

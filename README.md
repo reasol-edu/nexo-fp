@@ -75,6 +75,7 @@ Capítulos:
 | [Comandos de consola](docs/manual/08-comandos-de-consola.md) | Administración por terminal |
 | [Despliegue](docs/manual/09-despliegue.md) | Docker y binario nativo |
 | [Operación y mantenimiento](docs/manual/10-operacion-y-mantenimiento.md) | Backups, colas, recordatorios |
+| [Resolución de problemas](docs/manual/11-resolucion-de-problemas.md) | Soluciones a las dudas más habituales |
 
 ---
 
