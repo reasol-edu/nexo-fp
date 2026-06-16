@@ -4,6 +4,23 @@ Todos los usuarios del sistema son docentes. El nivel de acceso depende de los r
 responsabilidades asignados, que son **acumulativos**: un docente con varios roles acumula todos sus
 permisos.
 
+## Acceso a la plataforma
+
+El inicio de sesión es siempre el **mismo formulario** (usuario y contraseña). Lo que cambia es **cómo se
+valida la contraseña**, según el **tipo de autenticación** que el administrador asigna a cada docente
+desde **Administración → Docentes**:
+
+- **Acceso local.** La contraseña la gestiona Nexo FP (se guarda cifrada). Estos docentes pueden usar el
+  enlace **«¿Olvidaste tu contraseña?»** para restablecerla por email (consulta
+  [Notificaciones por email](06-notificaciones-y-email.md)).
+- **Acceso externo (Séneca/iSéneca).** El docente entra con su **usuario y contraseña de Séneca**, que se
+  validan contra el servicio **iSéneca** de la Junta de Andalucía. La contraseña no se guarda en Nexo FP,
+  así que el restablecimiento por email **no aplica**: se gestiona desde Séneca.
+
+> La autenticación externa se habilita en el despliegue con `APP_EXTERNAL_ENABLED` y las variables
+> `APP_EXTERNAL_*` (consulta [Despliegue](09-despliegue.md#variables-de-entorno-opcionales)). Si está
+> desactivada, todos los accesos son locales.
+
 ## Los perfiles
 
 ### Administrador global
