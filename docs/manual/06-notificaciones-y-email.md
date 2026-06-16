@@ -44,9 +44,13 @@ El *worker* debe estar en ejecución para que los correos encolados se entreguen
 php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
 ```
 
-En los despliegues con **ejecutable binario** no es necesario lanzarlo a mano: los scripts de arranque
-(`dist/start.sh`, `dist/start.ps1`, `dist/start.bat`) inician el consumidor junto al servidor y lo
-detienen al finalizar. En Windows se recomienda usar `start.ps1` como lanzador.
+No es necesario lanzarlo a mano en los despliegues estándar:
+
+- Con **Docker Compose**, el `compose.yaml` incluye un servicio `worker` dedicado que ejecuta el
+  consumidor de forma continua y se reinicia automáticamente.
+- Con **ejecutable binario**, los scripts de arranque (`dist/start.sh`, `dist/start.ps1`,
+  `dist/start.bat`) inician el consumidor junto al servidor y lo detienen al finalizar. En Windows se
+  recomienda usar `start.ps1` como lanzador.
 
 La gestión de los mensajes fallidos se detalla en
 [Operación y mantenimiento](10-operacion-y-mantenimiento.md). Los destinatarios sin dirección de email

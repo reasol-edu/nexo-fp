@@ -13,6 +13,19 @@
 #                  (solo la base de datos; PHP se sirve con Symfony CLI)
 ##############################################################################
 
+# Entorno compartido por la aplicación y el worker (mismo código, misma BD).
+x-app-environment: &app-environment
+  APP_ENV:                      prod
+  APP_DEBUG:                    "0"
+  APP_SECRET:                   "${APP_SECRET:?Crea un .env con APP_SECRET definido}"
+  DATABASE_URL:                 "postgresql://nexo:${DB_PASSWORD:-changeme}@database:5432/nexo?serverVersion=16&charset=utf8"
+  DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
+  MIGRATIONS_PATH:              migrations/postgresql
+  APP_PAGE_SIZE:                "${APP_PAGE_SIZE:-20}"
+  APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
+  APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
+  APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+
 services:
 
   # ── Aplicación (FrankenPHP) ───────────────────────────────────────────────
@@ -27,17 +40,8 @@ services:
       - "${HTTPS_PORT:-443}:443"
       - "${HTTPS_PORT:-443}:443/udp"
     environment:
+      <<: *app-environment
       SERVER_NAME:                  "${SERVER_NAME:-:80}"
-      APP_ENV:                      prod
-      APP_DEBUG:                    "0"
-      APP_SECRET:                   "${APP_SECRET:?Crea un .env con APP_SECRET definido}"
-      DATABASE_URL:                 "postgresql://nexo:${DB_PASSWORD:-changeme}@database:5432/nexo?serverVersion=16&charset=utf8"
-      DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
-      MIGRATIONS_PATH:              migrations/postgresql
-      APP_PAGE_SIZE:                "${APP_PAGE_SIZE:-20}"
-      APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
-      APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
-      APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
       LOAD_FIXTURES:                "${LOAD_FIXTURES:-false}"
     volumes:
       # Datos persistentes de Symfony (caché, logs, sesiones) → ./data/var
@@ -45,6 +49,26 @@ services:
     depends_on:
       database:
         condition: service_healthy
+
+  # ── Worker de mensajería (envío asíncrono de emails) ──────────────────────
+  # FrankenPHP es monoproceso, así que el envío de correos encolados (verificación
+  # de email, notificaciones de tutoría/firma) lo procesa este contenedor aparte.
+  # No ejecuta el entrypoint (migraciones/setup las hace «app»); espera a que «app»
+  # las aplique y, si arranca antes, «restart» lo reintenta.
+  worker:
+    image: nexo-fp:latest
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+    entrypoint: ["php"]
+    command: ["bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=128M"]
+    volumes:
+      - ./data/var:/app/var
+    depends_on:
+      database:
+        condition: service_healthy
+      app:
+        condition: service_started
 
   # ── Base de datos (PostgreSQL) ────────────────────────────────────────────
   database:

@@ -36,7 +36,9 @@ El *worker* que procesa la cola debe estar en ejecución:
 php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M
 ```
 
-En el despliegue con binario nativo, los scripts de arranque lo lanzan y detienen automáticamente.
+En los despliegues con **Docker Compose** (servicio `worker`) y con **binario nativo** (scripts de
+arranque) el consumidor se lanza y se mantiene automáticamente; el comando anterior solo es necesario en
+ejecuciones manuales o de desarrollo.
 
 ## Recordatorios de firma
 

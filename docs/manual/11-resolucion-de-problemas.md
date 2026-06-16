@@ -63,8 +63,8 @@ asignaciones solo ve el panel de inicio y su perfil. Revisa sus asignaciones y c
 1. Comprueba que el correo está **activado**: `MAILER_DSN` debe apuntar a un servidor SMTP real (por
    defecto es `null://null`, que descarta los mensajes). Ver
    [Notificaciones por email](06-notificaciones-y-email.md).
-2. El *worker* de la cola debe estar en marcha (en el binario nativo se lanza solo). Revisa los
-   [mensajes fallidos](10-operacion-y-mantenimiento.md#correos-en-cola-messenger).
+2. El *worker* de la cola debe estar en marcha (con Docker Compose y con el binario nativo se lanza
+   solo). Revisa los [mensajes fallidos](10-operacion-y-mantenimiento.md#correos-en-cola-messenger).
 3. Comprueba que la notificación está habilitada en [Ajustes](07-ajustes.md) (global, centro y personal).
 4. Los destinatarios **sin dirección de email** registrada se omiten de forma silenciosa.
 

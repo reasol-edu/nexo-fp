@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- En el despliegue con Docker no se entregaban los correos asíncronos (verificación de email y notificaciones de tutoría/firma): el `compose.yaml` no incluía ningún consumidor de la cola, por lo que los mensajes quedaban encolados sin enviarse. Se añade un servicio `worker` dedicado que ejecuta `messenger:consume` de forma continua y se reinicia automáticamente
 - Eliminado un aviso de obsolescencia de Symfony 8.1 al arrancar: los rate limiters de recuperación de contraseña y de búsqueda se inyectaban confiando solo en el nombre del parámetro; ahora se seleccionan con el atributo `#[Target]`
 
 ## [2.0.1] - 2026-06-16
