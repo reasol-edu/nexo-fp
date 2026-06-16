@@ -172,18 +172,23 @@ script `start.sh` elimina la cuarentena automáticamente, pero si el problema pe
 xattr -d com.apple.quarantine frankenphp
 ```
 
-### Variables de entorno opcionales
+### Variables de entorno {#variables-de-entorno-opcionales}
 
-Tanto en Linux/macOS como en Windows se pueden ajustar antes de lanzar el script:
+Esta es la **referencia única** de las variables de configuración. En el binario nativo se ajustan antes
+de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen en `.env.local`.
 
 | Variable | Descripción | Valor por defecto |
 |----------|-------------|-------------------|
-| `PORT` | Puerto de escucha | `8080` |
-| `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca | `true` |
+| `PORT` | Puerto de escucha (binario nativo) | `8080` |
+| `APP_SECRET` | Clave de seguridad (64 caracteres hexadecimales). En el binario se genera sola | *(generada)* |
+| `DATABASE_URL` | Conexión a la base de datos (Docker usa PostgreSQL; el binario, SQLite) | *(según el modo)* |
+| `DEFAULT_URI` | URL pública de la aplicación, usada en los enlaces de los emails | `http://localhost` |
+| `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca (ver [Roles y permisos](03-roles-y-permisos.md#acceso-a-la-plataforma)) | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
 | `MAILER_DSN` | Transporte de correo para las [notificaciones](06-notificaciones-y-email.md) | `null://null` (desactivado) |
 | `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
+| `MESSENGER_TRANSPORT_DSN` | Cola de envío asíncrono de correos | `doctrine://default?auto_setup=0` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes) | `false` |
 
 ## Despliegue con Docker
