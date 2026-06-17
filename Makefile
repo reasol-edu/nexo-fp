@@ -1,5 +1,13 @@
 .PHONY: fixtures migrate setup test slides docs docs-pdf docs-web docs-serve
 
+# Versión publicada, leída de config/services.yaml (app.version). La portada del
+# manual en PDF la muestra automáticamente, así que en cada release basta con
+# actualizar services.yaml (paso 2 del procedimiento): no hay que tocar el manual.
+VERSION := $(shell grep -E '^[[:space:]]*app\.version:' config/services.yaml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+# Fecha del release (app.pub_date), reformateada YYYY-MM-DD -> DD/MM/YYYY para
+# mostrarla junto a la versión en la presentación y la portada del manual.
+PUB_DATE := $(shell grep -E '^[[:space:]]*app\.pub_date:' config/services.yaml | head -1 | sed -E 's/.*"([0-9]+)-([0-9]+)-([0-9]+)".*/\3\/\2\/\1/')
+
 test:
 	php bin/phpunit
 
@@ -25,9 +33,17 @@ setup:
 ## Requiere Node.js: usa "npx @marp-team/marp-cli" sin instalación global.
 ## --allow-local-files permite incrustar las capturas de docs/slides/img.
 ## Cambia la extensión de salida a .pptx o .html para otros formatos.
+##
+## La versión y la fecha del release son fuente única (config/services.yaml):
+## se sustituyen los marcadores {{VERSION}} y {{PUB_DATE}} del .md en un fichero
+## temporal _build.md (en el mismo dir, para que las rutas a img/ resuelvan) y
+## se compila ese. Por eso hay que generar siempre con "make slides", no
+## directamente con marp sobre el .md (vería los marcadores sin sustituir).
 slides:
 	@command -v npx >/dev/null 2>&1 || { echo "Necesitas Node.js/npx para generar la presentación. Instala Node y reintenta."; exit 1; }
-	npx --yes @marp-team/marp-cli docs/slides/nexo-fp.md --allow-local-files -o docs/slides/nexo-fp.pdf
+	sed -e 's/{{VERSION}}/$(VERSION)/g' -e 's#{{PUB_DATE}}#$(PUB_DATE)#g' docs/slides/nexo-fp.md > docs/slides/_build.md
+	npx --yes @marp-team/marp-cli docs/slides/_build.md --allow-local-files -o docs/slides/nexo-fp.pdf
+	rm -f docs/slides/_build.md
 
 ## Genera el manual completo: PDF y web.
 docs: docs-pdf docs-web
@@ -50,6 +66,7 @@ docs-pdf:
 		--lua-filter=docs/pandoc-internal-links.lua \
 		--metadata title="Manual de usuario de Nexo FP" \
 		--metadata subtitle="Preparación de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)" \
+		--metadata date="Versión $(VERSION) · $(PUB_DATE)" \
 		--metadata lang=es \
 		-c assets/theme.css -c assets/print.css \
 		-o docs/manual/_build.html \
@@ -66,9 +83,9 @@ docs-pdf:
 ## Requiere MkDocs Material: pip install -r docs/manual/requirements.txt
 docs-web:
 	@command -v mkdocs >/dev/null 2>&1 || { echo "Necesitas MkDocs Material: pip install -r docs/manual/requirements.txt"; exit 1; }
-	mkdocs build -f docs/manual/mkdocs.yml
+	MANUAL_COPYRIGHT="Nexo FP · versión $(VERSION) · $(PUB_DATE)" mkdocs build -f docs/manual/mkdocs.yml
 
 ## Previsualiza la web del manual en local (http://127.0.0.1:8000).
 docs-serve:
 	@command -v mkdocs >/dev/null 2>&1 || { echo "Necesitas MkDocs Material: pip install -r docs/manual/requirements.txt"; exit 1; }
-	mkdocs serve -f docs/manual/mkdocs.yml
+	MANUAL_COPYRIGHT="Nexo FP · versión $(VERSION) · $(PUB_DATE)" mkdocs serve -f docs/manual/mkdocs.yml

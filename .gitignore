@@ -7,6 +7,8 @@
 /docs/manual-site/
 /docs/manual/nexo-fp-manual.pdf
 /docs/slides/nexo-fp.pdf
+# Fichero temporal con los marcadores de versión/fecha ya sustituidos (make slides).
+/docs/slides/_build.md
 # Capturas originales (con barra lateral) antes del recorte para las diapositivas.
 /docs/slides/img/_orig/
 ###< nexo-fp ###

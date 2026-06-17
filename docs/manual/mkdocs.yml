@@ -1,6 +1,10 @@
 site_name: Manual de usuario de Nexo FP
 site_description: Gestión de la planificación y asignación de las estancias del alumnado en empresas de la FFEOE
 site_url: https://reasol-edu.github.io/nexo-fp/
+# Versión y fecha del release en el pie de la web. Fuente única: config/services.yaml.
+# El target "docs-web" del Makefile exporta MANUAL_COPYRIGHT con app.version y
+# app.pub_date; al construir directamente con mkdocs (sin la variable) se usa el valor por defecto.
+copyright: !ENV [MANUAL_COPYRIGHT, "Manual de usuario de Nexo FP"]
 docs_dir: .
 site_dir: ../manual-site
 use_directory_urls: false
