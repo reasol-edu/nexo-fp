@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Ordenación por columna en los listados de estudiantes, empresas y centros: las cabeceras de las columnas ordenables son ahora botones que alternan ascendente/descendente y reinician la paginación, con indicación accesible de la dirección de orden (`aria-sort`) y un icono de estado
+- «Ir a la página» en la paginación de los listados: junto a los botones de navegación se añade un campo numérico para saltar directamente a una página; el valor se ajusta automáticamente al rango válido (1 … última página)
+- Aviso de generación al exportar a CSV: al pulsar «Exportar» se muestra una notificación no bloqueante («Generando CSV…») que confirma que la descarga se está preparando y desaparece sola
+- Foco visible global coherente: enlaces y botones muestran un anillo de foco con la paleta «plum» al navegar con teclado (`:focus-visible`), respetando la preferencia de movimiento reducido
+
+### Changed
+
+- Listados adaptables a móvil: las tablas de estudiantes, empresas, puestos, centros y docentes se transforman en tarjetas apiladas en pantallas pequeñas (cada celda muestra su etiqueta), eliminando el desplazamiento horizontal y manteniendo pulsables las acciones por fila
+- Conflicto de edición no destructivo: cuando otra persona modifica un puesto formativo mientras se edita, el formulario conserva los datos tecleados y muestra un aviso en línea con la opción de descartar los cambios y cargar la versión actual, en lugar de redirigir descartando lo escrito
+- Tras un error de validación, el foco salta automáticamente al primer campo inválido y se desplaza hasta él; los campos con error se marcan con `aria-invalid` y su mensaje se asocia mediante `aria-describedby`
+- Diálogo de confirmación de borrado accesible: el aviso de confirmación se presenta como diálogo modal (`role="dialog"`, foco atrapado, cierre con Escape o clic fuera y retorno del foco al elemento que lo abrió)
+- Mejora de contraste del texto secundario y de los estados deshabilitados en listados y paginación, para cumplir el nivel AA de las pautas de accesibilidad (WCAG)
+- Realimentación de carga en los listados en vivo: durante las recargas se aplica una animación de pulso atenuado a la zona afectada, respetando la preferencia de movimiento reducido
+
 ## [2.2.0] - 2026-06-17
 
 ### Added

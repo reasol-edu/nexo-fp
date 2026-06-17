@@ -2,6 +2,14 @@
 
 Referencia de cada pantalla de Nexo FP y de lo que permite hacer.
 
+> **Listados (común a todas las secciones).** Las tablas de estudiantes, empresas, puestos, centros y
+> docentes comparten varias ayudas: se pueden **ordenar** pulsando en las cabeceras de columna (alterna
+> ascendente/descendente), la paginación incluye un campo **«Ir a la página»** para saltar directamente,
+> y al pulsar **«Exportar»** aparece un aviso de que el CSV se está generando. En móvil y tablet cada fila
+> se muestra como una **tarjeta** apilada (sin desplazamiento horizontal). La aplicación cuida la
+> accesibilidad por teclado: foco visible al navegar, los diálogos de confirmación atrapan el foco y se
+> cierran con Esc, y al enviar un formulario con errores el foco salta al primer campo incorrecto.
+
 ## Inicio
 
 ![Panel de inicio con las métricas del curso y las estancias activas](img/inicio.png)
