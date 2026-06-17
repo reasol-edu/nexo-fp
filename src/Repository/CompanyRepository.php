@@ -27,13 +27,22 @@ class CompanyRepository extends ServiceEntityRepository
         return $this->createByCentreFilteredQuery($centre);
     }
 
+    /** Columnas ordenables: clave pública => campo DQL (allowlist contra inyección). */
+    private const SORTABLE = [
+        'name' => 'c.name',
+        'city' => 'c.city',
+        'vat_number' => 'c.vatNumber',
+    ];
+
     /** @return Query<null, Company> */
-    public function createByCentreFilteredQuery(EducationalCentre $centre, string $search = ''): Query
+    public function createByCentreFilteredQuery(EducationalCentre $centre, string $search = '', string $sort = '', string $sortDir = 'asc'): Query
     {
         $qb = $this->createQueryBuilder('c')
             ->where('c.educationalCentre = :centre')
-            ->setParameter('centre', $centre->getId(), 'uuid')
-            ->orderBy('c.name', 'ASC');
+            ->setParameter('centre', $centre->getId(), 'uuid');
+
+        $dir = strtolower($sortDir) === 'desc' ? 'DESC' : 'ASC';
+        $qb->orderBy(self::SORTABLE[$sort] ?? 'c.name', isset(self::SORTABLE[$sort]) ? $dir : 'ASC');
 
         if ($search !== '') {
             $q = '%' . $search . '%';

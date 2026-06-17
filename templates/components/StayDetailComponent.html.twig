@@ -107,6 +107,9 @@
                         {{ ux_icon('heroicons:document-arrow-down', {class: 'h-4 w-4'}) }}
                     </a>
                     <a href="{{ path('app_stays_export', {id: stay.id.toRfc4122}) }}"
+                       data-controller="download-feedback"
+                       data-download-feedback-message-value="{{ 'ui.export_started'|trans|e('html_attr') }}"
+                       data-action="download-feedback#show"
                        class="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2
                               text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
                        title="{{ 'stays.export.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.export.btn'|trans({}, 'stays') }}">
@@ -746,35 +749,65 @@ function setupEventDelegation() {
             return;
         }
 
-        // Confirm panel
+        // Confirm dialog: modal centrado anclado a <body>, así nunca lo recorta
+        // el contenedor de la fila (antes era un panel posicionado que se cortaba
+        // al final de la tabla). Accesible: role=dialog, Escape, foco atrapado.
         const confirmTrigger = e.target.closest('.js-confirm-trigger');
         if (confirmTrigger) {
             e.stopPropagation();
             const form = confirmTrigger.closest('.js-confirm-form');
-            if (!form || form.querySelector('.js-confirm-panel')) return;
+            if (!form || document.querySelector('.js-confirm-overlay')) return;
             const isLive = !!form.dataset.liveAction;
-            const panel = document.createElement('div');
-            panel.className = 'js-confirm-panel absolute z-20 right-0 mt-1 w-64 rounded-xl border border-red-200 bg-white shadow-lg p-3 text-sm';
-            panel.innerHTML =
-                '<p class="text-gray-700 mb-2.5 leading-snug">' + (form.dataset.confirm ?? '') + '</p>' +
+            const previousFocus = document.activeElement;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'js-confirm-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4';
+
+            const dialog = document.createElement('div');
+            dialog.setAttribute('role', 'dialog');
+            dialog.setAttribute('aria-modal', 'true');
+            dialog.className = 'w-full max-w-sm rounded-2xl border border-red-200 bg-white p-5 shadow-xl';
+            dialog.innerHTML =
+                '<p class="text-sm leading-snug text-gray-700 mb-4"></p>' +
                 '<div class="flex items-center justify-end gap-2">' +
                 '  <button type="button" class="js-confirm-cancel rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">' + LABEL_CANCEL + '</button>' +
-                '  <button type="' + (isLive ? 'button' : 'submit') + '" class="js-confirm-go rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + (form.dataset.confirmLabel || LABEL_CONFIRM) + '</button>' +
+                '  <button type="button" class="js-confirm-go rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + (form.dataset.confirmLabel || LABEL_CONFIRM) + '</button>' +
                 '</div>';
-            form.style.position = 'relative';
-            form.appendChild(panel);
-            panel.querySelector('.js-confirm-cancel').addEventListener('click', function () { panel.remove(); });
-            if (isLive) {
-                panel.querySelector('.js-confirm-go').addEventListener('click', function () {
-                    panel.remove();
+            dialog.querySelector('p').textContent = form.dataset.confirm ?? '';
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            const cancelBtn = dialog.querySelector('.js-confirm-cancel');
+            const goBtn     = dialog.querySelector('.js-confirm-go');
+
+            function closeDialog() {
+                document.removeEventListener('keydown', onKeydown);
+                overlay.remove();
+                if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+            }
+            function onKeydown(ev) {
+                if (ev.key === 'Escape') { ev.preventDefault(); closeDialog(); return; }
+                if (ev.key === 'Tab') {
+                    const f = dialog.querySelectorAll('button');
+                    const first = f[0], last = f[f.length - 1];
+                    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+                    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+                }
+            }
+            cancelBtn.addEventListener('click', closeDialog);
+            overlay.addEventListener('mousedown', function (ev) { if (ev.target === overlay) closeDialog(); });
+            goBtn.addEventListener('click', function () {
+                closeDialog();
+                if (isLive) {
                     if (liveComp) liveComp.action(form.dataset.liveAction, JSON.parse(form.dataset.liveParams || '{}'));
-                });
-            }
-            function onOutside(ev) {
-                if (!panel.isConnected) { document.removeEventListener('click', onOutside); return; }
-                if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener('click', onOutside); }
-            }
-            setTimeout(function () { document.addEventListener('click', onOutside); }, 0);
+                } else if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            });
+            document.addEventListener('keydown', onKeydown);
+            cancelBtn.focus();
             return;
         }
 

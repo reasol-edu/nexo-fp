@@ -36,6 +36,12 @@ class StudentListComponent extends AbstractController
     #[LiveProp(writable: true)]
     public int $page = 1;
 
+    #[LiveProp(writable: true)]
+    public string $sort = '';
+
+    #[LiveProp(writable: true)]
+    public string $sortDir = 'asc';
+
     public function __construct(
         private readonly StudentRepository $students,
         private readonly GroupRepository $groups,
@@ -66,6 +72,8 @@ class StudentListComponent extends AbstractController
                 $this->centre,
                 trim($this->search),
                 trim($this->groupId),
+                $this->sort,
+                $this->sortDir,
             ),
             max(1, $this->page),
             (int) $this->appSettings->get('page.size'),
@@ -82,5 +90,17 @@ class StudentListComponent extends AbstractController
     public function setPage(#[LiveArg] int $page): void
     {
         $this->page = max(1, $page);
+    }
+
+    #[LiveAction]
+    public function sortBy(#[LiveArg] string $column): void
+    {
+        if ($this->sort === $column) {
+            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sort = $column;
+            $this->sortDir = 'asc';
+        }
+        $this->page = 1;
     }
 }

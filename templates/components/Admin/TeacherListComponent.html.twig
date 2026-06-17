@@ -1,3 +1,4 @@
+{% import 'components/_pagination_live.html.twig' as pager %}
 <div {{ attributes }}>
     {% set pagination = this.pagination %}
 
@@ -21,7 +22,7 @@
         </svg>
     </div>
 
-    <div data-loading="addClass(opacity-50 pointer-events-none)" class="transition-opacity">
+    <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
     {% if pagination.totalItems == 0 %}
         <div class="px-6 py-16 text-center">
             {{ ux_icon('heroicons:users', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
@@ -35,7 +36,7 @@
         </div>
     {% else %}
         <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="table-cards w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-100 bg-gray-50">
                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'teachers.name'|trans({}, 'admin') }}</th>
@@ -48,13 +49,13 @@
             <tbody class="divide-y divide-gray-100">
                 {% for teacher in pagination.items %}
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4">
+                        <td data-label="{{ 'teachers.name'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
                             <span class="font-medium text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
                         </td>
-                        <td class="px-6 py-4 font-mono text-xs text-gray-600">{{ teacher.username }}</td>
-                        <td class="px-6 py-4 text-gray-500 text-xs">{{ teacher.email ?? '—' }}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-1.5 flex-wrap">
+                        <td data-label="{{ 'teachers.username'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-600">{{ teacher.username }}</td>
+                        <td data-label="{{ 'teachers.email'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 text-gray-500 text-xs">{{ teacher.email ?? '—' }}</td>
+                        <td data-label="{{ 'teachers.roles'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
+                            <div class="flex items-center gap-1.5 flex-wrap sm:justify-start justify-end">
                                 {% if teacher.admin %}
                                     <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700 ring-1 ring-inset ring-plum-600/20">
                                         {{ 'teachers.badge.admin'|trans({}, 'admin') }}
@@ -115,47 +116,7 @@
         </table>
         </div>
 
-        {% if pagination.totalPages > 1 %}
-            <div class="flex items-center justify-between border-t border-gray-100 px-6 py-3 gap-4 flex-wrap">
-                <p class="text-xs text-gray-500 shrink-0">
-                    {{ 'pagination.summary'|trans({'%from%': pagination.firstItemIndex, '%to%': pagination.lastItemIndex, '%total%': pagination.totalItems}) }}
-                </p>
-                <nav class="flex items-center gap-1">
-                    {% if pagination.hasPreviousPage %}
-                        <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.previousPage }}"
-                                class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                            {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
-                        </button>
-                    {% else %}
-                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                            {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
-                        </span>
-                    {% endif %}
-                    {% for p in pagination.pageRange %}
-                        {% if p is null %}
-                            <span class="inline-flex items-center justify-center h-8 px-1 text-xs text-gray-400 select-none">…</span>
-                        {% elseif p == pagination.currentPage %}
-                            <span class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg bg-plum-600 text-white text-xs font-semibold">{{ p }}</span>
-                        {% else %}
-                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ p }}"
-                                    class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg border border-gray-200 text-gray-600 text-xs hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                {{ p }}
-                            </button>
-                        {% endif %}
-                    {% endfor %}
-                    {% if pagination.hasNextPage %}
-                        <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.nextPage }}"
-                                class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                        </button>
-                    {% else %}
-                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                        </span>
-                    {% endif %}
-                </nav>
-            </div>
-        {% endif %}
+        {{ pager.nav(pagination) }}
     {% endif %}
     </div>
 </div>

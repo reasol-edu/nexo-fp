@@ -24,6 +24,12 @@ class StudentRepository extends ServiceEntityRepository
         parent::__construct($registry, Student::class);
     }
 
+    /** Columnas ordenables: clave pública => campo DQL (allowlist contra inyección). */
+    private const SORTABLE = [
+        'nie' => 's.studentId',
+        'name' => 's.name.lastName',
+    ];
+
     /**
      * Paginated query: students in groups belonging to the centre's active academic year.
      * Supports text search (NIE, first name, last name) and optional group filter.
@@ -34,6 +40,8 @@ class StudentRepository extends ServiceEntityRepository
         EducationalCentre $centre,
         string $search = '',
         string $groupId = '',
+        string $sort = '',
+        string $sortDir = 'asc',
     ): Query {
         $qb = $this->createQueryBuilder('s')
             ->distinct()
@@ -43,9 +51,18 @@ class StudentRepository extends ServiceEntityRepository
             ->join('prog.professionalFamily', 'f')
             ->join('f.academicYear', 'ay')
             ->where('ay = :activeYear')
-            ->setParameter('activeYear', $centre->getActiveAcademicYear()->getId(), 'uuid')
-            ->orderBy('s.name.lastName', 'ASC')
-            ->addOrderBy('s.name.firstName', 'ASC');
+            ->setParameter('activeYear', $centre->getActiveAcademicYear()->getId(), 'uuid');
+
+        $dir = strtolower($sortDir) === 'desc' ? 'DESC' : 'ASC';
+        if (isset(self::SORTABLE[$sort])) {
+            $qb->orderBy(self::SORTABLE[$sort], $dir);
+            if ($sort === 'name') {
+                $qb->addOrderBy('s.name.firstName', $dir);
+            }
+        } else {
+            $qb->orderBy('s.name.lastName', 'ASC')
+               ->addOrderBy('s.name.firstName', 'ASC');
+        }
 
         if ($groupId !== '') {
             $qb->andWhere('g.id = :groupId')

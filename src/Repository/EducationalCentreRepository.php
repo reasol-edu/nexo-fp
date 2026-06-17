@@ -80,13 +80,22 @@ class EducationalCentreRepository extends ServiceEntityRepository
         return $this->createAllWithActiveYearFilteredQuery();
     }
 
+    /** Columnas ordenables: clave pública => campo DQL (allowlist contra inyección). */
+    private const SORTABLE = [
+        'code' => 'ec.code',
+        'name' => 'ec.name',
+        'city' => 'ec.city',
+    ];
+
     /** @return Query<null, EducationalCentre> */
-    public function createAllWithActiveYearFilteredQuery(string $search = ''): Query
+    public function createAllWithActiveYearFilteredQuery(string $search = '', string $sort = '', string $sortDir = 'asc'): Query
     {
         $qb = $this->createQueryBuilder('ec')
             ->leftJoin('ec.activeAcademicYear', 'ay')
-            ->addSelect('ay')
-            ->orderBy('ec.name', 'ASC');
+            ->addSelect('ay');
+
+        $dir = strtolower($sortDir) === 'desc' ? 'DESC' : 'ASC';
+        $qb->orderBy(self::SORTABLE[$sort] ?? 'ec.name', isset(self::SORTABLE[$sort]) ? $dir : 'ASC');
 
         if ($search !== '') {
             $q = '%' . $search . '%';

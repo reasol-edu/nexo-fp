@@ -28,6 +28,12 @@ class CompanyListComponent extends AbstractController
     #[LiveProp(writable: true)]
     public int $page = 1;
 
+    #[LiveProp(writable: true)]
+    public string $sort = '';
+
+    #[LiveProp(writable: true)]
+    public string $sortDir = 'asc';
+
     public function __construct(
         private readonly CompanyRepository $companies,
         private readonly TenantContext $tenantContext,
@@ -57,7 +63,7 @@ class CompanyListComponent extends AbstractController
         }
 
         return new Paginator(
-            $this->companies->createByCentreFilteredQuery($centre, trim($this->search)),
+            $this->companies->createByCentreFilteredQuery($centre, trim($this->search), $this->sort, $this->sortDir),
             max(1, $this->page),
             (int) $this->appSettings->get('page.size'),
         );
@@ -67,5 +73,17 @@ class CompanyListComponent extends AbstractController
     public function setPage(#[LiveArg] int $page): void
     {
         $this->page = max(1, $page);
+    }
+
+    #[LiveAction]
+    public function sortBy(#[LiveArg] string $column): void
+    {
+        if ($this->sort === $column) {
+            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sort = $column;
+            $this->sortDir = 'asc';
+        }
+        $this->page = 1;
     }
 }

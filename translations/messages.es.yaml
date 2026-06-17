@@ -6,6 +6,7 @@ ui.cancel: 'Cancelar'
 ui.close: 'Cerrar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
+ui.export_started: 'Generando el archivo CSV…'
 
 # Perfil del usuario
 profile.title: 'Mi perfil'
@@ -65,3 +66,5 @@ pagination.summary: 'Mostrando %from%–%to% de %total%'
 pagination.previous: 'Página anterior'
 pagination.next: 'Página siguiente'
 pagination.nav_label: 'Navegación de páginas'
+pagination.goto: 'Ir'
+pagination.goto_label: 'Ir a la página'

@@ -1,3 +1,4 @@
+{% import 'components/_pagination_live.html.twig' as pager %}
 <div {{ attributes }}>
     {% if centre.activeAcademicYear is null %}
         <div class="px-6 py-16 text-center">
@@ -29,7 +30,7 @@
             </svg>
         </div>
 
-        <div data-loading="addClass(opacity-50 pointer-events-none)" class="transition-opacity">
+        <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
         {% set centreAdminIds = centre.admins|map(a => a.id.toRfc4122) %}
 
         {% if pagination.totalItems == 0 %}
@@ -111,47 +112,7 @@
             </table>
             </div>
 
-            {% if pagination.totalPages > 1 %}
-                <div class="flex items-center justify-between border-t border-gray-100 px-6 py-3 gap-4 flex-wrap">
-                    <p class="text-xs text-gray-500 shrink-0">
-                        {{ 'pagination.summary'|trans({'%from%': pagination.firstItemIndex, '%to%': pagination.lastItemIndex, '%total%': pagination.totalItems}) }}
-                    </p>
-                    <nav class="flex items-center gap-1">
-                        {% if pagination.hasPreviousPage %}
-                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.previousPage }}"
-                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
-                            </button>
-                        {% else %}
-                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                {{ ux_icon('heroicons:chevron-left', {class: 'h-4 w-4'}) }}
-                            </span>
-                        {% endif %}
-                        {% for p in pagination.pageRange %}
-                            {% if p is null %}
-                                <span class="inline-flex items-center justify-center h-8 px-1 text-xs text-gray-400 select-none">…</span>
-                            {% elseif p == pagination.currentPage %}
-                                <span class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg bg-plum-600 text-white text-xs font-semibold">{{ p }}</span>
-                            {% else %}
-                                <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ p }}"
-                                        class="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-lg border border-gray-200 text-gray-600 text-xs hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                    {{ p }}
-                                </button>
-                            {% endif %}
-                        {% endfor %}
-                        {% if pagination.hasNextPage %}
-                            <button data-action="live#action" data-live-action-param="setPage" data-live-page-param="{{ pagination.nextPage }}"
-                                    class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                            </button>
-                        {% else %}
-                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                            </span>
-                        {% endif %}
-                    </nav>
-                </div>
-            {% endif %}
+            {{ pager.nav(pagination) }}
         {% endif %}
         </div>
     {% endif %}
