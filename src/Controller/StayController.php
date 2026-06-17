@@ -792,20 +792,6 @@ class StayController extends AbstractController
                 throw $this->createAccessDeniedException();
             }
 
-            // Bloqueo optimista: si otra persona guardó mientras se editaba, la
-            // versión enviada no coincide con la cargada y avisamos en lugar de pisar.
-            $submittedVersion = $request->request->getInt('version', $position->getVersion());
-            try {
-                $this->em->lock($position, LockMode::OPTIMISTIC, $submittedVersion);
-            } catch (OptimisticLockException) {
-                $this->addFlash('error', $this->t('stays.flash.position_conflict'));
-
-                return $this->redirectToRoute('app_stays_edit_position', [
-                    'id'         => $id,
-                    'positionId' => $positionId,
-                ]);
-            }
-
             $values = [
                 'workcenter_id'       => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids'  => $request->request->all('programme_year_ids'),
@@ -823,6 +809,34 @@ class StayController extends AbstractController
                 $values['academic_tutor_id'] = $currentTutorId;
                 $values['workplace_mentor_id'] = $currentMentorId;
                 $values['programme_year_ids'] = $currentPyIds;
+            }
+
+            // Bloqueo optimista: si otra persona guardó mientras se editaba, la
+            // versión enviada no coincide con la cargada. En vez de descartar lo
+            // tecleado, conservamos los valores enviados, recargamos la versión
+            // vigente y avisamos en línea para que se revise antes de reintentar.
+            $submittedVersion = $request->request->getInt('version', $position->getVersion());
+            try {
+                $this->em->lock($position, LockMode::OPTIMISTIC, $submittedVersion);
+            } catch (OptimisticLockException) {
+                $this->em->refresh($position);
+
+                return $this->render('stays/edit_position.html.twig', [
+                    'centre'              => $centre,
+                    'stay'                => $stay,
+                    'position'            => $position,
+                    'is_assignment_locked'=> $isAssignmentLocked,
+                    'by_company'          => $byCompany,
+                    'workers_by_company'  => $workersByCompany,
+                    'programme_years'     => $programmeYears,
+                    'teachers'            => $teachers,
+                    'enrolled_students'   => $enrolledStudents,
+                    'student_group_map'   => $studentGroupMap,
+                    'other_assigned_ids'  => $otherAssignedIds,
+                    'errors'              => [],
+                    'values'              => $values,
+                    'conflict'            => true,
+                ]);
             }
 
             // Validate workcenter

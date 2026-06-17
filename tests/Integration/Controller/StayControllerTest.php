@@ -667,8 +667,9 @@ class StayControllerTest extends ControllerTestCase
         $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
         $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
 
-        // Versión obsoleta (otra persona ya guardó): debe avisar y no sobrescribir.
-        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+        // Versión obsoleta (otra persona ya guardó): avisa en línea sin redirigir,
+        // conserva lo tecleado y no sobrescribe la versión vigente.
+        $crawler = $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'        => $token,
             'version'       => '0',
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
@@ -676,11 +677,12 @@ class StayControllerTest extends ControllerTestCase
             'state'         => 'DRAFT',
         ]);
 
-        self::assertResponseRedirects();
-        self::assertStringContainsString(
-            '/puesto/' . $positionId . '/editar',
-            (string) $this->client->getResponse()->headers->get('Location'),
-        );
+        self::assertResponseIsSuccessful();
+        // El aviso de conflicto se muestra en línea.
+        self::assertGreaterThanOrEqual(1, $crawler->filter('[role="alert"]')->count());
+        self::assertStringContainsString('conflicto', (string) $this->client->getResponse()->getContent());
+        // Lo tecleado se conserva en el formulario reenviado.
+        self::assertStringContainsString('Cambio que no debe guardarse', (string) $this->client->getResponse()->getContent());
 
         $this->em->clear();
         $reloaded = $this->em->find(TrainingPosition::class, $position->getId());

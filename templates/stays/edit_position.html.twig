@@ -25,6 +25,23 @@
             <input type="hidden" name="_token" value="{{ csrf_token('edit_position_' ~ position.id.toRfc4122) }}">
             <input type="hidden" name="version" value="{{ position.version }}">
 
+            {% if conflict|default(false) %}
+                <div role="alert" class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                    <div class="flex items-start gap-2">
+                        {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 text-amber-600 shrink-0 mt-0.5'}) }}
+                        <div>
+                            <p class="text-sm font-semibold text-amber-900">{{ 'stays.position.conflict.title'|trans({}, 'stays') }}</p>
+                            <p class="mt-1 text-xs text-amber-800">{{ 'stays.position.conflict.body'|trans({}, 'stays') }}</p>
+                            <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                               class="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 transition-colors">
+                                {{ ux_icon('heroicons:arrow-path', {class: 'h-3.5 w-3.5'}) }}
+                                {{ 'stays.position.conflict.reload'|trans({}, 'stays') }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
             {% if errors is defined and errors|length > 0 %}
                 <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
                     <p class="text-sm font-medium text-red-800 mb-1">{{ 'stays.form.error_summary'|trans({}, 'stays') }}</p>
@@ -50,6 +67,7 @@
                 </label>
                 <select id="workcenter_id" name="workcenter_id"
                         data-ts-has-error="{{ errors.workcenter_id is defined ? '1' : '' }}"
+                        {% if errors.workcenter_id is defined %}aria-invalid="true" aria-describedby="workcenter_id-error"{% endif %}
                         autofocus
                         {{ is_assignment_locked ? 'disabled' : '' }}
                         class="w-full text-sm">
@@ -67,7 +85,7 @@
                     {% endfor %}
                 </select>
                 {% if errors.workcenter_id is defined %}
-                    <p class="mt-1.5 text-xs text-red-600">{{ errors.workcenter_id }}</p>
+                    <p id="workcenter_id-error" class="mt-1.5 text-xs text-red-600">{{ errors.workcenter_id }}</p>
                 {% endif %}
             </div>
 
@@ -110,6 +128,7 @@
                 </label>
                 <select id="student_id" name="student_id"
                         data-ts-has-error="{{ errors.student_id is defined ? '1' : '' }}"
+                        {% if errors.student_id is defined %}aria-invalid="true" aria-describedby="student_id-error"{% endif %}
                         {{ is_assignment_locked ? 'disabled' : '' }}
                         class="w-full text-sm">
                     <option value="">{{ 'stays.position.field.student_unassigned'|trans({}, 'stays') }}</option>
@@ -124,7 +143,7 @@
                     {% endfor %}
                 </select>
                 {% if errors.student_id is defined %}
-                    <p class="mt-1.5 text-xs text-red-600">{{ errors.student_id }}</p>
+                    <p id="student_id-error" class="mt-1.5 text-xs text-red-600">{{ errors.student_id }}</p>
                 {% endif %}
             </div>
 
@@ -136,6 +155,7 @@
                 </label>
                 <select id="academic_tutor_id" name="academic_tutor_id"
                         data-ts-has-error="{{ errors.academic_tutor_id is defined ? '1' : '' }}"
+                        {% if errors.academic_tutor_id is defined %}aria-invalid="true" aria-describedby="academic_tutor_id-error"{% endif %}
                         {{ is_assignment_locked ? 'disabled' : '' }}
                         class="w-full text-sm">
                     <option value="">{{ 'stays.position.field.academic_tutor_placeholder'|trans({}, 'stays') }}</option>
@@ -147,7 +167,7 @@
                     {% endfor %}
                 </select>
                 {% if errors.academic_tutor_id is defined %}
-                    <p class="mt-1.5 text-xs text-red-600">{{ errors.academic_tutor_id }}</p>
+                    <p id="academic_tutor_id-error" class="mt-1.5 text-xs text-red-600">{{ errors.academic_tutor_id }}</p>
                 {% endif %}
             </div>
 
@@ -159,6 +179,7 @@
                 </label>
                 <select id="workplace_mentor_id" name="workplace_mentor_id"
                         data-ts-has-error="{{ errors.workplace_mentor_id is defined ? '1' : '' }}"
+                        {% if errors.workplace_mentor_id is defined %}aria-invalid="true" aria-describedby="workplace_mentor_id-error"{% endif %}
                         {{ is_assignment_locked ? 'disabled' : '' }}
                         class="w-full text-sm">
                     <option value="">{{ 'stays.position.field.workplace_mentor_placeholder'|trans({}, 'stays') }}</option>
@@ -173,7 +194,7 @@
                     {% endfor %}
                 </select>
                 {% if errors.workplace_mentor_id is defined %}
-                    <p class="mt-1.5 text-xs text-red-600">{{ errors.workplace_mentor_id }}</p>
+                    <p id="workplace_mentor_id-error" class="mt-1.5 text-xs text-red-600">{{ errors.workplace_mentor_id }}</p>
                 {% endif %}
             </div>
 
