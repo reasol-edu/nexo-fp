@@ -241,6 +241,24 @@ todas las filas) y se exporta el **informe PDF** y los puestos a **CSV**.
 
 ---
 
+## Trabajo en equipo, en tiempo real
+
+<!-- _class: tight -->
+
+Varias personas (dirección, coordinación, jefatura, enlaces) pueden gestionar
+los puestos de una misma estancia **a la vez**:
+
+- La pantalla se **actualiza sola en menos de un segundo**: lo que cambia otra
+  persona aparece **sin recargar**, y la fila modificada se **resalta** un instante.
+- Cada pantalla muestra siempre **lo que su rol permite ver**: el aviso no transporta
+  datos; el contenido se vuelve a pedir al servidor con los permisos de cada usuario.
+- Si dos personas editan el mismo puesto, la aplicación **avisa del conflicto**
+  en lugar de sobrescribir el trabajo del otro.
+
+> Tecnología: hub **Mercure** embebido en FrankenPHP. Sin servicios ni contenedores extra.
+
+---
+
 ## 9 · Asignar un puesto
 
 ![bg right:50%](img/12_puesto_editar.png)

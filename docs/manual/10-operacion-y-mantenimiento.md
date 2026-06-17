@@ -41,6 +41,18 @@ En los despliegues con **Docker Compose** (servicio `worker`) y con **binario na
 arranque) el consumidor se lanza y se mantiene automáticamente; el comando anterior solo es necesario en
 ejecuciones manuales o de desarrollo.
 
+## Sincronización en vivo (Mercure)
+
+La actualización en vivo de la pantalla de estancia se apoya en un **hub de Mercure embebido en
+FrankenPHP**, tanto en Docker como en el binario nativo. No es un servicio aparte que haya que
+arrancar, supervisar ni respaldar: vive dentro del mismo proceso del servidor de aplicaciones.
+
+Lo único que persiste es el secreto que firma los avisos: en el binario nativo se genera en el primer
+arranque y se guarda en `data/.mercure_secret` (incluido, por tanto, en la copia de seguridad del
+directorio `data/`); en Docker es la variable `MERCURE_JWT_SECRET`. Consulta los detalles y la
+resolución de problemas en [Sincronización en vivo](09-despliegue.md#sincronizacion-en-vivo-mercure) y
+[Resolución de problemas](11-resolucion-de-problemas.md#la-pantalla-de-estancia-no-se-actualiza-sola).
+
 ## Recordatorios de firma
 
 El aviso diario de puestos registrados sin firmar se **programa automáticamente** con Symfony Scheduler y

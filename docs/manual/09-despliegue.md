@@ -189,7 +189,39 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `MAILER_DSN` | Transporte de correo para las [notificaciones](06-notificaciones-y-email.md) | `null://null` (desactivado) |
 | `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
 | `MESSENGER_TRANSPORT_DSN` | Cola de envío asíncrono de correos | `doctrine://default?auto_setup=0` |
+| `MERCURE_JWT_SECRET` | Clave para firmar los avisos de [sincronización en vivo](#sincronizacion-en-vivo-mercure). En Docker es obligatoria; en el binario se genera sola | *(generada en el binario)* |
+| `MERCURE_URL` | URL interna que usa la aplicación para publicar avisos (servidor→hub) | *(según el modo)* |
+| `MERCURE_PUBLIC_URL` | URL pública (navegador→hub), relativa al mismo origen | `/.well-known/mercure` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes) | `false` |
+
+### Sincronización en vivo (Mercure) {#sincronizacion-en-vivo-mercure}
+
+La pantalla de estancia se actualiza sola cuando varias personas gestionan los puestos formativos a la
+vez (ver [Secciones de la aplicación](05-secciones-de-la-aplicacion.md#estancias)). Esta función usa
+[Mercure](https://mercure.rocks), un protocolo de envío de eventos del servidor al navegador.
+
+No requiere ningún servicio ni contenedor adicional: el **hub de Mercure va embebido en FrankenPHP**,
+el mismo servidor de aplicaciones que se usa en los dos modos de despliegue. Solo hay que tener en
+cuenta el secreto que firma los avisos:
+
+- **Binario nativo:** el secreto se genera automáticamente en el primer arranque y se guarda en
+  `data/.mercure_secret`. Los arranques posteriores reutilizan el mismo. No hay que hacer nada.
+- **Docker:** define `MERCURE_JWT_SECRET` en `.env.local` (clave aleatoria, distinta de `APP_SECRET`).
+  Genérala igual que `APP_SECRET`, con `php -r 'echo bin2hex(random_bytes(32));'`.
+
+El canal solo transporta un aviso de cambio, nunca datos: cada navegador vuelve a pedir el contenido al
+servidor, que lo renderiza aplicando los permisos de cada usuario. Si la aplicación se sirve sin hub
+(por ejemplo, con el servidor de desarrollo `php -S`), la sincronización en vivo simplemente queda
+inactiva y la pantalla se actualiza al recargar; el resto de la aplicación funciona igual.
+
+En **desarrollo local** con `symfony server:start` no hay FrankenPHP, así que el hub no va embebido. El
+overlay `compose.dev.yaml` levanta un hub aparte (imagen `dunglas/mercure`) junto a PostgreSQL; el
+Symfony CLI lo detecta automáticamente e inyecta las variables `MERCURE_URL` y `MERCURE_PUBLIC_URL`
+apuntando a ese contenedor, de modo que la sincronización en vivo funciona sin más configuración. Como
+ese hub queda en otro puerto que el servidor local, se abre con suscripción anónima y CORS al origen de
+desarrollo (`https://localhost:8000`); es una relajación **solo para desarrollo** y sin riesgo, porque el
+canal sigue sin transportar datos. Si arrancas el servidor en otro puerto, ajusta `cors_origins` en
+`compose.dev.yaml`.
 
 ## Despliegue con Docker
 
@@ -225,6 +257,9 @@ Los campos obligatorios son:
   php -r 'echo bin2hex(random_bytes(32));'
   ```
 - **`DB_PASSWORD`** — contraseña de la base de datos PostgreSQL.
+- **`MERCURE_JWT_SECRET`** — clave para firmar los avisos de
+  [sincronización en vivo](#sincronizacion-en-vivo-mercure), distinta de `APP_SECRET`. Genérala con el
+  mismo comando.
 
 ### Arranque
 

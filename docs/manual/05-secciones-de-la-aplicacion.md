@@ -76,6 +76,21 @@ Cada puesto formativo registra:
 | Estado | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca` |
 | Firmado | Indica si el convenio está firmado |
 
+### Trabajo simultáneo y actualización en vivo
+
+Varias personas pueden gestionar los puestos de una misma estancia a la vez (dirección, coordinación,
+jefatura de familia y docentes de enlace). El detalle de la estancia se **actualiza en vivo**: cuando
+alguien crea o elimina un puesto, asigna un estudiante o un tutor, cambia un estado o firma, las demás
+pantallas abiertas de esa estancia se refrescan solas en menos de un segundo, sin recargar. Cada
+pantalla muestra siempre lo que su rol permite ver. Las filas que cambian por la acción de otra persona
+(o las que aparecen nuevas) se **resaltan brevemente** con una animación para que se vea de un vistazo qué
+se ha modificado. Esta función requiere el despliegue con FrankenPHP (Docker o binario nativo); ver
+[Sincronización en vivo](09-despliegue.md#sincronizacion-en-vivo-mercure).
+
+Al editar un puesto desde el formulario a página completa, si otra persona lo ha modificado mientras
+tanto, la aplicación **avisa del conflicto** y pide revisar los datos actualizados antes de volver a
+guardar, en lugar de sobrescribir el cambio de la otra persona.
+
 ## Calendario
 
 ![Vista mensual del calendario de estancias con un color por familia profesional](img/calendario.png)

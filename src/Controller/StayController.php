@@ -20,12 +20,16 @@ use App\Repository\WorkcenterRepository;
 use App\Service\CsvExporter;
 use App\Service\PdfService;
 use App\Service\StayNotifier;
+use App\Service\StayRealtimeNotifier;
 use App\Service\TenantContext;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mercure\Authorization;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Workflow\WorkflowInterface;
@@ -49,6 +53,8 @@ class StayController extends AbstractController
         private readonly PdfService $pdf,
         private readonly CsvExporter $csvExporter,
         private readonly StayNotifier $notifier,
+        private readonly StayRealtimeNotifier $realtime,
+        private readonly Authorization $mercureAuthorization,
         #[Target('training_position')]
         private readonly WorkflowInterface $trainingPositionWorkflow,
     ) {}
@@ -308,7 +314,7 @@ class StayController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_stays_show')]
-    public function show(string $id): Response
+    public function show(string $id, Request $request): Response
     {
         $centre = $this->tenant->getSelectedCentre();
         if ($centre === null) {
@@ -326,10 +332,27 @@ class StayController extends AbstractController
 
         $this->denyAccessUnlessGranted(StayVoter::VIEW, $stay);
 
-        return $this->render('stays/show.html.twig', [
-            'centre' => $centre,
-            'stay'   => $stay,
+        $topic = $this->realtime->topicForStay($stay);
+
+        $response = $this->render('stays/show.html.twig', [
+            'centre'              => $centre,
+            'stay'                => $stay,
+            'mercure_public_url'  => $this->realtime->publicUrl(),
+            'mercure_topic'       => $topic,
         ]);
+
+        // Cookie de autorización Mercure: solo concede suscripción al topic de
+        // ESTA estancia, y solo a quien acaba de superar StayVoter::VIEW.
+        try {
+            $response->headers->setCookie(
+                $this->mercureAuthorization->createCookie($request, [$topic])
+            );
+        } catch (\Throwable) {
+            // Hub sin factoría de tokens (p. ej. secreto sin configurar): sin
+            // tiempo real, pero la página sigue funcionando con normalidad.
+        }
+
+        return $response;
     }
 
     #[Route('/{id}/informe', name: 'app_stays_report')]
@@ -574,6 +597,7 @@ class StayController extends AbstractController
                     $this->em->persist($position);
                 }
                 $this->em->flush();
+                $this->realtime->publishStayChanged($stay);
 
                 $this->notifier->notifyLiaisonsPositionsCreated($stay, $workcenter->getCompany(), $count, $currentUser);
 
@@ -627,6 +651,7 @@ class StayController extends AbstractController
 
         $this->em->remove($position);
         $this->em->flush();
+        $this->realtime->publishStayChanged($stay);
 
         $this->addFlash('success', $this->t('stays.flash.position_deleted'));
 
@@ -767,6 +792,20 @@ class StayController extends AbstractController
                 throw $this->createAccessDeniedException();
             }
 
+            // Bloqueo optimista: si otra persona guardó mientras se editaba, la
+            // versión enviada no coincide con la cargada y avisamos en lugar de pisar.
+            $submittedVersion = $request->request->getInt('version', $position->getVersion());
+            try {
+                $this->em->lock($position, LockMode::OPTIMISTIC, $submittedVersion);
+            } catch (OptimisticLockException) {
+                $this->addFlash('error', $this->t('stays.flash.position_conflict'));
+
+                return $this->redirectToRoute('app_stays_edit_position', [
+                    'id'         => $id,
+                    'positionId' => $positionId,
+                ]);
+            }
+
             $values = [
                 'workcenter_id'       => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids'  => $request->request->all('programme_year_ids'),
@@ -886,6 +925,7 @@ class StayController extends AbstractController
 
             if (empty($errors)) {
                 $this->em->flush();
+                $this->realtime->publishStayChanged($stay);
 
                 if ($academicTutor !== null && $academicTutor->getId()->toRfc4122() !== $currentTutorId) {
                     $this->notifier->notifyTutorAssigned($position);

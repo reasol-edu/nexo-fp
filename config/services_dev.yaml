@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+# Sobrescrituras solo para el entorno de desarrollo. Se carga después de
+# services.yaml, así que prevalece.
+when@dev:
+    parameters:
+        # El hub de desarrollo (compose.dev.yaml, imagen dunglas/mercure) se abre
+        # con la directiva «anonymous» y, al servir la app con «symfony serve», el
+        # hub queda en otro origen (la cookie de autorización de mismo origen no se
+        # envía). Un suscriptor anónimo solo recibe updates PÚBLICOS, así que en dev
+        # publicamos el aviso como público para que la sincronización en vivo
+        # funcione. Es seguro: el canal solo transporta el UUID de la estancia, sin
+        # datos; cada cliente re-renderiza en el servidor con sus propios permisos.
+        app.mercure_private_updates: false

@@ -15,8 +15,11 @@ use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkerRepository;
 use App\Security\Voter\StayVoter;
 use App\Service\StayNotifier;
+use App\Service\StayRealtimeNotifier;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -45,6 +48,7 @@ class StayDetailComponent extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly TranslatorInterface $translator,
         private readonly StayNotifier $notifier,
+        private readonly StayRealtimeNotifier $realtime,
     ) {}
 
     /** @return array<string, mixed> */
@@ -190,7 +194,7 @@ class StayDetailComponent extends AbstractController
 
 
     #[LiveAction]
-    public function assignPosition(#[LiveArg] string $studentId, #[LiveArg] string $positionId): void
+    public function assignPosition(#[LiveArg] string $studentId, #[LiveArg] string $positionId): ?Response
     {
         $stay = $this->stays->findById($this->stayId);
         if ($stay === null) {
@@ -205,12 +209,12 @@ class StayDetailComponent extends AbstractController
             }
         }
         if ($student === null) {
-            return;
+            return null;
         }
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() !== null) {
-            return;
+            return null;
         }
 
         if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
@@ -218,15 +222,19 @@ class StayDetailComponent extends AbstractController
         }
 
         $position->setStudent($student);
-        $this->em->flush();
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
 
         $this->toast('stays.toast.position_assigned', [
             '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
         ]);
+
+        return null;
     }
 
     #[LiveAction]
-    public function unassignPosition(#[LiveArg] string $positionId): void
+    public function unassignPosition(#[LiveArg] string $positionId): ?Response
     {
         $stay = $this->stays->findById($this->stayId);
         if ($stay === null) {
@@ -238,7 +246,7 @@ class StayDetailComponent extends AbstractController
             || $position->getStudent() === null
             || $position->getState() !== TrainingPositionState::DRAFT
         ) {
-            return;
+            return null;
         }
 
         if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
@@ -249,15 +257,19 @@ class StayDetailComponent extends AbstractController
         $position->setStudent(null);
         $position->setAcademicTutor(null);
         $position->setWorkplaceMentor(null);
-        $this->em->flush();
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
 
         $this->toast('stays.toast.position_unassigned', [
             '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
         ]);
+
+        return null;
     }
 
     #[LiveAction]
-    public function setAcademicTutor(#[LiveArg] string $positionId, #[LiveArg] string $teacherId): void
+    public function setAcademicTutor(#[LiveArg] string $positionId, #[LiveArg] string $teacherId): ?Response
     {
         $stay = $this->stays->findById($this->stayId);
         if ($stay === null) {
@@ -266,7 +278,7 @@ class StayDetailComponent extends AbstractController
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() === null) {
-            return;
+            return null;
         }
 
         if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
@@ -275,12 +287,14 @@ class StayDetailComponent extends AbstractController
 
         $teacher = $this->teachers->findById($teacherId);
         if ($teacher === null) {
-            return;
+            return null;
         }
 
         $previousTutorId = $position->getAcademicTutor()?->getId()->toRfc4122();
         $position->setAcademicTutor($teacher);
-        $this->em->flush();
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
 
         if ($teacher->getId()->toRfc4122() !== $previousTutorId) {
             $this->notifier->notifyTutorAssigned($position);
@@ -289,10 +303,12 @@ class StayDetailComponent extends AbstractController
         $this->toast('stays.toast.academic_tutor_set', [
             '%teacher%' => $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),
         ]);
+
+        return null;
     }
 
     #[LiveAction]
-    public function setWorkplaceMentor(#[LiveArg] string $positionId, #[LiveArg] string $workerId): void
+    public function setWorkplaceMentor(#[LiveArg] string $positionId, #[LiveArg] string $workerId): ?Response
     {
         $stay = $this->stays->findById($this->stayId);
         if ($stay === null) {
@@ -301,7 +317,7 @@ class StayDetailComponent extends AbstractController
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() === null || $position->getWorkcenter() === null) {
-            return;
+            return null;
         }
 
         if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
@@ -316,15 +332,39 @@ class StayDetailComponent extends AbstractController
             }
         }
         if ($mentor === null) {
-            return;
+            return null;
         }
 
         $position->setWorkplaceMentor($mentor);
-        $this->em->flush();
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
 
         $this->toast('stays.toast.workplace_mentor_set', [
             '%mentor%' => $mentor->getName()->getFirstName() . ' ' . $mentor->getName()->getLastName(),
         ]);
+
+        return null;
+    }
+
+    /**
+     * Persiste los cambios y publica el aviso de tiempo real. Si otra persona
+     * modificó el puesto en paralelo (bloqueo optimista), el flush cierra el EM:
+     * redirigimos a la estancia para recargar con datos frescos en lugar de pisar.
+     */
+    private function flushWithRealtime(Stay $stay): ?Response
+    {
+        try {
+            $this->em->flush();
+        } catch (OptimisticLockException) {
+            $this->addFlash('error', $this->translator->trans('stays.flash.position_conflict', [], 'stays'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $this->stayId]);
+        }
+
+        $this->realtime->publishStayChanged($stay);
+
+        return null;
     }
 
     /** @param array<string, string> $params */

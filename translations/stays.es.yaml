@@ -92,6 +92,7 @@ stays.flash.workplace_mentor_set: 'Tutor dual de empresa asignado correctamente.
 stays.flash.position_unassigned: 'Estudiante desasignado del puesto formativo correctamente.'
 stays.flash.position_updated: 'Puesto formativo actualizado correctamente.'
 stays.flash.position_deleted: 'Puesto formativo eliminado correctamente.'
+stays.flash.position_conflict: 'Otra persona ha modificado este puesto mientras lo editabas. Revisa los datos actualizados antes de volver a guardar.'
 stays.flash.created: 'Estancia creada correctamente.'
 stays.flash.no_active_year: 'Este centro no tiene un curso académico activo.'
 stays.flash.positions_created: '{1} Puesto formativo creado correctamente.|]1,Inf[ %count% puestos formativos creados correctamente.'

@@ -2,6 +2,24 @@
 
 @source inline("bg-green-500 bg-green-700 bg-blue-700 bg-gray-600");
 
+/* Resaltado de filas modificadas por otra persona (sincronización en vivo Mercure).
+   El controlador mercure-sync añade .js-sync-flash a las filas cuyo contenido
+   cambió tras un re-render externo, y la retira al terminar la animación. */
+@keyframes sync-flash {
+    0%   { background-color: color-mix(in srgb, var(--color-plum-300) 55%, transparent); }
+    100% { background-color: transparent; }
+}
+
+.js-sync-flash {
+    animation: sync-flash 1.8s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js-sync-flash {
+        animation-duration: 0.01ms;
+    }
+}
+
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 

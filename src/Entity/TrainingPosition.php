@@ -18,6 +18,10 @@ class TrainingPosition
     #[ORM\Column(type: 'uuid')]
     private Uuid $id;
 
+    #[ORM\Version]
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $version = 1;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $details = null;
 
@@ -64,6 +68,11 @@ class TrainingPosition
     public function getId(): Uuid
     {
         return $this->id;
+    }
+
+    public function getVersion(): int
+    {
+        return $this->version;
     }
 
     public function getDetails(): ?string

@@ -32,6 +32,8 @@ if (-not $env:APP_EXTERNAL_URL_FORCE_SECURITY) { $env:APP_EXTERNAL_URL_FORCE_SEC
 if (-not $env:MAILER_DSN)                  { $env:MAILER_DSN = "null://null" }
 if (-not $env:MAILER_FROM)                 { $env:MAILER_FROM = "no-responder@example.com" }
 if (-not $env:MESSENGER_TRANSPORT_DSN)     { $env:MESSENGER_TRANSPORT_DSN = "doctrine://default?auto_setup=0" }
+if (-not $env:MERCURE_URL)                 { $env:MERCURE_URL = "http://localhost:$Port/.well-known/mercure" }
+if (-not $env:MERCURE_PUBLIC_URL)          { $env:MERCURE_PUBLIC_URL = "/.well-known/mercure" }
 
 # -- Carpeta de datos ------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
@@ -44,6 +46,15 @@ if (-not (Test-Path $SecretFile)) {
     $secret | Set-Content -Path $SecretFile -NoNewline -Encoding ascii
 }
 $env:APP_SECRET = (Get-Content $SecretFile -Raw -Encoding ascii).Trim()
+
+# -- MERCURE_JWT_SECRET: generar en el primer arranque ---------------------------
+$MercureSecretFile = Join-Path $Data ".mercure_secret"
+if (-not (Test-Path $MercureSecretFile)) {
+    Write-Host "Generando MERCURE_JWT_SECRET..."
+    $mercureSecret = & $FP php-cli -r 'echo bin2hex(random_bytes(32));' 2>$null
+    $mercureSecret | Set-Content -Path $MercureSecretFile -NoNewline -Encoding ascii
+}
+$env:MERCURE_JWT_SECRET = (Get-Content $MercureSecretFile -Raw -Encoding ascii).Trim()
 
 # -- .env: exponer variables a PHP ----------------------------------------------
 # Set-Content -Encoding utf8 escribe BOM en PS 5.x; Symfony no admite BOM.
@@ -61,6 +72,9 @@ APP_EXTERNAL_URL_FORCE_SECURITY=$($env:APP_EXTERNAL_URL_FORCE_SECURITY)
 MAILER_DSN=$($env:MAILER_DSN)
 MAILER_FROM=$($env:MAILER_FROM)
 MESSENGER_TRANSPORT_DSN=$($env:MESSENGER_TRANSPORT_DSN)
+MERCURE_URL=$($env:MERCURE_URL)
+MERCURE_PUBLIC_URL=$($env:MERCURE_PUBLIC_URL)
+MERCURE_JWT_SECRET=$($env:MERCURE_JWT_SECRET)
 "@
 [System.IO.File]::WriteAllText((Join-Path $App ".env"), $envContent, [System.Text.UTF8Encoding]::new($false))
 

@@ -8,20 +8,52 @@
 # Así, en producción «docker compose up -d» usa solo compose.yaml y levanta
 # la aplicación y la base de datos, sin exponer el puerto de PostgreSQL.
 #
-# En desarrollo solo se arranca la base de datos; la aplicación PHP se sirve
-# con:  symfony server:start
+# En desarrollo se arrancan la base de datos y un hub Mercure (para la
+# sincronización en vivo); la aplicación PHP se sirve con:  symfony server:start
+# El Symfony CLI detecta el hub e inyecta MERCURE_URL y MERCURE_PUBLIC_URL solo.
 ##############################################################################
 
 services:
 
-  # El servicio app queda tras el perfil "production": con el comando de
-  # desarrollo de arriba NO se levanta (se usa Symfony CLI). Para arrancarlo
-  # igualmente:
+  # Los servicios app y worker quedan tras el perfil "production": con el comando
+  # de desarrollo de arriba NO se levantan (la app se sirve con Symfony CLI y el
+  # worker de Messenger se lanza con «php bin/console messenger:consume» o no se
+  # usa). Para arrancarlos igualmente:
   #   docker compose -f compose.yaml -f compose.dev.yaml --profile production up -d
   app:
+    profiles:
+      - production
+
+  worker:
     profiles:
       - production
 
   database:
     ports:
       - "5432:5432"
+
+  # ── Hub Mercure para DESARROLLO ───────────────────────────────────────────
+  # Solo en este overlay. En producción el hub va embebido en FrankenPHP (mismo
+  # origen que la app); con «symfony server:start» la app se sirve aparte, así
+  # que aquí se levanta un hub suelto. El Symfony CLI detecta la imagen
+  # «dunglas/mercure» (puerto 80) y, al arrancar el servidor local, inyecta
+  # solo las variables MERCURE_URL y MERCURE_PUBLIC_URL apuntando a este hub.
+  #
+  # Al quedar en otro puerto (otro origen) que «symfony serve», la cookie de
+  # autorización de mismo origen de producción no aplica; por eso el hub de DEV
+  # se abre con suscripción anónima y CORS al origen del servidor local. No hay
+  # fuga de datos: el canal solo transporta un aviso vacío con el UUID de la
+  # estancia, y el contenido se renderiza en el servidor con los permisos del
+  # usuario. Ajusta «cors_origins» si arrancas «symfony serve» en otro puerto.
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ":80"
+      MERCURE_PUBLISHER_JWT_KEY: "${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}"
+      MERCURE_SUBSCRIBER_JWT_KEY: "${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}"
+      MERCURE_EXTRA_DIRECTIVES: |
+        anonymous
+        cors_origins https://localhost:8000 http://localhost:8000 https://127.0.0.1:8000 http://127.0.0.1:8000
+    ports:
+      - "80"

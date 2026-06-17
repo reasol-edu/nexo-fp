@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 ###> nexo-fp production stack ################################################
 # Variables de entorno: copia .env.example a .env.local, ajusta los valores e
 # indica a Docker Compose que use ese fichero (no se versiona). Exporta una
@@ -25,6 +26,12 @@ x-app-environment: &app-environment
   APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
   APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
   APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+  # Mercure (sincronización en vivo). El hub va embebido en FrankenPHP (servicio
+  # «app»); no hace falta un contenedor aparte. MERCURE_URL es la publicación
+  # interna app→hub; MERCURE_PUBLIC_URL es relativa (mismo origen) para el navegador.
+  MERCURE_URL:                  "${MERCURE_URL:-http://localhost/.well-known/mercure}"
+  MERCURE_PUBLIC_URL:           "${MERCURE_PUBLIC_URL:-/.well-known/mercure}"
+  MERCURE_JWT_SECRET:           "${MERCURE_JWT_SECRET:?Crea un .env con MERCURE_JWT_SECRET definido}"
 
 services:
 

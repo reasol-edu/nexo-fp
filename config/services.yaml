@@ -11,6 +11,10 @@ parameters:
     app.name:                   "Nexo FP"
     app.version:                "2.1.0"
     app.pub_date:               "2026-06-16"
+    # Avisos de Mercure como updates privados (true en prod). En dev se pone a
+    # false (ver services_dev.yaml) porque el hub de desarrollo es anónimo y solo
+    # entrega updates públicos. El canal solo lleva el UUID de la estancia.
+    app.mercure_private_updates: true
 
 services:
     # default configuration for services in *this* file
@@ -25,4 +29,10 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # El resto de argumentos (el hub) se siguen autoconfigurando; solo fijamos
+    # si el aviso es privado, controlado por el parámetro de arriba.
+    App\Service\StayRealtimeNotifier:
+        arguments:
+            $private: '%app.mercure_private_updates%'
 

@@ -20,6 +20,7 @@ use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
 use App\Entity\Worker;
 use App\Tests\Integration\ControllerTestCase;
+use App\Tests\Mercure\CollectingHub;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 
 class StayControllerTest extends ControllerTestCase
@@ -649,6 +650,131 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testEditPositionWithStaleVersionShowsConflictAndDoesNotPersist(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        // Versión obsoleta (otra persona ya guardó): debe avisar y no sobrescribir.
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'        => $token,
+            'version'       => '0',
+            'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'details'       => 'Cambio que no debe guardarse',
+            'state'         => 'DRAFT',
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString(
+            '/puesto/' . $positionId . '/editar',
+            (string) $this->client->getResponse()->headers->get('Location'),
+        );
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertNull($reloaded->getDetails());
+        self::assertSame(1, $reloaded->getVersion());
+    }
+
+    public function testEditPositionIncrementsVersionOnSave(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        self::assertSame(1, $position->getVersion());
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+        $version    = $crawler->filter('[name="version"]')->first()->attr('value');
+        self::assertSame('1', $version);
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'        => $token,
+            'version'       => $version,
+            'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'details'       => 'Observaciones nuevas',
+            'state'         => 'DRAFT',
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertSame('Observaciones nuevas', $reloaded->getDetails());
+        self::assertSame(2, $reloaded->getVersion());
+    }
+
+    public function testEditPositionPublishesStayChange(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $crawler    = $this->client->request('GET', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar');
+        $token      = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->collectingHub()->updates = [];
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
+            '_token'        => $token,
+            'version'       => '1',
+            'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'details'       => 'Observaciones nuevas',
+            'state'         => 'DRAFT',
+        ]);
+
+        self::assertResponseRedirects();
+        $topics = array_merge([], ...array_map(
+            static fn ($u) => $u->getTopics(),
+            $this->collectingHub()->updates,
+        ));
+        self::assertContains('stay/' . $stayId, $topics);
+    }
+
+    public function testShowSetsMercureAuthorizationCookieAndMountsController(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122());
+
+        self::assertResponseIsSuccessful();
+        $cookie = $this->client->getResponse()->headers->getCookies();
+        $names  = array_map(static fn ($c) => $c->getName(), $cookie);
+        self::assertContains('mercureAuthorization', $names);
+        self::assertStringContainsString('data-controller="mercure-sync"', $this->getStreamedContent());
+    }
+
     public function testEditPositionStateNonDraftRequiresTutors(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
@@ -1239,6 +1365,14 @@ class StayControllerTest extends ControllerTestCase
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function collectingHub(): CollectingHub
+    {
+        /** @var CollectingHub $hub */
+        $hub = self::getContainer()->get(CollectingHub::class);
+
+        return $hub;
+    }
 
     private function makeTeacher(string $username): Teacher
     {

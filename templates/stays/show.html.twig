@@ -3,5 +3,13 @@
 {% block title %}{{ stay.name }} · {{ centre.name }} · {{ app_name }}{% endblock %}
 
 {% block content %}
-    {{ component('StayDetailComponent', { stayId: stay.id.toRfc4122 }) }}
+    {% if mercure_public_url is not empty %}
+        <div data-controller="mercure-sync"
+             data-mercure-sync-url-value="{{ mercure_public_url }}"
+             data-mercure-sync-topic-value="{{ mercure_topic }}">
+            {{ component('StayDetailComponent', { stayId: stay.id.toRfc4122 }) }}
+        </div>
+    {% else %}
+        {{ component('StayDetailComponent', { stayId: stay.id.toRfc4122 }) }}
+    {% endif %}
 {% endblock %}

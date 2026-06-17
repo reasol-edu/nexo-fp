@@ -31,6 +31,8 @@ export APP_EXTERNAL_URL_FORCE_SECURITY="${APP_EXTERNAL_URL_FORCE_SECURITY:-true}
 export MAILER_DSN="${MAILER_DSN:-null://null}"
 export MAILER_FROM="${MAILER_FROM:-no-responder@example.com}"
 export MESSENGER_TRANSPORT_DSN="${MESSENGER_TRANSPORT_DSN:-doctrine://default?auto_setup=0}"
+export MERCURE_URL="${MERCURE_URL:-http://localhost:${PORT}/.well-known/mercure}"
+export MERCURE_PUBLIC_URL="${MERCURE_PUBLIC_URL:-/.well-known/mercure}"
 
 # -- Carpeta de datos -----------------------------------------------------------
 mkdir -p "${DATA}"
@@ -41,6 +43,13 @@ if [[ ! -f "${DATA}/.secret" ]]; then
     "${FP}" php-cli -r 'echo bin2hex(random_bytes(32));' 2>/dev/null > "${DATA}/.secret"
 fi
 export APP_SECRET="$(cat "${DATA}/.secret")"
+
+# -- MERCURE_JWT_SECRET: generar en el primer arranque --------------------------
+if [[ ! -f "${DATA}/.mercure_secret" ]]; then
+    echo "Generando MERCURE_JWT_SECRET..."
+    "${FP}" php-cli -r 'echo bin2hex(random_bytes(32));' 2>/dev/null > "${DATA}/.mercure_secret"
+fi
+export MERCURE_JWT_SECRET="$(cat "${DATA}/.mercure_secret")"
 
 # -- .env: exponer variables a PHP (bootEnv requiere el fichero .env) -----------
 cat > "${APP}/.env" <<EOF
@@ -57,6 +66,9 @@ APP_EXTERNAL_URL_FORCE_SECURITY=${APP_EXTERNAL_URL_FORCE_SECURITY}
 MAILER_DSN=${MAILER_DSN}
 MAILER_FROM=${MAILER_FROM}
 MESSENGER_TRANSPORT_DSN=${MESSENGER_TRANSPORT_DSN}
+MERCURE_URL=${MERCURE_URL}
+MERCURE_PUBLIC_URL=${MERCURE_PUBLIC_URL}
+MERCURE_JWT_SECRET=${MERCURE_JWT_SECRET}
 EOF
 
 # -- Caché: limpiar posibles compilaciones parciales de arranques anteriores -----

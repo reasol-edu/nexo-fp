@@ -1,4 +1,4 @@
-.PHONY: fixtures migrate setup test slides docs docs-pdf docs-web docs-serve
+.PHONY: dev dev-stop fixtures migrate setup test slides docs docs-pdf docs-web docs-serve
 
 # Versión publicada, leída de config/services.yaml (app.version). La portada del
 # manual en PDF la muestra automáticamente, así que en cada release basta con
@@ -26,6 +26,28 @@ migrate:
 
 setup:
 	php bin/console app:setup --no-interaction
+
+## Arranca el entorno de desarrollo local.
+##
+## Levanta los contenedores de DESARROLLO (PostgreSQL + hub Mercure; los
+## servicios «app» y «worker» quedan tras el perfil «production», así que NO se
+## arrancan: el PHP lo sirve Symfony CLI) y, a continuación, «symfony serve».
+## El Symfony CLI detecta el hub «dunglas/mercure» e inyecta MERCURE_URL y
+## MERCURE_PUBLIC_URL, de modo que la sincronización en vivo funciona sin más.
+##
+## Se pasa --env-file .env.local porque compose.yaml interpola APP_SECRET y
+## MERCURE_JWT_SECRET (con «:?») aunque «app»/«worker» estén desactivados.
+## «symfony serve» queda en primer plano: Ctrl+C detiene el servidor (los
+## contenedores siguen en marcha; usa «make dev-stop» para pararlos).
+dev:
+	@test -f .env.local || { echo "Falta .env.local. Cópialo de .env.example y ajusta APP_SECRET, DB_PASSWORD y MERCURE_JWT_SECRET."; exit 1; }
+	@command -v symfony >/dev/null 2>&1 || { echo "Necesitas Symfony CLI. Instálalo desde https://symfony.com/download"; exit 1; }
+	docker compose --env-file .env.local -f compose.yaml -f compose.dev.yaml up -d
+	symfony server:start
+
+## Detiene los contenedores de desarrollo (PostgreSQL + hub Mercure).
+dev-stop:
+	docker compose --env-file .env.local -f compose.yaml -f compose.dev.yaml down
 
 
 ## Genera la presentación en PDF (docs/slides/nexo-fp.pdf).

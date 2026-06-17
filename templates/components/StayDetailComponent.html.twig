@@ -273,7 +273,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}">
 
                                     <td class="px-5 py-3 w-44">
                                         <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}</p>
@@ -451,7 +451,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}">
                                     <td class="px-5 py-3 w-44">
                                         <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}</p>
                                         <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
@@ -657,7 +657,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         {% for position in unassigned_positions %}
-                            <tr class="hover:bg-gray-50/50 transition-colors">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-sync-key="position-{{ position.id.toRfc4122 }}">
                                 <td class="px-5 py-3.5">
                                     {% if position.workcenter %}
                                         <p class="font-medium text-gray-900 leading-snug">{{ position.workcenter.company.name }}</p>

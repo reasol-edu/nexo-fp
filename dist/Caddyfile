@@ -14,6 +14,14 @@
 
     encode gzip
 
+    # Hub Mercure embebido (sincronización en vivo de estancias). El secreto JWT
+    # lo genera el script de arranque. Sin «anonymous»: toda suscripción requiere
+    # la cookie de autorización que emite la aplicación.
+    mercure {
+        publisher_jwt {env.MERCURE_JWT_SECRET}
+        subscriber_jwt {env.MERCURE_JWT_SECRET}
+    }
+
     # FrankenPHP gestiona tanto PHP como ficheros estáticos
     php_server
 }

@@ -23,6 +23,7 @@
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
         <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
             <input type="hidden" name="_token" value="{{ csrf_token('edit_position_' ~ position.id.toRfc4122) }}">
+            <input type="hidden" name="version" value="{{ position.version }}">
 
             {% if errors is defined and errors|length > 0 %}
                 <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">

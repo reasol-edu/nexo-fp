@@ -19,6 +19,7 @@ use App\Entity\TrainingPosition;
 use App\Entity\Workcenter;
 use App\Entity\Worker;
 use App\Tests\Integration\ControllerTestCase;
+use App\Tests\Mercure\CollectingHub;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 
 class StayDetailComponentTest extends ControllerTestCase
@@ -400,6 +401,29 @@ class StayDetailComponentTest extends ControllerTestCase
 
         $html = $this->renderHtml($admin, $stay);
         self::assertStringNotContainsString('data-student-id', $html);
+    }
+
+    public function testAssignPositionPublishesStayChange(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+
+        /** @var CollectingHub $hub */
+        $hub = self::getContainer()->get(CollectingHub::class);
+        $hub->updates = [];
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        $component->call('assignPosition', [
+            'studentId'  => $student->getId()->toRfc4122(),
+            'positionId' => $position->getId()->toRfc4122(),
+        ]);
+
+        $topics = array_merge([], ...array_map(static fn ($u) => $u->getTopics(), $hub->updates));
+        self::assertContains('stay/' . $stay->getId()->toRfc4122(), $topics);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

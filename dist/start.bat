@@ -32,6 +32,8 @@ if "%APP_EXTERNAL_URL_FORCE_SECURITY%"=="" set APP_EXTERNAL_URL_FORCE_SECURITY=t
 if "%MAILER_DSN%"==""                  set MAILER_DSN=null://null
 if "%MAILER_FROM%"==""                 set MAILER_FROM=no-responder@example.com
 if "%MESSENGER_TRANSPORT_DSN%"==""     set MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0
+if "%MERCURE_URL%"==""                 set MERCURE_URL=http://localhost:%PORT%/.well-known/mercure
+if "%MERCURE_PUBLIC_URL%"==""          set MERCURE_PUBLIC_URL=/.well-known/mercure
 
 :: -- Carpeta de datos --------------------------------------------------------
 if not exist "%DATA%" mkdir "%DATA%"
@@ -42,6 +44,13 @@ if not exist "%DATA%\.secret" (
     "%FP%" php-cli -r "file_put_contents('%DATA_FWD%/.secret', bin2hex(random_bytes(32)));" 2>nul
 )
 set /p APP_SECRET=<"%DATA%\.secret"
+
+:: -- MERCURE_JWT_SECRET: generar en el primer arranque ------------------------
+if not exist "%DATA%\.mercure_secret" (
+    echo Generando MERCURE_JWT_SECRET...
+    "%FP%" php-cli -r "file_put_contents('%DATA_FWD%/.mercure_secret', bin2hex(random_bytes(32)));" 2>nul
+)
+set /p MERCURE_JWT_SECRET=<"%DATA%\.mercure_secret"
 
 :: -- .env: exponer variables a PHP --------------------------------------------
 (
@@ -58,6 +67,9 @@ set /p APP_SECRET=<"%DATA%\.secret"
     echo MAILER_DSN=%MAILER_DSN%
     echo MAILER_FROM=%MAILER_FROM%
     echo MESSENGER_TRANSPORT_DSN=%MESSENGER_TRANSPORT_DSN%
+    echo MERCURE_URL=%MERCURE_URL%
+    echo MERCURE_PUBLIC_URL=%MERCURE_PUBLIC_URL%
+    echo MERCURE_JWT_SECRET=%MERCURE_JWT_SECRET%
 ) > "%APP%\.env"
 
 :: -- Caché: limpiar posibles compilaciones parciales de arranques anteriores --

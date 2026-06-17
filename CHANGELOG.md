@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Sincronización en vivo de la pantalla de estancia: cuando varias personas trabajan a la vez sobre los puestos formativos de una misma estancia (crear, asignar estudiante, asignar tutor docente o laboral, cambiar de estado, firmar o eliminar), todas las pantallas abiertas de esa estancia se actualizan solas en menos de un segundo, sin necesidad de recargar. Se apoya en Mercure y sigue un diseño «aviso + re-render»: el canal solo transporta una señal vacía de cambio; cada navegador vuelve a pedir al servidor el contenido, que se renderiza aplicando de nuevo los permisos de cada usuario. Así nunca viajan datos ni HTML por el canal y no hay fugas de información entre roles
+- Resaltado visual de los cambios externos: al actualizarse la pantalla por la acción de otra persona, las filas cuyo contenido ha cambiado (o las nuevas) se marcan con una animación breve para dar contexto de qué se ha modificado; respeta la preferencia del sistema de movimiento reducido
+- Bloqueo optimista en los puestos formativos: el formulario de edición a página completa detecta si otra persona guardó cambios mientras se editaba y avisa en lugar de sobrescribir silenciosamente, pidiendo revisar los datos actualizados antes de volver a guardar
+
+### Changed
+
+- El hub de Mercure va embebido en FrankenPHP en ambos despliegues (Docker y binario nativo); no hace falta ningún servicio ni contenedor adicional. Se añaden las variables `MERCURE_URL`, `MERCURE_PUBLIC_URL` y `MERCURE_JWT_SECRET`; en el binario nativo el secreto se genera automáticamente en el primer arranque (`data/.mercure_secret`)
+
 ## [2.1.0] - 2026-06-16
 
 ### Added
