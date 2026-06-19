@@ -29,19 +29,21 @@ class OfertaFormativaImporter
 
     /**
      * Imports the offering into the given academic year.
+     *
      * Existing entries (matched by name) are updated; new ones are created.
-     * Teacher assignments reference teachers by username; unknown usernames are collected.
+     * Teacher assignments are only processed when the corresponding option is enabled.
+     * Unknown usernames are collected and returned so callers can report them.
      *
      * @param array<string, mixed> $data
      * @return array{families: int, programmes: int, levels: int, groups: int, missing_teachers: list<string>}
      */
-    public function import(array $data, AcademicYear $year): array
+    public function import(array $data, AcademicYear $year, ImportOptions $options): array
     {
         $stats = [
-            'families'        => 0,
-            'programmes'      => 0,
-            'levels'          => 0,
-            'groups'          => 0,
+            'families'         => 0,
+            'programmes'       => 0,
+            'levels'           => 0,
+            'groups'           => 0,
             'missing_teachers' => [],
         ];
 
@@ -66,13 +68,15 @@ class OfertaFormativaImporter
                 $stats['families']++;
             }
 
-            $headUsername = $familyData['head'] ?? null;
-            if ($headUsername !== null && $headUsername !== '') {
-                $head = $this->teachers->findByUsername((string) $headUsername);
-                if ($head === null) {
-                    $stats['missing_teachers'][] = (string) $headUsername;
+            if ($options->importHeads) {
+                $headUsername = $familyData['head'] ?? null;
+                if ($headUsername !== null && $headUsername !== '') {
+                    $head = $this->teachers->findByUsername((string) $headUsername);
+                    if ($head === null) {
+                        $stats['missing_teachers'][] = (string) $headUsername;
+                    }
+                    $family->setHead($head ?? null);
                 }
-                $family->setHead($head ?? null);
             }
 
             $existingProgrammes = [];
@@ -99,18 +103,6 @@ class OfertaFormativaImporter
 
                 $details = $progData['details'] ?? null;
                 $programme->setDetails($details !== null && $details !== '' ? (string) $details : null);
-
-                foreach ($programme->getCoordinators()->toArray() as $c) {
-                    $programme->removeCoordinator($c);
-                }
-                foreach ((array) ($progData['coordinators'] ?? []) as $username) {
-                    $teacher = $this->teachers->findByUsername((string) $username);
-                    if ($teacher === null) {
-                        $stats['missing_teachers'][] = (string) $username;
-                    } else {
-                        $programme->addCoordinator($teacher);
-                    }
-                }
 
                 $existingLevels = [];
                 foreach ($this->levels->findByProgrammeOrderedByName($programme) as $l) {
@@ -160,27 +152,31 @@ class OfertaFormativaImporter
                         $groupDetails = $groupData['details'] ?? null;
                         $group->setDetails($groupDetails !== null && $groupDetails !== '' ? (string) $groupDetails : null);
 
-                        foreach ($group->getTeachers()->toArray() as $t) {
-                            $group->removeTeacher($t);
-                        }
-                        foreach ((array) ($groupData['teachers'] ?? []) as $username) {
-                            $teacher = $this->teachers->findByUsername((string) $username);
-                            if ($teacher === null) {
-                                $stats['missing_teachers'][] = (string) $username;
-                            } else {
-                                $group->addTeacher($teacher);
+                        if ($options->importTeachers) {
+                            foreach ($group->getTeachers()->toArray() as $t) {
+                                $group->removeTeacher($t);
+                            }
+                            foreach ($this->uniqueUsernames((array) ($groupData['teachers'] ?? [])) as $username) {
+                                $teacher = $this->teachers->findByUsername($username);
+                                if ($teacher === null) {
+                                    $stats['missing_teachers'][] = $username;
+                                } else {
+                                    $group->addTeacher($teacher);
+                                }
                             }
                         }
 
-                        foreach ($group->getTutors()->toArray() as $t) {
-                            $group->removeTutor($t);
-                        }
-                        foreach ((array) ($groupData['tutors'] ?? []) as $username) {
-                            $teacher = $this->teachers->findByUsername((string) $username);
-                            if ($teacher === null) {
-                                $stats['missing_teachers'][] = (string) $username;
-                            } else {
-                                $group->addTutor($teacher);
+                        if ($options->importTutors) {
+                            foreach ($group->getTutors()->toArray() as $t) {
+                                $group->removeTutor($t);
+                            }
+                            foreach ($this->uniqueUsernames((array) ($groupData['tutors'] ?? [])) as $username) {
+                                $teacher = $this->teachers->findByUsername($username);
+                                if ($teacher === null) {
+                                    $stats['missing_teachers'][] = $username;
+                                } else {
+                                    $group->addTutor($teacher);
+                                }
                             }
                         }
                     }
@@ -196,5 +192,21 @@ class OfertaFormativaImporter
         $stats['missing_teachers'] = $missing;
 
         return $stats;
+    }
+
+    /** @param array<mixed> $raw @return list<string> */
+    private function uniqueUsernames(array $raw): array
+    {
+        $seen   = [];
+        $result = [];
+        foreach ($raw as $u) {
+            $username = trim((string) $u);
+            if ($username !== '' && !isset($seen[$username])) {
+                $seen[$username] = true;
+                $result[]        = $username;
+            }
+        }
+
+        return $result;
     }
 }

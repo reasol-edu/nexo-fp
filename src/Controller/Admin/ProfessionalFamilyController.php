@@ -17,6 +17,7 @@ use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
 use App\Repository\TeacherRepository;
+use App\Service\ImportOptions;
 use App\Service\OfertaFormativaExporter;
 use App\Service\OfertaFormativaImporter;
 use Doctrine\ORM\EntityManagerInterface;
@@ -87,7 +88,13 @@ class ProfessionalFamilyController extends AbstractController
             return $this->render('admin/family/import.html.twig', ['centre' => $centre]);
         }
 
-        $stats = $this->importer->import($data, $centre->getActiveAcademicYear());
+        $options = new ImportOptions(
+            importHeads:    $request->request->has('import_heads'),
+            importTutors:   $request->request->has('import_tutors'),
+            importTeachers: $request->request->has('import_teachers'),
+        );
+
+        $stats = $this->importer->import($data, $centre->getActiveAcademicYear(), $options);
 
         $summary = $this->translator->trans('families.import.flash.summary', [
             '%families%'  => $stats['families'],
