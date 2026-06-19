@@ -155,8 +155,25 @@ Gestión interna del centro. Reúne en un único espacio:
 - **Estudiantes:** alta, edición, baja e importación masiva desde CSV (formato de exportación de Séneca;
   ver [Primeros pasos](02-primeros-pasos.md#formato-del-csv-de-importacion)).
 - **Oferta formativa:** estructura jerárquica completa (familias profesionales → enseñanzas → niveles →
-  grupos, con asignación de tutor y docentes a cada grupo).
+  grupos, con asignación de tutor y docentes a cada grupo). Incluye **exportación e importación en JSON**
+  para copiar la estructura entre cursos o centros (ver más abajo).
 - **Cursos académicos:** crear y activar cursos del centro.
+
+### Exportar e importar la oferta formativa
+
+Desde la página principal de **Oferta formativa** están disponibles dos acciones:
+
+- **Exportar JSON** — descarga un fichero `.json` con toda la estructura del curso activo: familias
+  profesionales, enseñanzas, niveles, grupos y los nombres de usuario de los docentes asignados
+  (responsable de familia, coordinadores de enseñanza, docentes y tutores de cada grupo).
+- **Importar JSON** — carga un fichero exportado previamente y crea o actualiza la estructura en el
+  curso activo del centro. Si una familia, enseñanza, nivel o grupo con el mismo nombre ya existe, se
+  actualiza (no se duplica). Los docentes se buscan por nombre de usuario; si alguno no existe en el
+  servidor de destino, su asignación se omite y el mensaje de resultado indica qué usuarios no se
+  han encontrado.
+
+El caso de uso habitual es **copiar la oferta de un curso al siguiente**: exporta el curso actual,
+activa el nuevo curso académico e importa el fichero.
 
 ## Administración
 
