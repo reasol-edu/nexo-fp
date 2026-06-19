@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-06-19
+
+### Added
+
+- Exportación e importación de la oferta formativa en JSON: familias profesionales, enseñanzas, niveles y grupos, con los nombres de usuario de los docentes asignados. La importación es idempotente (actualiza por nombre, no duplica), permite elegir con checkboxes qué asignaciones de docentes importar (jefes/as de departamento, docentes y tutores de grupo) y notifica los usuarios no encontrados en el servidor de destino
+- Tests unitarios completos para `OfertaFormativaExporter` y `OfertaFormativaImporter`
+
+### Changed
+
+- Eliminada la exportación CSV de estudiantes (no era necesaria)
+
 ## [2.3.1] - 2026-06-19
 
 ### Changed

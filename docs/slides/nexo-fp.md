@@ -178,6 +178,7 @@ En **Centro educativo › Oferta formativa**:
 - Cada **familia profesional** tiene un jefe/a de departamento.
 - Dentro, sus **enseñanzas** (ciclos): CFGM, CFGS…
 - La búsqueda y el plegado facilitan navegar ofertas grandes.
+- **Exportar / importar en JSON** para copiar la oferta entre cursos.
 
 ---
 
