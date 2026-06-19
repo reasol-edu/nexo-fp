@@ -207,7 +207,7 @@ En **Centro educativo › Estudiantes**:
 - Alta manual o **importación por CSV**.
 - Séneca (perfil Dirección): **Alumnado › Alumnado del centro › Exportar datos** (formato CSV)
 - Cada estudiante pertenece a un **grupo**.
-- Búsqueda por NIE/nombre, filtro por grupo y **exportación CSV**.
+- Búsqueda por NIE/nombre y filtro por grupo.
 
 ---
 
@@ -356,7 +356,7 @@ Ciclo de vida de cada puesto:
 Nexo FP genera la documentación que se necesita fuera de la aplicación:
 
 - **Informe de estancia** en **PDF**, listo para imprimir o tramitar.
-- **Exportación CSV** de estudiantes, empresas y puestos.
+- **Exportación CSV** de empresas y puestos.
 - **Avisos por email** automáticos:
   - al **crear puestos** (a los docentes de enlace de la empresa),
   - al **asignar tutoría docente**,

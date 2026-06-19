@@ -152,9 +152,8 @@ contacto y observaciones) se muestran como secciones desplegables con el valor a
 Gestión interna del centro. Reúne en un único espacio:
 
 - **Docentes del curso:** alta, baja e importación del personal adscrito al curso activo.
-- **Estudiantes:** alta, edición, baja, importación masiva desde CSV (formato de exportación de Séneca;
-  ver [Primeros pasos](02-primeros-pasos.md#formato-del-csv-de-importacion)) y exportación a CSV
-  respetando los filtros de búsqueda y grupo activos.
+- **Estudiantes:** alta, edición, baja e importación masiva desde CSV (formato de exportación de Séneca;
+  ver [Primeros pasos](02-primeros-pasos.md#formato-del-csv-de-importacion)).
 - **Oferta formativa:** estructura jerárquica completa (familias profesionales → enseñanzas → niveles →
   grupos, con asignación de tutor y docentes a cada grupo).
 - **Cursos académicos:** crear y activar cursos del centro.
