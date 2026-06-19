@@ -1,7 +1,8 @@
 # Despliegue
 
-Este capítulo detalla los dos modos de despliegue pensados para uso real: **binario nativo** (un centro sin 
-infraestructura) y **Docker Compose** (servidor). Para el modo de desarrollo local, consulta
+Este capítulo contiene las instrucciones completas de todos los modos de despliegue: **prueba rápida**
+(sin conocimientos técnicos), **binario nativo**, **Docker Compose**, **Plesk** y **desarrollo local**.
+Para elegir el modo más adecuado, consulta la tabla comparativa en
 [Instalación y requisitos](01-instalacion-y-requisitos.md).
 
 ## Prueba rápida en tu ordenador (sin conocimientos técnicos)
@@ -405,4 +406,244 @@ docker compose exec app php bin/console app:create-educational-centre
 
 # Crear un administrador adicional
 docker compose exec app php bin/console app:create-admin
+```
+
+## Despliegue en Plesk
+
+Opción para centros que ya disponen de un **VPS o servidor dedicado gestionado con Plesk**. El stack
+es PHP-FPM + MySQL + Apache/Nginx estándar: no requiere Docker ni FrankenPHP. A cambio, la
+[sincronización en vivo](#sincronizacion-en-vivo-mercure) no está disponible en este modo (necesita
+FrankenPHP). Se requiere **acceso SSH** a la suscripción.
+
+### Requisitos previos
+
+- **PHP 8.4** en modo **PHP-FPM** con las siguientes extensiones activas:
+  `ctype`, `curl`, `dom`, `gd`, `iconv`, `intl`, `libxml`, `mbstring`, `pdo_mysql`, `xml`, `opcache`
+- **MySQL 8.0+** o **MariaDB 10.6+** (o PostgreSQL 12+ si el servidor lo ofrece; ver nota al final)
+- **Composer** (disponible en la mayoría de servidores Plesk vía SSH; compruébalo con `composer --version`)
+- Acceso SSH a la suscripción
+
+### 1. Obtener los archivos
+
+!!! tip "Usa Git para facilitar las actualizaciones"
+    Clona el repositorio en un directorio **fuera de `httpdocs/`** (por ejemplo `~/apps/nexo-fp/`):
+
+    ```bash
+    git clone https://github.com/reasol-edu/nexo-fp.git ~/apps/nexo-fp
+    ```
+
+    Así, actualizar a una nueva versión se reduce a un `git pull` y tres comandos.
+
+Si prefieres no usar Git, descarga el código fuente desde la
+[página de Releases](https://github.com/reasol-edu/nexo-fp/releases) en **Assets → Source code (zip)**
+y descomprímelo en el servidor.
+
+### 2. Configurar el dominio en Plesk
+
+En el panel de Plesk, ve a **Dominios → [tu dominio] → Configuración de alojamiento web** y cambia el
+campo **«Directorio raíz del documento»** para que apunte a la carpeta `public/` del proyecto:
+
+```
+/var/www/vhosts/tudominio.es/apps/nexo-fp/public
+```
+
+(Ajusta la ruta según donde hayas colocado los archivos.)
+
+### 3. Configurar PHP 8.4 en Plesk
+
+En la sección **PHP** del dominio:
+
+1. Selecciona la versión **8.4** y el modo **FPM**.
+2. En **«Configuración adicional del manejador PHP»** añade o ajusta:
+
+   ```ini
+   memory_limit = 256M
+   max_execution_time = 60
+   ```
+
+3. Activa las extensiones necesarias si aparecen desactivadas en la lista.
+
+### 4. Variables de entorno
+
+Crea el fichero `.env.local` en la raíz del proyecto con los valores mínimos obligatorios:
+
+```bash
+APP_ENV=prod
+APP_SECRET=pon_aqui_64_caracteres_hexadecimales_aleatorios
+DATABASE_URL="mysql://usuario:contraseña@localhost:3306/nombre_bd?serverVersion=8.0&charset=utf8mb4"
+MIGRATIONS_PATH=migrations/mysql
+DEFAULT_URI=https://tudominio.es
+```
+
+!!! tip "Generar APP_SECRET"
+    Ejecuta este comando en el servidor y copia el resultado en `APP_SECRET`:
+
+    ```bash
+    php -r "echo bin2hex(random_bytes(32));"
+    ```
+
+El resto de variables (correo, autenticación externa, paginación…) son opcionales y equivalentes a
+las del despliegue con Docker; consulta la sección [Variables de entorno](#variables-de-entorno-opcionales)
+de ese apartado.
+
+!!! note "PostgreSQL como alternativa"
+    Si el servidor dispone de PostgreSQL en lugar de MySQL, cambia `DATABASE_URL` al formato:
+
+    ```
+    postgresql://usuario:contraseña@localhost:5432/nombre_bd?serverVersion=16&charset=utf8
+    ```
+
+    y ajusta también `MIGRATIONS_PATH=migrations/postgresql`.
+
+### 5. Instalar dependencias
+
+```bash
+cd ~/apps/nexo-fp
+composer install --no-dev --optimize-autoloader
+```
+
+### 6. Crear la base de datos y configurar la aplicación
+
+1. Crea la base de datos y el usuario desde el panel de Plesk (**Bases de datos**).
+2. Ajusta el usuario y la contraseña en `DATABASE_URL` del `.env.local`.
+3. Por SSH, ejecuta:
+
+```bash
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console app:setup --no-interaction
+```
+
+!!! danger "Cambia la contraseña por defecto"
+    `app:setup` crea el usuario `admin` con contraseña `admin`. **Cámbiala inmediatamente** en
+    **Administración → Perfil** antes de que nadie más acceda.
+
+### 7. Correos y recordatorios (worker vía cron)
+
+Los correos de aviso y los recordatorios diarios de firma los procesa un *worker* de Symfony
+Messenger. Sin él la aplicación funciona, pero **no se envían emails ni se ejecutan los recordatorios
+programados**.
+
+!!! info "Configurar el worker en Plesk"
+    Ve a **Tareas programadas** en el panel de Plesk y crea una tarea con periodicidad **cada hora**:
+
+    ```
+    /usr/bin/php /ruta/absoluta/a/nexo-fp/bin/console messenger:consume async scheduler_default --time-limit=3540 --memory-limit=128M
+    ```
+
+    El parámetro `--time-limit=3540` (59 minutos) hace que el proceso termine antes de que arranque
+    la siguiente ejecución, evitando solapamientos.
+
+El transporte `async` lleva los correos pendientes y `scheduler_default` gestiona el recordatorio
+diario de firma. Si prefieres disparar el recordatorio directamente desde cron en lugar del
+Scheduler, consulta [Recordatorios de firma](10-operacion-y-mantenimiento.md#recordatorios-de-firma).
+
+### 8. HTTPS y dominio definitivo
+
+Activa **Let's Encrypt** desde la sección **SSL/TLS** del dominio en Plesk. Una vez habilitado el
+certificado, actualiza `DEFAULT_URI` en `.env.local`:
+
+```bash
+DEFAULT_URI=https://tudominio.es
+```
+
+Y limpia la caché para que Symfony la regenere con la URL nueva:
+
+```bash
+php bin/console cache:clear
+```
+
+### 9. Sincronización en vivo
+
+!!! warning "No disponible en este modo de despliegue"
+    La actualización automática de la pantalla de estancia requiere el hub Mercure embebido en
+    FrankenPHP. En un despliegue con Plesk (PHP-FPM estándar) esta función **no está disponible**:
+    la aplicación funciona con normalidad, pero las pantallas de estancia hay que recargarlas
+    manualmente para ver los cambios de otros usuarios.
+
+    Para obtener sincronización en vivo, usa el [despliegue con Docker Compose](#despliegue-con-docker).
+    Consulta también la sección [Sincronización en vivo](#sincronizacion-en-vivo-mercure) para más
+    detalles técnicos.
+
+### Actualizar a una nueva versión
+
+1. Descarga o actualiza los archivos (con Git: `git pull`).
+2. Instala las dependencias actualizadas:
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+3. Aplica las migraciones de base de datos:
+   ```bash
+   php bin/console doctrine:migrations:migrate --no-interaction
+   ```
+4. Limpia la caché:
+   ```bash
+   php bin/console cache:clear
+   ```
+
+!!! tip "Las migraciones son seguras de re-ejecutar"
+    Si una versión no incluye cambios de esquema, `doctrine:migrations:migrate` termina en segundos
+    sin modificar nada. Puedes ejecutarlo en cada actualización sin riesgo.
+
+### Copias de seguridad
+
+Guarda periódicamente:
+
+- El directorio **`var/`** del proyecto (caché, logs, sesiones).
+- Un volcado de la base de datos:
+
+```bash
+mysqldump -u usuario -p nombre_bd > backup-$(date +%Y%m%d).sql
+```
+
+Consulta [Operación y mantenimiento](10-operacion-y-mantenimiento.md#copias-de-seguridad) para más
+contexto sobre protección de datos y política de conservación.
+
+## Desarrollo local
+
+Para contribuir al proyecto o ejecutarlo desde el código fuente. Requisitos: PHP 8.4+, Composer y Docker
+Compose (solo para la base de datos).
+
+```bash
+# 1. Clona el repositorio y copia el entorno
+cp .env.example .env.local            # ajusta si es necesario
+export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local
+
+# 2. Levanta solo PostgreSQL con el overlay de desarrollo
+docker compose -f compose.yaml -f compose.dev.yaml up -d
+
+# 3. Instala dependencias e inicializa la base de datos
+composer install
+make migrate
+php bin/console app:setup
+
+# 4. Arranca el servidor de desarrollo
+symfony server:start          # o: php -S localhost:8000 -t public/
+```
+
+Accede a **https://localhost:8000** (o **http://localhost:8000** con `php -S`) con `admin` / `admin`.
+
+!!! note "Overlay de desarrollo"
+    `compose.dev.yaml` se combina con `-f` y expone PostgreSQL en el puerto 5432, dejando el servicio
+    PHP (`app`) tras el perfil `production`; por eso el comando anterior solo arranca la base de datos.
+    En producción se usa únicamente `compose.yaml` (`docker compose up -d`), que levanta también la
+    aplicación.
+
+### Cargar datos de demostración
+
+```bash
+make fixtures
+```
+
+Consulta `DEMO.md` en la raíz del repositorio para ver los usuarios, centros y escenarios disponibles.
+
+### Ejecutar los tests
+
+```bash
+make test
+```
+
+### Análisis estático
+
+```bash
+php vendor/bin/phpstan analyse
 ```

@@ -46,6 +46,8 @@ ejecuciones manuales o de desarrollo.
 La actualización en vivo de la pantalla de estancia se apoya en un **hub de Mercure embebido en
 FrankenPHP**, tanto en Docker como en el binario nativo. No es un servicio aparte que haya que
 arrancar, supervisar ni respaldar: vive dentro del mismo proceso del servidor de aplicaciones.
+En despliegues con **Plesk** (PHP-FPM estándar) esta función no está disponible; la aplicación
+funciona con normalidad sin ella.
 
 Lo único que persiste es el secreto que firma los avisos: en el binario nativo se genera en el primer
 arranque y se guarda en `data/.mercure_secret` (incluido, por tanto, en la copia de seguridad del
@@ -75,6 +77,12 @@ Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzars
   solas al arrancar.
 - **Binario nativo:** descarga el nuevo paquete y conserva el directorio `data/` de la instalación
   anterior; al arrancar, aplicará las migraciones pendientes sobre la base de datos existente.
+- **Plesk:** `git pull` (o sube los archivos nuevos), después por SSH:
+  ```bash
+  composer install --no-dev --optimize-autoloader
+  php bin/console doctrine:migrations:migrate --no-interaction
+  php bin/console cache:clear
+  ```
 
 ## Protección de datos (RGPD)
 

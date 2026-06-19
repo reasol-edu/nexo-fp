@@ -1,89 +1,37 @@
 # Instalación y requisitos
 
-Nexo FP puede ejecutarse de tres formas, según la infraestructura disponible y quién va a utilizarla.
+Nexo FP puede ejecutarse de cuatro formas, según la infraestructura disponible y quién va a utilizarla.
 
-| Modo | Base de datos | Para quién | Esfuerzo |
-|------|---------------|------------|----------|
-| **Binario nativo** (FrankenPHP) | SQLite | Un centro, sin infraestructura | Mínimo |
-| **Docker Compose** | PostgreSQL | Servidor / producción | Medio |
-| **Desarrollo local** | PostgreSQL, MySQL/MariaDB o SQLite | Contribuir al proyecto | Para perfiles técnicos |
+| Modo | Base de datos | Para quién                     | Esfuerzo | Colaboración en tiempo real |
+|------|---------------|--------------------------------|----------|-----------------------------|
+| **Binario nativo** (FrankenPHP) | SQLite | Un centro, sin infraestructura | Mínimo | ✅ |
+| **Docker Compose** | PostgreSQL | Servidor / producción          | Medio | ✅ |
+| **Plesk** (PHP-FPM) | MySQL/MariaDB o PostgreSQL | VPS con Plesk, sin Docker      | Medio | ❌ |
+| **Desarrollo local** | PostgreSQL, MySQL/MariaDB o SQLite | Contribuiciones al proyecto    | Para perfiles técnicos | ✅ |
 
-En los tres casos, las **migraciones de base de datos se aplican automáticamente** al arrancar.
+En binario nativo y Docker las **migraciones de base de datos se aplican automáticamente** al arrancar;
+en Plesk y desarrollo local hay que ejecutarlas manualmente.
 
 !!! tip "¿No tienes conocimientos técnicos?"
-    Elige **Binario nativo**. Echa un vistazo a una guía paso a paso sencilla, en
-    [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
+    Elige **Binario nativo**. La guía paso a paso en
+    [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos)
+    te lleva desde la descarga hasta la aplicación en marcha en tres pasos.
 
 ## Requisitos
 
 | Modo | Requisitos |
 |------|------------|
-| Docker | Docker Engine 24+ y Docker Compose v2 |
 | Binario nativo | Sin requisitos adicionales (todo incluido) |
+| Docker | Docker Engine 24+ y Docker Compose v2 |
+| Plesk | PHP 8.4 FPM, extensiones estándar, MySQL 8+ / MariaDB 10.6+ (o PostgreSQL 12+), Composer, acceso SSH |
 | Desarrollo local | PHP 8.4+, Composer, PostgreSQL 16+, MySQL 8+ / MariaDB 11+ o SQLite |
 
-## Inicio rápido (Docker)
+## Guías de instalación
 
-El modo recomendado para producción. La imagen incluye [FrankenPHP](https://frankenphp.dev) como
-servidor de aplicaciones y usa [PostgreSQL](https://www.postgresql.org) 16 como base de datos.
+Las instrucciones detalladas de cada modo están en el capítulo [Despliegue](09-despliegue.md):
 
-```bash
-cp .env.example .env.local            # edita APP_SECRET y DB_PASSWORD
-export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local (no el .env versionado)
-docker compose up -d
-```
-
-Accede a **http://localhost** con `admin` / `admin`.
-
-La configuración detallada de cada modo (Docker y binario) está en el capítulo
-[Despliegue](09-despliegue.md).
-
-## Desarrollo local
-
-Para contribuir al proyecto o ejecutarlo desde el código fuente. Requisitos: PHP 8.4+, Composer y Docker
-Compose (solo para la base de datos).
-
-```bash
-# 1. Clona el repositorio y copia el entorno
-cp .env.example .env.local            # ajusta si es necesario
-export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local
-
-# 2. Levanta solo PostgreSQL con el overlay de desarrollo
-docker compose -f compose.yaml -f compose.dev.yaml up -d
-
-# 3. Instala dependencias e inicializa la base de datos
-composer install
-make migrate
-php bin/console app:setup
-
-# 4. Arranca el servidor de desarrollo
-symfony server:start          # o: php -S localhost:8000 -t public/
-```
-
-Accede a **https://localhost:8000** (o **http://localhost:8000** con `php -S`) con `admin` / `admin`.
-
-!!! note "Overlay de desarrollo"
-    `compose.dev.yaml` se combina con `-f` y expone PostgreSQL en el puerto 5432, dejando el servicio
-    PHP (`app`) tras el perfil `production`; por eso el comando anterior solo arranca la base de datos.
-    En producción se usa únicamente `compose.yaml` (`docker compose up -d`), que levanta también la
-    aplicación.
-
-### Cargar datos de demostración
-
-```bash
-make fixtures
-```
-
-Consulta `DEMO.md` en la raíz del repositorio para ver los usuarios, centros y escenarios disponibles.
-
-### Ejecutar los tests
-
-```bash
-make test
-```
-
-### Análisis estático
-
-```bash
-php vendor/bin/phpstan analyse
-```
+- [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos) — sin conocimientos técnicos, con datos de ejemplo listos para explorar
+- [Binario nativo](09-despliegue.md#ejecucion-como-binario-nativo) — un solo ejecutable, ideal para un IES sin infraestructura
+- [Docker Compose](09-despliegue.md#despliegue-con-docker) — producción con HTTPS automático y base de datos robusta
+- [Plesk](09-despliegue.md#despliegue-en-plesk) — VPS ya gestionado con Plesk, sin necesidad de Docker
+- [Desarrollo local](09-despliegue.md#desarrollo-local) — ejecutar desde el código fuente para contribuir al proyecto

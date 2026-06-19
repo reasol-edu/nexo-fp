@@ -387,19 +387,21 @@ Cada persona gestiona su cuenta en **Mi perfil**:
 
 ---
 
-## Tres formas de desplegar
+## Cuatro formas de desplegar
 
 <!-- _class: tight -->
 
-| Modo | Base de datos | Para quién | Esfuerzo |
-|---|---|---|---|
-| **Binario** (FrankenPHP) | SQLite | Un centro, "doble clic" | Mínimo |
-| **Docker Compose** | PostgreSQL | Servidor / producción | Medio |
-| **Desarrollo local** | PostgreSQL | Contribuir al proyecto | Para técnicos |
+| Modo | Base de datos | Para quién | Esfuerzo | Tiempo real |
+|---|---|---|---|---|
+| **Binario** (FrankenPHP) | SQLite | Un centro, "doble clic" | Mínimo | ✅ |
+| **Docker Compose** | PostgreSQL | Servidor / producción | Medio | ✅ |
+| **Plesk** (PHP-FPM) | MySQL / PostgreSQL | VPS con Plesk, sin Docker | Medio | ❌ |
+| **Desarrollo local** | PostgreSQL | Contribuir al proyecto | Para técnicos | ✅ |
 
 - El **binario** es un único ejecutable: ideal para un IES sin infraestructura.
 - **Docker** añade HTTPS automático y base de datos robusta para varios centros.
-- En los tres casos, las **migraciones de base de datos se aplican solas** al arrancar.
+- **Plesk** es la opción para centros con VPS ya gestionado; no requiere Docker.
+- En binario y Docker las **migraciones se aplican solas** al arrancar.
 
 ---
 

@@ -25,7 +25,7 @@ de ese centro. Los administradores globales pueden gestionar todos los centros d
 
 El manual sigue el orden natural de uso de la aplicación:
 
-1. [Instalación y requisitos](01-instalacion-y-requisitos.md) — poner en marcha la aplicación.
+1. [Instalación y requisitos](01-instalacion-y-requisitos.md) — elegir el modo de despliegue.
 2. [Primeros pasos](02-primeros-pasos.md) — preparar el curso académico.
 3. [Roles y permisos](03-roles-y-permisos.md) — quién puede hacer qué.
 4. [Flujo de trabajo](04-flujo-de-trabajo.md) — el recorrido completo de un curso.
@@ -33,7 +33,7 @@ El manual sigue el orden natural de uso de la aplicación:
 6. [Notificaciones por email](06-notificaciones-y-email.md) — avisos automáticos.
 7. [Ajustes](07-ajustes.md) — configuración jerárquica.
 8. [Comandos de consola](08-comandos-de-consola.md) — administración desde la terminal.
-9. [Despliegue](09-despliegue.md) — Docker y binario nativo.
+9. [Despliegue](09-despliegue.md) — binario nativo, Docker y Plesk.
 10. [Operación y mantenimiento](10-operacion-y-mantenimiento.md) — el día a día.
 11. [Resolución de problemas](11-resolucion-de-problemas.md) — soluciones a las dudas más habituales.
 12. [Glosario](12-glosario.md) — los términos del manual y de la aplicación.
