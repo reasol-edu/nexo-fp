@@ -10,9 +10,9 @@ Nexo FP puede ejecutarse de tres formas, según la infraestructura disponible y 
 
 En los tres casos, las **migraciones de base de datos se aplican automáticamente** al arrancar.
 
-> ¿No tienes conocimientos técnicos y no sabes qué modo elegir? Si solo quieres probarlo o usarlo en tu
-> ordenador, elige **Binario nativo**. Tienes una guía paso a paso, sin jerga, en
-> [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
+!!! tip "¿No tienes conocimientos técnicos?"
+    Elige **Binario nativo**. Echa un vistazo a una guía paso a paso sencilla, en
+    [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
 
 ## Requisitos
 
@@ -62,10 +62,11 @@ symfony server:start          # o: php -S localhost:8000 -t public/
 
 Accede a **https://localhost:8000** (o **http://localhost:8000** con `php -S`) con `admin` / `admin`.
 
-> El overlay `compose.dev.yaml` se combina con `-f` y expone PostgreSQL en el puerto 5432, dejando el
-> servicio PHP (`app`) tras el perfil `production`; por eso el comando anterior solo arranca la base de
-> datos. En producción se usa únicamente `compose.yaml` (`docker compose up -d`), que levanta también la
-> aplicación.
+!!! note "Overlay de desarrollo"
+    `compose.dev.yaml` se combina con `-f` y expone PostgreSQL en el puerto 5432, dejando el servicio
+    PHP (`app`) tras el perfil `production`; por eso el comando anterior solo arranca la base de datos.
+    En producción se usa únicamente `compose.yaml` (`docker compose up -d`), que levanta también la
+    aplicación.
 
 ### Cargar datos de demostración
 

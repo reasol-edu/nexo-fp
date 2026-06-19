@@ -9,6 +9,7 @@ use App\Entity\PersonName;
 use App\Entity\Worker;
 use App\Entity\Workcenter;
 use App\Pagination\Paginator;
+use App\Repository\CompanyAuditRepository;
 use App\Repository\CompanyRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\WorkcenterRepository;
@@ -19,6 +20,7 @@ use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -34,10 +36,13 @@ class CompanyController extends AbstractController
         private readonly WorkcenterRepository $workcenters,
         private readonly WorkerRepository $workers,
         private readonly TeacherRepository $teachers,
+        private readonly CompanyAuditRepository $companyAudits,
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
         private readonly ValidatorInterface $validator,
         private readonly CsvExporter $csvExporter,
+        #[Autowire(service: 'html_sanitizer.sanitizer.app.company_contact')]
+        private readonly HtmlSanitizerInterface $contactSanitizer,
     ) {}
 
     #[Route('', name: 'app_companies_index')]
@@ -207,6 +212,7 @@ class CompanyController extends AbstractController
             'name'                      => $company->getName(),
             'vat_number'                => $company->getVatNumber(),
             'city'                      => $company->getCity(),
+            'contact_information'       => $company->getContactInformation() ?? '',
             'exceptional_circumstances' => $company->getExceptionalCircumstances() ?? '',
             'representative_first_name' => $company->getRepresentativeFirstName() ?? '',
             'representative_last_name'  => $company->getRepresentativeLastName() ?? '',
@@ -222,10 +228,12 @@ class CompanyController extends AbstractController
                 throw $this->createAccessDeniedException();
             }
 
+            $rawContactInfo = $request->request->getString('contact_information');
             $values = [
                 'name'                      => trim($request->request->getString('name')),
                 'vat_number'                => trim($request->request->getString('vat_number')),
                 'city'                      => trim($request->request->getString('city')),
+                'contact_information'       => $this->contactSanitizer->sanitize($rawContactInfo),
                 'exceptional_circumstances' => trim($request->request->getString('exceptional_circumstances')),
                 'representative_first_name' => trim($request->request->getString('representative_first_name')),
                 'representative_last_name'  => trim($request->request->getString('representative_last_name')),
@@ -262,6 +270,7 @@ class CompanyController extends AbstractController
                 $company->setName($values['name'])
                     ->setVatNumber($values['vat_number'])
                     ->setCity($values['city'])
+                    ->setContactInformation($values['contact_information'] !== '' ? $values['contact_information'] : null)
                     ->setExceptionalCircumstances($values['exceptional_circumstances'] !== '' ? $values['exceptional_circumstances'] : null)
                     ->setRepresentativeFirstName($values['representative_first_name'] !== '' ? $values['representative_first_name'] : null)
                     ->setRepresentativeLastName($values['representative_last_name'] !== '' ? $values['representative_last_name'] : null)
@@ -325,6 +334,18 @@ class CompanyController extends AbstractController
         }
 
         return $this->redirectToRoute('app_companies_index');
+    }
+
+    #[Route('/{id}/historial', name: 'app_companies_history')]
+    public function history(string $id): Response
+    {
+        $company = $this->requireCompanyInCurrentCentre($id);
+        $this->denyAccessUnlessGranted(CompanyVoter::EDIT, $company);
+
+        return $this->render('company/history.html.twig', [
+            'company' => $company,
+            'audits'  => $this->companyAudits->findByCompany($company),
+        ]);
     }
 
     #[Route('/{id}/centros-trabajo', name: 'app_companies_workcenter_add', methods: ['POST'])]

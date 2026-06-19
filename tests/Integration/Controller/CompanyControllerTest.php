@@ -564,6 +564,115 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertCount(1, $reloaded->getWorkers());
     }
 
+    // ── contact information ───────────────────────────────────────────────────
+
+    public function testEditCompanyPostSanitizesContactInformation(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $crawler   = $this->client->request('GET', '/empresas/' . $companyId);
+        $token     = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId, [
+            '_token'              => $token,
+            'name'                => 'Empresa S.L.',
+            'vat_number'          => 'B12345678',
+            'city'                => 'Sevilla',
+            'contact_information' => '<p><strong>Contacto</strong></p><script>alert(1)</script><p onclick="evil()">párrafo</p>',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        /** @var Company $updated */
+        $updated = $this->em->find(Company::class, $company->getId());
+        $stored  = $updated->getContactInformation();
+
+        self::assertNotNull($stored);
+        self::assertStringContainsString('<strong>Contacto</strong>', $stored);
+        self::assertStringNotContainsString('<script>', $stored);
+        self::assertStringNotContainsString('onclick', $stored);
+    }
+
+    public function testEditCompanyPostEmptyContactInformationStoresNull(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678')
+            ->setContactInformation('<p>Anterior</p>');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+        $crawler   = $this->client->request('GET', '/empresas/' . $companyId);
+        $token     = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId, [
+            '_token'              => $token,
+            'name'                => 'Empresa S.L.',
+            'vat_number'          => 'B12345678',
+            'city'                => 'Sevilla',
+            'contact_information' => '',
+        ]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        /** @var Company $updated */
+        $updated = $this->em->find(Company::class, $company->getId());
+        self::assertNull($updated->getContactInformation());
+    }
+
+    // ── history ───────────────────────────────────────────────────────────────
+
+    public function testHistoryPageRendersAndShowsAuditAfterEdit(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa Original', 'B12345678');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $companyId = $company->getId()->toRfc4122();
+
+        // Editar la empresa para generar una entrada de auditoría
+        $crawler = $this->client->request('GET', '/empresas/' . $companyId);
+        $token   = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/empresas/' . $companyId, [
+            '_token'     => $token,
+            'name'       => 'Empresa Modificada',
+            'vat_number' => 'B12345678',
+            'city'       => 'Sevilla',
+        ]);
+        self::assertResponseRedirects();
+
+        // Verificar que el historial responde 200 y contiene la entrada
+        $crawler = $this->client->request('GET', '/empresas/' . $companyId . '/historial');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Empresa Modificada', $crawler->html());
+        self::assertStringContainsString('Empresa Original', $crawler->html());
+    }
+
+    public function testHistoryPageRendersEmptyStateWhenNoAudits(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'Empresa S.L.', 'B12345678');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/' . $company->getId()->toRfc4122() . '/historial');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('No hay cambios registrados', $crawler->html());
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username): Teacher

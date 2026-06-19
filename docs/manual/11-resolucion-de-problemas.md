@@ -97,7 +97,7 @@ cambios de otras personas.
   [formato del CSV](02-primeros-pasos.md#formato-del-csv-de-importacion).
 - Si aparecen «unidades no reconocidas», los grupos del curso no se llaman igual que la columna `Unidad`
   de Séneca. Renombra los grupos para que coincidan exactamente (ver
-  [Primeros pasos, paso 2](02-primeros-pasos.md#2-estructurar-la-oferta-formativa-del-curso-academico-equipo-directivo)).
+  [Primeros pasos, paso 3](02-primeros-pasos.md#3-estructurar-la-oferta-formativa-del-curso-academico-equipo-directivo)).
 
 ## Copias de seguridad y actualización
 

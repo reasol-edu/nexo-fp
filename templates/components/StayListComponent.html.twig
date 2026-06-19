@@ -177,7 +177,7 @@
                     {% set is_future  = start_str > today_str and not is_past %}
                     {% set is_current = not is_past and not is_future %}
 
-                    <article class="rounded-2xl border bg-white shadow-xs overflow-hidden flex flex-col
+                    <article class="relative rounded-2xl border bg-white shadow-xs overflow-hidden flex flex-col
                                     transition-all group
                                     {{ is_past
                                         ? 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-300'
@@ -404,7 +404,9 @@
                         <div class="px-5 py-3 mt-auto flex items-center justify-end">
                             <a href="{{ path('app_stays_show', {id: sid}) }}"
                                class="inline-flex items-center gap-1.5 text-xs font-medium text-plum-600
-                                      hover:text-plum-800 transition-colors group-hover:underline">
+                                      hover:text-plum-800 transition-colors group-hover:underline
+                                      before:absolute before:inset-0 before:content-['']
+                                      focus-visible:before:rounded-2xl">
                                 {{ 'stays.card.view'|trans({}, 'stays') }}
                                 {{ ux_icon('heroicons:arrow-right', {class: 'h-3.5 w-3.5'}) }}
                             </a>

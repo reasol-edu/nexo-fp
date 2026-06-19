@@ -20,7 +20,7 @@ Antes de crear puestos, el personal con acceso a **Empresas** registra:
 
 1. Las **empresas** colaboradoras con sus datos básicos (nombre, CIF/NIF, localidad).
 2. Los **centros de trabajo** (sedes) de cada empresa.
-3. Los **empleados** que actuarán como tutores de empresa (mentores).
+3. Los **empleados** que actuarán como tutores de empresa.
 4. Los **docentes de enlace** asignados a cada empresa.
 
 ![Directorio de empresas colaboradoras con sus docentes de enlace](img/empresas.png)
@@ -37,8 +37,9 @@ concreto (por ejemplo, «DAW - 2.º curso, marzo-mayo 2027»).
 
 ![Listado de estancias con filtros por familia, enseñanza y período](img/estancias.png)
 
-> Una misma enseñanza puede tener **varias estancias que se solapen** en el tiempo: no todos los grupos
-> realizan la fase de formación a la vez. Es una situación legítima y la aplicación no la impide.
+!!! info "Estancias solapadas"
+    Una misma enseñanza puede tener **varias estancias que se solapen** en el tiempo: no todos los grupos
+    realizan la fase de formación a la vez. Es una situación legítima y la aplicación no la impide.
 
 ## 4 — Asignar estudiantes y tutores
 
@@ -67,7 +68,8 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 4. Los puestos en estado **Registrado** quedan bloqueados para evitar modificaciones accidentales; se
    puede volver a *Borrador* para corregir datos.
 
-> La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.
+!!! tip "Ten en cuenta"
+    La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.
 
 ## 6 — Generar informes
 

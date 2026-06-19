@@ -72,6 +72,7 @@ para todos los centros (debe ser un entero ≥ 1).
 Requiere tener configurado el envío de correo (`MAILER_DSN` y `MAILER_FROM`) y `DEFAULT_URI` con la URL
 pública de la aplicación para que los enlaces de los emails funcionen.
 
-> **No es necesario configurar cron.** El recordatorio se programa con Symfony Scheduler y lo dispara el
-> *worker* de Messenger una vez al día (consulta [Notificaciones por email](06-notificaciones-y-email.md)).
-> El comando queda como complemento para ejecución manual o puntual.
+!!! tip "Sin configuración de cron"
+    El recordatorio se programa con Symfony Scheduler y lo dispara el *worker* de Messenger una vez al
+    día (consulta [Notificaciones por email](06-notificaciones-y-email.md)). El comando queda como
+    complemento para ejecución manual o puntual.

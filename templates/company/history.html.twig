@@ -1,0 +1,85 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'company.history.title'|trans({}, 'companies') }} · {{ company.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-8">
+
+    {# Breadcrumb #}
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            <a href="{{ path('app_companies_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'companies.title'|trans({}, 'companies') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ company.name }}</h1>
+    </div>
+
+    {# ── Pestañas ─────────────────────────────────────────────────────────────── #}
+    {% include 'company/_tabs.html.twig' with {company: company, active: 'history'} %}
+
+    {# ── Historial ────────────────────────────────────────────────────────────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'company.history.title'|trans({}, 'companies') }}</h2>
+        </div>
+
+        {% if audits is empty %}
+            <div class="px-6 py-10 text-center">
+                <p class="text-sm text-gray-400">{{ 'company.history.empty'|trans({}, 'companies') }}</p>
+            </div>
+        {% else %}
+            {% set html_fields = ['contactInformation', 'exceptionalCircumstances'] %}
+            <ul class="divide-y divide-gray-100">
+                {% for audit in audits %}
+                    <li class="px-6 py-5 space-y-3">
+                        <div class="flex items-center gap-3 text-xs text-gray-500">
+                            {{ ux_icon('heroicons:clock', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                            <span class="font-mono">{{ audit.changedAt|date('d/m/Y H:i') }}</span>
+                            <span>·</span>
+                            <span>{{ audit.changedBy ? audit.changedBy.name.firstName ~ ' ' ~ audit.changedBy.name.lastName : 'company.audit.changed_by_system'|trans({}, 'companies') }}</span>
+                        </div>
+                        <ul class="space-y-2">
+                            {% for field, change in audit.changes %}
+                                <li class="text-sm">
+                                    <span class="font-medium text-gray-700">
+                                        {{ ('company.audit.field.' ~ field)|trans({}, 'companies') }}
+                                    </span>
+                                    {% if field in html_fields %}
+                                        <div class="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
+                                            <details class="rounded-lg border border-gray-200 overflow-hidden">
+                                                <summary class="px-3 py-1.5 bg-gray-50 cursor-pointer text-gray-500 select-none">
+                                                    {{ 'company.audit.before'|trans({}, 'companies') }}
+                                                </summary>
+                                                <div class="ql-editor px-3 py-2 prose prose-sm max-w-none">
+                                                    {{ change.old|default('')|raw }}
+                                                </div>
+                                            </details>
+                                            <details class="rounded-lg border border-gray-200 overflow-hidden">
+                                                <summary class="px-3 py-1.5 bg-gray-50 cursor-pointer text-gray-500 select-none">
+                                                    {{ 'company.audit.after'|trans({}, 'companies') }}
+                                                </summary>
+                                                <div class="ql-editor px-3 py-2 prose prose-sm max-w-none">
+                                                    {{ change.new|default('')|raw }}
+                                                </div>
+                                            </details>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-gray-500">
+                                            <span class="line-through text-red-400">{{ change.old|default('—') }}</span>
+                                            →
+                                            <span class="text-green-700">{{ change.new|default('—') }}</span>
+                                        </span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

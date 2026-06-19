@@ -18,6 +18,8 @@ exclude_docs: |
 theme:
   name: material
   language: es
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
   palette:
     primary: deep purple
     accent: deep purple
@@ -36,6 +38,7 @@ extra_css:
 
 markdown_extensions:
   - admonition
+  - pymdownx.details
   - attr_list
   - tables
   - toc:

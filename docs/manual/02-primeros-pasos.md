@@ -10,17 +10,34 @@ para dejar listo para su uso un curso académico está detallado en el capítulo
 Todo en Nexo FP gira en torno al **curso académico activo** de cada centro: al cambiar de curso, cambia
 el contexto de trabajo. Desde **Centro Educativo** se gestiona el contenido del curso académico activo.
 
-> ⚠️ **Antes de empezar, cambia la contraseña por defecto.** El primer acceso se hace con `admin` /
-> `admin`. Entra y, en **Mi perfil → Contraseña**, establece una contraseña robusta. No dejes nunca las
-> credenciales por defecto en una instalación accesible por red.
+!!! danger "Cambia la contraseña por defecto antes de empezar"
+    El primer acceso se hace con `admin` / `admin`. Entra y, en **Mi perfil → Contraseña**, establece
+    una contraseña robusta. No dejes nunca las credenciales por defecto en una instalación accesible
+    por red.
 
-## 2. Estructurar la oferta formativa del curso académico (equipo directivo)
+## 2. Añadir los docentes del curso académico (equipo directivo)
+
+Desde **Centro Educativo → Docentes del curso** se da de alta al personal adscrito al curso activo.
+**Este paso es imprescindible antes de estructurar la oferta formativa**: sin docentes en el curso no es
+posible asignar jefaturas de departamento, coordinadores duales, tutores ni docentes a los grupos.
+
+Los docentes pueden añadirse uno a uno o mediante **importación masiva desde CSV de Séneca**.
+
+### Cómo exportar el CSV de Séneca (perfil Dirección)
+
+En Séneca, con el perfil **Dirección**:
+
+**Personal → Personal del centro → Exportar datos** (seleccionar formato **CSV**)
+
+El fichero resultante contiene el `Usuario IdEA` y el nombre del personal del centro. Si el docente
+ya existe en el sistema, se añade al curso activo sin modificar sus datos. Si no existe, se crea
+automáticamente con autenticación externa (IdEA).
+
+## 3. Estructurar la oferta formativa del curso académico (equipo directivo)
 
 La oferta formativa es una estructura jerárquica que se construye de arriba a abajo:
 
-```
-Familia profesional → Enseñanza (ciclo) → Nivel (curso) → Grupo
-```
+> Familia profesional → Enseñanza (ciclo) → Nivel (curso) → Grupo
 
 - **Familias profesionales**: cada una con su jefe/a de departamento.
 - **Enseñanzas**: los ciclos formativos (CFGM, CFGS…) de cada familia.
@@ -29,20 +46,41 @@ Familia profesional → Enseñanza (ciclo) → Nivel (curso) → Grupo
   Para evitar problemas de importación, los nombres de los grupos tienen que ser
   exactamente iguales que los que aparecen en Séneca (por ejemplo, `1º DAW A` o `1DAWA`, `1º DAW-A`, etc.)
 
-> Los roles de coordinación de FP dual, jefatura de familia profesional y tutoría se asignan a
-> **personas concretas**: de esas asignaciones se derivan los permisos de cada docente
-> (consulta [Roles y permisos](03-roles-y-permisos.md)).
+!!! info
+    Los roles de coordinación de FP dual, jefatura de familia profesional y tutoría se asignan a
+    **personas concretas**: de esas asignaciones se derivan los permisos de cada docente
+    (consulta [Roles y permisos](03-roles-y-permisos.md)).
 
-## 3. Asignar tutores y docentes a los grupos (equipo directivo)
+## 4. Asignar tutores y docentes a los grupos (equipo directivo)
 
 Para cada grupo se designan el tutor/a del mismo (puede seleccionarse más de uno) y los docentes
 que imparten clase en él. Estas asignaciones determinan qué estancias podrá ver cada docente.
 
-## 4. Dar de alta a los estudiantes (equipo directivo)
+Las asignaciones pueden hacerse manualmente desde cada grupo o mediante **importación masiva desde
+CSV de Séneca**.
+
+### Cómo exportar el CSV de asignaciones de Séneca (perfil Dirección)
+
+En Séneca, con el perfil **Dirección**:
+
+**Personal → Personal del centro → Materia y grupos → Unidad: Cualquiera → Exportar datos** (seleccionar formato **CSV**)
+
+El fichero contiene la columna `Unidad` (nombre del grupo) y `Profesor/a` (apellidos y nombre). El
+grupo se busca por nombre exacto entre los grupos del curso activo, y el docente por nombre y apellidos
+exactos entre los del curso activo — razón por la que el paso 2 (importar docentes) debe completarse
+antes.
+
+## 5. Dar de alta a los estudiantes (equipo directivo)
 
 Desde **Centro Educativo → Estudiantes** se dan de alta los estudiantes, manualmente o mediante
-**importación masiva por CSV desde Séneca**, y se distribuyen en sus grupos. El listado permite 
+**importación masiva por CSV desde Séneca**, y se distribuyen en sus grupos. El listado permite
 búsqueda por NIE o nombre, filtro por grupo y **exportación a CSV**.
+
+### Cómo exportar el CSV de Séneca (perfil Dirección)
+
+En Séneca, con el perfil **Dirección**:
+
+**Alumnado → Alumnado del centro → (seleccionar curso/unidad o dejar en blanco para todos) → Exportar datos** (seleccionar formato **CSV**)
 
 ### Formato del CSV de importación
 
@@ -64,12 +102,7 @@ Notas sobre el comportamiento:
 - Los estudiantes que ya existen (mismo `Nº Id. Escolar`) se **actualizan**; los nuevos se **crean**.
 - Si la `Unidad` no coincide con ningún grupo del curso, el estudiante se importa **sin grupo** y al
   final se muestra la lista de unidades no reconocidas. Por eso es importante que los grupos se llamen
-  **exactamente** igual que en Séneca (ver el paso 2).
+  **exactamente** igual que en Séneca (ver el paso 3).
 - El fichero puede estar codificado en UTF-8 o Windows-1252 (se detecta automáticamente).
-
-## 5. Añadir al resto de docentes del curso académico (equipo directivo)
-
-Por último, añade al resto de **personal adscrito al curso** para que pueda acceder a la plataforma
-con sus respectivos roles.
 
 Con el curso configurado, el centro está listo para registrar empresas y crear estancias.

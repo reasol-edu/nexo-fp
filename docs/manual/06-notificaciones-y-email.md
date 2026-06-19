@@ -46,9 +46,10 @@ MAILER_DSN=gmail://USUARIO:CONTRASEÑA_DE_APLICACION@default
 MAILER_FROM=tu-cuenta@gmail.com
 ```
 
-> ⚠️ **Necesitas una «contraseña de aplicación», no la contraseña normal de la cuenta.** Google no permite
-> autenticarse por SMTP con la contraseña habitual; hay que generar una contraseña de aplicación
-> específica, y para ello la cuenta **debe tener activada la verificación en dos pasos**.
+!!! warning "Contraseña de aplicación de Google"
+    Necesitas una **contraseña de aplicación**, no la contraseña normal de la cuenta. Google no permite
+    autenticarse por SMTP con la contraseña habitual; hay que generar una contraseña de aplicación
+    específica, y para ello la cuenta **debe tener activada la verificación en dos pasos**.
 
 Pasos para obtenerla:
 
@@ -68,8 +69,9 @@ Notas sobre el DSN:
 - Gmail reescribe el remitente a la cuenta autenticada, por lo que conviene que `MAILER_FROM` coincida con
   esa dirección.
 
-> Ten en cuenta los **límites de envío** de Google (orientativos: ~500 correos/día en cuentas gratuitas y
-> ~2000/día en Google Workspace). Para volúmenes mayores, usa un servicio SMTP transaccional.
+!!! note "Límites de envío de Gmail"
+    Orientativos: ~500 correos/día en cuentas gratuitas y ~2000/día en Google Workspace.
+    Para volúmenes mayores, usa un servicio SMTP transaccional.
 
 ## Envío asíncrono
 

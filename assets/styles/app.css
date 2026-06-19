@@ -251,6 +251,69 @@ summary:focus-visible {
 .ts-group-item .ts-group-item-programme { font-weight: 500; color: inherit; font-size: 0.8125rem; }
 .ts-group-item .ts-sep                  { color: #d1d5db; margin: 0 0.3rem; font-size: 0.8125rem; }
 
+/* Quill rich-editor: adapta el look al tema plum y la altura a ~5 filas. */
+:root .ql-toolbar.ql-snow {
+    border: 1px solid var(--color-plum-200);
+    border-bottom: none;
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: var(--color-plum-50);
+    flex-wrap: wrap;
+    font-family: inherit;
+    padding: 0.375rem 0.5rem;
+}
+
+:root .ql-container.ql-snow {
+    height: auto; /* override Quill's height:100% which collapses in CSS grid */
+    border: 1px solid var(--color-plum-200);
+    border-radius: 0 0 0.75rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+:root .ql-container.ql-snow:focus-within {
+    border-color: var(--color-plum-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-plum-500) 18%, transparent);
+}
+
+:root .ql-toolbar.ql-snow:has(+ .ql-container.ql-snow:focus-within) {
+    border-color: var(--color-plum-500);
+}
+
+:root .ql-editor {
+    min-height: 8rem;
+    line-height: 1.6;
+}
+
+:root .ql-editor.ql-blank::before {
+    color: var(--color-plum-400);
+    font-style: normal;
+}
+
+:root .ql-toolbar .ql-stroke { stroke: var(--color-plum-700); }
+:root .ql-toolbar .ql-fill   { fill:   var(--color-plum-700); }
+:root .ql-toolbar button:hover .ql-stroke,
+:root .ql-toolbar .ql-picker-label:hover .ql-stroke { stroke: var(--color-plum-600); }
+:root .ql-toolbar button.ql-active .ql-stroke,
+:root .ql-toolbar .ql-picker-label.ql-active .ql-stroke { stroke: var(--color-plum-600); }
+:root .ql-toolbar button:hover .ql-fill,
+:root .ql-toolbar button.ql-active .ql-fill { fill: var(--color-plum-600); }
+
+:root .ql-toolbar .ql-picker-label {
+    color: var(--color-plum-700);
+    border-color: var(--color-plum-200);
+}
+
+:root .ql-toolbar .ql-picker-options {
+    border-color: var(--color-plum-200);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-plum-950) 15%, transparent);
+}
+
+:root .ql-toolbar .ql-picker-item:hover,
+:root .ql-toolbar .ql-picker-item.ql-selected {
+    color: var(--color-plum-600);
+}
+
 /* Asignación rápida de puesto: opción con empresa / centro / observaciones */
 .ts-pos-option                  { padding: 0.125rem 0; line-height: 1.35; }
 .ts-pos-option .ts-pos-company  { font-size: 0.8125rem; font-weight: 500; color: #111827; }

@@ -1,0 +1,12 @@
+<div class="flex gap-1 rounded-xl bg-gray-100 p-1">
+    <a href="{{ path('app_companies_edit', {id: company.id}) }}"
+       class="flex-1 rounded-lg py-2 text-center text-sm font-medium transition-colors
+              {{ active == 'data' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+        {{ 'company.tab.data'|trans({}, 'companies') }}
+    </a>
+    <a href="{{ path('app_companies_history', {id: company.id}) }}"
+       class="flex-1 rounded-lg py-2 text-center text-sm font-medium transition-colors
+              {{ active == 'history' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-600 hover:text-gray-900' }}">
+        {{ 'company.tab.history'|trans({}, 'companies') }}
+    </a>
+</div>

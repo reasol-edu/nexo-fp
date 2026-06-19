@@ -37,6 +37,9 @@ class Company
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $exceptionalCircumstances = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $contactInformation = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
     private ?string $representativeFirstName = null;
@@ -122,6 +125,18 @@ class Company
     public function setExceptionalCircumstances(?string $exceptionalCircumstances): static
     {
         $this->exceptionalCircumstances = $exceptionalCircumstances;
+
+        return $this;
+    }
+
+    public function getContactInformation(): ?string
+    {
+        return $this->contactInformation;
+    }
+
+    public function setContactInformation(?string $contactInformation): static
+    {
+        $this->contactInformation = $contactInformation;
 
         return $this;
     }

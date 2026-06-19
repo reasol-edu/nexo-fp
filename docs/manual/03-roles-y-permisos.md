@@ -17,9 +17,10 @@ desde **Administración → Docentes**:
   validan contra el servicio **iSéneca** de la Junta de Andalucía. La contraseña no se guarda en Nexo FP,
   así que el restablecimiento por email **no aplica**: se gestiona desde Séneca.
 
-> La autenticación externa se habilita en el despliegue con `APP_EXTERNAL_ENABLED` y las variables
-> `APP_EXTERNAL_*` (consulta [Despliegue](09-despliegue.md#variables-de-entorno-opcionales)). Si está
-> desactivada, todos los accesos son locales.
+!!! info "Configuración"
+    La autenticación externa se habilita en el despliegue con `APP_EXTERNAL_ENABLED` y las variables
+    `APP_EXTERNAL_*` (consulta [Despliegue](09-despliegue.md#variables-de-entorno-opcionales)). Si está
+    desactivada, todos los accesos son locales.
 
 ## Los perfiles
 

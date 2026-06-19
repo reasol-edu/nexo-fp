@@ -30,8 +30,8 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 |---------|-------------|
 | **Empresa** | Organización colaboradora donde el alumnado realiza la FFEOE. |
 | **Centro de trabajo** | Sede o filial concreta de una empresa donde se desarrolla la estancia. |
-| **Empleado** | Persona de la empresa que puede actuar como tutor/a de empresa (mentor). |
-| **Mentor / Tutor/a dual de empresa** | Empleado/a responsable del seguimiento del estudiante dentro de la empresa. |
+| **Empleado** | Persona de la empresa que puede actuar como tutor/a de empresa. |
+| **Tutor/a dual de empresa** | Empleado/a responsable del seguimiento del estudiante dentro de la empresa. |
 | **Representante** | Persona que representa legalmente a la empresa (nombre, DNI y cargo); datos opcionales que aparecen en el informe PDF. |
 
 ## Estancias y puestos

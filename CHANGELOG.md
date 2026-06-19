@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-06-19
+
+### Added
+
+- Admonitions en la documentación: avisos tipo `tip`, `info`, `warning`, `danger`, `note` y `question` en el manual de usuario, tanto en la web (MkDocs Material) como en el PDF (Pandoc + Paged.js). El filtro Lua `pandoc-admonitions.lua` convierte la sintaxis de MkDocs al HTML estructurado que consume el CSS de impresión; los tipos colapsables (`???`) se renderizan expandidos en PDF
+- Iconos/emoji en los admonitions del PDF: cada tipo muestra un icono identificativo (💡 tip, 📝 note, ℹ️ info, ⚠️ warning, 🚨 danger, ❓ question) mediante pseudo-elementos CSS `::before`
+- Logo de la aplicación en la portada de la documentación web (MkDocs) y en la portada de la presentación Marp
+
+### Changed
+
+- Capturas de diapositivas 9 y 12 retomadas a 1024 px de viewport para que las imágenes de docentes y estudiantes muestren los botones de importación sin recorte
+
 ## [2.2.1] - 2026-06-17
 
 ### Added

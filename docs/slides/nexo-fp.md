@@ -29,7 +29,7 @@ style: |
   code { background: var(--nx-accent-soft); color: var(--nx-ink); }
   header { color: var(--nx-muted); font-size: 16px; }
   footer { color: var(--nx-muted); font-size: 14px; }
-  section.lead { display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  section.lead { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   section.lead h1 { font-size: 60px; margin-bottom: 0.2em; }
   section.sep { background: var(--nx-ink); color: #fff; justify-content: center; }
   section.sep h1 { color: #fff; }
@@ -38,6 +38,8 @@ style: |
 ---
 
 <!-- _class: lead -->
+
+![width:80px](img/logo.svg)
 
 # Nexo FP
 
@@ -71,7 +73,7 @@ estudiantes, empresas, tutores, estados y firmas — con avisos automáticos y e
 Una herramienta de **gestión integral de estancias**. En tres ideas:
 
 1. **Planificar** — define el curso, las enseñanzas, los grupos y las empresas.
-2. **Asignar** — crea estancias y reparte estudiantes, tutores docentes y mentores.
+2. **Asignar** — crea estancias y reparte estudiantes, tutores docentes y tutores de empresa.
 3. **Firmar** — sigue el estado de cada puesto hasta su firma y su tramitación.
 
 El panel de inicio resume el curso de un vistazo: alumnado, estancias, plazas y empresas.
@@ -86,7 +88,7 @@ El panel de inicio resume el curso de un vistazo: alumnado, estancias, plazas y 
 `Curso académico` → `Familia profesional` → `Enseñanza` → `Nivel` → `Grupo` → `Estudiantes`
 
 **Tejido empresarial**
-`Empresa` → `Centro de trabajo` → `Trabajadores` (mentores)
+`Empresa` → `Centro de trabajo` → `Trabajadores` (tutores duales de empresa)
 
 **El nexo entre ambos**
 `Estancia` (período + enseñanza) → `Puestos formativos`
@@ -151,7 +153,23 @@ Desde **Administración › Centros educativos**:
 
 ---
 
-## 2 · Oferta formativa — familias y enseñanzas
+## 2 · Docentes del curso
+
+<!-- _class: tight -->
+
+![bg right:52%](img/06b_admin_docentes.png)
+
+En **Centro educativo › Docentes del curso**:
+
+- Añade el personal adscrito al curso activo — **antes de estructurar la oferta**.
+- Sin docentes en el curso no se pueden asignar tutores ni jefaturas.
+- Importación masiva desde Séneca (perfil Dirección):
+  **Personal › Personal del centro › Exportar datos** (formato CSV)
+- Los docentes nuevos se crean con autenticación **IdEA**; los existentes se añaden al curso.
+
+---
+
+## 3 · Oferta formativa — familias y enseñanzas
 
 ![bg right:50% fit](img/04_admin_familias.png)
 
@@ -163,7 +181,9 @@ En **Centro educativo › Oferta formativa**:
 
 ---
 
-## 3 · Estructura docente de la enseñanza
+## 4 · Estructura docente y grupos
+
+<!-- _class: tight -->
 
 ![bg right:52%](img/05_admin_ensenanza.png)
 
@@ -172,37 +192,43 @@ Al editar una **enseñanza**:
 - **Coordinadores duales** (gestionan sus estancias).
 - **Niveles** del ciclo (1.º, 2.º…), y dentro de cada nivel, los **grupos**.
 - En los grupos se asignan **tutores** y **docentes**.
+- También por CSV de Séneca: **Personal › Personal del centro › Materia y grupos › Exportar datos** (formato CSV)
 
 > Coordinación, jefatura y tutoría son **personas concretas**: de ahí salen los permisos.
 
 ---
 
-## 4 · Estudiantes
+## 5 · Estudiantes
 
 ![bg right:54%](img/06_admin_estudiantes.png)
 
 En **Centro educativo › Estudiantes**:
 
 - Alta manual o **importación por CSV**.
+- Séneca (perfil Dirección): **Alumnado › Alumnado del centro › Exportar datos** (formato CSV)
 - Cada estudiante pertenece a un **grupo**.
 - Búsqueda por NIE/nombre, filtro por grupo y **exportación CSV**.
 
 ---
 
-## 5 · Empresas, centros de trabajo y mentores
+## 6 · Empresas, centros de trabajo y tutores duales de empresa
 
-![bg right:50%](img/08_empresa_detalle.png)
+<!-- _class: tight -->
+
+![bg right:50%](img/08_empresa_editar.png)
 
 En **Empresas**:
 
 - Alta con **CIF/NIF** y localidad; listado con **exportación CSV**.
+- **Información de contacto** en texto enriquecido (teléfonos, emails, personas de referencia…).
 - Cada empresa tiene sus **centros de trabajo**.
-- Y sus **empleados**: los **mentores** (tutores de empresa).
+- Y sus **empleados**: los **tutores duales de empresa**.
 - Se asignan **docentes de enlace** que la gestionan.
+- **Historial de cambios**: quién modificó qué y cuándo, con diff de cada campo.
 
 ---
 
-## 6 · Crear una estancia
+## 7 · Crear una estancia
 
 ![bg right:54%](img/09_estancia_nueva.png)
 
@@ -216,7 +242,7 @@ Una **estancia** agrupa los puestos de una enseñanza en un período:
 
 ---
 
-## 7 · El listado de estancias
+## 8 · El listado de estancias
 
 ![bg right:50%](img/10_estancias_lista.png)
 
@@ -226,7 +252,9 @@ Una **estancia** agrupa los puestos de una enseñanza en un período:
 
 ---
 
-## 8 · Detalle de la estancia: los puestos
+## 9 · Detalle de la estancia: los puestos
+
+<!-- _class: tight -->
 
 ![bg right:52%](img/11_estancia_detalle.png)
 
@@ -259,7 +287,7 @@ los puestos de una misma estancia **a la vez**:
 
 ---
 
-## 9 · Asignar un puesto
+## 10 · Asignar un puesto
 
 ![bg right:50%](img/12_puesto_editar.png)
 
@@ -273,7 +301,7 @@ Al **editar un puesto** se define:
 
 ---
 
-## 10 · Estados del puesto y firma
+## 11 · Estados del puesto y firma
 
 <!-- _class: tight -->
 

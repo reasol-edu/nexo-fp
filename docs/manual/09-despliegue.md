@@ -27,8 +27,9 @@ Los archivos descargables están en el apartado **Assets** de la última versió
 | **Linux** (PC habitual) | `nexo-fp-…-linux-x86_64.tar.gz` |
 | **Linux ARM** (p. ej. Raspberry Pi) | `nexo-fp-…-linux-aarch64.tar.gz` |
 
-> **¿No sabes qué Mac tienes?** Abre el menú Apple () arriba a la izquierda → **Acerca de este Mac**.
-> Si aparece «Chip Apple M…» elige el archivo *arm64*; si aparece «Procesador Intel», el *x86_64*.
+!!! question "¿Qué Mac tengo?"
+    Abre el menú Apple () arriba a la izquierda → **Acerca de este Mac**.
+    Si aparece «Chip Apple M…» elige el archivo *arm64*; si aparece «Procesador Intel», el *x86_64*.
 
 ### Paso 2 · Descomprime el archivo
 
@@ -49,29 +50,30 @@ Espera unos segundos (la primera vez tarda un poco en prepararse) y abre tu nave
 
 ![Pantalla de inicio de sesión de Nexo FP con el usuario «admin» introducido](img/login.png)
 
-> **Aviso de seguridad en macOS.** Como la aplicación no está firmada con un certificado de Apple, la
-> primera vez macOS la bloqueará con un mensaje del tipo *«No se puede abrir "demo.command" porque
-> proviene de un desarrollador no identificado»* (en versiones recientes, *«Apple no ha podido verificar
-> que "demo.command" esté libre de software malicioso»*). Es normal. Para autorizarla:
->
-> 1. En el **Finder**, haz **clic secundario** sobre `demo.command` (clic con el botón derecho del
->    ratón, o mantén pulsada la tecla **Control** ⌃ mientras haces clic) y elige **Abrir** en el menú
->    contextual.
-> 2. En el cuadro de diálogo que aparece, vuelve a pulsar **Abrir** para confirmar.
->
-> Si usas **macOS Sequoia (15) o posterior** y el bloqueo no te ofrece la opción de abrir, ve al menú
-> Apple () → **Ajustes del Sistema** → **Privacidad y seguridad**, baja hasta la sección **Seguridad**
-> y pulsa **Abrir igualmente** junto al aviso sobre `demo.command`; confírmalo con **Touch ID** o tu
-> contraseña de administrador.
->
-> Solo hace falta hacerlo la primera vez: después, `demo.command` se abrirá con normalidad.
+??? warning "Aviso de seguridad en macOS"
+    Como la aplicación no está firmada con un certificado de Apple, la primera vez macOS la bloqueará
+    con un mensaje del tipo *«No se puede abrir "demo.command" porque proviene de un desarrollador no
+    identificado»* (en versiones recientes, *«Apple no ha podido verificar que "demo.command" esté libre
+    de software malicioso»*). Es normal. Para autorizarla:
+
+    1. En el **Finder**, haz **clic secundario** sobre `demo.command` (clic con el botón derecho del
+       ratón, o mantén pulsada la tecla **Control** ⌃ mientras haces clic) y elige **Abrir** en el menú
+       contextual.
+    2. En el cuadro de diálogo que aparece, vuelve a pulsar **Abrir** para confirmar.
+
+    Si usas **macOS Sequoia (15) o posterior** y el bloqueo no te ofrece la opción de abrir, ve al menú
+    Apple () → **Ajustes del Sistema** → **Privacidad y seguridad**, baja hasta la sección **Seguridad**
+    y pulsa **Abrir igualmente** junto al aviso sobre `demo.command`; confírmalo con **Touch ID** o tu
+    contraseña de administrador.
+
+    Solo hace falta hacerlo la primera vez: después, `demo.command` se abrirá con normalidad.
 
 Para **detener** la aplicación, cierra la ventana negra (terminal) que se abrió, o pulsa `Ctrl + C` en
 ella.
 
-> ⚠️ El modo demostración **borra cualquier dato anterior** y carga datos de ejemplo cada vez que
-> arrancas con `demo.*`. Para empezar con una instalación vacía y real, usa los scripts `start.*` en vez
-> de `demo.*` (ver más abajo).
+!!! danger "El modo demostración borra los datos existentes"
+    Cada vez que arrancas con `demo.*` se borran todos los datos anteriores y se cargan los de ejemplo.
+    Para empezar con una instalación vacía y real, usa los scripts `start.*` en vez de `demo.*`.
 
 ## Ejecución como binario nativo
 
@@ -139,11 +141,11 @@ La primera vez que se inicia, el script realiza automáticamente:
 
 La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado).
 
-> ⚠️ **Seguridad — cambia la contraseña por defecto.** El usuario inicial `admin` / `admin` se crea solo
-> para el primer acceso. En cuanto entres, ve a **Mi perfil → Contraseña** y establece una contraseña
-> robusta. En instalaciones reales, crea además tu propio administrador con
-> [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin). Nunca dejes `admin` / `admin` en una
-> instalación accesible por red.
+!!! danger "Cambia la contraseña por defecto"
+    El usuario inicial `admin` / `admin` se crea solo para el primer acceso. En cuanto entres, ve a
+    **Mi perfil → Contraseña** y establece una contraseña robusta. En instalaciones reales, crea además
+    tu propio administrador con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin).
+    Nunca dejes `admin` / `admin` en una instalación accesible por red.
 
 ### Arranque con datos de demostración
 
@@ -244,9 +246,10 @@ Indica a Docker Compose que use ese fichero exportándolo una vez en tu sesión.
 export COMPOSE_ENV_FILES=.env.local
 ```
 
-> Como alternativa, añade `--env-file .env.local` a cada comando `docker compose`. Si quieres que la
-> aplicación se inicie sola al reiniciar el servidor, consulta
-> [Arranque automático al reiniciar el servidor](#arranque-automatico-al-reiniciar-el-servidor).
+!!! tip "Alternativa"
+    Añade `--env-file .env.local` a cada comando `docker compose`. Si quieres que la aplicación se
+    inicie sola al reiniciar el servidor, consulta
+    [Arranque automático al reiniciar el servidor](#arranque-automatico-al-reiniciar-el-servidor).
 
 Los campos obligatorios son:
 
@@ -279,11 +282,11 @@ El stack levanta tres contenedores: `app` (servidor FrankenPHP), `database` (Pos
 procesa el envío asíncrono de los correos y dispara el recordatorio diario de firma programado con
 Symfony Scheduler (consulta [Notificaciones por email](06-notificaciones-y-email.md#envio-asincrono)).
 
-> ⚠️ **Seguridad — cambia la contraseña por defecto.** El usuario inicial `admin` / `admin` se crea solo
-> para el primer acceso. En cuanto entres, ve a **Mi perfil → Contraseña** y establece una contraseña
-> robusta. En producción, crea además tu propio administrador con
-> [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin). Nunca dejes `admin` / `admin` en una
-> instalación accesible por red.
+!!! danger "Cambia la contraseña por defecto"
+    El usuario inicial `admin` / `admin` se crea solo para el primer acceso. En cuanto entres, ve a
+    **Mi perfil → Contraseña** y establece una contraseña robusta. En producción, crea además tu propio
+    administrador con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin).
+    Nunca dejes `admin` / `admin` en una instalación accesible por red.
 
 ### Datos de demostración
 
@@ -331,11 +334,12 @@ Para el caso habitual basta con dos cosas:
 2. Haber arrancado el stack al menos una vez con `docker compose up -d` y no haberlo detenido
    explícitamente con `docker compose stop` o `docker compose down`.
 
-> ⚠️ **`.env.local` solo se lee al hacer `up`.** Las variables de `.env.local` se graban en los
-> contenedores **cuando se crean** (`docker compose up -d`). Los reinicios automáticos reutilizan esos
-> contenedores tal cual y **no vuelven a leer el fichero**. Por eso, si más adelante editas `.env.local`
-> (o el propio `compose.yaml`), debes volver a ejecutar `docker compose up -d` para que los cambios surtan
-> efecto; un simple reinicio del servidor no los recogerá.
+!!! warning "`.env.local` solo se lee al hacer `up`"
+    Las variables de `.env.local` se graban en los contenedores **cuando se crean**
+    (`docker compose up -d`). Los reinicios automáticos reutilizan esos contenedores tal cual y
+    **no vuelven a leer el fichero**. Por eso, si más adelante editas `.env.local` (o el propio
+    `compose.yaml`), debes volver a ejecutar `docker compose up -d` para que los cambios surtan efecto;
+    un simple reinicio del servidor no los recogerá.
 
 Si además quieres que el stack se **recree** desde cero en cada arranque —por ejemplo, para que siempre
 aplique los últimos valores de `.env.local` aunque previamente se hubiera hecho `down`— define una unidad

@@ -47,6 +47,9 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ company.name }}</h1>
     </div>
 
+    {# ── Pestañas ─────────────────────────────────────────────────────────────── #}
+    {% include 'company/_tabs.html.twig' with {company: company, active: 'data'} %}
+
     {# ── Datos de la empresa ───────────────────────────────────────────────────── #}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
@@ -91,16 +94,18 @@
                     />
                 </div>
 
-                {# Circunstancias excepcionales #}
-                <div class="sm:col-span-3">
-                    <twig:Form:Textarea
-                        id="exceptional_circumstances"
-                        name="exceptional_circumstances"
-                        label="{{ 'company.field.exceptional_circumstances'|trans({}, 'companies') }}"
-                        value="{{ errors is not empty ? app.request.request.get('exceptional_circumstances') : values.exceptional_circumstances }}"
-                        help="{{ 'company.field.exceptional_circumstances_help'|trans({}, 'companies') }}"
-                        :rows="3"
-                    />
+                {# Información de contacto (editor enriquecido) #}
+                <div class="sm:col-span-3"
+                     data-controller="rich-editor"
+                     data-rich-editor-placeholder-value="{{ 'company.field.contact_information_placeholder'|trans({}, 'companies') }}">
+                    <label class="block text-sm font-medium text-gray-700 mb-0.5">
+                        {{ 'company.field.contact_information'|trans({}, 'companies') }}
+                    </label>
+                    <p class="text-xs text-gray-400 mb-1.5">{{ 'company.field.contact_information_help'|trans({}, 'companies') }}</p>
+                    <div data-rich-editor-target="editor"></div>
+                    <textarea name="contact_information"
+                              data-rich-editor-target="input"
+                              class="hidden">{{ errors is not empty ? app.request.request.get('contact_information') : values.contact_information }}</textarea>
                 </div>
 
             </div>
@@ -168,6 +173,18 @@
                         <option value="{{ liaison.id }}" selected>{{ liaison.name.lastName }}, {{ liaison.name.firstName }}</option>
                     {% endfor %}
                 </select>
+            </div>
+
+            {# Observaciones #}
+            <div class="pt-3 border-t border-gray-100">
+                <twig:Form:Textarea
+                    id="exceptional_circumstances"
+                    name="exceptional_circumstances"
+                    label="{{ 'company.field.exceptional_circumstances'|trans({}, 'companies') }}"
+                    value="{{ errors is not empty ? app.request.request.get('exceptional_circumstances') : values.exceptional_circumstances }}"
+                    help="{{ 'company.field.exceptional_circumstances_help'|trans({}, 'companies') }}"
+                    :rows="3"
+                />
             </div>
 
             <div class="flex justify-end pt-2">

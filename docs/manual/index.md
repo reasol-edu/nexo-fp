@@ -9,10 +9,10 @@ La aplicación se ha diseñado para ser intuitiva y fácil de usar, con un enfoq
 reducción de errores administrativos. Permite generar informes detallados en PDF y facilita la
 comunicación entre el centro educativo y las empresas.
 
-> **¿Quieres simplemente probar de forma rápida la aplicación?** Sigue la guía
-> [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos):
-> en tres pasos, sin conocimientos técnicos, descargas el binario y lo arrancas con datos de demostración
-> ya cargados.
+!!! tip "¿Solo quieres probarlo?"
+    Sigue la guía [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos):
+    en tres pasos, sin conocimientos técnicos, descargas el binario y lo arrancas con datos de demostración
+    ya cargados.
 
 ## Multicentro
 

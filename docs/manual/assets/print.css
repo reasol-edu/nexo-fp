@@ -95,3 +95,93 @@ img { break-inside: avoid; }
 
 /* Evita líneas viudas/huérfanas. */
 p { orphans: 3; widows: 3; }
+
+/* ----- Admonitions (generadas por pandoc-admonitions.lua) ----- */
+.admonition {
+  border-left: 4px solid;
+  border-radius: 4px;
+  margin: 1em 0;
+  padding: 0.5em 0.9em 0.5em 0.9em;
+  break-inside: avoid;
+}
+
+.admonition p:first-child { margin-top: 0; }
+.admonition p:last-child  { margin-bottom: 0; }
+
+.admonition-title {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.2em;
+}
+
+/* — tip / hint / important ———— verde  💡 */
+.admonition.tip,
+.admonition.hint,
+.admonition.important {
+  border-color: #2e7d32;
+  background:   #f1f8e9;
+}
+.admonition.tip .admonition-title,
+.admonition.hint .admonition-title,
+.admonition.important .admonition-title { color: #1b5e20; }
+.admonition.tip .admonition-title::before,
+.admonition.hint .admonition-title::before,
+.admonition.important .admonition-title::before { content: '💡 '; }
+
+/* — note ————————————————————— azul  📝 */
+.admonition.note {
+  border-color: #1565c0;
+  background:   #e8eaf6;
+}
+.admonition.note .admonition-title { color: #0d47a1; }
+.admonition.note .admonition-title::before { content: '📝 '; }
+
+/* — info / todo —————————————— cian  ℹ️ */
+.admonition.info,
+.admonition.todo {
+  border-color: #00838f;
+  background:   #e0f7fa;
+}
+.admonition.info .admonition-title,
+.admonition.todo .admonition-title { color: #006064; }
+.admonition.info .admonition-title::before,
+.admonition.todo .admonition-title::before { content: 'ℹ️ '; }
+
+/* — warning / caution / attention — ámbar  ⚠️ */
+.admonition.warning,
+.admonition.caution,
+.admonition.attention {
+  border-color: #e65100;
+  background:   #fff8e1;
+}
+.admonition.warning .admonition-title,
+.admonition.caution .admonition-title,
+.admonition.attention .admonition-title { color: #bf360c; }
+.admonition.warning .admonition-title::before,
+.admonition.caution .admonition-title::before,
+.admonition.attention .admonition-title::before { content: '⚠️ '; }
+
+/* — danger / error —————————— rojo  🚨 */
+.admonition.danger,
+.admonition.error {
+  border-color: #b71c1c;
+  background:   #ffebee;
+}
+.admonition.danger .admonition-title,
+.admonition.error .admonition-title { color: #7f0000; }
+.admonition.danger .admonition-title::before,
+.admonition.error .admonition-title::before { content: '🚨 '; }
+
+/* — question / help / faq ———— violeta (paleta plum)  ❓ */
+.admonition.question,
+.admonition.help,
+.admonition.faq {
+  border-color: #6d5b97;
+  background:   #efe9f6;
+}
+.admonition.question .admonition-title,
+.admonition.help .admonition-title,
+.admonition.faq .admonition-title { color: #4a3374; }
+.admonition.question .admonition-title::before,
+.admonition.help .admonition-title::before,
+.admonition.faq .admonition-title::before { content: '❓ '; }

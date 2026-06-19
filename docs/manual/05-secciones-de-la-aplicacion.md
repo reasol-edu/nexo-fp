@@ -2,13 +2,14 @@
 
 Referencia de cada pantalla de Nexo FP y de lo que permite hacer.
 
-> **Listados (común a todas las secciones).** Las tablas de estudiantes, empresas, puestos, centros y
-> docentes comparten varias ayudas: se pueden **ordenar** pulsando en las cabeceras de columna (alterna
-> ascendente/descendente), la paginación incluye un campo **«Ir a la página»** para saltar directamente,
-> y al pulsar **«Exportar»** aparece un aviso de que el CSV se está generando. En móvil y tablet cada fila
-> se muestra como una **tarjeta** apilada (sin desplazamiento horizontal). La aplicación cuida la
-> accesibilidad por teclado: foco visible al navegar, los diálogos de confirmación atrapan el foco y se
-> cierran con Esc, y al enviar un formulario con errores el foco salta al primer campo incorrecto.
+!!! info "Funciones comunes a todos los listados"
+    Las tablas de estudiantes, empresas, puestos, centros y docentes comparten varias ayudas: se pueden
+    **ordenar** pulsando en las cabeceras de columna (alterna ascendente/descendente), la paginación incluye
+    un campo **«Ir a la página»** para saltar directamente, y al pulsar **«Exportar»** aparece un aviso de
+    que el CSV se está generando. En móvil y tablet cada fila se muestra como una **tarjeta** apilada (sin
+    desplazamiento horizontal). La aplicación cuida la accesibilidad por teclado: foco visible al navegar,
+    los diálogos de confirmación atrapan el foco y se cierran con Esc, y al enviar un formulario con errores
+    el foco salta al primer campo incorrecto.
 
 ## Inicio
 
@@ -35,7 +36,7 @@ estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docent
 finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.
 
 La cabecera incluye una **campana de notificaciones** que muestra en tiempo real las tareas pendientes
-del docente: firmas próximas a vencer, puestos sin estudiante, sin tutor académico o sin mentor de
+del docente: firmas próximas a vencer, puestos sin estudiante, sin tutor académico o sin tutor de
 empresa, y estudiantes sin puesto asignado.
 
 La **búsqueda global** (⌘K / Ctrl+K) permite localizar estancias, empresas, estudiantes y docentes desde
@@ -62,14 +63,16 @@ concreto. Desde esta sección se puede:
 - Los **filtros** (búsqueda, familia profesional, enseñanza y período) se recuerdan por centro en el
   navegador y se restauran automáticamente al volver al listado.
 
-> Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol. Las
-> estancias de otras enseñanzas no aparecen ni son accesibles (consulta
-> [Roles y permisos](03-roles-y-permisos.md)).
+!!! warning "Visibilidad según rol"
+    Un docente solo ve en el listado las estancias de las enseñanzas en las que tiene algún rol. Las
+    estancias de otras enseñanzas no aparecen ni son accesibles (consulta
+    [Roles y permisos](03-roles-y-permisos.md)).
 
-> Los tutores/as y docentes de grupo ven el detalle de la estancia y los puestos formativos de sus
-> estudiantes, pero **no** el bloque de **puestos sin asignar**. Estos solo son visibles para quienes
-> gestionan la estancia (administración, coordinación o jefatura de departamento) y para los docentes de
-> enlace de las empresas implicadas. La misma regla se aplica al informe PDF y a la exportación CSV.
+!!! warning "Puestos sin asignar"
+    Los tutores/as y docentes de grupo ven el detalle de la estancia y los puestos formativos de sus
+    estudiantes, pero **no** el bloque de **puestos sin asignar**. Estos solo son visibles para quienes
+    gestionan la estancia (administración, coordinación o jefatura de departamento) y para los docentes de
+    enlace de las empresas implicadas. La misma regla se aplica al informe PDF y a la exportación CSV.
 
 Cada puesto formativo registra:
 
@@ -116,17 +119,31 @@ detalle de la estancia.
 
 Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 
-- Datos de la empresa: nombre, CIF/NIF, localidad y circunstancias excepcionales.
+- **Datos de la empresa**: nombre, CIF/NIF y localidad.
+- **Información de contacto**: campo de texto enriquecido (negrita, cursiva, listas, enlaces…) para
+  anotar teléfonos, correos electrónicos, personas de referencia y cualquier otro dato de contacto.
 - **Representante** de la empresa (nombre, apellidos, DNI/NIE y cargo); todos los campos son opcionales.
 - **Centros de trabajo** (sedes o filiales) donde los estudiantes realizarán su formación.
 - **Empleados** de la empresa que pueden actuar como tutores de empresa.
 - **Docentes de enlace** asignados a cada empresa.
+- **Observaciones**: campo de texto libre para anotaciones internas.
+
+![Formulario de edición de empresa con el editor de información de contacto y pestañas](img/empresa-editar.png)
 
 El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo; la exportación
 incluye también el representante (nombre, DNI/NIE y cargo).
 
-> Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual, jefes/as
-> de departamento de familia profesional y docentes de enlace.
+### Historial de cambios
+
+Cada ficha incluye la pestaña **Historial de cambios**, que registra automáticamente quién modificó la
+empresa y qué campos cambiaron, con fecha y hora exactas. Los campos de texto largo (información de
+contacto y observaciones) se muestran como secciones desplegables con el valor anterior y el nuevo.
+
+![Pestaña Historial de cambios de una empresa con una entrada de auditoría](img/empresa-historial.png)
+
+!!! info "Acceso restringido"
+    Esta sección solo es visible para administradores/as de centro, coordinadores/as de FP dual, jefes/as
+    de departamento de familia profesional y docentes de enlace.
 
 ## Centro Educativo
 

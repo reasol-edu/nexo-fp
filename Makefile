@@ -85,6 +85,7 @@ docs-pdf:
 	@command -v pandoc >/dev/null 2>&1 || { echo "Necesitas pandoc. Instálalo (p. ej. brew install pandoc) y reintenta."; exit 1; }
 	@command -v npx >/dev/null 2>&1 || { echo "Necesitas Node.js/npx para generar el PDF. Instala Node y reintenta."; exit 1; }
 	pandoc -s --toc --toc-depth=2 \
+		--lua-filter=docs/pandoc-admonitions.lua \
 		--lua-filter=docs/pandoc-internal-links.lua \
 		--metadata title="Manual de usuario de Nexo FP" \
 		--metadata subtitle="Preparación de la Fase de Formación en Empresa u Organismo Equiparado (FFEOE)" \
