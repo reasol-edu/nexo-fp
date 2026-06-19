@@ -8,6 +8,7 @@ copyright: !ENV [MANUAL_COPYRIGHT, "Manual de usuario de Nexo FP"]
 docs_dir: .
 site_dir: ../manual-site
 use_directory_urls: false
+repo_url: https://github.com/reasol-edu/nexo-fp
 
 exclude_docs: |
   README.md
@@ -23,6 +24,8 @@ theme:
   palette:
     primary: deep purple
     accent: deep purple
+  icon:
+      repo: fontawesome/brands/github
   features:
     - navigation.instant
     - navigation.tracking
