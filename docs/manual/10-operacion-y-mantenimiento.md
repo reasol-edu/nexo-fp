@@ -77,6 +77,14 @@ Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzars
   solas al arrancar.
 - **Binario nativo:** descarga el nuevo paquete y conserva el directorio `data/` de la instalación
   anterior; al arrancar, aplicará las migraciones pendientes sobre la base de datos existente.
+- **Ubuntu Server 26.04:** descarga el nuevo paquete y extráelo sobre `/opt/nexo-fp/`; el directorio
+  `data/` y el fichero `.env.local` se conservan al no estar incluidos en el paquete. Las migraciones
+  se aplican automáticamente al reiniciar los servicios:
+  ```bash
+  sudo systemctl stop nexo-fp-worker nexo-fp
+  sudo -u nexofp tar xzf nexo-fp-X.Y.Z-linux-x86_64.tar.gz -C /opt/nexo-fp --strip-components=1
+  sudo systemctl start nexo-fp nexo-fp-worker
+  ```
 - **Plesk:** `git pull` (o sube los archivos nuevos), después por SSH:
   ```bash
   composer install --no-dev --optimize-autoloader

@@ -33,7 +33,7 @@ El manual sigue el orden natural de uso de la aplicación:
 6. [Notificaciones por email](06-notificaciones-y-email.md) — avisos automáticos.
 7. [Ajustes](07-ajustes.md) — configuración jerárquica.
 8. [Comandos de consola](08-comandos-de-consola.md) — administración desde la terminal.
-9. [Despliegue](09-despliegue.md) — binario nativo, Docker y Plesk.
+9. [Despliegue](09-despliegue.md) — binario nativo, Docker, Ubuntu Server y Plesk.
 10. [Operación y mantenimiento](10-operacion-y-mantenimiento.md) — el día a día.
 11. [Resolución de problemas](11-resolucion-de-problemas.md) — soluciones a las dudas más habituales.
 12. [Glosario](12-glosario.md) — los términos del manual y de la aplicación.

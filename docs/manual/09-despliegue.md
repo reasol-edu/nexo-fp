@@ -1,7 +1,8 @@
 # Despliegue
 
 Este capítulo contiene las instrucciones completas de todos los modos de despliegue: **prueba rápida**
-(sin conocimientos técnicos), **binario nativo**, **Docker Compose**, **Plesk** y **desarrollo local**.
+(sin conocimientos técnicos), **binario nativo**, **Docker Compose**, **Plesk**,
+**Ubuntu Server 26.04** y **desarrollo local**.
 Para elegir el modo más adecuado, consulta la tabla comparativa en
 [Instalación y requisitos](01-instalacion-y-requisitos.md).
 
@@ -597,6 +598,228 @@ mysqldump -u usuario -p nombre_bd > backup-$(date +%Y%m%d).sql
 
 Consulta [Operación y mantenimiento](10-operacion-y-mantenimiento.md#copias-de-seguridad) para más
 contexto sobre protección de datos y política de conservación.
+
+## Despliegue en Ubuntu Server 26.04
+
+Opción para centros que disponen de un **VPS o servidor dedicado con Ubuntu Server 26.04 LTS**.
+Usa el binario de FrankenPHP con **PostgreSQL nativo** y dos servicios **systemd**. No requiere
+Docker. A diferencia del despliegue en Plesk, incluye la
+[sincronización en vivo](#sincronizacion-en-vivo-mercure) (el hub Mercure va embebido en FrankenPHP).
+Se requiere acceso SSH con sudo.
+
+### Instalación automatizada
+
+El script `install-ubuntu.sh` (incluido en el paquete descargado o disponible directamente en el
+repositorio) realiza la instalación completa sin intervención manual.
+
+**Requisitos antes de ejecutarlo:**
+
+- Ubuntu Server 26.04 LTS con acceso a Internet y usuario con sudo.
+- Un **nombre de dominio** que apunte al servidor (necesario para el certificado TLS automático).
+- Puertos **80**, **443/tcp** y **443/udp** accesibles desde Internet.
+
+**Ejecución:**
+
+Desde el directorio donde descomprimiste el paquete:
+
+```bash
+sudo bash install-ubuntu.sh
+```
+
+O directamente desde el repositorio, sin descargar el paquete:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/install-ubuntu.sh \
+  | sudo bash
+```
+
+El script solicita tres datos: el **nombre de dominio**, la **contraseña de la base de datos** y la
+**dirección de correo remitente** (opcional). A continuación realiza automáticamente los pasos
+descritos en la sección siguiente.
+
+!!! danger "Cambia la contraseña por defecto"
+    Al terminar, la aplicación queda accesible en `https://tudominio.es` con `admin` / `admin`.
+    **Cámbiala inmediatamente** en **Administración → Perfil** antes de dar acceso a nadie más.
+
+### Instalación manual paso a paso
+
+Si prefieres controlar cada paso o adaptar la instalación a tu entorno, sigue esta secuencia:
+
+#### 1. Instalar PostgreSQL
+
+```bash
+sudo apt-get update && sudo apt-get install -y postgresql postgresql-client curl
+sudo -u postgres psql -c "CREATE USER nexo WITH PASSWORD 'contraseña_segura';"
+sudo -u postgres psql -c "CREATE DATABASE nexo OWNER nexo;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nexo TO nexo;"
+```
+
+#### 2. Configurar el cortafuegos
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 443/udp   # HTTP/3 (QUIC)
+sudo ufw enable
+```
+
+#### 3. Crear el usuario del sistema y el directorio de instalación
+
+```bash
+sudo useradd -r -d /opt/nexo-fp -s /usr/sbin/nologin nexofp
+sudo mkdir -p /opt/nexo-fp
+sudo chown nexofp:nexofp /opt/nexo-fp
+```
+
+#### 4. Descargar el binario
+
+Desde la [página de Releases](https://github.com/reasol-edu/nexo-fp/releases), copia el enlace
+del archivo `nexo-fp-VERSION-linux-x86_64.tar.gz` (o `linux-aarch64` para ARM) y extráelo:
+
+```bash
+VERSION=X.Y.Z   # reemplaza por la versión actual
+sudo -u nexofp bash -c "
+  curl -fsSL https://github.com/reasol-edu/nexo-fp/releases/download/v${VERSION}/nexo-fp-${VERSION}-linux-x86_64.tar.gz \
+  | tar xzf - -C /opt/nexo-fp --strip-components=1
+"
+```
+
+#### 5. Crear el fichero de configuración
+
+```bash
+sudo -u nexofp nano /opt/nexo-fp/.env.local
+```
+
+Contenido mínimo obligatorio:
+
+```bash
+SERVER_ADDR=nexo.tudominio.es
+DEFAULT_URI=https://nexo.tudominio.es
+DATABASE_URL=postgresql://nexo:contraseña_segura@localhost:5432/nexo?serverVersion=16&charset=utf8
+MIGRATIONS_PATH=migrations/postgresql
+MAILER_DSN=null://null
+MAILER_FROM=nexo-fp@tudominio.es
+```
+
+`SERVER_ADDR` con el nombre de dominio (sin puerto) activa el **HTTPS automático** de
+FrankenPHP/Caddy vía Let's Encrypt.
+
+#### 6. Crear los scripts de arranque
+
+Copia los ficheros `nexo-start.sh` y `nexo-worker.sh` desde el paquete, o ejecútalos desde la
+sección anterior con `install-ubuntu.sh`.
+
+Los scripts leen `.env.local`, generan `APP_SECRET` y `MERCURE_JWT_SECRET` automáticamente en el
+primer arranque (guardados en `data/`), escriben el fichero `app/.env` que necesita Symfony y
+lanzan en primer plano el servidor o el worker respectivamente.
+
+#### 7. Instalar los servicios systemd
+
+```bash
+sudo tee /etc/systemd/system/nexo-fp.service > /dev/null << 'UNIT'
+[Unit]
+Description=Nexo FP (FrankenPHP)
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=nexofp
+Group=nexofp
+WorkingDirectory=/opt/nexo-fp
+ExecStart=/opt/nexo-fp/nexo-start.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=65536
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+sudo tee /etc/systemd/system/nexo-fp-worker.service > /dev/null << 'UNIT'
+[Unit]
+Description=Nexo FP Worker (Messenger + Scheduler)
+After=nexo-fp.service
+Requires=nexo-fp.service
+
+[Service]
+Type=simple
+User=nexofp
+Group=nexofp
+WorkingDirectory=/opt/nexo-fp
+ExecStart=/opt/nexo-fp/nexo-worker.sh
+Restart=always
+RestartSec=10
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now nexo-fp nexo-fp-worker
+```
+
+!!! info "AmbientCapabilities"
+    La directiva `AmbientCapabilities=CAP_NET_BIND_SERVICE` permite que el proceso (ejecutado como
+    `nexofp`, sin privilegios de root) escuche en los puertos 80 y 443.
+
+#### Comandos útiles
+
+```bash
+# Estado de los servicios
+sudo systemctl status nexo-fp nexo-fp-worker
+
+# Seguir los logs en tiempo real
+sudo journalctl -u nexo-fp -f
+sudo journalctl -u nexo-fp-worker -f
+
+# Reiniciar tras cambiar .env.local
+sudo systemctl restart nexo-fp nexo-fp-worker
+```
+
+### Actualización a una nueva versión
+
+1. Descarga el nuevo paquete y detén los servicios:
+
+   ```bash
+   VERSION=X.Y.Z
+   curl -fsSL https://github.com/reasol-edu/nexo-fp/releases/download/v${VERSION}/nexo-fp-${VERSION}-linux-x86_64.tar.gz \
+     -o /tmp/nexo-fp-new.tar.gz
+   sudo systemctl stop nexo-fp-worker nexo-fp
+   ```
+
+2. Extrae el nuevo paquete sobre la instalación existente. El directorio `data/` (secretos y base de
+   datos) y el fichero `.env.local` no están en el paquete, por lo que se conservan intactos:
+
+   ```bash
+   sudo -u nexofp tar xzf /tmp/nexo-fp-new.tar.gz -C /opt/nexo-fp --strip-components=1
+   ```
+
+3. Vuelve a arrancar los servicios. `nexo-start.sh` aplica automáticamente las migraciones
+   pendientes y regenera la caché:
+
+   ```bash
+   sudo systemctl start nexo-fp nexo-fp-worker
+   ```
+
+### Copias de seguridad
+
+- Los secretos (`data/.secret`, `data/.mercure_secret`) y la configuración (`data/.env.local`) están
+  en `/opt/nexo-fp/`. Inclúyelos en tus copias.
+- Haz un volcado periódico de la base de datos:
+
+  ```bash
+  sudo -u postgres pg_dump nexo > backup-$(date +%Y%m%d).sql
+  ```
+
+Consulta [Operación y mantenimiento](10-operacion-y-mantenimiento.md#copias-de-seguridad) para más
+contexto.
 
 ## Desarrollo local
 

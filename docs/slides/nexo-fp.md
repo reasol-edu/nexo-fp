@@ -387,7 +387,7 @@ Cada persona gestiona su cuenta en **Mi perfil**:
 
 ---
 
-## Cuatro formas de desplegar
+## Cinco formas de desplegar
 
 <!-- _class: tight -->
 
@@ -395,13 +395,15 @@ Cada persona gestiona su cuenta en **Mi perfil**:
 |---|---|---|---|---|
 | **Binario** (FrankenPHP) | SQLite | Un centro, "doble clic" | Mínimo | ✅ |
 | **Docker Compose** | PostgreSQL | Servidor / producción | Medio | ✅ |
+| **Ubuntu Server 26.04** | PostgreSQL | VPS Ubuntu, sin Docker | Medio | ✅ |
 | **Plesk** (PHP-FPM) | MySQL / PostgreSQL | VPS con Plesk, sin Docker | Medio | ❌ |
 | **Desarrollo local** | PostgreSQL | Contribuir al proyecto | Para técnicos | ✅ |
 
 - El **binario** es un único ejecutable: ideal para un IES sin infraestructura.
-- **Docker** añade HTTPS automático y base de datos robusta para varios centros.
-- **Plesk** es la opción para centros con VPS ya gestionado; no requiere Docker.
-- En binario y Docker las **migraciones se aplican solas** al arrancar.
+- **Docker** y **Ubuntu Server** añaden HTTPS automático y PostgreSQL robusto.
+- **Ubuntu Server**: script de instalación automatizado (`install-ubuntu.sh`).
+- **Plesk**: para centros con VPS ya gestionado; no requiere Docker.
+- En binario, Docker y Ubuntu las **migraciones se aplican solas** al arrancar.
 
 ---
 
