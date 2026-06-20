@@ -1084,15 +1084,19 @@ Compose (solo para la base de datos).
 cp .env.example .env.local            # ajusta si es necesario
 export COMPOSE_ENV_FILES=.env.local   # Compose usará .env.local
 
-# 2. Levanta solo PostgreSQL con el overlay de desarrollo
+# 2. Genera un valor aleatorio para MERCURE_JWT_SECRET (obligatorio: el bundle
+#    falla al arrancar si está vacío). Añádelo a .env.local:
+echo "MERCURE_JWT_SECRET=\"$(openssl rand -hex 32)\"" >> .env.local
+
+# 3. Levanta solo PostgreSQL con el overlay de desarrollo
 docker compose -f compose.yaml -f compose.dev.yaml up -d
 
-# 3. Instala dependencias e inicializa la base de datos
+# 4. Instala dependencias e inicializa la base de datos
 composer install
 make migrate
 php bin/console app:setup
 
-# 4. Arranca el servidor de desarrollo
+# 5. Arranca el servidor de desarrollo
 symfony server:start          # o: php -S localhost:8000 -t public/
 ```
 
