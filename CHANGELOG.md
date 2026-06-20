@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.6] - 2026-06-20
+
+### Added
+
+- Pestaña **Firmas pendientes** en el listado de estancias: muestra los puestos formativos registrados en Séneca que aún no tienen el convenio firmado, ordenados por fecha fin ascendente (el más urgente primero). Los mismos filtros de búsqueda (incluyendo nombre de grupo), familia profesional, enseñanza y período que el listado de estancias se aplican a esta pestaña. Una insignia numérica indica cuántos puestos están pendientes con los filtros activos. Los resultados respetan los permisos por rol del usuario; en pantallas pequeñas se presentan como tarjetas. La fecha fin se colorea en rojo (≤ 7 días) o ámbar (≤ 30 días) para priorizar de un vistazo
+
 ## [2.3.5] - 2026-06-20
 
 ### Added
