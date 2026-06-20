@@ -228,10 +228,14 @@
         </header>
 
         <main class="flex-1">
-            {# Flash messages #}
+            {# Flash messages — región live para lectores de pantalla. Los success
+               se anuncian con polite (no interrumpen); los error con assertive. #}
             {% set flashes = app.flashes(['success', 'error']) %}
             {% if flashes is not empty %}
-                <div class="px-6 pt-6 space-y-2">
+                <div class="px-6 pt-6 space-y-2"
+                     role="status"
+                     aria-live="{{ flashes.error is defined ? 'assertive' : 'polite' }}"
+                     aria-atomic="true">
                     {% for type, messages in flashes %}
                         {% for message in messages %}
                             <div data-flash
