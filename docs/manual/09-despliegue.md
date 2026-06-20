@@ -837,6 +837,230 @@ sudo systemctl restart nexo-fp nexo-fp-worker
    sudo systemctl start nexo-fp nexo-fp-worker
    ```
 
+### Despliegue continuo (CD) {#despliegue-continuo}
+
+Con CD el servidor se actualiza solo cada vez que se publica una nueva versión, sin intervención
+manual. La base es siempre el mismo script de actualización; la diferencia está en cómo se activa:
+**sondeo periódico** (más sencillo, sin puertos extra) o **webhook** (instantáneo, requiere un
+puerto adicional).
+
+!!! info "Etiquetas reescritas"
+    El repositorio puede publicar una versión reescribiendo la etiqueta existente con
+    `git push --force`. Ambas estrategias usan `git fetch --tags --force` para detectar ese caso
+    correctamente.
+
+#### Script de actualización compartido
+
+Crea `/opt/nexo-fp/nexo-update.sh` con el usuario `nexofp`:
+
+```bash
+sudo -u nexofp tee /opt/nexo-fp/nexo-update.sh > /dev/null << 'EOF'
+#!/usr/bin/env bash
+# Actualiza Nexo FP a la última versión publicada en GitHub.
+# Compara la etiqueta activa con la etiqueta remota más reciente; si difieren,
+# descarga el paquete y reinicia los servicios. Compatible con etiquetas
+# reescritas (git push --force sobre una etiqueta existente).
+set -euo pipefail
+
+INSTALL_DIR=/opt/nexo-fp
+REPO=reasol-edu/nexo-fp
+LOG_TAG=nexo-update
+
+log()  { logger -t "$LOG_TAG" "$*"; echo "$*"; }
+error(){ logger -t "$LOG_TAG" -p user.err "ERROR: $*"; echo "ERROR: $*" >&2; }
+
+# ── Obtener etiqueta remota más reciente ──────────────────────────────────────
+REMOTE_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/')
+
+if [[ -z "$REMOTE_TAG" ]]; then
+  error "No se pudo obtener la versión remota."
+  exit 1
+fi
+
+# ── Comparar con la versión instalada ────────────────────────────────────────
+LOCAL_TAG=$(cat "${INSTALL_DIR}/VERSION" 2>/dev/null || echo "none")
+
+if [[ "$LOCAL_TAG" == "$REMOTE_TAG" ]]; then
+  log "Ya en ${REMOTE_TAG}. Sin cambios."
+  exit 0
+fi
+
+log "Actualizando ${LOCAL_TAG} → ${REMOTE_TAG}…"
+
+# ── Descarga ──────────────────────────────────────────────────────────────────
+VERSION=${REMOTE_TAG#v}
+TMP=$(mktemp /tmp/nexo-fp-update.XXXXXX.tar.gz)
+curl -fsSL \
+  "https://github.com/${REPO}/releases/download/${REMOTE_TAG}/nexo-fp-${VERSION}-linux-x86_64.tar.gz" \
+  -o "$TMP"
+
+# ── Parada, extracción y arranque ─────────────────────────────────────────────
+sudo systemctl stop nexo-fp-worker nexo-fp
+sudo tar xzf "$TMP" -C "$INSTALL_DIR" --strip-components=1
+rm -f "$TMP"
+sudo systemctl start nexo-fp nexo-fp-worker
+
+log "Actualización a ${REMOTE_TAG} completada."
+EOF
+sudo chmod +x /opt/nexo-fp/nexo-update.sh
+```
+
+El script necesita poder invocar `sudo systemctl` sin contraseña. Añade la regla de sudoers:
+
+```bash
+sudo tee /etc/sudoers.d/nexo-update > /dev/null << 'EOF'
+nexofp ALL=(root) NOPASSWD: \
+  /usr/bin/systemctl stop nexo-fp nexo-fp-worker, \
+  /usr/bin/systemctl start nexo-fp nexo-fp-worker, \
+  /usr/bin/tar xzf /tmp/nexo-fp-update.*.tar.gz -C /opt/nexo-fp --strip-components=1
+EOF
+sudo chmod 440 /etc/sudoers.d/nexo-update
+```
+
+#### Opción A — Sondeo periódico con systemd timer
+
+El timer comprueba si hay nueva versión cada 15 minutos. No requiere abrir ningún puerto extra
+ni configurar el repositorio remoto.
+
+```bash
+sudo tee /etc/systemd/system/nexo-update.service > /dev/null << 'UNIT'
+[Unit]
+Description=Nexo FP — actualización automática
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nexofp
+ExecStart=/opt/nexo-fp/nexo-update.sh
+StandardOutput=journal
+StandardError=journal
+UNIT
+
+sudo tee /etc/systemd/system/nexo-update.timer > /dev/null << 'UNIT'
+[Unit]
+Description=Nexo FP — comprueba actualizaciones cada 15 minutos
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now nexo-update.timer
+```
+
+Verifica que el timer está activo:
+
+```bash
+systemctl list-timers nexo-update.timer
+```
+
+Para forzar una comprobación inmediata sin esperar al siguiente disparo:
+
+```bash
+sudo systemctl start nexo-update.service
+journalctl -u nexo-update.service -n 20
+```
+
+#### Opción B — Webhook desde GitHub
+
+El webhook recibe la señal de GitHub en el momento exacto en que se publica la release,
+sin ningún retardo de sondeo. Requiere abrir el puerto elegido en el cortafuegos y configurar
+un secreto compartido en GitHub.
+
+**1. Instala `webhook`:**
+
+```bash
+sudo apt-get install -y webhook
+```
+
+**2. Crea la configuración del receptor:**
+
+```bash
+sudo -u nexofp tee /opt/nexo-fp/webhook.json > /dev/null << 'EOF'
+[
+  {
+    "id": "nexo-update",
+    "execute-command": "/opt/nexo-fp/nexo-update.sh",
+    "command-working-directory": "/opt/nexo-fp",
+    "response-message": "Actualización iniciada",
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "payload-hmac-sha256",
+            "secret": "WEBHOOK_SECRET",
+            "parameter": { "source": "header", "name": "X-Hub-Signature-256" }
+          }
+        },
+        {
+          "match": {
+            "type": "value",
+            "value": "release",
+            "parameter": { "source": "payload", "name": "action" }
+          }
+        }
+      ]
+    }
+  }
+]
+EOF
+```
+
+Sustituye `WEBHOOK_SECRET` por una cadena aleatoria larga (p. ej. `openssl rand -hex 32`).
+
+**3. Crea el servicio systemd para el receptor:**
+
+```bash
+sudo tee /etc/systemd/system/nexo-webhook.service > /dev/null << 'UNIT'
+[Unit]
+Description=Nexo FP — receptor de webhooks
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nexofp
+ExecStart=/usr/bin/webhook -hooks /opt/nexo-fp/webhook.json -port 9000 -verbose
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now nexo-webhook
+```
+
+**4. Abre el puerto en el cortafuegos:**
+
+```bash
+sudo ufw allow 9000/tcp comment 'Nexo FP webhook'
+```
+
+**5. Configura el webhook en GitHub:**
+
+En el repositorio ve a **Settings → Webhooks → Add webhook**:
+
+| Campo | Valor |
+|-------|-------|
+| Payload URL | `https://tudominio.es:9000/hooks/nexo-update` |
+| Content type | `application/json` |
+| Secret | el mismo valor que `WEBHOOK_SECRET` |
+| Events | «Let me select individual events» → **Releases** |
+
+!!! tip "HTTPS para el webhook"
+    Si prefieres no exponer el puerto 9000 directamente, configura un proxy inverso en FrankenPHP
+    (o Caddy) que enrute `/hooks/` al receptor local en `localhost:9000`. Así el webhook llega
+    por el mismo puerto 443 ya abierto y el tráfico queda cifrado con tu certificado TLS existente.
+
 ### Copias de seguridad
 
 - Los secretos (`data/.secret`, `data/.mercure_secret`) y la configuración (`data/.env.local`) están
