@@ -19,6 +19,7 @@
         "mpdf/mpdf": "^8.3.1",
         "openspout/openspout": "^5.7",
         "phpseclib/phpseclib": "^3.0.55",
+        "symfony/apache-pack": "*",
         "symfony/asset": "8.1.*",
         "symfony/asset-mapper": "8.1.*",
         "symfony/console": "8.1.*",

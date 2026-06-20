@@ -496,12 +496,19 @@ de ese apartado.
 
     y ajusta también `MIGRATIONS_PATH=migrations/postgresql`.
 
-### 5. Instalar dependencias
+### 5. Instalar dependencias y compilar los assets
 
 ```bash
 cd ~/apps/nexo-fp
 composer install --no-dev --optimize-autoloader
+php bin/console tailwind:build --env=prod
+php bin/console asset-map:compile
 ```
+
+!!! info "Por qué hace falta compilar los assets"
+    Los archivos CSS y JS generados no se incluyen en el repositorio. `tailwind:build` genera
+    el CSS a partir de las plantillas (sin necesidad de Node.js) y `asset-map:compile` copia
+    y versiona todos los assets en `public/assets/`.
 
 ### 6. Crear la base de datos y configurar la aplicación
 
@@ -572,13 +579,19 @@ php bin/console cache:clear
    ```bash
    composer install --no-dev --optimize-autoloader
    ```
-3. Aplica las migraciones de base de datos:
+3. Recompila los assets:
+   ```bash
+   php bin/console tailwind:build --env=prod
+   php bin/console asset-map:compile
+   ```
+4. Aplica las migraciones de base de datos:
    ```bash
    php bin/console doctrine:migrations:migrate --no-interaction
    ```
-4. Limpia la caché:
+5. Regenera la caché:
    ```bash
-   php bin/console cache:clear
+   rm -rf var/cache/prod
+   php bin/console cache:warmup --env=prod --no-debug
    ```
 
 !!! tip "Las migraciones son seguras de re-ejecutar"
