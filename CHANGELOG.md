@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.9] - 2026-06-20
+
+### Added
+
+- Política mínima de contraseña: el cambio desde Mi perfil y el restablecimiento por email exigen **al menos 12 caracteres**, con pista visible en el formulario y mensaje de error explícito (centralizado en el servicio `PasswordPolicy`)
+- Cabeceras de seguridad HTTP en los tres despliegues (Docker/Caddy, binario nativo y Apache/Plesk): `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`; también se elimina la cabecera `Server` (y `X-Powered-By` en Apache)
+
+### Changed
+
+- Accesibilidad: pestañas «Estancias» / «Firmas pendientes» implementan el patrón WAI-ARIA (`tablist`/`tab`/`tabpanel`, `aria-selected`, `aria-controls`, roving `tabindex`); las cabeceras ordenables de la tabla de firmas pendientes declaran `aria-sort` y un texto de ayuda para lectores de pantalla; el botón de mostrar/ocultar contraseña en el login y en el restablecimiento incluye `aria-label`/`aria-pressed`/`aria-controls` y el controlador Stimulus mantiene `aria-pressed` sincronizado con el estado visible
+- Mensajes flash (éxito/error y *toasts* de acciones en vivo en el detalle de estancia) anunciados a lectores de pantalla con `role="status"` y `aria-live` (assertive si hay error, polite en el resto), `aria-atomic="true"`
+- Enlace de cerrar sesión: incluye el token CSRF en la URL (`csrf_token('logout')`) para alinearse con `csrf_protection.stateless_token_ids: [logout]` activado en `csrf.yaml`
+- El secreto del hub Mercure (`MERCURE_JWT_SECRET`) deja de tener un valor por defecto inseguro en `.env`. En desarrollo local hay que añadirlo a `.env.local` (un comando listo para copiar en el manual); en los despliegues de binario y Docker se sigue generando automáticamente. Plesk ya requería configurarlo
+- Refactor menor en `StayListComponent.html.twig`: las macros `sortIcon`/`ariaSort` se mueven al inicio del template para que su ámbito quede claro
+
+### Fixed
+
+- Seguridad: enumeración de cuentas por timing en `POST /contrasena/recuperar`. El envío síncrono del correo de restablecimiento permitía distinguir «usuario existe» (latencia de SMTP) de «no existe» (retorno inmediato) pese al mensaje neutro. Ahora ambas ramas tardan un mínimo común (900 ms en prod, 0 en tests) midiendo el tiempo y rellenando con `usleep`; el parámetro `app.password_reset.request_min_duration_us` controla el umbral
+- Seguridad: el cambio de email en Mi perfil rechaza la dirección si ya la usa otra cuenta como email principal o como `pendingEmail` (comparación insensible a mayúsculas). Antes el `flush` dejaba dos docentes con el mismo correo, rompiendo notificaciones y verificación
+
 ## [2.3.8] - 2026-06-20
 
 ### Fixed
