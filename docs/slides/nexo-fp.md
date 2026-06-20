@@ -220,7 +220,7 @@ En **Centro educativo › Estudiantes**:
 
 En **Empresas**:
 
-- Alta con **CIF/NIF** y localidad; listado con **exportación CSV**.
+- Alta con **CIF/NIF** y localidad; listado con **exportación a Excel**.
 - **Información de contacto** en texto enriquecido (teléfonos, emails, personas de referencia…).
 - Cada empresa tiene sus **centros de trabajo**.
 - Y sus **empleados**: los **tutores duales de empresa**.
@@ -266,7 +266,7 @@ Cada fila es un **puesto formativo**:
 - **Estado** (Borrador, Pendiente, Registrado en Séneca)
 
 Se asignan estudiantes y tutores con un modo de **asignación rápida** (selectores en
-todas las filas) y se exporta el **informe PDF** y los puestos a **CSV**.
+todas las filas) y se exporta el **informe PDF** y los puestos a **Excel**.
 
 ---
 
@@ -284,7 +284,7 @@ los puestos de una misma estancia **a la vez**:
 - Si dos personas editan el mismo puesto, la aplicación **avisa del conflicto**
   en lugar de sobrescribir el trabajo del otro.
 
-> Tecnología: hub **Mercure** embebido en FrankenPHP. Sin servicios ni contenedores extra.
+> Disponible en los modos **binario nativo**, **Docker** y **Ubuntu Server**, sin configuración adicional.
 
 ---
 
@@ -357,7 +357,7 @@ Ciclo de vida de cada puesto:
 Nexo FP genera la documentación que se necesita fuera de la aplicación:
 
 - **Informe de estancia** en **PDF**, listo para imprimir o tramitar.
-- **Exportación CSV** de empresas y puestos.
+- **Exportación a Excel** de empresas y puestos.
 - **Avisos por email** automáticos:
   - al **crear puestos** (a los docentes de enlace de la empresa),
   - al **asignar tutoría docente**,
@@ -498,7 +498,7 @@ Comandos de consola:
   php bin/console messenger:failed:retry
   php bin/console messenger:failed:remove <id>
   ```
-- **Recordatorio de firma** automático cada día (Symfony Scheduler, vía el *worker*); sin cron externo.
+- **Recordatorio de firma** automático cada día, sin cron externo.
 
 > El envío asíncrono mantiene la aplicación **rápida**: el usuario no espera al correo.
 

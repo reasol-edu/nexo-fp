@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-06-20
+
+### Changed
+
+- Manual de usuario revisado: introducción reescrita para centrar el objetivo de la aplicación (planificación y asignación de puestos formativos) y dejar claro que el acceso es exclusivo para el profesorado; eliminada la mención al framework en el primer párrafo; corregidas todas las referencias a exportación («CSV») por «Excel» en el texto, las tablas de permisos, el glosario de acciones y la presentación
+- Presentación revisada: eliminados nombres de tecnologías internas de las diapositivas de funcionalidad; mención al modo de despliegue Ubuntu Server añadida en la diapositiva de sincronización en tiempo real
+- Mejoras de estilo en el manual: eliminadas expresiones poco naturales, repeticiones léxicas cercanas y calcos del inglés («con un enfoque en»)
+
 ## [2.3.3] - 2026-06-20
 
 ### Added

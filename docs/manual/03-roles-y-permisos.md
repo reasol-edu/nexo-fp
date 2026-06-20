@@ -49,8 +49,8 @@ tutores. Al crear una nueva estancia, solo puede seleccionar enseñanzas de las 
 ### Jefe/a de departamento de familia profesional
 
 Docente designado/a como jefe/a de departamento de una familia profesional. Tiene acceso a la sección
-**Empresas** (ver y editar cualquier empresa del centro) y puede ver y gestionar —editar, gestionar
-puestos y eliminar— las estancias de las enseñanzas pertenecientes a su familia profesional.
+**Empresas** (ver y editar cualquier empresa del centro) y puede ver, editar y eliminar las estancias de
+las enseñanzas de su familia profesional, así como gestionar sus puestos formativos.
 
 ### Docente de enlace
 
@@ -110,7 +110,7 @@ Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es
 | Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
 | Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
 | Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Descargar informe PDF / exportar CSV | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
+| Descargar informe PDF / exportar a Excel | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 
 ### Empresas
 

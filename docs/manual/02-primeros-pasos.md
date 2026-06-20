@@ -8,7 +8,7 @@ para dejar listo para su uso un curso académico está detallado en el capítulo
 [Flujo de trabajo](04-flujo-de-trabajo.md).
 
 Todo en Nexo FP gira en torno al **curso académico activo** de cada centro: al cambiar de curso, cambia
-el contexto de trabajo. Desde **Centro Educativo** se gestiona el contenido del curso académico activo.
+el contexto de trabajo. Desde **Centro Educativo** se gestiona todo su contenido.
 
 !!! danger "Cambia la contraseña por defecto antes de empezar"
     El primer acceso se hace con `admin` / `admin`. Entra y, en **Mi perfil → Contraseña**, establece
@@ -18,8 +18,8 @@ el contexto de trabajo. Desde **Centro Educativo** se gestiona el contenido del 
 ## 2. Añadir los docentes del curso académico (equipo directivo)
 
 Desde **Centro Educativo → Docentes del curso** se da de alta al personal adscrito al curso activo.
-**Este paso es imprescindible antes de estructurar la oferta formativa**: sin docentes en el curso no es
-posible asignar jefaturas de departamento, coordinadores duales, tutores ni docentes a los grupos.
+**Este paso es imprescindible antes de estructurar la oferta formativa**: sin personal dado de alta en el
+curso no es posible asignar jefaturas de departamento, coordinadores duales, tutores ni docentes a los grupos.
 
 Los docentes pueden añadirse uno a uno o mediante **importación masiva desde CSV de Séneca**.
 
@@ -74,7 +74,7 @@ antes.
 
 Desde **Centro Educativo → Estudiantes** se dan de alta los estudiantes, manualmente o mediante
 **importación masiva por CSV desde Séneca**, y se distribuyen en sus grupos. El listado permite
-búsqueda por NIE o nombre, filtro por grupo y **exportación a CSV**.
+búsqueda por NIE o nombre, filtro por grupo y **exportación a Excel**.
 
 ### Cómo exportar el CSV de Séneca (perfil Dirección)
 

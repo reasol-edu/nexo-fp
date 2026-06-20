@@ -64,7 +64,7 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 1. Para salir de **Borrador** hay que asignar **ambos tutores** (docente y de empresa).
 2. Cuando la asignación está lista, el estado pasa a **Pendiente de Séneca**.
 3. Una vez confirmada la recepción en Séneca, se marca como **Registrado en Séneca** y el convenio se
-   indica como firmado. La casilla **Firmado** solo se habilita en este estado.
+   registra como firmado. La casilla **Firmado** solo se habilita en este estado.
 4. Los puestos en estado **Registrado** quedan bloqueados para evitar modificaciones accidentales; se
    puede volver a *Borrador* para corregir datos.
 
@@ -74,5 +74,4 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 ## 6 — Generar informes
 
 En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle completo de
-todos los puestos, estudiantes, tutores y fechas, o exportar los datos a **CSV** para trabajarlos en una
-hoja de cálculo.
+todos los puestos, estudiantes, tutores y fechas, o exportar los datos a **Excel**.

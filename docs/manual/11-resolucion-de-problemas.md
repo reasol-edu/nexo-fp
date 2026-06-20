@@ -46,7 +46,7 @@ En el binario nativo: `nexo-fp php-cli bin/console app:create-admin <nuevo_usuar
 ### El navegador dice «la conexión no es privada» en desarrollo
 
 El servidor de desarrollo (`symfony server:start`) usa un certificado **autofirmado** en
-`https://localhost:8000`. Es esperable: acepta la excepción de seguridad del navegador, o usa
+`https://localhost:8000`. Es lo esperado: acepta la excepción de seguridad del navegador, o usa
 `http://localhost:8000` arrancando con `php -S`.
 
 ### Un docente no ve ninguna estancia, empresa o sección
@@ -76,13 +76,13 @@ cambios de otras personas.
 
 1. Comprueba el **modo de despliegue**: la sincronización en vivo necesita el hub embebido en FrankenPHP
    (Docker o binario nativo). En desarrollo con `symfony server:start`, el hub lo aporta el overlay
-   `compose.dev.yaml` (contenedor `dunglas/mercure`) y el Symfony CLI lo detecta solo. El servidor de
+   `compose.dev.yaml` (contenedor `dunglas/mercure`) y el Symfony CLI lo detecta automáticamente. El servidor de
    desarrollo `php -S` no tiene hub ni inyección de variables, así que no hay tiempo real.
 2. En **Docker**, asegúrate de que `MERCURE_JWT_SECRET` está definida; sin ella el contenedor no arranca.
 3. Si hay un **proxy inverso** delante (Nginx, Apache, balanceador), debe permitir conexiones
    *Server-Sent Events* (SSE) sin almacenarlas en búfer ni cerrarlas por inactividad, y reenviar la ruta
    `/.well-known/mercure`.
-4. La sincronización se sirve en el **mismo origen** que la aplicación (`MERCURE_PUBLIC_URL` es relativa).
+4. La sincronización opera en el **mismo origen** que la aplicación (`MERCURE_PUBLIC_URL` es relativa).
    Si cambias el dominio o el puerto, no fijes una URL absoluta distinta para el hub.
 5. En las herramientas de desarrollo del navegador (pestaña *Red*) debe verse una conexión abierta a
    `/.well-known/mercure`; si aparece como rechazada, revisa que tu usuario tenga permiso para ver la

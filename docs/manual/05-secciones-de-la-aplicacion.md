@@ -6,10 +6,10 @@ Referencia de cada pantalla de Nexo FP y de lo que permite hacer.
     Las tablas de estudiantes, empresas, puestos, centros y docentes comparten varias ayudas: se pueden
     **ordenar** pulsando en las cabeceras de columna (alterna ascendente/descendente), la paginación incluye
     un campo **«Ir a la página»** para saltar directamente, y al pulsar **«Exportar»** aparece un aviso de
-    que el CSV se está generando. En móvil y tablet cada fila se muestra como una **tarjeta** apilada (sin
-    desplazamiento horizontal). La aplicación cuida la accesibilidad por teclado: foco visible al navegar,
-    los diálogos de confirmación atrapan el foco y se cierran con Esc, y al enviar un formulario con errores
-    el foco salta al primer campo incorrecto.
+    que el archivo se está generando. En móvil y tablet cada fila se muestra como una **tarjeta** apilada (sin
+    desplazamiento horizontal). La aplicación cuida la accesibilidad por teclado: el foco es visible al
+    navegar, los diálogos de confirmación lo retienen y se cierran con Esc, y al enviar un formulario con
+    errores el cursor salta al primer campo incorrecto.
 
 ## Inicio
 
@@ -58,8 +58,8 @@ concreto. Desde esta sección se puede:
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones. Para cada empresa
   se incluye el CIF y, si están registrados, el representante (nombre, DNI y cargo); junto al tutor/a dual
   de empresa se muestra su DNI.
-- Exportar los puestos de la estancia a **CSV** (compatible con Excel) con estudiante, empresa, centro de
-  trabajo, tutorías y estado.
+- Exportar los puestos de la estancia a **Excel** con estudiante, empresa, centro de trabajo, tutorías y
+  estado.
 - Los **filtros** (búsqueda, familia profesional, enseñanza y período) se recuerdan por centro en el
   navegador y se restauran automáticamente al volver al listado.
 
@@ -72,7 +72,7 @@ concreto. Desde esta sección se puede:
     Los tutores/as y docentes de grupo ven el detalle de la estancia y los puestos formativos de sus
     estudiantes, pero **no** el bloque de **puestos sin asignar**. Estos solo son visibles para quienes
     gestionan la estancia (administración, coordinación o jefatura de departamento) y para los docentes de
-    enlace de las empresas implicadas. La misma regla se aplica al informe PDF y a la exportación CSV.
+    enlace de las empresas implicadas. La misma regla se aplica al informe PDF y a la exportación a Excel.
 
 Cada puesto formativo registra:
 
@@ -130,7 +130,7 @@ Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 
 ![Formulario de edición de empresa con el editor de información de contacto y pestañas](img/empresa-editar.png)
 
-El listado de empresas puede exportarse a **CSV** respetando el filtro de búsqueda activo; la exportación
+El listado de empresas puede exportarse a **Excel** respetando el filtro de búsqueda activo; la exportación
 incluye también el representante (nombre, DNI/NIE y cargo).
 
 ### Historial de cambios

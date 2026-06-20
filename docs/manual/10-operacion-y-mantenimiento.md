@@ -94,8 +94,8 @@ Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzars
 
 ## Protección de datos (RGPD)
 
-Nexo FP almacena **datos personales** de alumnado (nombre, NIE) y profesorado, y datos de las empresas
-colaboradoras. El **centro educativo es el responsable del tratamiento** de esos datos; conviene tenerlo
+Nexo FP almacena **datos personales** de alumnado (nombre, NIE) y profesorado, así como información de
+las empresas colaboradoras. El **centro educativo es el responsable del tratamiento** de esos datos; conviene tenerlo
 en cuenta al operar la aplicación:
 
 - **Acceso mínimo necesario.** Los permisos están diseñados para que cada docente vea solo los datos que
