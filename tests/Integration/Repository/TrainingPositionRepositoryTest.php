@@ -309,6 +309,179 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $results);
     }
 
+    // ── createPendingSignaturesQuery ─────────────────────────────────────────
+
+    public function testPendingQueryReturnsDoneUnsigned(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000001');
+        $student  = $this->makeStudent('2024-ps-01');
+        $position = $this->makePosition($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::DONE);
+        $this->persist($student, $position);
+
+        $results = $this->repo->createPendingSignaturesQuery($year)->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($position->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testPendingQueryExcludesDraftState(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000002');
+        $student  = $this->makeStudent('2024-ps-02');
+        $position = $this->makePosition($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::DRAFT);
+        $this->persist($student, $position);
+
+        self::assertCount(0, $this->repo->createPendingSignaturesQuery($year)->getResult());
+    }
+
+    public function testPendingQueryExcludesPendingState(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000003');
+        $student  = $this->makeStudent('2024-ps-03');
+        $position = $this->makePosition($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::PENDING);
+        $this->persist($student, $position);
+
+        self::assertCount(0, $this->repo->createPendingSignaturesQuery($year)->getResult());
+    }
+
+    public function testPendingQueryExcludesSignedPositions(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000004');
+        $student  = $this->makeStudent('2024-ps-04');
+        $position = $this->makePosition($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::DONE)
+            ->setSigned(true);
+        $this->persist($student, $position);
+
+        self::assertCount(0, $this->repo->createPendingSignaturesQuery($year)->getResult());
+    }
+
+    public function testPendingQuerySearchByStudentName(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000005');
+        $studentA = $this->makeStudentNamed('García', 'Ana', '2024-ps-05a');
+        $studentB = $this->makeStudentNamed('López', 'Luis', '2024-ps-05b');
+        $posA = $this->makePosition($stay)->setStudent($studentA)->setState(TrainingPositionState::DONE);
+        $posB = $this->makePosition($stay)->setStudent($studentB)->setState(TrainingPositionState::DONE);
+        $this->persist($studentA, $studentB, $posA, $posB);
+
+        $results = $this->repo->createPendingSignaturesQuery($year, 'García')->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($posA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testPendingQuerySearchByStayName(): void
+    {
+        [$stayA, , $year] = $this->makeChainWithYear('43000006');
+        $centre = $year->getEducationalCentre();
+        $fam    = $this->makeFamily($year);
+        $prog   = $this->makeProgramme($year, $fam);
+        $stayB  = (new Stay())->setName('Estancia XYZ')->setAcademicYear($year)->setProgramme($prog)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))->setEndDate(new \DateTimeImmutable('2025-06-30'));
+        $this->persist($fam, $prog, $stayB);
+
+        $stA   = $this->makeStudent('2024-ps-06a');
+        $stB   = $this->makeStudent('2024-ps-06b');
+        $posA  = $this->makePosition($stayA)->setStudent($stA)->setState(TrainingPositionState::DONE);
+        $posB  = $this->makePosition($stayB)->setStudent($stB)->setState(TrainingPositionState::DONE);
+        $this->persist($stA, $stB, $posA, $posB);
+
+        $results = $this->repo->createPendingSignaturesQuery($year, 'XYZ')->getResult();
+
+        self::assertCount(1, $results);
+        self::assertSame($posB->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+    }
+
+    public function testPendingQueryPeriodFilterExcludesPast(): void
+    {
+        $centre  = $this->makeCentre('43000007');
+        $year    = $this->makeYear($centre);
+        $family  = $this->makeFamily($year);
+        $prog    = $this->makeProgramme($year, $family);
+
+        // Estancia actual (incluye hoy)
+        $currentStay = (new Stay())
+            ->setName('Actual ' . uniqid())
+            ->setAcademicYear($year)
+            ->setProgramme($prog)
+            ->setStartDate(new \DateTimeImmutable('-30 days'))
+            ->setEndDate(new \DateTimeImmutable('+30 days'));
+
+        // Estancia pasada (terminó hace tiempo)
+        $pastStay = (new Stay())
+            ->setName('Pasada ' . uniqid())
+            ->setAcademicYear($year)
+            ->setProgramme($prog)
+            ->setStartDate(new \DateTimeImmutable('2020-01-01'))
+            ->setEndDate(new \DateTimeImmutable('2020-06-30'));
+
+        $this->persist($centre, $year, $family, $prog, $currentStay, $pastStay);
+
+        $student1 = $this->makeStudent('2024-ps-07a');
+        $student2 = $this->makeStudent('2024-ps-07b');
+        $posC = $this->makePosition($currentStay)->setStudent($student1)->setState(TrainingPositionState::DONE);
+        $posP = $this->makePosition($pastStay)->setStudent($student2)->setState(TrainingPositionState::DONE);
+        $this->persist($student1, $student2, $posC, $posP);
+
+        $results = $this->repo->createPendingSignaturesQuery(
+            $year, '', '', '', ['current', 'future']
+        )->getResult();
+
+        $ids = array_map(static fn ($p) => $p->getId()->toRfc4122(), $results);
+        self::assertContains($posC->getId()->toRfc4122(), $ids);
+        self::assertNotContains($posP->getId()->toRfc4122(), $ids);
+    }
+
+    public function testPendingQuerySortByStudent(): void
+    {
+        [$stay, , $year] = $this->makeChainWithYear('43000008');
+        $stB = $this->makeStudentNamed('Cabello', 'Carlos', '2024-ps-08b');
+        $stA = $this->makeStudentNamed('Amador', 'Maria', '2024-ps-08a');
+        $posB = $this->makePosition($stay)->setStudent($stB)->setState(TrainingPositionState::DONE);
+        $posA = $this->makePosition($stay)->setStudent($stA)->setState(TrainingPositionState::DONE);
+        $this->persist($stA, $stB, $posA, $posB);
+
+        $results = $this->repo->createPendingSignaturesQuery(
+            $year, '', '', '', ['current', 'future', 'past'], 'student', 'ASC'
+        )->getResult();
+
+        self::assertCount(2, $results);
+        self::assertSame($posA->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+        self::assertSame($posB->getId()->toRfc4122(), $results[1]->getId()->toRfc4122());
+    }
+
+    public function testPendingQueryExcludesOtherYear(): void
+    {
+        [$stay, $centre, $year] = $this->makeChainWithYear('43000009');
+        $otherYear = (new AcademicYear())->setName('2023-2024')->setEducationalCentre($centre);
+        $fam2      = $this->makeFamily($otherYear);
+        $prog2     = $this->makeProgramme($otherYear, $fam2);
+        $stay2     = (new Stay())->setName('Otra año ' . uniqid())->setAcademicYear($otherYear)
+            ->setProgramme($prog2)->setStartDate(new \DateTimeImmutable('2024-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2024-06-30'));
+        $this->persist($otherYear, $fam2, $prog2, $stay2);
+
+        $st1 = $this->makeStudent('2024-ps-09a');
+        $st2 = $this->makeStudent('2024-ps-09b');
+        $pos1 = $this->makePosition($stay)->setStudent($st1)->setState(TrainingPositionState::DONE);
+        $pos2 = $this->makePosition($stay2)->setStudent($st2)->setState(TrainingPositionState::DONE);
+        $this->persist($st1, $st2, $pos1, $pos2);
+
+        $results = $this->repo->createPendingSignaturesQuery($year)->getResult();
+
+        $ids = array_map(static fn ($p) => $p->getId()->toRfc4122(), $results);
+        self::assertContains($pos1->getId()->toRfc4122(), $ids);
+        self::assertNotContains($pos2->getId()->toRfc4122(), $ids);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
@@ -399,5 +572,27 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
             ->setName($name)
             ->setCity('Sevilla')
             ->setCompany($company);
+    }
+
+    /**
+     * Crea y persiste la cadena mínima devolviendo también el AcademicYear.
+     *
+     * @return array{Stay, EducationalCentre, AcademicYear}
+     */
+    private function makeChainWithYear(string $centreCode): array
+    {
+        $centre    = $this->makeCentre($centreCode);
+        $year      = $this->makeYear($centre);
+        $family    = $this->makeFamily($year);
+        $programme = $this->makeProgramme($year, $family);
+        $stay      = $this->makeStay($year, $programme);
+        $this->persist($centre, $year, $family, $programme, $stay);
+
+        return [$stay, $centre, $year];
+    }
+
+    private function makeStudentNamed(string $lastName, string $firstName, string $studentId): Student
+    {
+        return (new Student(new PersonName($firstName, $lastName)))->setStudentId($studentId);
     }
 }

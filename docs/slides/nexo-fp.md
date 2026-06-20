@@ -248,6 +248,8 @@ Una **estancia** agrupa los puestos de una enseñanza en un período:
 - Tarjetas con **estado de ocupación** (plazas, firmadas) y período.
 - Filtros por **familia**, **enseñanza** y búsqueda, **recordados por centro**.
 - Indicadores visuales del progreso de cada estancia.
+- Pestaña **Firmas pendientes**: lista de puestos registrados en Séneca sin firma,
+  ordenados por urgencia (fecha fin más próxima primero).
 
 ---
 

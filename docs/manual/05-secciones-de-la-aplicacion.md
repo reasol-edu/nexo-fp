@@ -87,6 +87,30 @@ Cada puesto formativo registra:
 | Estado | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca` |
 | Firmado | Indica si el convenio está firmado |
 
+### Firmas pendientes
+
+![Pestaña Firmas pendientes con la lista de puestos sin firmar](img/firmas-pendientes.png)
+
+La pestaña **Firmas pendientes**, junto a «Estancias», muestra todos los puestos formativos que ya están
+registrados en Séneca pero cuyo convenio todavía no se ha firmado. Los mismos filtros de búsqueda,
+familia, enseñanza y período que controlan el listado de estancias se aplican también a esta pestaña sin
+necesidad de ajustarlos de nuevo. Una insignia numérica sobre la pestaña indica cuántos puestos están
+pendientes con los filtros activos.
+
+La búsqueda de texto localiza por nombre de estancia, enseñanza, nombre del estudiante (nombre y
+apellidos) y nombre del grupo al que pertenece el puesto.
+
+La lista incluye las columnas **Estudiante**, **Estancia**, **Grupo**, **Empresa**, **Tutor/a docente** y
+**Fecha de inicio**, con las tres primeras ordenables haciendo clic en la cabecera. La columna «Fecha de
+inicio» se muestra en rojo si quedan 7 días o menos y en ámbar si quedan 30 o menos, para priorizar los
+convenios que hay que tener firmados antes de que arranque la estancia (la ordenación por defecto es por
+fecha de inicio ascendente). En pantallas pequeñas los resultados se presentan como tarjetas.
+
+!!! info "Visibilidad según rol"
+    La pestaña aplica los mismos permisos que el listado de estancias: cada docente solo ve los puestos
+    de las enseñanzas en las que tiene algún rol (coordinador/a, jefe/a de familia, tutor/a de grupo,
+    docente de grupo o docente de enlace de empresa).
+
 ### Trabajo simultáneo y actualización en vivo
 
 Varias personas pueden gestionar los puestos de una misma estancia a la vez (dirección, coordinación,

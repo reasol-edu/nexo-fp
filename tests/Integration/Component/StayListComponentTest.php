@@ -12,6 +12,7 @@ use App\Entity\Stay;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
+use App\Repository\TrainingPositionRepository;
 use App\Service\AppSettings;
 use App\Tests\Integration\ControllerTestCase;
 use App\Twig\Components\StayListComponent;
@@ -139,6 +140,93 @@ class StayListComponentTest extends ControllerTestCase
         self::assertTrue($component->hasActiveFilters());
     }
 
+    public function testSwitchTabChangesTabProp(): void
+    {
+        $component = $this->makeComponent();
+        self::assertSame('stays', $component->tab);
+
+        $component->switchTab('pending');
+        self::assertSame('pending', $component->tab);
+
+        $component->switchTab('stays');
+        self::assertSame('stays', $component->tab);
+    }
+
+    public function testSwitchTabIgnoresInvalidValues(): void
+    {
+        $component = $this->makeComponent();
+        $component->switchTab('invalid');
+        self::assertSame('stays', $component->tab);
+    }
+
+    public function testMountNormalizesInvalidTab(): void
+    {
+        $component      = $this->makeComponent();
+        $component->tab = 'unknown';
+        $component->mount();
+        self::assertSame('stays', $component->tab);
+    }
+
+    public function testSetPendingPageNeverBelowOne(): void
+    {
+        $component = $this->makeComponent();
+
+        $component->setPendingPage(-3);
+        self::assertSame(1, $component->pendingPage);
+
+        $component->setPendingPage(5);
+        self::assertSame(5, $component->pendingPage);
+    }
+
+    public function testSetPendingSortTogglesSortDir(): void
+    {
+        $component = $this->makeComponent();
+        self::assertSame('startDate', $component->pendingSort);
+        self::assertSame('ASC', $component->pendingSortDir);
+
+        $component->setPendingSort('startDate');
+        self::assertSame('DESC', $component->pendingSortDir);
+        self::assertSame(1, $component->pendingPage);
+
+        $component->setPendingSort('startDate');
+        self::assertSame('ASC', $component->pendingSortDir);
+    }
+
+    public function testSetPendingSortChangesColumnAndResetsDir(): void
+    {
+        $component = $this->makeComponent();
+        $component->setPendingSort('student');
+        self::assertSame('student', $component->pendingSort);
+        self::assertSame('ASC', $component->pendingSortDir);
+    }
+
+    public function testSetPendingSortIgnoresInvalidValues(): void
+    {
+        $component = $this->makeComponent();
+        $component->setPendingSort('invalid');
+        self::assertSame('startDate', $component->pendingSort);
+    }
+
+    public function testClearFiltersAlsoResetsPendingPage(): void
+    {
+        $component              = $this->makeComponent();
+        $component->pendingPage = 4;
+
+        $component->clearFilters();
+
+        self::assertSame(1, $component->pendingPage);
+    }
+
+    public function testResetPageAlsoResetsPendingPage(): void
+    {
+        $component              = $this->makeComponent();
+        $component->pendingPage = 3;
+
+        $component->resetPage();
+
+        self::assertSame(1, $component->pendingPage);
+    }
+
     // ── Paginación contra base de datos ──────────────────────────────────────────
 
     public function testPageBeyondLastIsClampedToLastPage(): void
@@ -195,16 +283,19 @@ class StayListComponentTest extends ControllerTestCase
         $programmes = self::getContainer()->get(ProgrammeRepository::class);
         /** @var AppSettings $appSettings */
         $appSettings = self::getContainer()->get(AppSettings::class);
+        /** @var TrainingPositionRepository $positions */
+        $positions = self::getContainer()->get(TrainingPositionRepository::class);
 
-        $component = new class($stays, $families, $programmes, $appSettings, $user) extends StayListComponent {
+        $component = new class($stays, $families, $programmes, $appSettings, $positions, $user) extends StayListComponent {
             public function __construct(
                 StayRepository $stays,
                 ProfessionalFamilyRepository $families,
                 ProgrammeRepository $programmes,
                 AppSettings $appSettings,
+                TrainingPositionRepository $positions,
                 private readonly ?UserInterface $stubUser,
             ) {
-                parent::__construct($stays, $families, $programmes, $appSettings);
+                parent::__construct($stays, $families, $programmes, $appSettings, $positions);
             }
 
             protected function getUser(): ?UserInterface

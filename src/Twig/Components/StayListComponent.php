@@ -7,10 +7,12 @@ namespace App\Twig\Components;
 use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
 use App\Pagination\Paginator;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
+use App\Repository\TrainingPositionRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\AppSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -50,12 +52,29 @@ class StayListComponent extends AbstractController
     #[LiveProp(writable: true)]
     public int $page = 1;
 
+    #[LiveProp(writable: true)]
+    public string $tab = 'stays';
+
+    #[LiveProp(writable: true)]
+    public int $pendingPage = 1;
+
+    #[LiveProp(writable: true)]
+    public string $pendingSort = 'startDate';
+
+    #[LiveProp(writable: true)]
+    public string $pendingSortDir = 'ASC';
+
     /** @var Paginator<Stay>|null */
     private ?Paginator $paginationCache = null;
     /** @var \App\Entity\Stay[]|null */
     private ?array $itemsCache = null;
     /** @var array<string, mixed>|null */
     private ?array $statsCache = null;
+
+    /** @var Paginator<TrainingPosition>|null */
+    private ?Paginator $pendingPaginationCache = null;
+    /** @var TrainingPosition[]|null */
+    private ?array $pendingItemsCache = null;
 
     public function mount(): void
     {
@@ -69,6 +88,16 @@ class StayListComponent extends AbstractController
             $this->programmeId = '';
         }
         $this->page = max(1, min($this->page, 9999));
+        $this->pendingPage = max(1, min($this->pendingPage, 9999));
+        if (!in_array($this->tab, ['stays', 'pending'], true)) {
+            $this->tab = 'stays';
+        }
+        if (!in_array($this->pendingSort, ['startDate', 'student', 'workcenter'], true)) {
+            $this->pendingSort = 'startDate';
+        }
+        if (!in_array($this->pendingSortDir, ['ASC', 'DESC'], true)) {
+            $this->pendingSortDir = 'ASC';
+        }
     }
 
     public function __construct(
@@ -76,6 +105,7 @@ class StayListComponent extends AbstractController
         private readonly ProfessionalFamilyRepository $families,
         private readonly ProgrammeRepository $programmes,
         private readonly AppSettings $appSettings,
+        private readonly TrainingPositionRepository $positions,
     ) {}
 
     /** @return Paginator<Stay> */
@@ -139,6 +169,66 @@ class StayListComponent extends AbstractController
         return $this->statsCache ?? [];
     }
 
+    /** @return Paginator<TrainingPosition> */
+    public function getPendingPagination(): Paginator
+    {
+        if ($this->pendingPaginationCache !== null) {
+            return $this->pendingPaginationCache;
+        }
+
+        $year = $this->centre->getActiveAcademicYear();
+
+        $periods = [];
+        if ($this->showCurrent) {
+            $periods[] = 'current';
+        }
+        if ($this->showFuture) {
+            $periods[] = 'future';
+        }
+        if ($this->showPast) {
+            $periods[] = 'past';
+        }
+
+        $user   = $this->getUser();
+        $viewer = $user instanceof Teacher ? $user : null;
+
+        $query = $year !== null
+            ? $this->positions->createPendingSignaturesQuery(
+                $year, $this->search, $this->familyId, $this->programmeId,
+                $periods, $this->pendingSort, $this->pendingSortDir, $viewer,
+            )
+            : $this->positions->findNoneQuery();
+
+        $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'));
+
+        $lastPage = max(1, $pagination->getTotalPages());
+        if ($this->pendingPage > $lastPage) {
+            $this->pendingPage = $lastPage;
+            $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'));
+        }
+
+        $this->pendingPaginationCache = $pagination;
+
+        return $this->pendingPaginationCache;
+    }
+
+    /** @return TrainingPosition[] */
+    public function getPendingItems(): array
+    {
+        if ($this->pendingItemsCache !== null) {
+            return $this->pendingItemsCache;
+        }
+
+        $this->pendingItemsCache = iterator_to_array($this->getPendingPagination()->getItems(), false);
+
+        return $this->pendingItemsCache;
+    }
+
+    public function getPendingCount(): int
+    {
+        return $this->getPendingPagination()->getTotalItems();
+    }
+
     /** @return \App\Entity\ProfessionalFamily[] */
     public function getAvailableFamilies(): array
     {
@@ -177,6 +267,7 @@ class StayListComponent extends AbstractController
     public function resetPage(): void
     {
         $this->page = 1;
+        $this->pendingPage = 1;
     }
 
     #[LiveAction]
@@ -184,6 +275,7 @@ class StayListComponent extends AbstractController
     {
         $this->programmeId = '';
         $this->page = 1;
+        $this->pendingPage = 1;
     }
 
     #[LiveAction]
@@ -196,6 +288,42 @@ class StayListComponent extends AbstractController
         $this->showFuture = true;
         $this->showPast = true;
         $this->page = 1;
+        $this->pendingPage = 1;
+    }
+
+    #[LiveAction]
+    public function switchTab(#[LiveArg] string $tab): void
+    {
+        if (in_array($tab, ['stays', 'pending'], true)) {
+            $this->tab = $tab;
+        }
+    }
+
+    #[LiveAction]
+    public function setPendingPage(#[LiveArg] int $page): void
+    {
+        $this->pendingPage = max(1, $page);
+    }
+
+    #[LiveAction]
+    public function setPendingSort(#[LiveArg] string $sort): void
+    {
+        if (!in_array($sort, ['startDate', 'student', 'workcenter'], true)) {
+            return;
+        }
+        if ($this->pendingSort === $sort) {
+            $this->pendingSortDir = $this->pendingSortDir === 'ASC' ? 'DESC' : 'ASC';
+        } else {
+            $this->pendingSort = $sort;
+            $this->pendingSortDir = 'ASC';
+        }
+        $this->pendingPage = 1;
+    }
+
+    #[LiveAction]
+    public function setPage(#[LiveArg] int $page): void
+    {
+        $this->page = max(1, $page);
     }
 
     public function hasActiveFilters(): bool
@@ -206,11 +334,5 @@ class StayListComponent extends AbstractController
             || !$this->showCurrent
             || !$this->showFuture
             || !$this->showPast;
-    }
-
-    #[LiveAction]
-    public function setPage(#[LiveArg] int $page): void
-    {
-        $this->page = max(1, $page);
     }
 }

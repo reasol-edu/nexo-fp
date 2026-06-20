@@ -126,8 +126,38 @@
 
         </div>
 
+        {# ── Pestañas ──────────────────────────────────────────────────────────── #}
+        {% set pendingCount = this.pendingCount %}
+        <div class="flex border-b border-gray-200 mb-4">
+            <button data-action="live#action"
+                    data-live-action-param="switchTab"
+                    data-live-tab-param="stays"
+                    class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors
+                           {{ tab == 'stays'
+                               ? 'border-plum-500 text-plum-700'
+                               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                {{ 'stays.tab.stays'|trans({}, 'stays') }}
+            </button>
+            <button data-action="live#action"
+                    data-live-action-param="switchTab"
+                    data-live-tab-param="pending"
+                    class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors inline-flex items-center gap-2
+                           {{ tab == 'pending'
+                               ? 'border-plum-500 text-plum-700'
+                               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                {{ 'stays.tab.pending'|trans({}, 'stays') }}
+                {% if pendingCount > 0 %}
+                    <span class="inline-flex items-center justify-center rounded-full min-w-[1.25rem] px-1.5 py-0.5 text-xs font-semibold
+                                 {{ tab == 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600' }}">
+                        {{ pendingCount }}
+                    </span>
+                {% endif %}
+            </button>
+        </div>
+
         {# ── Contenido ─────────────────────────────────────────────────────────── #}
         <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
+        {% if tab == 'stays' %}
         {% set items = this.items %}
         {% set stats = this.stats %}
 
@@ -419,6 +449,166 @@
             {# ── Paginación ────────────────────────────────────────────────────── #}
             {{ pager.nav(pagination, 'mt-4') }}
 
+        {% endif %}
+
+        {% else %}
+
+        {# ── Pestaña: Firmas pendientes ───────────────────────────────────────── #}
+        {% set pendingPagination = this.pendingPagination %}
+        {% set pendingItems = this.pendingItems %}
+
+        {% if pendingPagination.totalItems == 0 %}
+            {% set has_filters = this.hasActiveFilters %}
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-16 text-center">
+                {{ ux_icon('heroicons:pencil-square', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+                <p class="text-sm text-gray-500">
+                    {{ (has_filters ? 'stays.pending.search_empty' : 'stays.pending.empty')|trans({}, 'stays') }}
+                </p>
+                {% if has_filters %}
+                    <button type="button"
+                            data-action="live#action"
+                            data-live-action-param="clearFilters"
+                            class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5
+                                   text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        {{ ux_icon('heroicons:x-mark', {class: 'h-3.5 w-3.5'}) }}
+                        {{ 'stays.filter.clear'|trans({}, 'stays') }}
+                    </button>
+                {% endif %}
+            </div>
+        {% else %}
+
+            {# ── Tabla — pantallas medianas y grandes ─────────────────────────── #}
+            {%- macro sortIcon(currentSort, col, currentDir) -%}
+                {%- if currentSort == col -%}
+                    {%- if currentDir == 'ASC' -%}
+                        <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 3l4 6H4z"/></svg>
+                    {%- else -%}
+                        <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 13l4-6H4z"/></svg>
+                    {%- endif -%}
+                {%- else -%}
+                    <svg class="h-3.5 w-3.5 ml-1 inline-block text-gray-300" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 3l2-3 2 3H6zm0 10l2 3 2-3H6z"/></svg>
+                {%- endif -%}
+            {%- endmacro -%}
+
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+                <table class="table-cards min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                                <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="student"
+                                        class="inline-flex items-center hover:text-gray-700 transition-colors">
+                                    {{ 'stays.pending.col.student'|trans({}, 'stays') }}
+                                    {{ _self.sortIcon(pendingSort, 'student', pendingSortDir) }}
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                                {{ 'stays.pending.col.stay'|trans({}, 'stays') }}
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden lg:table-cell">
+                                {{ 'stays.pending.col.group'|trans({}, 'stays') }}
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                                <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="workcenter"
+                                        class="inline-flex items-center hover:text-gray-700 transition-colors">
+                                    {{ 'stays.pending.col.workcenter'|trans({}, 'stays') }}
+                                    {{ _self.sortIcon(pendingSort, 'workcenter', pendingSortDir) }}
+                                </button>
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden xl:table-cell">
+                                {{ 'stays.pending.col.tutor'|trans({}, 'stays') }}
+                            </th>
+                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                                <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="startDate"
+                                        class="inline-flex items-center hover:text-gray-700 transition-colors">
+                                    {{ 'stays.pending.col.start_date'|trans({}, 'stays') }}
+                                    {{ _self.sortIcon(pendingSort, 'startDate', pendingSortDir) }}
+                                </button>
+                            </th>
+                            <th class="px-4 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        {% for position in pendingItems %}
+                            {% set stay = position.stay %}
+                            {% set student = position.student %}
+                            {% set wc = position.workcenter %}
+                            {% set tutor = position.academicTutor %}
+                            {% set pyears = position.programmeYears %}
+                            {% set today_str_p  = "now"|date("Y-m-d") %}
+                            {% set week_str_p   = "now"|date_modify("+7 days")|date("Y-m-d") %}
+                            {% set month_str_p  = "now"|date_modify("+30 days")|date("Y-m-d") %}
+                            {% set start_str_p  = stay.startDate|date("Y-m-d") %}
+                            {% set is_past_p    = start_str_p < today_str_p %}
+                            {% set is_urgent_p  = start_str_p <= week_str_p %}
+                            {% set is_soon_p    = not is_urgent_p and start_str_p <= month_str_p %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td data-label="{{ 'stays.pending.col.student'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    {% if student %}
+                                        {{ student.name.firstName }} {{ student.name.lastName }}
+                                    {% else %}
+                                        <span class="text-gray-400">{{ 'stays.pending.no_student'|trans({}, 'stays') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{{ 'stays.pending.col.stay'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 text-gray-700">
+                                    <span class="line-clamp-1 max-w-[12rem]" title="{{ stay.name }}">{{ stay.name }}</span>
+                                    <span class="text-xs text-gray-400 whitespace-nowrap">{{ stay.startDate|date('d/m/Y') }} → {{ stay.endDate|date('d/m/Y') }}</span>
+                                </td>
+                                <td data-label="{{ 'stays.pending.col.group'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 text-gray-600 hidden lg:table-cell">
+                                    {% if pyears|length > 0 %}
+                                        {% for py in pyears %}{{ py.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    {% else %}
+                                        <span class="text-gray-400">—</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{{ 'stays.pending.col.workcenter'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 text-gray-700">
+                                    {% if wc %}
+                                        <span class="font-medium">{{ wc.company.name }}</span>
+                                        {% if wc.name != wc.company.name %}
+                                            <br><span class="text-xs text-gray-400">{{ wc.name }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-gray-400">{{ 'stays.pending.no_workcenter'|trans({}, 'stays') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{{ 'stays.pending.col.tutor'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 text-gray-600 hidden xl:table-cell">
+                                    {% if tutor %}
+                                        {{ tutor.name.firstName }} {{ tutor.name.lastName }}
+                                    {% else %}
+                                        <span class="text-gray-400">{{ 'stays.pending.no_tutor'|trans({}, 'stays') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td data-label="{{ 'stays.pending.col.start_date'|trans({}, 'stays')|e('html_attr') }}"
+                                    class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 text-xs font-medium
+                                                 {{ is_urgent_p ? 'text-red-600 font-semibold' : (is_soon_p ? 'text-amber-600' : (is_past_p ? 'text-red-400' : 'text-gray-600')) }}">
+                                        {% if is_urgent_p or is_past_p %}
+                                            {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                        {% endif %}
+                                        {{ stay.startDate|date('d/m/Y') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}"
+                                       class="inline-flex items-center gap-1 text-xs font-medium text-plum-600 hover:text-plum-800 transition-colors whitespace-nowrap">
+                                        {{ 'stays.pending.card.view'|trans({}, 'stays') }}
+                                        {{ ux_icon('heroicons:arrow-right', {class: 'h-3.5 w-3.5'}) }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ── Paginación ────────────────────────────────────────────────────── #}
+            {{ pager.nav(pendingPagination, 'mt-4', 'setPendingPage') }}
+
+        {% endif %}
         {% endif %}
         </div>
 
