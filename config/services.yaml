@@ -15,6 +15,11 @@ parameters:
     # false (ver services_dev.yaml) porque el hub de desarrollo es anónimo y solo
     # entrega updates públicos. El canal solo lleva el UUID de la estancia.
     app.mercure_private_updates: true
+    # Tiempo mínimo (en microsegundos) que tarda la rama POST de la solicitud
+    # de restablecimiento de contraseña. Iguala las dos ramas (usuario existe /
+    # no existe) para que el envío síncrono del correo no permita enumerar
+    # cuentas por timing. En el entorno de tests se anula (services_test.yaml).
+    app.password_reset.request_min_duration_us: 900000
 
 services:
     # default configuration for services in *this* file
