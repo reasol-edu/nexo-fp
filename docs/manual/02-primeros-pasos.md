@@ -12,8 +12,8 @@ el contexto de trabajo. Desde **Centro Educativo** se gestiona todo su contenido
 
 !!! danger "Cambia la contraseña por defecto antes de empezar"
     El primer acceso se hace con `admin` / `admin`. Entra y, en **Mi perfil → Contraseña**, establece
-    una contraseña robusta. No dejes nunca las credenciales por defecto en una instalación accesible
-    por red.
+    una contraseña robusta de **al menos 12 caracteres**. No dejes nunca las credenciales por defecto
+    en una instalación accesible por red.
 
 ## 2. Añadir los docentes del curso académico (equipo directivo)
 

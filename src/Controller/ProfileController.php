@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Service\PasswordPolicy;
 use App\Service\ProfileMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +24,7 @@ class ProfileController extends AbstractController
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
         private readonly ProfileMailer $profileMailer,
+        private readonly PasswordPolicy $passwordPolicy,
     ) {}
 
     #[Route('', name: 'app_profile')]
@@ -74,6 +76,14 @@ class ProfileController extends AbstractController
                     $errors['current_password'] = $this->t('profile.error.current_password_required');
                 } elseif (!$this->hasher->isPasswordValid($teacher, $values['current_password'])) {
                     $errors['current_password'] = $this->t('profile.error.current_password_invalid');
+                }
+
+                if (($policyViolation = $this->passwordPolicy->firstViolationKey($values['new_password'])) !== null) {
+                    $errors['new_password'] = $this->translator->trans(
+                        $policyViolation,
+                        ['%min%' => PasswordPolicy::MIN_LENGTH],
+                        'messages',
+                    );
                 }
 
                 if ($values['new_password'] !== $values['new_password_confirm']) {

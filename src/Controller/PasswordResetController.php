@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Repository\TeacherRepository;
+use App\Service\PasswordPolicy;
 use App\Service\ProfileMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,7 @@ class PasswordResetController extends AbstractController
         private readonly ProfileMailer $mailer,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
+        private readonly PasswordPolicy $passwordPolicy,
         #[Target('password_reset')]
         private readonly RateLimiterFactoryInterface $passwordResetLimiter,
     ) {}
@@ -113,6 +115,13 @@ class PasswordResetController extends AbstractController
                 return $this->render('security/password_reset.html.twig', [
                     'token' => $token,
                     'error' => $this->translator->trans('password_reset.error.password_required', [], 'messages'),
+                ]);
+            }
+
+            if (($policyViolation = $this->passwordPolicy->firstViolationKey($newPassword)) !== null) {
+                return $this->render('security/password_reset.html.twig', [
+                    'token' => $token,
+                    'error' => $this->translator->trans($policyViolation, ['%min%' => PasswordPolicy::MIN_LENGTH], 'messages'),
                 ]);
             }
 

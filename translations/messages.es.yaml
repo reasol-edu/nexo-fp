@@ -34,6 +34,8 @@ profile.error.email_invalid: 'El correo electrónico no tiene un formato válido
 profile.error.current_password_required: 'Introduce tu contraseña actual para confirmar el cambio.'
 profile.error.current_password_invalid: 'La contraseña actual no es correcta.'
 profile.error.password_mismatch: 'Las contraseñas no coinciden.'
+profile.error.password_too_short: 'La contraseña debe tener al menos %min% caracteres.'
+profile.hint.password_policy: 'Mínimo %min% caracteres.'
 
 profile.flash.saved: 'Perfil guardado correctamente.'
 profile.flash.email_verification_sent: 'Hemos enviado un enlace de verificación a tu nueva dirección de correo. Confirma el cambio haciendo clic en el enlace antes de 24 horas.'

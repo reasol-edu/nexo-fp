@@ -12,7 +12,8 @@ desde **Administración → Docentes**:
 
 - **Acceso local.** La contraseña la gestiona Nexo FP (se guarda cifrada). Estos docentes pueden usar el
   enlace **«¿Olvidaste tu contraseña?»** para restablecerla por email (consulta
-  [Notificaciones por email](06-notificaciones-y-email.md)).
+  [Notificaciones por email](06-notificaciones-y-email.md)). La contraseña debe tener **al menos 12
+  caracteres**; tanto el formulario de perfil como el de restablecimiento la rechazan si es más corta.
 - **Acceso externo (Séneca/iSéneca).** El docente entra con su **usuario y contraseña de Séneca**, que se
   validan contra el servicio **iSéneca** de la Junta de Andalucía. La contraseña no se guarda en Nexo FP,
   así que el restablecimiento por email **no aplica**: se gestiona desde Séneca.
