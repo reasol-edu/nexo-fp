@@ -36,19 +36,22 @@ class AppFixtures extends Fixture
         $this->wipeDatabase();
         $manager->clear();
 
-        // Persist all teachers first and flush so they get IDs in DB
+        // Hash 'ejemplo' once and reuse it for every teacher (except admin).
+        $ejemploHash = $this->passwordHasher->hashPassword(
+            new Teacher(new PersonName('tmp', 'tmp')),
+            'ejemplo',
+        );
+
         $admin = new Teacher(new PersonName('Admin', 'User'));
         $admin->setUsername('admin');
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin'));
         $admin->setAdmin(true);
         $manager->persist($admin);
 
-        $aTeachers = $this->makeAdaLovelaceTeachers($manager);
-        $mTeachers = $this->makeMonterrubioTeachers($manager);
+        $aTeachers = $this->makeAdaLovelaceTeachers($manager, $ejemploHash);
+        $mTeachers = $this->makeMonterrubioTeachers($manager, $ejemploHash);
         $manager->flush();
-        // No clear — keep teachers managed so we can use them directly below
 
-        // Build everything else without intermediate flush/clear
         [$aCentre, $aYear, , $aProgrammes, $aPyears] = $this->buildAdaLovelace($manager, $aTeachers);
         [$mCentre, $mYear, , $mProgrammes, $mPyears] = $this->buildMonterrubio($manager, $mTeachers);
 
@@ -76,10 +79,8 @@ class AppFixtures extends Fixture
             ? fn(string $t) => '`' . $t . '`'
             : fn(string $t) => '"' . $t . '"';
 
-        // Break the circular FK before anything else
         $conn->executeStatement('UPDATE educational_centre SET active_academic_year_id = NULL');
 
-        // Delete in reverse dependency order (join tables first, then children, then parents)
         $stmts = [
             'DELETE FROM ' . $q('training_position_programme_year'),
             'DELETE FROM ' . $q('stay_students'),
@@ -119,126 +120,87 @@ class AppFixtures extends Fixture
     // ── Helpers de creación de docentes ──────────────────────────────────────
 
     /** @return array<string, Teacher> */
-    private function makeAdaLovelaceTeachers(ObjectManager $manager): array
+    private function makeAdaLovelaceTeachers(ObjectManager $manager, string $passwordHash): array
     {
+        // Positions 0-17: special-role teachers (admins, family heads, coordinators, liaisons, padding).
+        // Positions 18+: regular teachers used as group tutors and co-teachers.
         $data = [
-            ['rafael.exposito',   'Rafael',         'Expósito Moreno'],
-            ['carmen.diaz',       'Carmen',         'Díaz Jiménez'],
-            ['francisco.molina',  'Francisco Javier', 'Molina Ruiz'],
-            ['maria.garcia',      'María Dolores',  'García Fernández'],
-            ['antonio.navarro',   'Antonio',        'Navarro Castillo'],
-            ['laura.sanchez',     'Laura',          'Sánchez Torres'],
-            ['diego.romero',      'Diego',          'Romero Vega'],
-            ['isabel.lozano',     'Isabel',         'Lozano Herrera'],
-            ['manuel.perez',      'Manuel',         'Pérez Blanco'],
-            ['pilar.martinez',    'Pilar',          'Martínez Rueda'],
-            ['roberto.guerrero',  'Roberto',        'Guerrero Campos'],
-            ['cristina.vargas',   'Cristina',       'Vargas Morales'],
-            ['beatriz.alonso',    'Beatriz',        'Alonso Serrano'],
-            ['rodrigo.fuentes',   'Rodrigo',        'Fuentes Parra'],
-            ['elena.caballero',   'Elena',          'Caballero Ruiz'],
-            ['julio.medina',      'Julio',          'Medina Torres'],
-            ['sofia.delgado',     'Sofía',          'Delgado Iglesias'],
-            ['marcos.herrero',    'Marcos',         'Herrero Vidal'],
-            ['alberto.cabrera',   'Alberto',        'Cabrera García'],
-            ['nuria.lopez',       'Nuria',          'López Morales'],
-            ['javier.ortega',     'Javier',         'Ortega Bravo'],
-            ['anabelen.castro',   'Ana Belén',      'Castro Fuentes'],
-            ['tomas.vazquez',     'Tomás',          'Vázquez Acosta'],
-            ['rosamaria.serrano', 'Rosa María',     'Serrano Díaz'],
-            ['fernando.ibanez',   'Fernando',       'Ibáñez Cano'],
-            ['marta.ramos',       'Marta',          'Ramos Palacios'],
-            ['sergio.gallego',    'Sergio',         'Gallego Nieto'],
-            ['veronica.mora',     'Verónica',       'Mora Espinosa'],
-            ['pablo.aguilar',     'Pablo',          'Aguilar Blanco'],
-            ['concepcion.munoz',  'Concepción',     'Muñoz Aranda'],
-            ['alvaro.suarez',     'Álvaro',         'Suárez Paredes'],
-            ['patricia.rubio',    'Patricia',       'Rubio Fernández'],
-            ['luis.carrasco',     'Luis',           'Carrasco Reyes'],
-            ['sandra.dominguez',  'Sandra',         'Domínguez Orozco'],
-            ['david.pozo',        'David',          'Pozo Santana'],
-            ['inmaculada.pena',   'Inmaculada',     'Peña García'],
-            ['oscar.cortes',      'Óscar',          'Cortés Nieto'],
-            ['yolanda.jimenez',   'Yolanda',        'Jiménez Fuentes'],
-            ['miguel.flores',     'Miguel Ángel',   'Flores Pérez'],
-            ['lucia.campos',      'Lucía',          'Campos Herrero'],
-            ['enrique.benitez',   'Enrique',        'Benítez Castro'],
-            ['marina.herrera',    'Marina',         'Herrera López'],
-            ['joseluis.pinto',    'José Luis',      'Pinto García'],
-            ['amparo.gomez',      'Amparo',         'Gómez Sánchez'],
-            ['carlos.cano',       'Carlos',         'Cano Moreno'],
-            ['teresa.prieto',     'Teresa',         'Prieto Vega'],
-            ['andres.moya',       'Andrés',         'Moya López'],
-            ['gloria.romero',     'Gloria',         'Romero Herrera'],
-            ['guillermo.ruiz',    'Guillermo',      'Ruiz Vidal'],
-            ['victoria.navarro',  'Victoria',       'Navarro Gil'],
-            ['alejandro.martin',  'Alejandro',      'Martín Díaz'],
-            ['silvia.pacheco',    'Silvia',         'Pacheco Ruiz'],
-            ['eduardo.medina',    'Eduardo',        'Medina Vargas'],
+            ['rafael.exposito',   'Rafael',          'Expósito Moreno'],
+            ['carmen.diaz',       'Carmen',          'Díaz Jiménez'],
+            ['francisco.molina',  'Francisco Javier','Molina Ruiz'],
+            ['isabel.lozano',     'Isabel',          'Lozano Herrera'],
+            ['maria.garcia',      'María Dolores',   'García Fernández'],
+            ['diego.romero',      'Diego',           'Romero Vega'],
+            ['manuel.perez',      'Manuel',          'Pérez Blanco'],
+            ['roberto.guerrero',  'Roberto',         'Guerrero Campos'],
+            ['beatriz.alonso',    'Beatriz',         'Alonso Serrano'],
+            ['rodrigo.fuentes',   'Rodrigo',         'Fuentes Parra'],
+            ['elena.caballero',   'Elena',           'Caballero Ruiz'],
+            ['julio.medina',      'Julio',           'Medina Torres'],
+            ['sofia.delgado',     'Sofía',           'Delgado Iglesias'],
+            ['marcos.herrero',    'Marcos',          'Herrero Vidal'],
+            ['alberto.cabrera',   'Alberto',         'Cabrera García'],
+            ['nuria.lopez',       'Nuria',           'López Morales'],
+            ['javier.ortega',     'Javier',          'Ortega Bravo'],
+            ['anabelen.castro',   'Ana Belén',       'Castro Fuentes'],
+            // Regular teachers (group tutors / co-teachers):
+            ['tomas.vazquez',     'Tomás',           'Vázquez Acosta'],
+            ['rosamaria.serrano', 'Rosa María',      'Serrano Díaz'],
+            ['fernando.ibanez',   'Fernando',        'Ibáñez Cano'],
+            ['marta.ramos',       'Marta',           'Ramos Palacios'],
+            ['sergio.gallego',    'Sergio',          'Gallego Nieto'],
+            ['veronica.mora',     'Verónica',        'Mora Espinosa'],
+            ['pablo.aguilar',     'Pablo',           'Aguilar Blanco'],
+            ['concepcion.munoz',  'Concepción',      'Muñoz Aranda'],
+            ['alvaro.suarez',     'Álvaro',          'Suárez Paredes'],
+            ['patricia.rubio',    'Patricia',        'Rubio Fernández'],
+            ['luis.carrasco',     'Luis',            'Carrasco Reyes'],
+            ['sandra.dominguez',  'Sandra',          'Domínguez Orozco'],
         ];
 
-        return $this->persistTeachers($manager, $data, isGlobalAdmin: ['rafael.exposito']);
+        return $this->persistTeachers($manager, $data, $passwordHash, isGlobalAdmin: ['rafael.exposito']);
     }
 
     /** @return array<string, Teacher> */
-    private function makeMonterrubioTeachers(ObjectManager $manager): array
+    private function makeMonterrubioTeachers(ObjectManager $manager, string $passwordHash): array
     {
+        // Positions 0-17: special-role teachers.
+        // Positions 18+: regular teachers used as group tutors and co-teachers.
         $data = [
-            ['mariajose.alvarez',       'María José',      'Álvarez García'],
-            ['pedro.fernandez',         'Pedro Antonio',   'Fernández Rubio'],
-            ['rosario.soto',            'Rosario',         'Soto Merino'],
-            ['ignacio.crespo',          'Ignacio',         'Crespo Leal'],
-            ['piedad.torres',           'Piedad',          'Torres Velázquez'],
-            ['dolores.reyes',           'Dolores',         'Reyes Álvarez'],
-            ['vicente.roldan',          'Vicente',         'Roldán Camacho'],
-            ['carmenrosa.marin',        'Carmen Rosa',     'Marín Espejo'],
-            ['antonia.guzman',          'Antonia',         'Guzmán Osuna'],
-            ['josefa.naranjo',          'Josefa',          'Naranjo Hidalgo'],
-            ['remedios.calvo',          'Remedios',        'Calvo Durán'],
-            ['bartolome.morales',       'Bartolomé',       'Morales Cabello'],
-            ['francisca.giron',         'Francisca',       'Girón Padilla'],
-            ['sebastian.lara',          'Sebastián',       'Lara Nieto'],
-            ['encarnacion.baena',       'Encarnación',     'Baena Vilches'],
-            ['manuela.criado',          'Manuela',         'Criado Arroyo'],
-            ['demetrio.gallardo',       'Demetrio',        'Gallardo Cruz'],
-            ['amelia.fuentes',          'Amelia',          'Fuentes Olea'],
-            ['isidoro.bueno',           'Isidoro',         'Bueno Salas'],
-            ['remedios.ortiz',          'Remedios',        'Ortiz Pedrera'],
-            ['alfonso.serrano',         'Alfonso',         'Serrano Rico'],
-            ['montserrat.cobo',         'Montserrat',      'Cobo Rivas'],
-            ['gonzalo.torres',          'Gonzalo',         'Torres Jurado'],
-            ['esperanza.ruiz',          'Esperanza',       'Ruiz Calero'],
-            ['horacio.lopez',           'Horacio',         'López Bravo'],
-            ['natividad.moreno',        'Natividad',       'Moreno Navarro'],
-            ['dionisio.garcia',         'Dionisio',        'García Blanco'],
-            ['rosalia.campos',          'Rosalía',         'Campos Vega'],
-            ['teodoro.herrero',         'Teodoro',         'Herrero Reina'],
-            ['milagros.jimenez',        'Milagros',        'Jiménez Villar'],
-            ['fermin.castillo',         'Fermín',          'Castillo Pérez'],
-            ['olimpia.santana',         'Olimpia',         'Santana Durán'],
-            ['aurelio.gomez',           'Aurelio',         'Gómez Márquez'],
-            ['fatima.palacios',         'Fátima',          'Palacios Estrada'],
-            ['celestino.ramos',         'Celestino',       'Ramos Garrido'],
-            ['azucena.suarez',          'Azucena',         'Suárez Montoro'],
-            ['esteban.maldonado',       'Esteban',         'Maldonado Cid'],
-            ['presentacion.delgado',    'Presentación',    'Delgado Cuenca'],
-            ['wenceslao.cruz',          'Wenceslao',       'Cruz Carrillo'],
-            ['purificacion.aguilar',    'Purificación',    'Aguilar Peña'],
-            ['leopoldo.bravo',          'Leopoldo',        'Bravo Solano'],
-            ['candelaria.munoz',        'Candelaria',      'Muñoz Serrano'],
-            ['ezequiel.toro',           'Ezequiel',        'Toro Caballero'],
-            ['adoracion.haro',          'Adoración',       'Haro Gutiérrez'],
-            ['serafin.vidal',           'Serafín',         'Vidal Peña'],
-            ['leonor.molina',           'Leonor',          'Molina Fuentes'],
-            ['anselmo.perez',           'Anselmo',         'Pérez Lozano'],
-            ['concepcion.barroso',      'Concepción',      'Barroso Gil'],
-            ['baltasar.herrera',        'Baltasar',        'Herrera Mena'],
-            ['amparo.romero',           'Amparo',          'Romero Durán'],
-            ['inocencio.garcia',        'Inocencio',       'García Quesada'],
-            ['visitacion.blanco',       'Visitación',      'Blanco Mora'],
+            ['mariajose.alvarez',    'María José',    'Álvarez García'],
+            ['pedro.fernandez',      'Pedro Antonio', 'Fernández Rubio'],
+            ['rosario.soto',         'Rosario',       'Soto Merino'],
+            ['dolores.reyes',        'Dolores',       'Reyes Álvarez'],
+            ['antonia.guzman',       'Antonia',       'Guzmán Osuna'],
+            ['ignacio.crespo',       'Ignacio',       'Crespo Leal'],
+            ['piedad.torres',        'Piedad',        'Torres Velázquez'],
+            ['vicente.roldan',       'Vicente',       'Roldán Camacho'],
+            ['carmenrosa.marin',     'Carmen Rosa',   'Marín Espejo'],
+            ['josefa.naranjo',       'Josefa',        'Naranjo Hidalgo'],
+            ['remedios.calvo',       'Remedios',      'Calvo Durán'],
+            ['bartolome.morales',    'Bartolomé',     'Morales Cabello'],
+            ['francisca.giron',      'Francisca',     'Girón Padilla'],
+            ['sebastian.lara',       'Sebastián',     'Lara Nieto'],
+            ['encarnacion.baena',    'Encarnación',   'Baena Vilches'],
+            ['manuela.criado',       'Manuela',       'Criado Arroyo'],
+            ['demetrio.gallardo',    'Demetrio',      'Gallardo Cruz'],
+            ['amelia.fuentes',       'Amelia',        'Fuentes Olea'],
+            // Regular teachers (group tutors / co-teachers):
+            ['isidoro.bueno',        'Isidoro',       'Bueno Salas'],
+            ['remedios.ortiz',       'Remedios',      'Ortiz Pedrera'],
+            ['alfonso.serrano',      'Alfonso',       'Serrano Rico'],
+            ['montserrat.cobo',      'Montserrat',    'Cobo Rivas'],
+            ['gonzalo.torres',       'Gonzalo',       'Torres Jurado'],
+            ['esperanza.ruiz',       'Esperanza',     'Ruiz Calero'],
+            ['horacio.lopez',        'Horacio',       'López Bravo'],
+            ['natividad.moreno',     'Natividad',     'Moreno Navarro'],
+            ['dionisio.garcia',      'Dionisio',      'García Blanco'],
+            ['rosalia.campos',       'Rosalía',       'Campos Vega'],
+            ['teodoro.herrero',      'Teodoro',       'Herrero Reina'],
+            ['milagros.jimenez',     'Milagros',      'Jiménez Villar'],
         ];
 
-        return $this->persistTeachers($manager, $data, isGlobalAdmin: ['mariajose.alvarez']);
+        return $this->persistTeachers($manager, $data, $passwordHash, isGlobalAdmin: ['mariajose.alvarez']);
     }
 
     /**
@@ -246,13 +208,13 @@ class AppFixtures extends Fixture
      * @param string[] $isGlobalAdmin
      * @return array<string, Teacher>
      */
-    private function persistTeachers(ObjectManager $manager, array $data, array $isGlobalAdmin = []): array
+    private function persistTeachers(ObjectManager $manager, array $data, string $passwordHash, array $isGlobalAdmin = []): array
     {
         $teachers = [];
         foreach ($data as [$username, $first, $last]) {
             $t = new Teacher(new PersonName($first, $last));
             $t->setUsername($username);
-            $t->setPassword($this->passwordHasher->hashPassword($t, $username));
+            $t->setPassword($passwordHash);
             if (in_array($username, $isGlobalAdmin, true)) {
                 $t->setAdmin(true);
             }
@@ -298,14 +260,6 @@ class AppFixtures extends Fixture
         [$py1smr, $py2smr] = $this->makeProgrammeYears($manager, $smr, 'SMR');
         $programmes[] = $smr; $pyears[] = $py1smr; $pyears[] = $py2smr;
 
-        $asir = $this->makeProgramme($manager, 'CFGS Administración de Sistemas Informáticos en Red', $ic, $year, $teachers['antonio.navarro']);
-        [$py1asir, $py2asir] = $this->makeProgrammeYears($manager, $asir, 'ASIR');
-        $programmes[] = $asir; $pyears[] = $py1asir; $pyears[] = $py2asir;
-
-        $dam = $this->makeProgramme($manager, 'CFGS Desarrollo de Aplicaciones Multiplataforma', $ic, $year, $teachers['laura.sanchez']);
-        [$py1dam, $py2dam] = $this->makeProgrammeYears($manager, $dam, 'DAM');
-        $programmes[] = $dam; $pyears[] = $py1dam; $pyears[] = $py2dam;
-
         $daw = $this->makeProgramme($manager, 'CFGS Desarrollo de Aplicaciones Web', $ic, $year, $teachers['diego.romero']);
         [$py1daw, $py2daw] = $this->makeProgrammeYears($manager, $daw, 'DAW');
         $programmes[] = $daw; $pyears[] = $py1daw; $pyears[] = $py2daw;
@@ -314,17 +268,9 @@ class AppFixtures extends Fixture
         [$py1caue, $py2caue] = $this->makeProgrammeYears($manager, $caue, 'CAUE');
         $programmes[] = $caue; $pyears[] = $py1caue; $pyears[] = $py2caue;
 
-        $em = $this->makeProgramme($manager, 'CFGM Emergencias Sanitarias', $san, $year, $teachers['pilar.martinez']);
-        [$py1em, $py2em] = $this->makeProgrammeYears($manager, $em, 'ES');
-        $programmes[] = $em; $pyears[] = $py1em; $pyears[] = $py2em;
-
         $hb = $this->makeProgramme($manager, 'CFGS Higiene Bucodental', $san, $year, $teachers['roberto.guerrero']);
         [$py1hb, $py2hb] = $this->makeProgrammeYears($manager, $hb, 'HB');
         $programmes[] = $hb; $pyears[] = $py1hb; $pyears[] = $py2hb;
-
-        $ap = $this->makeProgramme($manager, 'CFGS Audiología Protésica', $san, $year, $teachers['cristina.vargas']);
-        [$py1ap, $py2ap] = $this->makeProgrammeYears($manager, $ap, 'AP');
-        $programmes[] = $ap; $pyears[] = $py1ap; $pyears[] = $py2ap;
 
         return [$centre, $year, [$ic, $san], $programmes, $pyears];
     }
@@ -428,22 +374,25 @@ class AppFixtures extends Fixture
         string $prefix,
         int $studentsPerGroup,
     ): array {
-        $teacherList = array_values($teachers);
-        $groups      = [];
-        $tutorIdx    = 18; // start after special-role teachers
+        $teacherList  = array_values($teachers);
+        $specialCount = 18; // positions 0-17 are admins, heads, coordinators and liaisons
+        $regularCount = max(1, count($teacherList) - $specialCount);
+        $groups       = [];
+        $regularIdx   = 0; // cycles only within the regular (non-special) range
 
         foreach ($pyears as $i => $py) {
-            $abbr    = $py->getName();
-            $abbr    = preg_replace('/[^A-Z0-9]/i', '', $abbr) ?? $abbr;
-            $group   = (new Group())
+            $abbr  = $py->getName();
+            $abbr  = preg_replace('/[^A-Z0-9]/i', '', $abbr) ?? $abbr;
+            $group = (new Group())
                 ->setName($abbr . '-A')
                 ->setProgrammeYear($py);
 
-            $tutor = $teacherList[$tutorIdx % count($teacherList)];
-            $group->addTutor($tutor);
-            $tutorIdx += 2;
+            $tutor = $teacherList[$specialCount + ($regularIdx % $regularCount)];
+            $regularIdx++;
+            $co = $teacherList[$specialCount + ($regularIdx % $regularCount)];
+            $regularIdx++;
 
-            $co = $teacherList[($tutorIdx + 1) % count($teacherList)];
+            $group->addTutor($tutor);
             $group->addTeacher($co);
 
             $manager->persist($group);
@@ -477,7 +426,13 @@ class AppFixtures extends Fixture
         $surnames = ['García', 'Martínez', 'López', 'Sánchez', 'González', 'Pérez', 'Rodríguez',
                      'Fernández', 'Jiménez', 'Moreno', 'Muñoz', 'Álvarez', 'Romero', 'Díaz',
                      'Herrera', 'Torres', 'Ruiz', 'Navarro', 'Molina', 'Blanco'];
-        return $surnames[($groupIdx * 7 + $studentIdx * 3) % count($surnames)];
+        $n  = count($surnames);
+        $i1 = ($groupIdx * 7 + $studentIdx * 3) % $n;
+        $i2 = ($groupIdx * 11 + $studentIdx * 5 + 7) % $n;
+        if ($i1 === $i2) {
+            $i2 = ($i2 + 1) % $n;
+        }
+        return $surnames[$i1] . ' ' . $surnames[$i2];
     }
 
     // ── Empresas ──────────────────────────────────────────────────────────────
@@ -488,9 +443,9 @@ class AppFixtures extends Fixture
      */
     private function buildCompanies(ObjectManager $manager, EducationalCentre $centre, array $teachers, string $set = 'm'): array
     {
-        $isMonterrubio2 = $set === 'm';
+        $isFirstSet = $set === 'm';
 
-        $companyData = $isMonterrubio2 ? [
+        $companyData = $isFirstSet ? [
             ['Repsol Química S.A.',              'B12300001', 'Linares'],
             ['Indra Sistemas S.L.',              'B12300002', 'Linares'],
             ['Telco Jaén S.L.',                  'B12300003', 'Linares'],
@@ -518,8 +473,7 @@ class AppFixtures extends Fixture
             ['Spa y Bienestar Guadalquivir S.L.','B41300012', 'Utrera'],
         ];
 
-        // Each entry: [from, to, [usernames]]
-        $liaisonGroups = $isMonterrubio2
+        $liaisonGroups = $isFirstSet
             ? [
                 [0,  5,  ['beatriz.alonso', 'rodrigo.fuentes']],
                 [6,  8,  ['elena.caballero', 'julio.medina']],
@@ -531,8 +485,12 @@ class AppFixtures extends Fixture
                 [8,  11, ['manuela.criado']],
             ];
 
-        $workerSurnames = ['Vega', 'Cano', 'Bravo', 'Pardo', 'Rueda', 'Oliva', 'Mena', 'Cruz',
-                           'Salas', 'Nieto', 'Yuste', 'Lagos'];
+        $workerFirstNames = ['Carmen',  'Andrés', 'Lucía',   'Joaquín', 'Pilar',  'Tomás',
+                             'Rosa',    'Ignacio','Marta',   'Álvaro',  'Inés',   'Raúl'];
+        $workerLastNames1 = ['Vega',    'Cano',   'Bravo',   'Pardo',   'Rueda',  'Oliva',
+                             'Mena',    'Cruz',   'Salas',   'Nieto',   'Yuste',  'Lagos'];
+        $workerLastNames2 = ['Mora',    'León',   'Peña',    'Reyes',   'Soto',   'Leal',
+                             'Vera',    'Ríos',   'Alba',    'Toro',    'Pino',   'Varo'];
 
         $repFirstNames = ['Carmen', 'Andrés', 'Lucía', 'Joaquín', 'Pilar', 'Tomás',
                           'Rosa', 'Ignacio', 'Marta', 'Álvaro', 'Inés', 'Raúl'];
@@ -550,16 +508,14 @@ class AppFixtures extends Fixture
                 ->setCity($city)
                 ->setEducationalCentre($centre);
 
-            // Una de cada cuatro empresas se deja sin representante (campo opcional).
             if ($idx % 4 !== 3) {
                 $company
                     ->setRepresentativeFirstName($repFirstNames[$idx % count($repFirstNames)])
                     ->setRepresentativeLastName($repLastNames[$idx % count($repLastNames)])
-                    ->setRepresentativeNationalId(sprintf('%08dR', $idx + ($isMonterrubio2 ? 30000000 : 40000000)))
+                    ->setRepresentativeNationalId(sprintf('%08dR', $idx + ($isFirstSet ? 30000000 : 40000000)))
                     ->setRepresentativeRole($repRoles[$idx % count($repRoles)]);
             }
 
-            // Assign liaisons
             foreach ($liaisonGroups as [$from, $to, $liaisonUsernames]) {
                 if ($idx >= $from && $idx <= $to) {
                     foreach ($liaisonUsernames as $lu) {
@@ -577,8 +533,12 @@ class AppFixtures extends Fixture
             $manager->persist($wc);
             $workcenters[] = $wc;
 
-            $worker = new Worker(new PersonName('Responsable', $workerSurnames[$idx % count($workerSurnames)]));
-            $worker->setNationalIdNumber(sprintf('%08dZ', $idx + ($isMonterrubio2 ? 10000000 : 20000000)));
+            $n = count($workerFirstNames);
+            $worker = new Worker(new PersonName(
+                $workerFirstNames[$idx % $n],
+                $workerLastNames1[$idx % $n] . ' ' . $workerLastNames2[$idx % $n],
+            ));
+            $worker->setNationalIdNumber(sprintf('%08dZ', $idx + ($isFirstSet ? 10000000 : 20000000)));
             $company->addWorker($worker);
             $manager->persist($worker);
         }
@@ -607,8 +567,6 @@ class AppFixtures extends Fixture
         $teacherList = array_values($teachers);
         $wcCount     = count($workcenters);
 
-        // Los puestos que no están en borrador necesitan tutor dual de empresa;
-        // se toma el primer trabajador del centro de trabajo correspondiente.
         $mentorOf = static fn (Workcenter $wc): ?Worker => $wc->getCompany()->getWorkers()->first() ?: null;
 
         foreach ($programmes as $progIdx => $programme) {
@@ -624,7 +582,6 @@ class AppFixtures extends Fixture
             $wc2         = $workcenters[($progIdx + 2) % $wcCount];
             $wc3         = $workcenters[($progIdx + 3) % $wcCount];
 
-            // Abbreviation derived from ProgrammeYear name (e.g. "1.º SMR" → "SMR")
             $abbr = preg_replace('/^\d+\.º\s+/', '', $py1->getName()) ?? '';
 
             // ── Estancia pasada (1.er trimestre 2025-2026) ────────────────────
@@ -638,7 +595,6 @@ class AppFixtures extends Fixture
 
             $students1 = $group1->getStudents()->toArray();
 
-            // 5 positions DONE+signed (alumnos 0–4)
             foreach (range(0, 4) as $si) {
                 if (isset($students1[$si])) {
                     $pastStay->addStudent($students1[$si]);
@@ -654,7 +610,6 @@ class AppFixtures extends Fixture
                         ->setSigned(true));
                 }
             }
-            // 2 alumnos matriculados sin puesto
             foreach ([5, 6] as $si) {
                 if (isset($students1[$si])) {
                     $pastStay->addStudent($students1[$si]);
@@ -672,17 +627,14 @@ class AppFixtures extends Fixture
 
             $students2 = $group2->getStudents()->toArray();
 
-            // pos-1: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
                 ->setStay($currentStay)->setWorkcenter($wc0)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
-            // pos-2: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
                 ->setStay($currentStay)->setWorkcenter($wc1)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
-            // pos-3: DRAFT, alumno asignado pero sin confirmar
             if (isset($students2[0])) {
                 $currentStay->addStudent($students2[0]);
                 $manager->persist((new TrainingPosition())
@@ -691,7 +643,6 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::DRAFT));
             }
 
-            // pos-4: PENDING, sin firmar
             if (isset($students2[1])) {
                 $currentStay->addStudent($students2[1]);
                 $manager->persist((new TrainingPosition())
@@ -701,7 +652,6 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::PENDING));
             }
 
-            // pos-5: PENDING, firmado
             if (isset($students2[2])) {
                 $currentStay->addStudent($students2[2]);
                 $manager->persist((new TrainingPosition())
@@ -711,7 +661,6 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::PENDING)->setSigned(true));
             }
 
-            // pos-6: DONE, firmado
             if (isset($students2[3])) {
                 $currentStay->addStudent($students2[3]);
                 $manager->persist((new TrainingPosition())
@@ -721,7 +670,6 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::DONE)->setSigned(true));
             }
 
-            // pos-7: DONE, firmado
             if (isset($students2[4])) {
                 $currentStay->addStudent($students2[4]);
                 $manager->persist((new TrainingPosition())
@@ -731,30 +679,11 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::DONE)->setSigned(true));
             }
 
-            // 2 alumnos matriculados sin puesto
             foreach ([5, 6] as $si) {
                 if (isset($students2[$si])) {
                     $currentStay->addStudent($students2[$si]);
                 }
             }
-
-            // ── Estancia futura (1.er trimestre 2026-2027) ─────────────────────
-            $futureStay = (new Stay())
-                ->setName('FFEOE ' . $abbr . ' 2026-2027')
-                ->setAcademicYear($year)
-                ->setProgramme($programme)
-                ->setStartDate(new \DateTimeImmutable('2026-09-15'))
-                ->setEndDate(new \DateTimeImmutable('2027-01-31'));
-            $manager->persist($futureStay);
-
-            // 2 puestos DRAFT, sin alumnos
-            $manager->persist((new TrainingPosition())
-                ->setStay($futureStay)->setWorkcenter($wc0)
-                ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
-
-            $manager->persist((new TrainingPosition())
-                ->setStay($futureStay)->setWorkcenter($wc1)
-                ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
         }
     }
 }
