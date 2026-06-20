@@ -222,16 +222,12 @@ En **Empresas**:
 
 - Alta con **CIF/NIF** y localidad; listado con **exportación a Excel**.
 - **Información de contacto** en texto enriquecido (teléfonos, emails, personas de referencia…).
-- Cada empresa tiene sus **centros de trabajo**.
-- Y sus **empleados**: los **tutores duales de empresa**.
-- Se asignan **docentes de enlace** que la gestionan.
+- Cada empresa tiene **centros de trabajo**, **tutores duales** y **docentes de enlace** asignados.
 - **Historial de cambios**: quién modificó qué y cuándo, con diff de cada campo.
 
 ---
 
 ## 7 · Crear una estancia
-
-<!-- _class: tight -->
 
 ![bg right:54%](img/09_estancia_nueva.png)
 
