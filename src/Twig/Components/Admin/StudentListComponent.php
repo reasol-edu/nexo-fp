@@ -80,6 +80,11 @@ class StudentListComponent extends AbstractController
         );
     }
 
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== '' || $this->groupId !== '';
+    }
+
     #[LiveAction]
     public function resetPage(): void
     {

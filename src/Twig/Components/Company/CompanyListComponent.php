@@ -49,6 +49,16 @@ class CompanyListComponent extends AbstractController
         $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
     }
 
+    public function getCentreId(): string
+    {
+        return $this->tenantContext->getSelectedCentre()?->getId()->toRfc4122() ?? '';
+    }
+
+    public function hasActiveFilters(): bool
+    {
+        return $this->search !== '';
+    }
+
     public function updatedSearch(): void
     {
         $this->page = 1;

@@ -1,6 +1,11 @@
 {% import 'components/_sort_header.html.twig' as sort %}
 {% import 'components/_pagination_live.html.twig' as pager %}
-<div {{ attributes }}>
+<div {{ attributes.defaults(stimulus_controller('filter-persist', {
+    centreId: this.centreId,
+    active: this.hasActiveFilters,
+    key: 'company-filters',
+    defaults: {search: '', sort: '', sortDir: 'asc'},
+})) }}>
     {% set pagination = this.pagination %}
 
     {# Barra de búsqueda #}

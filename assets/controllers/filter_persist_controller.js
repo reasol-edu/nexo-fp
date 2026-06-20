@@ -3,7 +3,8 @@ import { getComponent } from '@symfony/ux-live-component';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const DEFAULTS = {
+// Defaults del StayListComponent (retrocompatibilidad cuando no se pasa 'defaults').
+const STAY_DEFAULTS = {
     search: '',
     familyId: '',
     programmeId: '',
@@ -16,7 +17,14 @@ export default class extends Controller {
     static values = {
         centreId: String,
         active: Boolean,
+        key: { type: String, default: 'stay-filters' },
+        defaults: { type: Object, default: null },
     };
+
+    get effectiveDefaults() {
+        const d = this.defaultsValue;
+        return d !== null && Object.keys(d).length > 0 ? d : STAY_DEFAULTS;
+    }
 
     async connect() {
         this.onRender = () => this.persist();
@@ -32,9 +40,10 @@ export default class extends Controller {
         }
 
         const component = await getComponent(this.element);
+        const defaults = this.effectiveDefaults;
         let changed = false;
         for (const [prop, value] of Object.entries(saved)) {
-            if (value !== DEFAULTS[prop]) {
+            if (value !== defaults[prop]) {
                 component.set(prop, value, false);
                 changed = true;
             }
@@ -54,7 +63,8 @@ export default class extends Controller {
             return;
         }
 
-        const isClean = Object.entries(DEFAULTS).every(([prop, def]) => state[prop] === def);
+        const defaults = this.effectiveDefaults;
+        const isClean = Object.entries(defaults).every(([prop, def]) => state[prop] === def);
         try {
             if (isClean) {
                 window.localStorage.removeItem(this.storageKey());
@@ -102,19 +112,15 @@ export default class extends Controller {
     }
 
     sanitize(data) {
-        const state = { ...DEFAULTS };
+        const defaults = this.effectiveDefaults;
+        const state = { ...defaults };
 
-        if (typeof data.search === 'string') {
-            state.search = data.search.slice(0, 255);
-        }
-        for (const prop of ['familyId', 'programmeId']) {
-            if (typeof data[prop] === 'string' && UUID_PATTERN.test(data[prop])) {
-                state[prop] = data[prop];
-            }
-        }
-        for (const prop of ['showCurrent', 'showFuture', 'showPast']) {
-            if (typeof data[prop] === 'boolean') {
-                state[prop] = data[prop];
+        for (const [prop, def] of Object.entries(defaults)) {
+            const incoming = data[prop];
+            if (typeof def === 'string' && typeof incoming === 'string') {
+                state[prop] = incoming.slice(0, 255);
+            } else if (typeof def === 'boolean' && typeof incoming === 'boolean') {
+                state[prop] = incoming;
             }
         }
 
@@ -122,6 +128,6 @@ export default class extends Controller {
     }
 
     storageKey() {
-        return `nexofp:stay-filters:${this.centreIdValue}`;
+        return `nexofp:${this.keyValue}:${this.centreIdValue}`;
     }
 }

@@ -1,6 +1,11 @@
 {% import 'components/_sort_header.html.twig' as sort %}
 {% import 'components/_pagination_live.html.twig' as pager %}
-<div {{ attributes }}>
+<div {{ attributes.defaults(stimulus_controller('filter-persist', {
+    centreId: centre.id.toRfc4122,
+    active: this.hasActiveFilters,
+    key: 'student-filters',
+    defaults: {search: '', groupId: '', sort: '', sortDir: 'asc'},
+})) }}>
     {% if centre.activeAcademicYear is null %}
         <div class="px-6 py-16 text-center">
             {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
