@@ -223,11 +223,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Instalar pandoc y fuentes
-        # fonts-noto-color-emoji es necesario para que Chrome renderice los
-        # iconos (💡 ⚠️ 🚨 …) que el CSS antepone a las admonitions del manual.
-        # Sin esta fuente los emojis salen como cuadraditos vacíos en el PDF.
-        run: sudo apt-get update && sudo apt-get install -y pandoc fonts-noto-color-emoji
+      - name: Instalar pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
 
       - name: Instalar MkDocs Material
         run: pip install -r docs/manual/requirements.txt

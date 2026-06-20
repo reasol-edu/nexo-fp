@@ -114,15 +114,6 @@ p { orphans: 3; widows: 3; }
   margin-bottom: 0.2em;
 }
 
-/* Pseudo-elemento que antepone el emoji: fuerza la cadena de fuentes emoji para
-   que Chromium use la fuente disponible (Noto Color Emoji en Linux, Apple Color
-   Emoji en macOS, Segoe UI Emoji en Windows) en vez de la fuente de texto. Sin
-   esto, en runners de Linux sin fuente emoji los iconos salen como cuadraditos
-   vacíos en el PDF. */
-.admonition-title::before {
-  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-}
-
 /* — tip / hint / important ———— verde  💡 */
 .admonition.tip,
 .admonition.hint,
