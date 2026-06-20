@@ -258,6 +258,69 @@ class StayListComponentTest extends ControllerTestCase
         self::assertNotContains('Estancia pasada', $names);
     }
 
+    public function testMountClearsFamilyIdNotBelongingToCentre(): void
+    {
+        $centre = $this->makeCentreWithStay('42010001', 'Estancia A', '-5 days', '+5 days');
+
+        $component           = $this->makeComponent($centre);
+        // UUID con formato válido pero ajeno al centro: debe limpiarse.
+        $component->familyId = Uuid::v4()->toRfc4122();
+        $component->mount();
+
+        self::assertSame('', $component->familyId);
+    }
+
+    public function testMountClearsProgrammeIdNotBelongingToCentre(): void
+    {
+        $centre = $this->makeCentreWithStay('42010002', 'Estancia B', '-5 days', '+5 days');
+
+        $component              = $this->makeComponent($centre);
+        $component->programmeId = Uuid::v4()->toRfc4122();
+        $component->mount();
+
+        self::assertSame('', $component->programmeId);
+    }
+
+    public function testMountKeepsFamilyAndProgrammeIdsBelongingToCentre(): void
+    {
+        $centre = $this->makeCentreWithStay('42010003', 'Estancia C', '-5 days', '+5 days');
+        $year   = $centre->requireActiveAcademicYear();
+
+        $families = self::getContainer()->get(\App\Repository\ProfessionalFamilyRepository::class)
+            ->findByAcademicYearFiltered($year, '');
+        self::assertNotEmpty($families, 'precondición: la estancia debería traer familia');
+        $family = $families[0];
+
+        $programmes = self::getContainer()->get(\App\Repository\ProgrammeRepository::class)
+            ->findByAcademicYearFilteredByFamily($year, $family->getId()->toRfc4122());
+        self::assertNotEmpty($programmes, 'precondición: la familia debería tener al menos una enseñanza');
+        $programme = $programmes[0];
+
+        $component              = $this->makeComponent($centre);
+        $component->familyId    = $family->getId()->toRfc4122();
+        $component->programmeId = $programme->getId()->toRfc4122();
+        $component->mount();
+
+        self::assertSame($family->getId()->toRfc4122(), $component->familyId);
+        self::assertSame($programme->getId()->toRfc4122(), $component->programmeId);
+    }
+
+    public function testMountClearsBothWhenActiveYearIsNull(): void
+    {
+        // Centro sin curso activo: cualquier UUID se descarta sin consultar nada.
+        $centre = (new EducationalCentre())->setCode('42010004')->setName('IES Sin curso')->setCity('Sevilla');
+        $this->persist($centre);
+        $this->flush();
+
+        $component              = $this->makeComponent($centre);
+        $component->familyId    = Uuid::v4()->toRfc4122();
+        $component->programmeId = Uuid::v4()->toRfc4122();
+        $component->mount();
+
+        self::assertSame('', $component->familyId);
+        self::assertSame('', $component->programmeId);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────────
 
     private function makeComponent(?EducationalCentre $centre = null, ?UserInterface $user = null): StayListComponent

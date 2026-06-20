@@ -87,6 +87,30 @@ class StayListComponent extends AbstractController
         if ($this->programmeId !== '' && !Uuid::isValid($this->programmeId)) {
             $this->programmeId = '';
         }
+
+        // Validar que los UUIDs de familia/enseñanza pertenecen al centro activo.
+        // Sin esto, los filtros funcionan como un oráculo de confirmación: un UUID
+        // válido pero ajeno al centro devuelve 0 filas (inofensivo), pero un UUID
+        // del centro activo se acepta. Limpiamos aquí para que el frontend solo
+        // pueda mantener IDs que efectivamente vea en sus selectores.
+        // (isset: el componente se construye sin centre en algunos tests unitarios;
+        // en uso real el LiveProp obligatorio ya está hidratado al entrar aquí.)
+        if (isset($this->centre)) {
+            $year = $this->centre->getActiveAcademicYear();
+            if ($year === null) {
+                $this->familyId = '';
+                $this->programmeId = '';
+            } else {
+                if ($this->familyId !== '' && $this->families->findByYearAndId($year, $this->familyId) === null) {
+                    $this->familyId = '';
+                    $this->programmeId = '';
+                }
+                if ($this->programmeId !== '' && $this->programmes->findByAcademicYearAndId($year, $this->programmeId) === null) {
+                    $this->programmeId = '';
+                }
+            }
+        }
+
         $this->page = max(1, min($this->page, 9999));
         $this->pendingPage = max(1, min($this->pendingPage, 9999));
         if (!in_array($this->tab, ['stays', 'pending'], true)) {
