@@ -19,20 +19,49 @@
     </div>
 
   Styling comes from print.css (PDF-only).
+
+  Compatible con pandoc 2.x y pandoc 3.x: en pandoc 3 los descriptores de
+  elementos AST exponen los nombres canónicos (`Str.text`, `Block.content`,
+  `Quoted.content` + `Quoted.quotetype`, `CodeBlock.text`) y dejan de exponer
+  el campo genérico `.c`. Los helpers `str_text`/`inlines_of`/`code_text`
+  aceptan ambas APIs.
 --]]
+
+-- ── compat helpers (pandoc 2.x vs 3.x) ────────────────────────────────────────
+
+local function str_text(inline)
+    -- pandoc 3.x: Str.text; pandoc 2.x: Str.c
+    return inline.text or inline.c
+end
+
+local function inlines_of(node)
+    -- Contenedor de inlines (Para, Quoted): pandoc 3.x usa `.content`;
+    -- pandoc 2.x usa `.c` (en Quoted 2.x es `{quotetype, [inlines]}`, así
+    -- que devolvemos `c[2]`).
+    if node.content ~= nil then return node.content end
+    if node.t == 'Quoted' then return node.c[2] end
+    return node.c
+end
+
+local function code_text(block)
+    -- pandoc 3.x: CodeBlock.text; pandoc 2.x: CodeBlock.c = {attr, text}
+    return block.text or block.c[2]
+end
 
 -- ── helpers ──────────────────────────────────────────────────────────────────
 
 local function is_admonition_para(block)
     if block.t ~= 'Para' then return false end
-    local c = block.c
-    return #c >= 1 and c[1].t == 'Str' and (c[1].c == '!!!' or c[1].c == '???')
+    local c = inlines_of(block)
+    if not c or #c < 1 or c[1].t ~= 'Str' then return false end
+    local s = str_text(c[1])
+    return s == '!!!' or s == '???'
 end
 
 -- Returns (prefix, adtype, title_inlines, content_inlines)
 local function parse_admonition_para(para)
-    local inlines = para.c
-    local prefix = inlines[1].c   -- '!!!' or '???'
+    local inlines = inlines_of(para)
+    local prefix = str_text(inlines[1])   -- '!!!' or '???'
     local idx    = 2
 
     -- skip leading spaces
@@ -41,7 +70,7 @@ local function parse_admonition_para(para)
     -- admonition type (e.g. "tip", "warning", "danger")
     local adtype = 'note'
     if idx <= #inlines and inlines[idx].t == 'Str' then
-        adtype = inlines[idx].c
+        adtype = str_text(inlines[idx])
         idx    = idx + 1
     end
 
@@ -51,7 +80,7 @@ local function parse_admonition_para(para)
     -- optional quoted title
     local title_inlines = pandoc.List()
     if idx <= #inlines and inlines[idx].t == 'Quoted' then
-        title_inlines = pandoc.List(inlines[idx].c[2])
+        title_inlines = pandoc.List(inlines_of(inlines[idx]))
         idx = idx + 1
     end
 
@@ -97,15 +126,15 @@ local function process_blocks(blocks)
             -- that Pandoc turned into code blocks due to 4-space indent).
             while i + 1 <= #blocks and blocks[i + 1].t == 'CodeBlock' do
                 i = i + 1
-                local code_text = blocks[i].c[2]
-                local ok, parsed = pcall(pandoc.read, code_text, 'markdown')
+                local text = code_text(blocks[i])
+                local ok, parsed = pcall(pandoc.read, text, 'markdown')
                 if ok then
                     for _, b in ipairs(parsed.blocks) do
                         content_blocks:insert(b)
                     end
                 else
                     -- fallback: keep as plain paragraph
-                    content_blocks:insert(pandoc.Para({ pandoc.Str(code_text) }))
+                    content_blocks:insert(pandoc.Para({ pandoc.Str(text) }))
                 end
             end
 
