@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.8] - 2026-06-20
+
+### Fixed
+
+- Seguridad: XSS almacenado en el historial de empresas. El campo «Observaciones» (`exceptional_circumstances`) se renderizaba con `|raw` en la pestaña Historial de cambios pese a ser un textarea de texto plano (sin sanitizado HTML). Un usuario con permiso de edición de empresa podía inyectar JavaScript que se ejecutaba al abrir el historial por cualquier otro editor de esa empresa. Ahora se renderiza escapado como cualquier otro campo de texto
+
 ## [2.3.7] - 2026-06-20
 
 ### Added
