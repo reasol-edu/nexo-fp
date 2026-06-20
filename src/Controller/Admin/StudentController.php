@@ -220,8 +220,9 @@ class StudentController extends AbstractController
             @unlink($path);
             $request->getSession()->remove('student_import_id');
 
-            $groupsByName = $this->buildGroupsByName($centre);
-            $result       = $this->processCsvImport($content, $groupsByName, dryRun: false);
+            $allowedGroupIds = $request->request->all('groups');
+            $groupsByName    = $this->buildGroupsByName($centre);
+            $result          = $this->processCsvImport($content, $groupsByName, dryRun: false, allowedGroupIds: $allowedGroupIds);
             $this->em->flush();
             $this->buildImportFlash($result);
 
@@ -284,6 +285,7 @@ class StudentController extends AbstractController
             'updated'       => $result['updated'],
             'skipped'       => $result['skipped'],
             'unknownGroups' => $result['unknownGroups'],
+            'groupStats'    => $result['groupStats'],
         ]);
     }
 
@@ -294,9 +296,16 @@ class StudentController extends AbstractController
 
     /**
      * @param array<string, Group> $groupsByName
-     * @return array{created: int, updated: int, skipped: int, unknownGroups: array<string, true>}
+     * @param list<string>|null    $allowedGroupIds RFC4122 UUIDs; null = all (dry-run); [] = sin-grupo only
+     * @return array{
+     *   created: int,
+     *   updated: int,
+     *   skipped: int,
+     *   unknownGroups: array<string, true>,
+     *   groupStats: array<string, array{group: Group, name: string, created: int, updated: int}>
+     * }
      */
-    private function processCsvImport(string $content, array $groupsByName, bool $dryRun): array
+    private function processCsvImport(string $content, array $groupsByName, bool $dryRun, ?array $allowedGroupIds = null): array
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $content);
@@ -309,6 +318,7 @@ class StudentController extends AbstractController
         $updated       = 0;
         $skipped       = 0;
         $unknownGroups = [];
+        $groupStats    = [];
 
         while (($row = fgetcsv($stream, escape: '')) !== false) {
             if (count(array_filter($row, static fn($v) => trim((string) $v) !== '')) === 0) {
@@ -338,10 +348,18 @@ class StudentController extends AbstractController
                 $unknownGroups[$groupName] = true;
             }
 
+            // En modo real, omitir estudiantes cuyo grupo conocido no esté en la lista permitida
+            if (!$dryRun && $allowedGroupIds !== null && $group !== null
+                && !in_array($group->getId()->toRfc4122(), $allowedGroupIds, true)) {
+                $skipped++;
+                continue;
+            }
+
             $existing = $this->students->findByStudentId($studentId);
+            $isNew    = $existing === null;
 
             if (!$dryRun) {
-                if ($existing === null) {
+                if ($isNew) {
                     $student = new Student(new PersonName($firstName, $lastName));
                     $student->setStudentId($studentId);
                     $this->em->persist($student);
@@ -355,21 +373,38 @@ class StudentController extends AbstractController
                     $student->addGroup($group);
                 }
             } else {
-                if ($existing === null) {
+                if ($isNew) {
                     $created++;
                 } else {
                     $updated++;
+                }
+
+                // Acumular estadísticas por grupo para la vista previa
+                if ($group !== null) {
+                    $gId = $group->getId()->toRfc4122();
+                    if (!isset($groupStats[$gId])) {
+                        $groupStats[$gId] = ['group' => $group, 'name' => $group->getName(), 'created' => 0, 'updated' => 0];
+                    }
+                    if ($isNew) {
+                        $groupStats[$gId]['created']++;
+                    } else {
+                        $groupStats[$gId]['updated']++;
+                    }
                 }
             }
         }
 
         fclose($stream);
 
+        // Ordenar por nombre de grupo
+        uasort($groupStats, static fn($a, $b) => strcmp($a['name'], $b['name']));
+
         return [
             'created'       => $created,
             'updated'       => $updated,
             'skipped'       => $skipped,
             'unknownGroups' => $unknownGroups,
+            'groupStats'    => $groupStats,
         ];
     }
 

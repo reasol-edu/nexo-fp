@@ -22,56 +22,102 @@
             <h2 class="text-base font-semibold text-gray-900">{{ 'students.import.preview.title'|trans({}, 'admin') }}</h2>
         </div>
 
-        <div class="px-6 py-6 space-y-6">
-            <p class="text-sm text-gray-600">{{ 'students.import.preview.intro'|trans({}, 'admin') }}</p>
+        <form method="post"
+              action="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
+              data-controller="form-submit">
+            <input type="hidden" name="import_confirmed" value="1">
+            <input type="hidden" name="import_id" value="{{ importId }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('import_students_confirm') }}">
 
-            <ul class="space-y-2">
-                {% if created > 0 %}
-                <li class="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm">
-                    {{ ux_icon('heroicons:user-plus', {class: 'h-5 w-5 text-green-600 shrink-0'}) }}
-                    <span class="font-semibold text-green-800">{{ 'students.import.preview.new'|trans({'%count%': created}, 'admin') }}</span>
-                </li>
-                {% endif %}
-                {% if updated > 0 %}
-                <li class="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm">
-                    {{ ux_icon('heroicons:pencil', {class: 'h-5 w-5 text-blue-600 shrink-0'}) }}
-                    <span class="font-semibold text-blue-800">{{ 'students.import.preview.updated'|trans({'%count%': updated}, 'admin') }}</span>
-                </li>
-                {% endif %}
-                {% if skipped > 0 %}
-                <li class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm">
-                    {{ ux_icon('heroicons:minus-circle', {class: 'h-5 w-5 text-gray-400 shrink-0'}) }}
-                    <span class="text-gray-600">{{ 'students.import.preview.skipped'|trans({'%count%': skipped}, 'admin') }}</span>
-                </li>
-                {% endif %}
-            </ul>
+            <div class="px-6 py-6 space-y-6">
 
-            {% if unknownGroups|length > 0 %}
-            <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3.5 text-sm text-amber-700">
-                {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 text-amber-500 shrink-0 inline-block mr-1.5 align-text-bottom'}) }}
-                {{ 'students.import.preview.unknown_groups'|trans({'%groups%': unknownGroups|keys|join(', ')}, 'admin') }}
+                {# ── Selección de grupos ─────────────────────────────────── #}
+                {% if groupStats|length > 0 %}
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-700">{{ 'students.import.preview.groups.title'|trans({}, 'admin') }}</h3>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-3">{{ 'students.import.preview.groups.hint'|trans({}, 'admin') }}</p>
+
+                    <ul class="divide-y divide-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+                        {% for groupId, stat in groupStats %}
+                        <li class="flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors">
+                            <input type="checkbox"
+                                   id="group_{{ groupId }}"
+                                   name="groups[]"
+                                   value="{{ groupId }}"
+                                   checked
+                                   class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500 shrink-0">
+                            <label for="group_{{ groupId }}" class="flex flex-1 items-center justify-between gap-4 cursor-pointer select-none">
+                                <span class="text-sm font-medium text-gray-800">{{ stat.name }}</span>
+                                <span class="text-xs text-gray-500 shrink-0">
+                                    {%- if stat.created > 0 -%}
+                                        <span class="text-green-700">{{ 'students.import.preview.new'|trans({'%count%': stat.created}, 'admin') }}</span>
+                                    {%- endif -%}
+                                    {%- if stat.created > 0 and stat.updated > 0 %}, {% endif -%}
+                                    {%- if stat.updated > 0 -%}
+                                        <span class="text-blue-700">{{ 'students.import.preview.updated'|trans({'%count%': stat.updated}, 'admin') }}</span>
+                                    {%- endif -%}
+                                </span>
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {# ── Resumen total ───────────────────────────────────────── #}
+                <div>
+                    {% if groupStats|length > 0 %}
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{{ 'students.import.preview.groups.total'|trans({}, 'admin') }}</p>
+                    {% else %}
+                    <p class="text-sm text-gray-600 mb-3">{{ 'students.import.preview.intro'|trans({}, 'admin') }}</p>
+                    {% endif %}
+
+                    <ul class="space-y-2">
+                        {% if created > 0 %}
+                        <li class="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm">
+                            {{ ux_icon('heroicons:user-plus', {class: 'h-5 w-5 text-green-600 shrink-0'}) }}
+                            <span class="font-semibold text-green-800">{{ 'students.import.preview.new'|trans({'%count%': created}, 'admin') }}</span>
+                        </li>
+                        {% endif %}
+                        {% if updated > 0 %}
+                        <li class="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm">
+                            {{ ux_icon('heroicons:pencil', {class: 'h-5 w-5 text-blue-600 shrink-0'}) }}
+                            <span class="font-semibold text-blue-800">{{ 'students.import.preview.updated'|trans({'%count%': updated}, 'admin') }}</span>
+                        </li>
+                        {% endif %}
+                        {% if skipped > 0 %}
+                        <li class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm">
+                            {{ ux_icon('heroicons:minus-circle', {class: 'h-5 w-5 text-gray-400 shrink-0'}) }}
+                            <span class="text-gray-600">{{ 'students.import.preview.skipped'|trans({'%count%': skipped}, 'admin') }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                {# ── Grupos no encontrados ────────────────────────────────── #}
+                {% if unknownGroups|length > 0 %}
+                <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3.5 text-sm text-amber-700">
+                    {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 text-amber-500 shrink-0 inline-block mr-1.5 align-text-bottom'}) }}
+                    {{ 'students.import.preview.unknown_groups'|trans({'%groups%': unknownGroups|keys|join(', ')}, 'admin') }}
+                </div>
+                {% endif %}
+
+                {# ── Botones ─────────────────────────────────────────────── #}
+                <div class="flex items-center justify-between pt-2">
+                    <a href="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
+                       class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                        {{ 'students.import.preview.back'|trans({}, 'admin') }}
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                        {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}
+                        {{ 'students.import.preview.confirm'|trans({}, 'admin') }}
+                    </button>
+                </div>
             </div>
-            {% endif %}
-
-            <form method="post"
-                  action="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
-                  data-controller="form-submit"
-                  class="flex items-center justify-between pt-2">
-                <input type="hidden" name="import_confirmed" value="1">
-                <input type="hidden" name="import_id" value="{{ importId }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('import_students_confirm') }}">
-
-                <a href="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
-                   class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                    {{ 'students.import.preview.back'|trans({}, 'admin') }}
-                </a>
-                <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
-                    {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}
-                    {{ 'students.import.preview.confirm'|trans({}, 'admin') }}
-                </button>
-            </form>
-        </div>
+        </form>
     </div>
 
 </div>
