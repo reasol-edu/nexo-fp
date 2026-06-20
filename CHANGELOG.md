@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.3] - 2026-06-20
 
 ### Added
 
@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Importación de estudiantes en dos pasos: al subir el CSV ahora se muestra una pantalla de vista previa con el recuento de altas, actualizaciones y omisiones (y aviso de grupos no encontrados) antes de confirmar; el fichero se guarda temporalmente y se enlaza a la sesión mediante un UUID para evitar doble envío o manipulación. La vista previa incluye checkboxes para seleccionar qué grupos se importan (todos marcados por defecto); los estudiantes sin grupo reconocido se incluyen siempre
 - Aviso de exportación cambiado de «Generando el archivo CSV…» a «Generando el archivo Excel…»
+- Pantalla de edición de estancia adaptable a móvil: el listado de estudiantes se transforma en tarjetas apiladas en pantallas pequeñas (igual que el resto de listados del sistema); en tarjeta se muestran todas las columnas (empresa, tutor docente, tutor laboral, estado), los desplegables de asignación rápida siguen funcionando y la sincronización en tiempo real no se ve afectada
 
 ## [2.3.2] - 2026-06-19
 

@@ -9,8 +9,8 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "2.3.2"
-    app.pub_date:               "2026-06-19"
+    app.version:                "2.3.3"
+    app.pub_date:               "2026-06-20"
     # Avisos de Mercure como updates privados (true en prod). En dev se pone a
     # false (ver services_dev.yaml) porque el hub de desarrollo es anónimo y solo
     # entrega updates públicos. El canal solo lleva el UUID de la estancia.

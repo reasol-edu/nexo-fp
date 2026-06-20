@@ -68,23 +68,22 @@ summary:focus-visible {
     }
 
     table.table-cards tbody td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.4rem 0 !important;
-        text-align: right;
+        display: block;
+        padding: 0.35rem 0 !important;
+        width: 100%;    /* override column-width utilities (w-44, w-64, w-48…) */
+        box-sizing: border-box;
     }
 
+    /* Etiqueta encima, en pequeño y gris */
     table.table-cards tbody td::before {
         content: attr(data-label);
-        font-size: 0.7rem;
+        display: block;
+        font-size: 0.65rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--color-gray-500);
-        text-align: left;
-        flex-shrink: 0;
+        letter-spacing: 0.06em;
+        color: var(--color-gray-400);
+        margin-bottom: 0.1rem;
     }
 
     table.table-cards tbody td:not([data-label])::before,
@@ -92,10 +91,26 @@ summary:focus-visible {
         content: none;
     }
 
-    /* La columna de acciones se alinea a la derecha ocupando toda la fila. */
+    /* La columna de acciones se alinea a la derecha al pie de la tarjeta. */
     table.table-cards tbody td:not([data-label]) {
-        justify-content: flex-end;
-        padding-top: 0.6rem !important;
+        text-align: right;
+        padding-top: 0.5rem !important;
+    }
+
+    /* Filas separadoras de grupo (dentro de tablas-tarjetas): sin borde ni
+       redondeado, para diferenciarse visualmente de las filas de datos. */
+    table.table-cards tbody tr.table-group-header {
+        border: none;
+        border-radius: 0;
+        padding: 0.25rem 0;
+        margin: 0.5rem 0.625rem 0.125rem;
+    }
+    table.table-cards tbody tr.table-group-header td {
+        display: block !important;
+        padding: 0.375rem 0 !important;
+    }
+    table.table-cards tbody tr.table-group-header td::before {
+        content: none !important;
     }
 }
 
