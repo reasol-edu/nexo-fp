@@ -83,12 +83,12 @@ El resto de docentes usan la contraseña **`ejemplo`**. Por ejemplo:
 
 ### Oferta formativa
 
-| Familia | Título completo | Abrev. |
-|---|---|---|
-| Informática y Comunicaciones | CFGM Sistemas Microinformáticos y Redes | SMR |
-| Informática y Comunicaciones | CFGS Desarrollo de Aplicaciones Web | DAW |
-| Sanidad | CFGS Audiología Protésica | AP |
-| Sanidad | CFGS Higiene Bucodental | HB |
+| Familia | Título completo | Abrev. | Grupos |
+|---|---|---|---|
+| Informática y Comunicaciones | CFGM Sistemas Microinformáticos y Redes | SMR | 1ºSMR-A, 2ºSMR-A |
+| Informática y Comunicaciones | CFGS Desarrollo de Aplicaciones Web | DAW | 1ºDAW-M, 1ºDAW-T (7 alumnos), 2ºDAW-M, 2ºDAW-T (7 alumnos) |
+| Sanidad | CFGS Audiología Protésica | AP | 1ºAP-A, 2ºAP-A |
+| Sanidad | CFGS Higiene Bucodental | HB | 1ºHB-A, 2ºHB-A |
 
 ### Docentes
 
@@ -216,7 +216,7 @@ El resto de docentes usan la contraseña **`ejemplo`**. Por ejemplo:
 
 ## Escenarios de estancias
 
-Cada enseñanza tiene **dos estancias** que cubren distintos momentos del curso:
+Cada enseñanza tiene **dos estancias** que cubren distintos momentos del curso.
 
 ### Estancia pasada — `FFEOE <ABREV> 2025 (1.er trimestre)`
 
@@ -230,16 +230,38 @@ Fechas: 15/09/2025 – 31/01/2026. Alumnos de **1.º** de la enseñanza.
 
 ### Estancia actual — `FFEOE <ABREV> 2026 (2.º trimestre)`
 
-Fechas: 01/03/2026 – 20/06/2026. Alumnos de **2.º** de la enseñanza.
+Fechas: 01/03/2026 – 30/06/2026. Alumnos de **2.º** de la enseñanza.
 
 | Puesto | Alumno | Estado | Firmado | Descripción |
 |---|---|---|---|---|
 | 1 | — | DRAFT | No | Puesto vacante sin asignar |
 | 2 | — | DRAFT | No | Puesto vacante sin asignar |
-| 3 | Alumno A | DRAFT | No | Asignado pero pendiente de confirmar |
-| 4 | Alumno B | PENDING | No | En prácticas, sin firmar |
+| 3 | Alumno A | DRAFT | No | Asignado **sin tutor dual docente** → aparece en «Pendientes» |
+| 4 | Alumno B | PENDING | No | En prácticas, sin firmar, **fecha límite 25/06** → notificación |
 | 5 | Alumno C | PENDING | Sí | En prácticas, firmado |
 | 6 | Alumno D | DONE | Sí | Prácticas finalizadas |
 | 7 | Alumno E | DONE | Sí | Prácticas finalizadas |
 | — | Alumno F | sin puesto | — | Matriculado en la estancia sin puesto asignado |
 | — | Alumno G | sin puesto | — | Matriculado en la estancia sin puesto asignado |
+
+### Escenario especial DAW (IES Ada Lovelace)
+
+DAW tiene grupos de mañana (`-M`, 12 alumnos) y de tarde (`-T`, 7 alumnos).
+
+**Estancia pasada** (`FFEOE DAW 2025 (1.er trimestre)`): solo alumnos de 1ºDAW-M, con el mismo patrón que el escenario estándar.
+
+**Estancia actual** (`FFEOE DAW 2026 (2.º trimestre)`): combina 2ºDAW-M y 2ºDAW-T en la misma estancia.
+
+Alumnos de 2ºDAW-M: mismo patrón que el escenario estándar (puestos 1-7 + 2 sin asignar).
+
+Alumnos de 2ºDAW-T:
+
+| Puesto | Alumno | Estado | Firmado | Descripción |
+|---|---|---|---|---|
+| T-1 | Alumno T-A | PENDING | No | En prácticas, sin firmar, **fecha límite 24/06** → notificación |
+| T-2 | Alumno T-B | DRAFT | No | Asignado **sin tutor dual docente** → aparece en «Pendientes» |
+| — | Alumnos T-C a T-G | sin puesto | — | Matriculados sin puesto asignado aún |
+
+### Información de contacto en empresas
+
+Aproximadamente la mitad de las empresas tienen el campo **Información de contacto** cumplimentado con nombre del responsable, correo electrónico y teléfono, para mostrar el editor de texto enriquecido.

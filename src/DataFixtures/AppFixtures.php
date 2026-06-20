@@ -52,16 +52,23 @@ class AppFixtures extends Fixture
         $mTeachers = $this->makeMonterrubioTeachers($manager, $ejemploHash);
         $manager->flush();
 
-        [$aCentre, $aYear, , $aProgrammes, $aPyears] = $this->buildAdaLovelace($manager, $aTeachers);
+        // buildAdaLovelace returns DAW separately so it can have M+T groups.
+        [$aCentre, $aYear, , $aProgrammes, $aPyears, $dawProg, $dawPy1, $dawPy2] = $this->buildAdaLovelace($manager, $aTeachers);
         [$mCentre, $mYear, , $mProgrammes, $mPyears] = $this->buildMonterrubio($manager, $mTeachers);
 
-        $mGroups = $this->buildGroups($manager, $aPyears, $aTeachers, 'M', 12);
+        // Standard groups (one per ProgrammeYear, suffix -A)
+        $aGroups = $this->buildGroups($manager, $aPyears, $aTeachers, 'M', 12);
         $sGroups = $this->buildGroups($manager, $mPyears, $mTeachers, 'S', 12);
+
+        // DAW morning (12 students) and afternoon (7 students) groups
+        $dawMGroups = $this->buildGroups($manager, [$dawPy1, $dawPy2], $aTeachers, 'DM', 12, '-M');
+        $dawTGroups = $this->buildGroups($manager, [$dawPy1, $dawPy2], $aTeachers, 'DT', 7,  '-T');
 
         [, $mWorkcenters] = $this->buildCompanies($manager, $aCentre, $aTeachers);
         [, $sWorkcenters] = $this->buildCompanies($manager, $mCentre, $mTeachers, 's');
 
-        $this->buildStays($manager, $aYear, $aProgrammes, $aPyears, $mGroups, $mWorkcenters, $aTeachers);
+        $this->buildStays($manager, $aYear, $aProgrammes, $aPyears, $aGroups, $mWorkcenters, $aTeachers);
+        $this->buildDAWStays($manager, $aYear, $dawProg, $dawPy1, $dawPy2, $dawMGroups, $dawTGroups, $mWorkcenters, $aTeachers);
         $this->buildStays($manager, $mYear, $mProgrammes, $mPyears, $sGroups, $sWorkcenters, $mTeachers);
 
         $manager->flush();
@@ -227,8 +234,11 @@ class AppFixtures extends Fixture
     // ── Estructura académica ──────────────────────────────────────────────────
 
     /**
+     * Returns non-DAW programmes and pyears, plus DAW programme/pyears separately
+     * so the caller can build M and T groups for DAW.
+     *
      * @param array<string, Teacher> $teachers
-     * @return array{EducationalCentre, AcademicYear, ProfessionalFamily[], Programme[], ProgrammeYear[]}
+     * @return array{EducationalCentre, AcademicYear, ProfessionalFamily[], Programme[], ProgrammeYear[], Programme, ProgrammeYear, ProgrammeYear}
      */
     private function buildAdaLovelace(ObjectManager $manager, array $teachers): array
     {
@@ -253,26 +263,23 @@ class AppFixtures extends Fixture
         $manager->persist($ic);
         $manager->persist($san);
 
-        $programmes = [];
-        $pyears     = [];
+        // DAW is returned separately for M+T group handling
+        $daw = $this->makeProgramme($manager, 'CFGS Desarrollo de Aplicaciones Web', $ic, $year, $teachers['diego.romero']);
+        [$py1daw, $py2daw] = $this->makeProgrammeYears($manager, $daw, 'DAW');
 
         $smr = $this->makeProgramme($manager, 'CFGM Sistemas Microinformáticos y Redes', $ic, $year, $teachers['maria.garcia']);
         [$py1smr, $py2smr] = $this->makeProgrammeYears($manager, $smr, 'SMR');
-        $programmes[] = $smr; $pyears[] = $py1smr; $pyears[] = $py2smr;
-
-        $daw = $this->makeProgramme($manager, 'CFGS Desarrollo de Aplicaciones Web', $ic, $year, $teachers['diego.romero']);
-        [$py1daw, $py2daw] = $this->makeProgrammeYears($manager, $daw, 'DAW');
-        $programmes[] = $daw; $pyears[] = $py1daw; $pyears[] = $py2daw;
 
         $ap = $this->makeProgramme($manager, 'CFGS Audiología Protésica', $san, $year, $teachers['manuel.perez']);
         [$py1ap, $py2ap] = $this->makeProgrammeYears($manager, $ap, 'AP');
-        $programmes[] = $ap; $pyears[] = $py1ap; $pyears[] = $py2ap;
 
         $hb = $this->makeProgramme($manager, 'CFGS Higiene Bucodental', $san, $year, $teachers['roberto.guerrero']);
         [$py1hb, $py2hb] = $this->makeProgrammeYears($manager, $hb, 'HB');
-        $programmes[] = $hb; $pyears[] = $py1hb; $pyears[] = $py2hb;
 
-        return [$centre, $year, [$ic, $san], $programmes, $pyears];
+        $programmes   = [$smr, $ap, $hb];
+        $pyears       = [$py1smr, $py2smr, $py1ap, $py2ap, $py1hb, $py2hb];
+
+        return [$centre, $year, [$ic, $san], $programmes, $pyears, $daw, $py1daw, $py2daw];
     }
 
     /**
@@ -373,6 +380,7 @@ class AppFixtures extends Fixture
         array $teachers,
         string $prefix,
         int $studentsPerGroup,
+        string $suffix = '-A',
     ): array {
         $teacherList  = array_values($teachers);
         $specialCount = 18; // positions 0-17 are admins, heads, coordinators and liaisons
@@ -384,7 +392,7 @@ class AppFixtures extends Fixture
             $abbr  = $py->getName();
             $abbr  = preg_replace('/[^A-Z0-9]/i', '', $abbr) ?? $abbr;
             $group = (new Group())
-                ->setName($abbr . '-A')
+                ->setName($abbr . $suffix)
                 ->setProgrammeYear($py);
 
             $tutor = $teacherList[$specialCount + ($regularIdx % $regularCount)];
@@ -485,6 +493,22 @@ class AppFixtures extends Fixture
                 [8,  11, ['manuela.criado']],
             ];
 
+        // Sample contact information (HTML rich text) for some companies per set.
+        $contactInfoByIdx = $isFirstSet ? [
+            0 => '<p><strong>Responsable de prácticas:</strong> Carmen Vega Mora<br><strong>Email:</strong> practicas@repsol-quimica.es<br><strong>Tel.:</strong> 953 400 200</p>',
+            1 => '<p><strong>Responsable de RR. HH.:</strong> Andrés Cano León<br><strong>Email:</strong> a.cano@indra.es<br><strong>Tel.:</strong> 953 510 100 (ext. 312)</p>',
+            3 => '<p><strong>Director técnico:</strong> Joaquín Pardo Reyes<br><strong>Email:</strong> jpardo@informlinares.es<br><strong>Tel.:</strong> 953 620 300</p>',
+            6 => '<p><strong>Supervisora de formación:</strong> Pilar Rueda Soto<br><strong>Email:</strong> formacion@hospitallinares.es<br><strong>Tel.:</strong> 953 700 400</p>',
+            8 => '<ul><li><strong>Dra. Rosa Oliva Leal</strong> — Responsable de alumnos en prácticas</li><li>rosa.oliva@centromediconorte.es</li><li>953 820 500</li></ul>',
+            10 => '<p><strong>Coordinadora:</strong> Inés Yuste Pino<br><strong>Email:</strong> iyuste@auxiliarsanitaria.es</p>',
+        ] : [
+            0 => '<p><strong>Campus Lead / Prácticas:</strong> Raúl Lagos Varo<br><strong>Email:</strong> practicas.es@accenture.com<br><strong>Tel.:</strong> 954 100 200</p>',
+            2 => '<p><strong>Responsable de formación:</strong> Carmen Mora Varo<br><strong>Email:</strong> formacion@redsevilla.es<br><strong>Tel.:</strong> 954 210 300</p>',
+            4 => '<p><strong>Directora asistencial:</strong> Lucía Bravo León<br><strong>Email:</strong> lbravo@vitaliasevilla.es<br><strong>Tel.:</strong> 954 350 450</p>',
+            6 => '<p><strong>Responsable de voluntariado y prácticas:</strong> Andrés Cano Varo<br><strong>Email:</strong> practicas@sevilla-integra.org</p>',
+            9 => '<ul><li><strong>Marta Salas Alba</strong> — Tutora de prácticas</li><li>marta@bellezasur.es</li><li>955 400 100</li></ul>',
+        ];
+
         $workerFirstNames = ['Carmen',  'Andrés', 'Lucía',   'Joaquín', 'Pilar',  'Tomás',
                              'Rosa',    'Ignacio','Marta',   'Álvaro',  'Inés',   'Raúl'];
         $workerLastNames1 = ['Vega',    'Cano',   'Bravo',   'Pardo',   'Rueda',  'Oliva',
@@ -514,6 +538,10 @@ class AppFixtures extends Fixture
                     ->setRepresentativeLastName($repLastNames[$idx % count($repLastNames)])
                     ->setRepresentativeNationalId(sprintf('%08dR', $idx + ($isFirstSet ? 30000000 : 40000000)))
                     ->setRepresentativeRole($repRoles[$idx % count($repRoles)]);
+            }
+
+            if (isset($contactInfoByIdx[$idx])) {
+                $company->setContactInformation($contactInfoByIdx[$idx]);
             }
 
             foreach ($liaisonGroups as [$from, $to, $liaisonUsernames]) {
@@ -622,36 +650,42 @@ class AppFixtures extends Fixture
                 ->setAcademicYear($year)
                 ->setProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2026-03-01'))
-                ->setEndDate(new \DateTimeImmutable('2026-06-20'));
+                ->setEndDate(new \DateTimeImmutable('2026-06-30'));
             $manager->persist($currentStay);
 
             $students2 = $group2->getStudents()->toArray();
 
+            // pos-1: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
                 ->setStay($currentStay)->setWorkcenter($wc0)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
+            // pos-2: DRAFT, sin alumno
             $manager->persist((new TrainingPosition())
                 ->setStay($currentStay)->setWorkcenter($wc1)
                 ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
 
+            // pos-3: DRAFT, alumno asignado pero SIN tutor dual docente → «Pendientes»
             if (isset($students2[0])) {
                 $currentStay->addStudent($students2[0]);
                 $manager->persist((new TrainingPosition())
-                    ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                    ->setStay($currentStay)->setWorkcenter($wc0)
                     ->addProgrammeYear($py2)->setStudent($students2[0])
                     ->setState(TrainingPositionState::DRAFT));
             }
 
+            // pos-4: PENDING, sin firmar, fecha próxima → campana de notificaciones
             if (isset($students2[1])) {
                 $currentStay->addStudent($students2[1]);
                 $manager->persist((new TrainingPosition())
                     ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
                     ->setWorkplaceMentor($mentorOf($wc0))
                     ->addProgrammeYear($py2)->setStudent($students2[1])
-                    ->setState(TrainingPositionState::PENDING));
+                    ->setState(TrainingPositionState::PENDING)
+                    ->setEndDate(new \DateTimeImmutable('2026-06-25')));
             }
 
+            // pos-5: PENDING, firmado
             if (isset($students2[2])) {
                 $currentStay->addStudent($students2[2]);
                 $manager->persist((new TrainingPosition())
@@ -661,6 +695,7 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::PENDING)->setSigned(true));
             }
 
+            // pos-6: DONE, firmado
             if (isset($students2[3])) {
                 $currentStay->addStudent($students2[3]);
                 $manager->persist((new TrainingPosition())
@@ -670,6 +705,7 @@ class AppFixtures extends Fixture
                     ->setState(TrainingPositionState::DONE)->setSigned(true));
             }
 
+            // pos-7: DONE, firmado
             if (isset($students2[4])) {
                 $currentStay->addStudent($students2[4]);
                 $manager->persist((new TrainingPosition())
@@ -683,6 +719,168 @@ class AppFixtures extends Fixture
                 if (isset($students2[$si])) {
                     $currentStay->addStudent($students2[$si]);
                 }
+            }
+        }
+    }
+
+    /**
+     * Stays for DAW at Ada Lovelace, which has morning (M) and afternoon (T) groups.
+     * The past stay uses only the 1ºDAW-M group; the current stay combines 2ºDAW-M and 2ºDAW-T.
+     *
+     * @param Group[] $mGroups [group_py1_M, group_py2_M]
+     * @param Group[] $tGroups [group_py1_T, group_py2_T]
+     * @param Workcenter[] $workcenters
+     * @param array<string, Teacher> $teachers
+     */
+    private function buildDAWStays(
+        ObjectManager $manager,
+        AcademicYear $year,
+        Programme $daw,
+        ProgrammeYear $py1,
+        ProgrammeYear $py2,
+        array $mGroups,
+        array $tGroups,
+        array $workcenters,
+        array $teachers,
+    ): void {
+        $wcCount  = count($workcenters);
+        $tutor    = $teachers['diego.romero']; // DAW coordinator
+        $mentorOf = static fn (Workcenter $wc): ?Worker => $wc->getCompany()->getWorkers()->first() ?: null;
+
+        $wc0 = $workcenters[1 % $wcCount];
+        $wc1 = $workcenters[2 % $wcCount];
+        $wc2 = $workcenters[3 % $wcCount];
+        $wc3 = $workcenters[4 % $wcCount];
+
+        $group1M = $mGroups[0]; // 1ºDAW-M
+        $group2M = $mGroups[1]; // 2ºDAW-M
+        $group2T = $tGroups[1]; // 2ºDAW-T (tarde solo en la estancia actual)
+
+        // ── Estancia pasada — grupo mañana (1ºDAW-M) ─────────────────────────
+        $pastStay = (new Stay())
+            ->setName('FFEOE DAW 2025 (1.er trimestre)')
+            ->setAcademicYear($year)
+            ->setProgramme($daw)
+            ->setStartDate(new \DateTimeImmutable('2025-09-15'))
+            ->setEndDate(new \DateTimeImmutable('2026-01-31'));
+        $manager->persist($pastStay);
+
+        $students1M = $group1M->getStudents()->toArray();
+        foreach (range(0, 4) as $si) {
+            if (isset($students1M[$si])) {
+                $pastStay->addStudent($students1M[$si]);
+                $wc = $workcenters[(1 + $si) % $wcCount];
+                $manager->persist((new TrainingPosition())
+                    ->setStay($pastStay)->setWorkcenter($wc)
+                    ->setAcademicTutor($tutor)->setWorkplaceMentor($mentorOf($wc))
+                    ->addProgrammeYear($py1)->setStudent($students1M[$si])
+                    ->setState(TrainingPositionState::DONE)->setSigned(true));
+            }
+        }
+        foreach ([5, 6] as $si) {
+            if (isset($students1M[$si])) {
+                $pastStay->addStudent($students1M[$si]);
+            }
+        }
+
+        // ── Estancia actual — grupos mañana (2ºDAW-M) y tarde (2ºDAW-T) ──────
+        $currentStay = (new Stay())
+            ->setName('FFEOE DAW 2026 (2.º trimestre)')
+            ->setAcademicYear($year)
+            ->setProgramme($daw)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $manager->persist($currentStay);
+
+        $students2M = $group2M->getStudents()->toArray();
+        $students2T = $group2T->getStudents()->toArray();
+
+        // Grupo mañana
+        $manager->persist((new TrainingPosition())
+            ->setStay($currentStay)->setWorkcenter($wc0)
+            ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
+
+        $manager->persist((new TrainingPosition())
+            ->setStay($currentStay)->setWorkcenter($wc1)
+            ->addProgrammeYear($py2)->setState(TrainingPositionState::DRAFT));
+
+        // DRAFT con alumno, sin tutor dual docente → «Pendientes»
+        if (isset($students2M[0])) {
+            $currentStay->addStudent($students2M[0]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc0)
+                ->addProgrammeYear($py2)->setStudent($students2M[0])
+                ->setState(TrainingPositionState::DRAFT));
+        }
+
+        // PENDING sin firmar, fecha próxima → notificación
+        if (isset($students2M[1])) {
+            $currentStay->addStudent($students2M[1]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc0))
+                ->addProgrammeYear($py2)->setStudent($students2M[1])
+                ->setState(TrainingPositionState::PENDING)
+                ->setEndDate(new \DateTimeImmutable('2026-06-25')));
+        }
+
+        if (isset($students2M[2])) {
+            $currentStay->addStudent($students2M[2]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc2)->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc2))
+                ->addProgrammeYear($py2)->setStudent($students2M[2])
+                ->setState(TrainingPositionState::PENDING)->setSigned(true));
+        }
+
+        if (isset($students2M[3])) {
+            $currentStay->addStudent($students2M[3]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc0)->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc0))
+                ->addProgrammeYear($py2)->setStudent($students2M[3])
+                ->setState(TrainingPositionState::DONE)->setSigned(true));
+        }
+
+        if (isset($students2M[4])) {
+            $currentStay->addStudent($students2M[4]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc3)->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc3))
+                ->addProgrammeYear($py2)->setStudent($students2M[4])
+                ->setState(TrainingPositionState::DONE)->setSigned(true));
+        }
+
+        foreach ([5, 6] as $si) {
+            if (isset($students2M[$si])) {
+                $currentStay->addStudent($students2M[$si]);
+            }
+        }
+
+        // Grupo tarde: un puesto PENDING con fecha próxima, otro sin tutor, resto sin asignar
+        if (isset($students2T[0])) {
+            $currentStay->addStudent($students2T[0]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc1)->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc1))
+                ->addProgrammeYear($py2)->setStudent($students2T[0])
+                ->setState(TrainingPositionState::PENDING)
+                ->setEndDate(new \DateTimeImmutable('2026-06-24')));
+        }
+
+        // DRAFT con alumno, sin tutor dual docente → «Pendientes»
+        if (isset($students2T[1])) {
+            $currentStay->addStudent($students2T[1]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($currentStay)->setWorkcenter($wc2)
+                ->addProgrammeYear($py2)->setStudent($students2T[1])
+                ->setState(TrainingPositionState::DRAFT));
+        }
+
+        // Resto del grupo tarde: matriculados sin puesto aún
+        foreach (range(2, 6) as $si) {
+            if (isset($students2T[$si])) {
+                $currentStay->addStudent($students2T[$si]);
             }
         }
     }
