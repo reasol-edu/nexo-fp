@@ -110,4 +110,7 @@ en cuenta al operar la aplicación:
   asegúrate de configurar un remitente y un servidor de correo del propio centro
   (consulta [Notificaciones por email](06-notificaciones-y-email.md)).
 - **Acceso por red.** En instalaciones accesibles desde Internet, usa siempre **HTTPS** y contraseñas
-  robustas; nunca dejes el usuario `admin` / `admin` por defecto.
+  robustas (mínimo 12 caracteres, que es lo que pide el propio formulario); nunca dejes el usuario
+  `admin` / `admin` por defecto. Los modos de despliegue Docker, binario nativo y Plesk añaden por
+  defecto las cabeceras de seguridad HTTP recomendadas (HSTS, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy` y `Permissions-Policy`).

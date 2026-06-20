@@ -14,6 +14,17 @@
 
     encode gzip
 
+    # Cabeceras de seguridad de base. La CSP no se aplica aquí (se irá afinando
+    # aparte: UX-Live, Quill y TomSelect requieren validación cuidadosa de los
+    # orígenes). Solo se aplican las que no rompen ninguna funcionalidad.
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        Permissions-Policy        "geolocation=(), camera=(), microphone=(), payment=()"
+        -Server
+    }
+
     # Hub Mercure embebido (sincronización en vivo de estancias). El secreto JWT
     # lo genera el script de arranque. Sin «anonymous»: toda suscripción requiere
     # la cookie de autorización que emite la aplicación.

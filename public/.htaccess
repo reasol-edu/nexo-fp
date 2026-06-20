@@ -25,3 +25,14 @@ DirectoryIndex index.php
         RedirectMatch 307 ^/$ /index.php/
     </IfModule>
 </IfModule>
+
+# Cabeceras de seguridad de base. La CSP no se aplica aquí (se afinará aparte:
+# UX-Live, Quill y TomSelect requieren validación cuidadosa de los orígenes).
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=()"
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
