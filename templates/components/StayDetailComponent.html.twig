@@ -424,6 +424,19 @@
                                                title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                                 {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                             </a>
+                                            <form method="post"
+                                                  action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                  class="js-confirm-form"
+                                                  data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                                                <button type="button"
+                                                        class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                               text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                                        title="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:document-duplicate', {class: 'h-4 w-4'}) }}
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                     {% elseif can_manage or manageable_position_ids is not empty %}
@@ -598,6 +611,19 @@
                                                title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                                 {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                             </a>
+                                            <form method="post"
+                                                  action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                                  class="js-confirm-form"
+                                                  data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                                                <button type="button"
+                                                        class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                               text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                                        title="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:document-duplicate', {class: 'h-4 w-4'}) }}
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                     {% elseif can_manage or manageable_position_ids is not empty %}
@@ -698,6 +724,19 @@
                                            title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
                                             {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                                         </a>
+                                        <form method="post"
+                                              action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                                              class="js-confirm-form"
+                                              data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                                              data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                                            <button type="button"
+                                                    class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                                                           text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                                                    title="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}">
+                                                {{ ux_icon('heroicons:document-duplicate', {class: 'h-4 w-4'}) }}
+                                            </button>
+                                        </form>
                                         <form method="post"
                                               action="{{ path('app_stays_delete_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                               class="js-confirm-form"

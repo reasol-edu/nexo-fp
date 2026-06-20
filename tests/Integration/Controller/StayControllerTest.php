@@ -574,6 +574,87 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    // ── duplicate position ────────────────────────────────────────────────────
+
+    public function testDuplicatePositionCreatesACopyAndRedirectsToEditPage(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $level      = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $position   = $this->makePosition($stay, $workcenter);
+        $position->setDetails('Tareas de desarrollo web');
+        $position->addProgrammeYear($level);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $level, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId);
+        $token   = $crawler->filter('form[action*="/puesto/' . $positionId . '/duplicar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/duplicar', ['_token' => $token]);
+
+        $location = (string) $this->client->getResponse()->headers->get('Location');
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/estancias/' . $stayId . '/puesto/', $location);
+        self::assertStringContainsString('/editar', $location);
+
+        // La copia tiene los mismos datos que el original
+        $this->em->clear();
+        preg_match('#/puesto/([^/]+)/editar#', $location, $m);
+        $copy = $this->em->find(TrainingPosition::class, \Symfony\Component\Uid\Uuid::fromString($m[1]));
+        self::assertNotNull($copy);
+        self::assertSame($workcenter->getId()->toRfc4122(), $copy->getWorkcenter()->getId()->toRfc4122());
+        self::assertSame('Tareas de desarrollo web', $copy->getDetails());
+        self::assertCount(1, $copy->getProgrammeYears());
+        self::assertNull($copy->getStudent());
+        self::assertSame(TrainingPositionState::DRAFT, $copy->getState());
+    }
+
+    public function testDuplicatePositionWithInvalidCsrfIsDenied(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/duplicar', ['_token' => 'token-invalido']);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testDuplicatePositionDeniesTeacherWithoutPermission(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $teacher    = $this->makeTeacher('teacher.1');
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position, $teacher);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($teacher, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/duplicar', ['_token' => 'any']);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
     // ── edit position ─────────────────────────────────────────────────────────
 
     public function testEditPositionGetRendersForm(): void

@@ -658,6 +658,51 @@ class StayController extends AbstractController
         return $this->redirectToRoute('app_stays_show', ['id' => $id]);
     }
 
+    #[Route('/{id}/puesto/{positionId}/duplicar', name: 'app_stays_duplicate_position', methods: ['POST'])]
+    public function duplicatePosition(string $id, string $positionId, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $centre->getActiveAcademicYear();
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $original = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($original === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(StayVoter::MANAGE_POSITION, $original);
+
+        if (!$this->isCsrfTokenValid('duplicate_position_' . $positionId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $copy = new TrainingPosition();
+        $copy->setStay($stay)
+             ->setWorkcenter($original->getWorkcenter())
+             ->setDetails($original->getDetails());
+        foreach ($original->getProgrammeYears() as $py) {
+            $copy->addProgrammeYear($py);
+        }
+
+        $this->em->persist($copy);
+        $this->em->flush();
+        $this->realtime->publishStayChanged($stay);
+
+        $this->addFlash('success', $this->t('stays.flash.position_duplicated'));
+
+        return $this->redirectToRoute('app_stays_edit_position', ['id' => $id, 'positionId' => $copy->getId()->toRfc4122()]);
+    }
+
     #[Route('/{id}/puesto/{positionId}/editar', name: 'app_stays_edit_position')]
     public function editPosition(string $id, string $positionId, Request $request): Response
     {
