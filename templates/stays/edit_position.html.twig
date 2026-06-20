@@ -20,6 +20,56 @@
         <p class="mt-1 text-sm text-gray-500">{{ stay.name }} · {{ stay.programme.name }}</p>
     </div>
 
+    {# ── Stepper de estado ────────────────────────────────────────────────── #}
+    {% set s = position.state.value %}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-4 mb-4">
+        <nav aria-label="{{ 'stays.position.stepper.aria'|trans({}, 'stays') }}" class="flex items-center gap-1">
+
+            {# Paso 1: Borrador #}
+            <div class="flex shrink-0 items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold
+                             {{ s == 'DRAFT' ? 'bg-amber-500 text-white' : 'bg-green-500 text-white' }}">
+                    {% if s != 'DRAFT' %}{{ ux_icon('heroicons:check', {class: 'h-3.5 w-3.5'}) }}{% else %}1{% endif %}
+                </span>
+                <span class="hidden sm:inline text-xs font-medium {{ s == 'DRAFT' ? 'text-amber-700' : 'text-gray-400' }}">
+                    {{ 'stays.state.draft'|trans({}, 'stays') }}
+                </span>
+            </div>
+
+            <div class="flex-1 h-px {{ s != 'DRAFT' ? 'bg-green-300' : 'bg-gray-200' }}"></div>
+
+            {# Paso 2: Pendiente de Séneca #}
+            <div class="flex shrink-0 items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold
+                             {{ s == 'PENDING' ? 'bg-blue-500 text-white' : (s == 'DONE' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500') }}">
+                    {% if s == 'DONE' %}{{ ux_icon('heroicons:check', {class: 'h-3.5 w-3.5'}) }}{% else %}2{% endif %}
+                </span>
+                <span class="hidden sm:inline text-xs font-medium {{ s == 'PENDING' ? 'text-blue-700' : 'text-gray-400' }}">
+                    {{ 'stays.state.pending'|trans({}, 'stays') }}
+                </span>
+            </div>
+
+            <div class="flex-1 h-px {{ s == 'DONE' ? 'bg-green-300' : 'bg-gray-200' }}"></div>
+
+            {# Paso 3: Registrado en Séneca #}
+            <div class="flex shrink-0 items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold
+                             {{ s == 'DONE' ? (position.signed ? 'bg-plum-500 text-white' : 'bg-green-500 text-white') : 'bg-gray-200 text-gray-500' }}">
+                    {% if s == 'DONE' %}{{ ux_icon('heroicons:check', {class: 'h-3.5 w-3.5'}) }}{% else %}3{% endif %}
+                </span>
+                <span class="hidden sm:inline text-xs font-medium {{ s == 'DONE' ? (position.signed ? 'text-plum-700' : 'text-green-700') : 'text-gray-400' }}">
+                    {{ 'stays.state.done'|trans({}, 'stays') }}
+                    {% if s == 'DONE' and position.signed %}
+                        <span class="ml-1 inline-flex items-center rounded-full bg-plum-100 px-1.5 py-0.5 text-xs font-medium text-plum-700">
+                            {{ 'stays.position.field.signed'|trans({}, 'stays') }}
+                        </span>
+                    {% endif %}
+                </span>
+            </div>
+
+        </nav>
+    </div>
+
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
         <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
             <input type="hidden" name="_token" value="{{ csrf_token('edit_position_' ~ position.id.toRfc4122) }}">

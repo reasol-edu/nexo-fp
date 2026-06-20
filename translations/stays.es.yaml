@@ -105,6 +105,7 @@ stays.flash.deleted: 'Estancia eliminada correctamente.'
 
 stays.position.edit.title: 'Editar puesto formativo'
 stays.position.edit.save: 'Guardar cambios'
+stays.position.stepper.aria: 'Progreso del puesto formativo'
 stays.position.unassign.btn: 'Desasignar estudiante'
 stays.position.unassign.confirm: '¿Desasignar a este estudiante del puesto? El puesto quedará libre.'
 stays.position.unassign.confirm_btn: 'Sí, desasignar'
