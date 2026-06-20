@@ -231,6 +231,8 @@ En **Empresas**:
 
 ## 7 · Crear una estancia
 
+<!-- _class: tight -->
+
 ![bg right:54%](img/09_estancia_nueva.png)
 
 Una **estancia** agrupa los puestos de una enseñanza en un período:
@@ -447,6 +449,46 @@ La primera vez, el contenedor automáticamente:
 - Base de datos **PostgreSQL 16**.
 - **Caddy + Let's Encrypt**: HTTPS automático con tu dominio.
 - Disponible en `http://localhost` (o tu dominio en producción).
+
+---
+
+## Despliegue en Ubuntu Server 26.04
+
+<!-- _class: tight -->
+
+Para centros con **VPS propio** en Ubuntu 26.04 LTS: HTTPS automático, sin Docker.
+Necesita acceso SSH con sudo y un **dominio** que apunte al servidor.
+
+```bash
+sudo bash install-ubuntu.sh
+```
+
+El script solicita el **dominio**, la **contraseña de base de datos** y el **remitente de
+correo** y se encarga de todo:
+
+1. Instala y configura **PostgreSQL**.
+2. Abre el cortafuegos (puertos 80 y 443).
+3. Instala FrankenPHP como servicio del sistema (HTTPS automático con Let's Encrypt).
+4. Lanza el **worker** como servicio independiente (correos y recordatorio de firma).
+
+> Las migraciones y el admin inicial (`admin` / `admin`) se crean solos al arrancar.
+
+---
+
+## Despliegue en Plesk
+
+<!-- _class: tight -->
+
+Para centros con **VPS ya gestionado con Plesk**: sin Docker ni FrankenPHP.
+
+1. Clona el repositorio (o sube el código fuente) en el servidor.
+2. En Plesk: cambia el **directorio raíz del dominio** a la carpeta `public/` del proyecto.
+3. Configura **PHP 8.4 FPM** con las extensiones requeridas.
+4. Crea `.env.local` con `APP_SECRET`, `DATABASE_URL` y `MIGRATIONS_PATH=migrations/mysql`.
+5. Por SSH: `composer install --no-dev` y `php bin/console doctrine:migrations:migrate`.
+6. En **Tareas programadas**: lanza el worker **cada hora** para correos y recordatorios.
+
+> La sincronización en tiempo real no está disponible en este modo; la aplicación funciona con normalidad.
 
 ---
 
