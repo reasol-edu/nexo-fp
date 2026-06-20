@@ -176,6 +176,22 @@ script `start.sh` elimina la cuarentena automáticamente, pero si el problema pe
 xattr -d com.apple.quarantine frankenphp
 ```
 
+### Actualizar a una nueva versión
+
+1. Detén la aplicación (cierra la terminal o pulsa Ctrl + C si se ejecuta en primer plano).
+2. Descarga el paquete de la nueva versión desde la
+   [página de Releases](https://github.com/reasol-edu/nexo-fp/releases) y descomprímelo.
+3. Copia los archivos nuevos sobre la carpeta existente, sobreescribiendo los que ya haya.
+   El directorio `data/` (base de datos, secretos y caché) **no forma parte del paquete**, por lo que
+   se conserva automáticamente al extraer encima.
+4. Vuelve a ejecutar el script de arranque. En cada arranque se aplican automáticamente las
+   migraciones pendientes y se regenera la caché.
+
+!!! tip "Alternativa limpia"
+    Si prefieres descomprimir en una carpeta nueva, copia el directorio `data/` desde la instalación
+    anterior antes de arrancar. También puedes conservar un fichero `.env.local` si lo habías creado
+    para personalizar alguna variable.
+
 ### Variables de entorno {#variables-de-entorno-opcionales}
 
 Esta es la **referencia única** de las variables de configuración. En el binario nativo se ajustan antes
@@ -883,3 +899,20 @@ make test
 ```bash
 php vendor/bin/phpstan analyse
 ```
+
+### Actualizar desde el repositorio
+
+```bash
+# 1. Descarga los últimos cambios
+git pull
+
+# 2. Actualiza las dependencias de PHP
+composer install
+
+# 3. Aplica las migraciones pendientes
+make migrate
+```
+
+!!! tip "Revisa `.env.example` tras cada actualización"
+    Si una nueva versión añade variables de entorno, aparecen en `.env.example`. Compara con
+    tu `.env.local` y añade las que necesites.
