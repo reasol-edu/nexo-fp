@@ -71,7 +71,14 @@
             <tbody class="divide-y divide-gray-100">
                 {% for company in pagination.items %}
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td data-label="{{ 'companies.name'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 font-medium text-gray-900">{{ company.name }}</td>
+                        <td data-label="{{ 'companies.name'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 font-medium text-gray-900">
+                            {% if is_granted('company.edit', company) %}
+                                <a href="{{ path('app_companies_edit', {id: company.id}) }}"
+                                   class="hover:text-plum-700 transition-colors">{{ company.name }}</a>
+                            {% else %}
+                                {{ company.name }}
+                            {% endif %}
+                        </td>
                         <td data-label="{{ 'companies.city'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 text-gray-600">{{ company.city }}</td>
                         <td data-label="{{ 'companies.vat_number'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-500">{{ company.vatNumber }}</td>
                         <td data-label="{{ 'companies.liaisons'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4">

@@ -50,7 +50,8 @@
                 {% for teacher in pagination.items %}
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td data-label="{{ 'teachers.name'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
-                            <span class="font-medium text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
+                            <a href="{{ path('app_admin_teachers_edit', {id: teacher.id}) }}"
+                               class="font-medium text-gray-900 hover:text-plum-700 transition-colors">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</a>
                         </td>
                         <td data-label="{{ 'teachers.username'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-600">{{ teacher.username }}</td>
                         <td data-label="{{ 'teachers.email'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 text-gray-500 text-xs">{{ teacher.email ?? '—' }}</td>

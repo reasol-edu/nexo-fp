@@ -73,7 +73,8 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td data-label="{{ 'students.col.nie'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-700 font-medium">{{ student.studentId }}</td>
                             <td data-label="{{ 'students.col.name'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
-                                <span class="font-medium text-gray-900">{{ student.name.lastName }}, {{ student.name.firstName }}</span>
+                                <a href="{{ path('app_admin_students_edit', {centreId: centre.id, id: student.id}) }}"
+                                   class="font-medium text-gray-900 hover:text-plum-700 transition-colors">{{ student.name.lastName }}, {{ student.name.firstName }}</a>
                             </td>
                             <td data-label="{{ 'students.col.groups'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
                                 <div class="flex flex-wrap gap-1 sm:justify-start justify-end">
