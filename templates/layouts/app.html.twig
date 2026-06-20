@@ -182,7 +182,7 @@
                     {{ ux_icon('heroicons:user', {class: 'h-4 w-4 shrink-0'}) }}
                     {{ 'profile'|trans({}, 'navigation') }}
                 </a>
-                <a href="{{ path('app_logout') }}"
+                <a href="{{ path('app_logout', {'_csrf_token': csrf_token('logout')}) }}"
                    class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium
                           text-plum-300 hover:bg-red-500/15 hover:text-red-300 transition-colors">
                     {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-4 w-4 shrink-0'}) }}

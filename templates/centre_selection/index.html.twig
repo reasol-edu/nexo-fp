@@ -68,7 +68,7 @@
 
             {# Pie: cerrar sesión #}
             <div class="border-t border-gray-100 px-6 py-4">
-                <a href="{{ path('app_logout') }}"
+                <a href="{{ path('app_logout', {'_csrf_token': csrf_token('logout')}) }}"
                    class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition-colors">
                     {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-4 w-4'}) }}
                     {{ 'logout'|trans({}, 'centre_selection') }}
