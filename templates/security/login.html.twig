@@ -132,6 +132,9 @@
                                       focus:border-plum-500 focus:bg-white focus:ring-3 focus:ring-plum-500/20 focus:outline-none">
                         <button type="button"
                                 data-action="password-visibility#toggle"
+                                aria-label="{{ 'password_visibility.toggle'|trans({}, 'login') }}"
+                                aria-pressed="false"
+                                aria-controls="password"
                                 class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-600 transition-colors">
                             {# Ojo abierto (contraseña oculta) #}
                             <svg data-password-visibility-target="eyeOpen"

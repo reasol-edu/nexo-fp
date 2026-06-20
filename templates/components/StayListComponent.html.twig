@@ -128,8 +128,15 @@
 
         {# ── Pestañas ──────────────────────────────────────────────────────────── #}
         {% set pendingCount = this.pendingCount %}
-        <div class="flex border-b border-gray-200 mb-4">
-            <button data-action="live#action"
+        <div role="tablist"
+             aria-label="{{ 'stays.tab.aria.tablist'|trans({}, 'stays') }}"
+             class="flex border-b border-gray-200 mb-4">
+            <button role="tab"
+                    id="stays-tab-stays"
+                    aria-selected="{{ tab == 'stays' ? 'true' : 'false' }}"
+                    aria-controls="stays-panel"
+                    tabindex="{{ tab == 'stays' ? '0' : '-1' }}"
+                    data-action="live#action"
                     data-live-action-param="switchTab"
                     data-live-tab-param="stays"
                     class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors
@@ -138,7 +145,12 @@
                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 {{ 'stays.tab.stays'|trans({}, 'stays') }}
             </button>
-            <button data-action="live#action"
+            <button role="tab"
+                    id="stays-tab-pending"
+                    aria-selected="{{ tab == 'pending' ? 'true' : 'false' }}"
+                    aria-controls="stays-panel"
+                    tabindex="{{ tab == 'pending' ? '0' : '-1' }}"
+                    data-action="live#action"
                     data-live-action-param="switchTab"
                     data-live-tab-param="pending"
                     class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors inline-flex items-center gap-2
@@ -148,7 +160,8 @@
                 {{ 'stays.tab.pending'|trans({}, 'stays') }}
                 {% if pendingCount > 0 %}
                     <span class="inline-flex items-center justify-center rounded-full min-w-[1.25rem] px-1.5 py-0.5 text-xs font-semibold
-                                 {{ tab == 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600' }}">
+                                 {{ tab == 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600' }}"
+                          aria-label="{{ 'stays.tab.pending_count.aria'|trans({'%count%': pendingCount}, 'stays') }}">
                         {{ pendingCount }}
                     </span>
                 {% endif %}
@@ -156,7 +169,10 @@
         </div>
 
         {# ── Contenido ─────────────────────────────────────────────────────────── #}
-        <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
+        <div id="stays-panel"
+             role="tabpanel"
+             aria-labelledby="stays-tab-{{ tab }}"
+             data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
         {% if tab == 'stays' %}
         {% set items = this.items %}
         {% set stats = this.stats %}
@@ -489,16 +505,23 @@
                     <svg class="h-3.5 w-3.5 ml-1 inline-block text-gray-300" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 3l2-3 2 3H6zm0 10l2 3 2-3H6z"/></svg>
                 {%- endif -%}
             {%- endmacro -%}
+            {%- macro ariaSort(currentSort, col, currentDir) -%}
+                {%- if currentSort == col -%}
+                    {{- currentDir == 'ASC' ? 'ascending' : 'descending' -}}
+                {%- else -%}none{%- endif -%}
+            {%- endmacro -%}
 
             <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
                 <table class="table-cards min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                            <th aria-sort="{{ _self.ariaSort(pendingSort, 'student', pendingSortDir) }}"
+                                class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="student"
                                         class="inline-flex items-center hover:text-gray-700 transition-colors">
                                     {{ 'stays.pending.col.student'|trans({}, 'stays') }}
                                     {{ _self.sortIcon(pendingSort, 'student', pendingSortDir) }}
+                                    <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
@@ -507,21 +530,25 @@
                             <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden lg:table-cell">
                                 {{ 'stays.pending.col.group'|trans({}, 'stays') }}
                             </th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                            <th aria-sort="{{ _self.ariaSort(pendingSort, 'workcenter', pendingSortDir) }}"
+                                class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="workcenter"
                                         class="inline-flex items-center hover:text-gray-700 transition-colors">
                                     {{ 'stays.pending.col.workcenter'|trans({}, 'stays') }}
                                     {{ _self.sortIcon(pendingSort, 'workcenter', pendingSortDir) }}
+                                    <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
                             <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden xl:table-cell">
                                 {{ 'stays.pending.col.tutor'|trans({}, 'stays') }}
                             </th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                            <th aria-sort="{{ _self.ariaSort(pendingSort, 'startDate', pendingSortDir) }}"
+                                class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
                                 <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="startDate"
                                         class="inline-flex items-center hover:text-gray-700 transition-colors">
                                     {{ 'stays.pending.col.start_date'|trans({}, 'stays') }}
                                     {{ _self.sortIcon(pendingSort, 'startDate', pendingSortDir) }}
+                                    <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
                             <th class="px-4 py-3"></th>
