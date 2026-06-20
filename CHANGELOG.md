@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.7] - 2026-06-20
+
+### Added
+
+- Documentación de **despliegue continuo (CD)** en Ubuntu Server: script de actualización automática compatible con etiquetas reescritas (`git push --force`), y dos estrategias de activación — sondeo periódico con systemd timer (sin puertos extra) y webhook de GitHub (actualización instantánea al publicar una release), con instrucciones para proxy inverso sobre el puerto 443 existente
+
 ## [2.3.6] - 2026-06-20
 
 ### Added
