@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2026-06-20
+
+### Added
+
+- Soporte de despliegue en servidores Apache/Plesk: fichero `.htaccess` estándar de Symfony incluido en el repositorio (vía `symfony/apache-pack`) para que el enrutamiento funcione sin configuración adicional de servidor
+- Documentación de despliegue: secciones «Actualizar a una nueva versión» añadidas para el modo binario nativo y para desarrollo local, completando la cobertura de todos los modos de despliegue
+
+### Changed
+
+- Datos de demostración mejorados: Audiología Protésica (AP) sustituye a Cuidados Auxiliares de Enfermería; dos apellidos en todos los estudiantes y trabajadores; grupos de mañana y tarde en DAW (1ºDAW-M, 1ºDAW-T, 2ºDAW-M, 2ºDAW-T con menos alumnos por la tarde); una posición sin tutor docente para ilustrar el bloque «Pendientes»; posición con fecha próxima a vencer para la campana de notificaciones; información de contacto enriquecida en varias empresas
+
 ## [2.3.4] - 2026-06-20
 
 ### Changed
