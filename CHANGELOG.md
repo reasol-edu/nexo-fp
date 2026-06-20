@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.10] - 2026-06-20
+
+### Fixed
+
+- Seguridad: el listado de estancias aceptaba UUIDs de familia profesional y de enseñanza con formato válido pero ajenos al centro activo. La consulta los filtraba por año académico (no había leak de datos), pero servía como **oráculo de confirmación** sobre IDs concretos. Ahora `StayListComponent::mount()` valida que el UUID exista en el centro activo (vía `ProfessionalFamilyRepository::findByYearAndId` y `ProgrammeRepository::findByAcademicYearAndId`) y, si no, lo limpia. Cambiar de familia también limpia la enseñanza si ya no coincide
+
 ## [2.3.9] - 2026-06-20
 
 ### Added

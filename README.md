@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>v2.3.9</strong> &nbsp;·&nbsp;
+  <strong>v2.3.10</strong> &nbsp;·&nbsp;
   <a href="https://reasol-edu.github.io/nexo-fp/">Documentación</a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Cambios</a> &nbsp;·&nbsp;
   <a href="CONTRIBUTING.md">Contribuir</a> &nbsp;·&nbsp;
