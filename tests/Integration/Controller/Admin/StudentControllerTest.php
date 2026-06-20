@@ -6,11 +6,7 @@ namespace App\Tests\Integration\Controller\Admin;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
-use App\Entity\Group;
 use App\Entity\PersonName;
-use App\Entity\ProfessionalFamily;
-use App\Entity\Programme;
-use App\Entity\ProgrammeYear;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Tests\Integration\ControllerTestCase;
@@ -241,7 +237,7 @@ class StudentControllerTest extends ControllerTestCase
         self::assertSelectorExists('form');
     }
 
-    public function testImportPostWithValidCsvCreatesStudentsAndRedirects(): void
+    public function testImportStep1WithValidCsvRendersPreview(): void
     {
         [$admin, $centre, $year] = $this->makeCentreWithYear();
         $this->persist($admin, $centre, $year);
@@ -265,10 +261,116 @@ class StudentControllerTest extends ControllerTestCase
             '_token' => $token,
         ], ['csv' => $file]);
 
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="import_confirmed"]');
+        self::assertSelectorExists('[name="import_id"]');
+
+        @unlink($tmpFile);
+    }
+
+    public function testImportStep2ConfirmImportsStudentsAndRedirects(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId . '/estudiantes/importar');
+        $token    = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $csv = implode("\n", [
+            '"Estado Matrícula","Nº Id. Escolar","Primer apellido","Segundo apellido","Nombre","Unidad"',
+            '"","2024-001","Martinez","Lopez","Ana","DAW1A"',
+        ]);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'nexo_test_');
+        file_put_contents($tmpFile, $csv);
+        $file = new UploadedFile($tmpFile, 'students.csv', 'text/csv', null, true);
+
+        // Step 1: upload → preview
+        $previewCrawler = $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            '_token' => $token,
+        ], ['csv' => $file]);
+        @unlink($tmpFile);
+
+        self::assertResponseIsSuccessful();
+        $importId     = $previewCrawler->filter('[name="import_id"]')->first()->attr('value');
+        $confirmToken = $previewCrawler->filter('[name="_token"]')->first()->attr('value');
+
+        // Step 2: confirm → import
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            'import_confirmed' => '1',
+            'import_id'        => $importId,
+            '_token'           => $confirmToken,
+        ]);
+
         self::assertResponseRedirects();
         self::assertStringContainsString('/estudiantes', (string) $this->client->getResponse()->headers->get('Location'));
 
+        $this->em->clear();
+        $created = $this->em->getRepository(Student::class)->findOneBy(['studentId' => '2024-001']);
+        self::assertNotNull($created);
+        self::assertSame('Ana', $created->getName()->getFirstName());
+    }
+
+    public function testImportStep2WithExpiredSessionRedirectsWithError(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+
+        // Do step 1 with a valid CSV to obtain a real confirm CSRF token from the preview page
+        $crawler = $this->client->request('GET', '/admin/centros/' . $centreId . '/estudiantes/importar');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $csv     = implode("\n", [
+            '"Estado Matrícula","Nº Id. Escolar","Primer apellido","Segundo apellido","Nombre","Unidad"',
+            '"","2024-999","Perez","","Luis","DAW1A"',
+        ]);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'nexo_test_');
+        file_put_contents($tmpFile, $csv);
+        $file = new UploadedFile($tmpFile, 'students.csv', 'text/csv', null, true);
+
+        $previewCrawler = $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            '_token' => $token,
+        ], ['csv' => $file]);
         @unlink($tmpFile);
+
+        self::assertResponseIsSuccessful();
+        $confirmToken = $previewCrawler->filter('[name="_token"]')->first()->attr('value');
+
+        // Step 2 with a tampered import_id (session has the real one, this won't match)
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            'import_confirmed' => '1',
+            'import_id'        => 'non-existent-uuid-that-wont-match',
+            '_token'           => $confirmToken,
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/importar', (string) $this->client->getResponse()->headers->get('Location'));
+    }
+
+    public function testImportStep2WithInvalidCsrfIsDenied(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            'import_confirmed' => '1',
+            'import_id'        => 'some-uuid',
+            '_token'           => 'token-invalido',
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testImportPostWithNoFileRendersFormAgain(): void
@@ -302,90 +404,6 @@ class StudentControllerTest extends ControllerTestCase
         $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
             '_token' => 'token-invalido',
         ]);
-
-        self::assertResponseStatusCodeSame(403);
-    }
-
-    // ── export ────────────────────────────────────────────────────────────────
-
-    public function testExportReturnsCsvWithStudentData(): void
-    {
-        [$admin, $centre, $year] = $this->makeCentreWithYear();
-        [$family, $programme, $level, $group] = $this->makeGroupChain($year, 'DAW1A');
-        $student = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
-        $group->addStudent($student);
-        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $student);
-        $centre->setActiveAcademicYear($year);
-        $this->flush();
-        $this->loginAs($admin);
-
-        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar');
-
-        self::assertResponseIsSuccessful();
-        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
-
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('2024-001', $content);
-        self::assertStringContainsString('Martinez', $content);
-        self::assertStringContainsString('DAW1A', $content);
-    }
-
-    public function testExportAppliesSearchFilter(): void
-    {
-        [$admin, $centre, $year] = $this->makeCentreWithYear();
-        [$family, $programme, $level, $group] = $this->makeGroupChain($year, 'DAW1A');
-        $ana   = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
-        $pedro = (new Student(new PersonName('Pedro', 'Sanchez')))->setStudentId('2024-002');
-        $group->addStudent($ana);
-        $group->addStudent($pedro);
-        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $ana, $pedro);
-        $centre->setActiveAcademicYear($year);
-        $this->flush();
-        $this->loginAs($admin);
-
-        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar?search=martinez');
-
-        self::assertResponseIsSuccessful();
-
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('Martinez', $content);
-        self::assertStringNotContainsString('Sanchez', $content);
-    }
-
-    public function testExportAppliesGroupFilter(): void
-    {
-        [$admin, $centre, $year] = $this->makeCentreWithYear();
-        [$family, $programme, $level, $groupA] = $this->makeGroupChain($year, 'DAW1A');
-        $groupB = (new Group())->setName('DAW1B')->setProgrammeYear($level);
-        $ana    = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
-        $pedro  = (new Student(new PersonName('Pedro', 'Sanchez')))->setStudentId('2024-002');
-        $groupA->addStudent($ana);
-        $groupB->addStudent($pedro);
-        $this->persist($admin, $centre, $year, $family, $programme, $level, $groupA, $groupB, $ana, $pedro);
-        $centre->setActiveAcademicYear($year);
-        $this->flush();
-        $this->loginAs($admin);
-
-        $url = '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar?groupId=' . $groupA->getId()->toRfc4122();
-        $this->client->request('GET', $url);
-
-        self::assertResponseIsSuccessful();
-
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('Martinez', $content);
-        self::assertStringNotContainsString('Sanchez', $content);
-    }
-
-    public function testExportDeniesNonAdmin(): void
-    {
-        [$admin, $centre, $year] = $this->makeCentreWithYear();
-        $teacher = $this->makeTeacher('teacher.1');
-        $this->persist($admin, $centre, $year, $teacher);
-        $centre->setActiveAcademicYear($year);
-        $this->flush();
-        $this->loginAs($teacher);
-
-        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/estudiantes/exportar');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -453,14 +471,4 @@ class StudentControllerTest extends ControllerTestCase
         return (new Student(new PersonName('Test', 'Student')))->setStudentId($studentId);
     }
 
-    /** @return array{0: ProfessionalFamily, 1: Programme, 2: ProgrammeYear, 3: Group} */
-    private function makeGroupChain(AcademicYear $year, string $groupName): array
-    {
-        $family    = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
-        $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
-        $level     = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
-        $group     = (new Group())->setName($groupName)->setProgrammeYear($level);
-
-        return [$family, $programme, $level, $group];
-    }
 }

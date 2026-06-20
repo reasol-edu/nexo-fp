@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Security\Voter\EducationalCentreVoter;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/admin/centros/{centreId}/estudiantes')]
@@ -195,6 +196,39 @@ class StudentController extends AbstractController
             return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
         }
 
+        // ── Paso 2: confirmación de la vista previa ──────────────────────────
+        if ($request->request->getString('import_confirmed') === '1') {
+            if (!$this->isCsrfTokenValid('import_students_confirm', $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $importId = $request->request->getString('import_id');
+            $savedId  = $request->getSession()->get('student_import_id');
+
+            if ($importId === '' || $importId !== $savedId) {
+                $this->addFlash('error', $this->t('students.import.error.expired'));
+                return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
+            }
+
+            $path = $this->getTempImportPath($importId);
+            if (!file_exists($path)) {
+                $this->addFlash('error', $this->t('students.import.error.expired'));
+                return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
+            }
+
+            $content = (string) file_get_contents($path);
+            @unlink($path);
+            $request->getSession()->remove('student_import_id');
+
+            $groupsByName = $this->buildGroupsByName($centre);
+            $result       = $this->processCsvImport($content, $groupsByName, dryRun: false);
+            $this->em->flush();
+            $this->buildImportFlash($result);
+
+            return $this->redirectToRoute('app_admin_students_index', ['centreId' => $centre->getId()]);
+        }
+
+        // ── Paso 1: subida del fichero → vista previa ────────────────────────
         if (!$this->isCsrfTokenValid('import_students', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -206,44 +240,74 @@ class StudentController extends AbstractController
         }
 
         $content = (string) file_get_contents($file->getPathname());
-        $content = ltrim($content, "\xEF\xBB\xBF"); // strip UTF-8 BOM
+        $content = ltrim($content, "\xEF\xBB\xBF");
         if (!mb_check_encoding($content, 'UTF-8')) {
             $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
         }
 
+        // Validate headers before dry-run
+        $stream  = fopen('php://temp', 'r+');
+        fwrite($stream, $content);
+        rewind($stream);
+        $headers = fgetcsv($stream, escape: '');
+        fclose($stream);
+
+        if ($headers === false || $headers[0] === null) {
+            $this->addFlash('error', $this->t('students.import.error.empty_file'));
+            return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
+        }
+
+        $headerMap = array_flip(array_map('trim', $headers));
+        $required  = ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad'];
+        foreach ($required as $col) {
+            if (!isset($headerMap[$col])) {
+                $this->addFlash('error', $this->t('students.import.error.missing_column') . ' «' . $col . '»');
+                return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
+            }
+        }
+
+        $groupsByName = $this->buildGroupsByName($centre);
+        $result       = $this->processCsvImport($content, $groupsByName, dryRun: true);
+
+        $importId = Uuid::v4()->toRfc4122();
+        $dir      = dirname($this->getTempImportPath($importId));
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        file_put_contents($this->getTempImportPath($importId), $content);
+        $request->getSession()->set('student_import_id', $importId);
+
+        return $this->render('admin/student/import_preview.html.twig', [
+            'centre'        => $centre,
+            'importId'      => $importId,
+            'created'       => $result['created'],
+            'updated'       => $result['updated'],
+            'skipped'       => $result['skipped'],
+            'unknownGroups' => $result['unknownGroups'],
+        ]);
+    }
+
+    private function getTempImportPath(string $importId): string
+    {
+        return (string) $this->getParameter('kernel.project_dir') . '/var/tmp/student-imports/' . $importId . '.csv';
+    }
+
+    /**
+     * @param array<string, Group> $groupsByName
+     * @return array{created: int, updated: int, skipped: int, unknownGroups: array<string, true>}
+     */
+    private function processCsvImport(string $content, array $groupsByName, bool $dryRun): array
+    {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $content);
         rewind($stream);
 
-        $headers = fgetcsv($stream, escape: '');
-        if ($headers === false || $headers[0] === null) {
-            fclose($stream);
-            $this->addFlash('error', $this->t('students.import.error.empty_file'));
-            return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
-        }
+        $headers   = fgetcsv($stream, escape: '');
+        $headerMap = array_flip(array_map('trim', (array) $headers));
 
-        /** @var array<string, int> $headerMap */
-        $headerMap = array_flip(array_map('trim', $headers));
-
-        $required = ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad'];
-        foreach ($required as $col) {
-            if (!isset($headerMap[$col])) {
-                fclose($stream);
-                $this->addFlash('error', $this->t('students.import.error.missing_column') . ' «' . $col . '»');
-                return $this->redirectToRoute('app_admin_students_import', ['centreId' => $centre->getId()]);
-            }
-        }
-
-        /** @var array<string, Group> */
-        $groupsByName = [];
-        foreach ($this->groups->findByActiveYearOfCentreOrderedByName($centre) as $group) {
-            $groupsByName[mb_strtolower($group->getName())] = $group;
-        }
-
-        $created = 0;
-        $updated = 0;
-        $skipped = 0;
-        /** @var array<string, true> $unknownGroups */
+        $created       = 0;
+        $updated       = 0;
+        $skipped       = 0;
         $unknownGroups = [];
 
         while (($row = fgetcsv($stream, escape: '')) !== false) {
@@ -257,10 +321,10 @@ class StudentController extends AbstractController
             }
 
             $studentId = trim((string) ($row[$headerMap['Nº Id. Escolar']] ?? ''));
-            $firstName  = trim((string) ($row[$headerMap['Nombre']] ?? ''));
-            $lastName1  = trim((string) ($row[$headerMap['Primer apellido']] ?? ''));
-            $lastName2  = trim((string) ($row[$headerMap['Segundo apellido']] ?? ''));
-            $groupName  = trim((string) ($row[$headerMap['Unidad']] ?? ''));
+            $firstName = trim((string) ($row[$headerMap['Nombre']] ?? ''));
+            $lastName1 = trim((string) ($row[$headerMap['Primer apellido']] ?? ''));
+            $lastName2 = trim((string) ($row[$headerMap['Segundo apellido']] ?? ''));
+            $groupName = trim((string) ($row[$headerMap['Unidad']] ?? ''));
 
             if ($studentId === '' || $firstName === '' || $lastName1 === '') {
                 $skipped++;
@@ -268,46 +332,79 @@ class StudentController extends AbstractController
             }
 
             $lastName = $lastName2 !== '' ? $lastName1 . ' ' . $lastName2 : $lastName1;
+            $group    = $groupsByName[mb_strtolower($groupName)] ?? null;
 
-            $group = $groupsByName[mb_strtolower($groupName)] ?? null;
             if ($group === null && $groupName !== '') {
                 $unknownGroups[$groupName] = true;
             }
 
-            $student = $this->students->findByStudentId($studentId);
-            if ($student === null) {
-                $student = new Student(new PersonName($firstName, $lastName));
-                $student->setStudentId($studentId);
-                $this->em->persist($student);
-                $created++;
-            } else {
-                $student->setName(new PersonName($firstName, $lastName));
-                $updated++;
-            }
+            $existing = $this->students->findByStudentId($studentId);
 
-            if ($group !== null && !$student->getGroups()->contains($group)) {
-                $student->addGroup($group);
+            if (!$dryRun) {
+                if ($existing === null) {
+                    $student = new Student(new PersonName($firstName, $lastName));
+                    $student->setStudentId($studentId);
+                    $this->em->persist($student);
+                    $created++;
+                } else {
+                    $existing->setName(new PersonName($firstName, $lastName));
+                    $updated++;
+                    $student = $existing;
+                }
+                if ($group !== null && !$student->getGroups()->contains($group)) {
+                    $student->addGroup($group);
+                }
+            } else {
+                if ($existing === null) {
+                    $created++;
+                } else {
+                    $updated++;
+                }
             }
         }
 
         fclose($stream);
-        $this->em->flush();
 
+        return [
+            'created'       => $created,
+            'updated'       => $updated,
+            'skipped'       => $skipped,
+            'unknownGroups' => $unknownGroups,
+        ];
+    }
+
+    /** @param array{created: int, updated: int, skipped: int, unknownGroups: array<string, true>} $result */
+    private function buildImportFlash(array $result): array
+    {
         $summary = $this->translator->trans('students.import.flash.summary', [
-            '%created%' => $created,
-            '%updated%' => $updated,
-            '%skipped%' => $skipped,
+            '%created%' => $result['created'],
+            '%updated%' => $result['updated'],
+            '%skipped%' => $result['skipped'],
         ], 'admin');
 
-        if (!empty($unknownGroups)) {
+        if (!empty($result['unknownGroups'])) {
             $summary .= ' ' . $this->translator->trans('students.import.flash.unknown_groups', [
-                '%groups%' => implode(', ', array_map(static fn(string $g) => '«' . $g . '»', array_keys($unknownGroups))),
+                '%groups%' => implode(', ', array_map(
+                    static fn(string $g) => '«' . $g . '»',
+                    array_keys($result['unknownGroups'])
+                )),
             ], 'admin');
         }
 
         $this->addFlash('success', $summary);
 
-        return $this->redirectToRoute('app_admin_students_index', ['centreId' => $centre->getId()]);
+        return [];
+    }
+
+    /** @return array<string, Group> */
+    private function buildGroupsByName(EducationalCentre $centre): array
+    {
+        $result = [];
+        foreach ($this->groups->findByActiveYearOfCentreOrderedByName($centre) as $group) {
+            $result[mb_strtolower($group->getName())] = $group;
+        }
+
+        return $result;
     }
 
     #[Route('/{id}/eliminar', name: 'app_admin_students_delete', methods: ['POST'])]

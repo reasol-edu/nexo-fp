@@ -19,7 +19,7 @@
         <div class="px-6 py-4 border-b border-gray-100">
             <h2 class="text-base font-semibold text-gray-900">{{ 'students.import.title'|trans({}, 'admin') }}</h2>
         </div>
-        <form method="post" enctype="multipart/form-data" class="px-6 py-6 space-y-6">
+        <form method="post" enctype="multipart/form-data" data-controller="form-submit" class="px-6 py-6 space-y-6">
             <input type="hidden" name="_token" value="{{ csrf_token('import_students') }}">
 
             <div class="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3.5 text-sm text-blue-700 space-y-1">

@@ -1,0 +1,78 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'students.import.preview.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_educational_centre_index') }}" class="hover:text-plum-600 transition-colors">{{ 'educational_centre'|trans({}, 'navigation') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_students_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'students.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_students_import', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'students.import.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'students.import.preview.title'|trans({}, 'admin') }}</h1>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'students.import.preview.title'|trans({}, 'admin') }}</h2>
+        </div>
+
+        <div class="px-6 py-6 space-y-6">
+            <p class="text-sm text-gray-600">{{ 'students.import.preview.intro'|trans({}, 'admin') }}</p>
+
+            <ul class="space-y-2">
+                {% if created > 0 %}
+                <li class="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm">
+                    {{ ux_icon('heroicons:user-plus', {class: 'h-5 w-5 text-green-600 shrink-0'}) }}
+                    <span class="font-semibold text-green-800">{{ 'students.import.preview.new'|trans({'%count%': created}, 'admin') }}</span>
+                </li>
+                {% endif %}
+                {% if updated > 0 %}
+                <li class="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm">
+                    {{ ux_icon('heroicons:pencil', {class: 'h-5 w-5 text-blue-600 shrink-0'}) }}
+                    <span class="font-semibold text-blue-800">{{ 'students.import.preview.updated'|trans({'%count%': updated}, 'admin') }}</span>
+                </li>
+                {% endif %}
+                {% if skipped > 0 %}
+                <li class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm">
+                    {{ ux_icon('heroicons:minus-circle', {class: 'h-5 w-5 text-gray-400 shrink-0'}) }}
+                    <span class="text-gray-600">{{ 'students.import.preview.skipped'|trans({'%count%': skipped}, 'admin') }}</span>
+                </li>
+                {% endif %}
+            </ul>
+
+            {% if unknownGroups|length > 0 %}
+            <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3.5 text-sm text-amber-700">
+                {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 text-amber-500 shrink-0 inline-block mr-1.5 align-text-bottom'}) }}
+                {{ 'students.import.preview.unknown_groups'|trans({'%groups%': unknownGroups|keys|join(', ')}, 'admin') }}
+            </div>
+            {% endif %}
+
+            <form method="post"
+                  action="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
+                  data-controller="form-submit"
+                  class="flex items-center justify-between pt-2">
+                <input type="hidden" name="import_confirmed" value="1">
+                <input type="hidden" name="import_id" value="{{ importId }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('import_students_confirm') }}">
+
+                <a href="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
+                   class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    {{ 'students.import.preview.back'|trans({}, 'admin') }}
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}
+                    {{ 'students.import.preview.confirm'|trans({}, 'admin') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
