@@ -254,6 +254,70 @@ class ProfileControllerTest extends ControllerTestCase
         self::assertNotNull($updated->getEmailVerificationTokenExpiresAt());
     }
 
+    public function testEmailAlreadyUsedByAnotherTeacherIsRejected(): void
+    {
+        $other = $this->makeTeacher('other.teacher');
+        $other->setEmail('compartido@ejemplo.com');
+        $this->persist($other);
+
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('propio@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'     => $token,
+            'first_name' => 'Test',
+            'last_name'  => 'Teacher',
+            'email'      => 'compartido@ejemplo.com',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $body = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('ya lo usa otra cuenta', $body);
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertSame('propio@ejemplo.com', $updated->getEmail());
+        self::assertNull($updated->getPendingEmail());
+    }
+
+    public function testEmailMatchesPendingOfAnotherTeacherIsRejected(): void
+    {
+        $other = $this->makeTeacher('other.teacher');
+        $other->setEmail('actual-otro@ejemplo.com');
+        $other->setPendingEmail('reclamado@ejemplo.com');
+        $other->setEmailVerificationToken('token-existente');
+        $other->setEmailVerificationTokenExpiresAt(new \DateTimeImmutable('+1 day'));
+        $this->persist($other);
+
+        $teacher = $this->makeTeacher('teacher.1');
+        $teacher->setEmail('propio@ejemplo.com');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'     => $token,
+            'first_name' => 'Test',
+            'last_name'  => 'Teacher',
+            'email'      => 'reclamado@ejemplo.com',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $body = $this->client->getResponse()->getContent();
+        self::assertStringContainsString('ya lo usa otra cuenta', $body);
+
+        $this->em->clear();
+        $updated = $this->em->find(Teacher::class, $teacher->getId());
+        self::assertNull($updated->getPendingEmail());
+    }
+
     public function testNonAdminClearingEmailSavesDirectly(): void
     {
         $teacher = $this->makeTeacher('teacher.1');

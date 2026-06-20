@@ -35,6 +35,7 @@ profile.error.current_password_required: 'Introduce tu contraseña actual para c
 profile.error.current_password_invalid: 'La contraseña actual no es correcta.'
 profile.error.password_mismatch: 'Las contraseñas no coinciden.'
 profile.error.password_too_short: 'La contraseña debe tener al menos %min% caracteres.'
+profile.error.email_taken: 'Ese correo ya lo usa otra cuenta. Indica una dirección distinta.'
 profile.hint.password_policy: 'Mínimo %min% caracteres.'
 
 profile.flash.saved: 'Perfil guardado correctamente.'

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Repository\TeacherRepository;
 use App\Service\PasswordPolicy;
 use App\Service\ProfileMailer;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,7 @@ class ProfileController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly ProfileMailer $profileMailer,
         private readonly PasswordPolicy $passwordPolicy,
+        private readonly TeacherRepository $teachers,
     ) {}
 
     #[Route('', name: 'app_profile')]
@@ -69,6 +71,10 @@ class ProfileController extends AbstractController
 
             if ($values['email'] !== '' && !filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
                 $errors['email'] = $this->t('profile.error.email_invalid');
+            } elseif ($values['email'] !== '' && $values['email'] !== $teacher->getEmail()
+                && $this->teachers->isEmailTakenByAnother($values['email'], $teacher)
+            ) {
+                $errors['email'] = $this->t('profile.error.email_taken');
             }
 
             if (!$teacher->isExternal() && $values['new_password'] !== '') {

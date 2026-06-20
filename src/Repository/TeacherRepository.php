@@ -135,6 +135,25 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         return $this->findOneBy(['emailVerificationToken' => $token]);
     }
 
+    /**
+     * ¿Está ya este correo asignado o pendiente de verificar por otro docente?
+     * Coincidencia insensible a mayúsculas; se excluye al propio docente cuando
+     * se pasa, para que el editor de perfil pueda «refrescar» su propio correo.
+     */
+    public function isEmailTakenByAnother(string $email, ?Teacher $exclude = null): bool
+    {
+        $qb = $this->createQueryBuilder('t')
+            ->where('LOWER(t.email) = LOWER(:email) OR LOWER(t.pendingEmail) = LOWER(:email)')
+            ->setParameter('email', $email)
+            ->setMaxResults(1);
+
+        if ($exclude !== null) {
+            $qb->andWhere('t.id != :selfId')->setParameter('selfId', $exclude->getId(), 'uuid');
+        }
+
+        return $qb->getQuery()->getOneOrNullResult() !== null;
+    }
+
     public function findByPasswordResetToken(string $token): ?Teacher
     {
         return $this->findOneBy(['passwordResetToken' => $token]);
