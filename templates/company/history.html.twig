@@ -30,7 +30,10 @@
                 <p class="text-sm text-gray-400">{{ 'company.history.empty'|trans({}, 'companies') }}</p>
             </div>
         {% else %}
-            {% set html_fields = ['contactInformation', 'exceptionalCircumstances'] %}
+            {# Solo los campos que pasan por html_sanitizer al guardarse pueden renderizarse
+               con |raw. «exceptionalCircumstances» es un textarea de texto plano, así que
+               se queda fuera para evitar XSS almacenado. #}
+            {% set html_fields = ['contactInformation'] %}
             <ul class="divide-y divide-gray-100">
                 {% for audit in audits %}
                     <li class="px-6 py-5 space-y-3">
