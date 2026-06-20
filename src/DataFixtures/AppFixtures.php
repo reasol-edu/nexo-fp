@@ -264,9 +264,9 @@ class AppFixtures extends Fixture
         [$py1daw, $py2daw] = $this->makeProgrammeYears($manager, $daw, 'DAW');
         $programmes[] = $daw; $pyears[] = $py1daw; $pyears[] = $py2daw;
 
-        $caue = $this->makeProgramme($manager, 'CFGM Cuidados Auxiliares de Enfermería', $san, $year, $teachers['manuel.perez']);
-        [$py1caue, $py2caue] = $this->makeProgrammeYears($manager, $caue, 'CAUE');
-        $programmes[] = $caue; $pyears[] = $py1caue; $pyears[] = $py2caue;
+        $ap = $this->makeProgramme($manager, 'CFGS Audiología Protésica', $san, $year, $teachers['manuel.perez']);
+        [$py1ap, $py2ap] = $this->makeProgrammeYears($manager, $ap, 'AP');
+        $programmes[] = $ap; $pyears[] = $py1ap; $pyears[] = $py2ap;
 
         $hb = $this->makeProgramme($manager, 'CFGS Higiene Bucodental', $san, $year, $teachers['roberto.guerrero']);
         [$py1hb, $py2hb] = $this->makeProgrammeYears($manager, $hb, 'HB');

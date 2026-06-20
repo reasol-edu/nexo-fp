@@ -87,7 +87,7 @@ El resto de docentes usan la contraseña **`ejemplo`**. Por ejemplo:
 |---|---|---|
 | Informática y Comunicaciones | CFGM Sistemas Microinformáticos y Redes | SMR |
 | Informática y Comunicaciones | CFGS Desarrollo de Aplicaciones Web | DAW |
-| Sanidad | CFGM Cuidados Auxiliares de Enfermería | CAUE |
+| Sanidad | CFGS Audiología Protésica | AP |
 | Sanidad | CFGS Higiene Bucodental | HB |
 
 ### Docentes
@@ -100,7 +100,7 @@ El resto de docentes usan la contraseña **`ejemplo`**. Por ejemplo:
 | `isabel.lozano` | Isabel Lozano Herrera | Jefe de familia — Sanidad |
 | `maria.garcia` | María Dolores García Fernández | Coordinadora — SMR |
 | `diego.romero` | Diego Romero Vega | Coordinador — DAW |
-| `manuel.perez` | Manuel Pérez Blanco | Coordinador — CAUE |
+| `manuel.perez` | Manuel Pérez Blanco | Coordinador — Audiología Protésica |
 | `roberto.guerrero` | Roberto Guerrero Campos | Coordinador — Higiene Bucodental |
 | `beatriz.alonso` | Beatriz Alonso Serrano | Docente de enlace (empresas 1–6) |
 | `rodrigo.fuentes` | Rodrigo Fuentes Parra | Docente de enlace (empresas 1–6) |
