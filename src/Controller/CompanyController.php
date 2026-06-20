@@ -15,7 +15,7 @@ use App\Repository\TeacherRepository;
 use App\Repository\WorkcenterRepository;
 use App\Repository\WorkerRepository;
 use App\Security\Voter\CompanyVoter;
-use App\Service\CsvExporter;
+use App\Service\XlsxExporter;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,7 +40,7 @@ class CompanyController extends AbstractController
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
         private readonly ValidatorInterface $validator,
-        private readonly CsvExporter $csvExporter,
+        private readonly XlsxExporter $xlsxExporter,
         #[Autowire(service: 'html_sanitizer.sanitizer.app.company_contact')]
         private readonly HtmlSanitizerInterface $contactSanitizer,
     ) {}
@@ -184,8 +184,8 @@ class CompanyController extends AbstractController
             ];
         }
 
-        return $this->csvExporter->streamResponse(
-            'empresas-' . $centre->getCode() . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.csv',
+        return $this->xlsxExporter->createResponse(
+            'empresas-' . $centre->getCode() . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
             [
                 $this->t('company.field.name'),
                 $this->t('company.field.vat_number'),

@@ -6,7 +6,7 @@ ui.cancel: 'Cancelar'
 ui.close: 'Cerrar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
-ui.export_started: 'Generando el archivo CSV…'
+ui.export_started: 'Generando el archivo Excel…'
 
 # Perfil del usuario
 profile.title: 'Mi perfil'

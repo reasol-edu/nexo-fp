@@ -17,7 +17,7 @@ use App\Repository\StayRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
-use App\Service\CsvExporter;
+use App\Service\XlsxExporter;
 use App\Service\PdfService;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
@@ -51,7 +51,7 @@ class StayController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
         private readonly PdfService $pdf,
-        private readonly CsvExporter $csvExporter,
+        private readonly XlsxExporter $xlsxExporter,
         private readonly StayNotifier $notifier,
         private readonly StayRealtimeNotifier $realtime,
         private readonly Authorization $mercureAuthorization,
@@ -485,8 +485,8 @@ class StayController extends AbstractController
 
         $slug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '-', $stay->getName()));
 
-        return $this->csvExporter->streamResponse(
-            'estancia-' . $slug . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.csv',
+        return $this->xlsxExporter->createResponse(
+            'estancia-' . $slug . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
             [
                 $this->t('stays.show.col.student'),
                 $this->t('stays.export.col.nie'),

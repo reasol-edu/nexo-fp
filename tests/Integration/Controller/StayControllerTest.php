@@ -1196,7 +1196,7 @@ class StayControllerTest extends ControllerTestCase
 
     // ── export ────────────────────────────────────────────────────────────────
 
-    public function testExportReturnsCsvWithPositionData(): void
+    public function testExportReturnsXlsxWithPositionData(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
@@ -1214,12 +1214,44 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('GET', '/estancias/' . $stay->getId()->toRfc4122() . '/exportar');
 
         self::assertResponseIsSuccessful();
-        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertResponseHeaderSame(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        self::assertStringContainsString('.xlsx', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
 
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('Empresa Test S.L.', $content);
-        self::assertStringContainsString('Martinez', $content);
-        self::assertStringContainsString('2024-001', $content);
+        $values = $this->parseXlsxResponse();
+        self::assertContains('Empresa Test S.L.', $values);
+        self::assertContains('2024-001', $values);
+    }
+
+    /** @return list<string> all non-empty cell values from the first sheet */
+    private function parseXlsxResponse(): array
+    {
+        $tmpFile = sys_get_temp_dir() . '/' . uniqid('nexo_test_xlsx_', true) . '.xlsx';
+        file_put_contents($tmpFile, $this->getStreamedContent());
+
+        try {
+            $reader = new \OpenSpout\Reader\XLSX\Reader();
+            $reader->open($tmpFile);
+            $values = [];
+            foreach ($reader->getSheetIterator() as $sheet) {
+                foreach ($sheet->getRowIterator() as $row) {
+                    foreach ($row->cells as $cell) {
+                        $v = $cell->getValue();
+                        if ($v !== '' && $v !== null) {
+                            $values[] = (string) $v;
+                        }
+                    }
+                }
+                break;
+            }
+            $reader->close();
+        } finally {
+            @unlink($tmpFile);
+        }
+
+        return $values;
     }
 
     public function testExportDeniedToUnrelatedTeacher(): void

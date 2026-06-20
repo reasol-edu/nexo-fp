@@ -419,7 +419,7 @@ class CompanyControllerTest extends ControllerTestCase
 
     // ── export ───────────────────────────────────────────────────────────────
 
-    public function testExportReturnsCsvWithCompanyData(): void
+    public function testExportReturnsXlsxWithCompanyData(): void
     {
         $centre  = $this->makeCentre('41000001');
         $teacher = $this->makeAdmin('admin.1');
@@ -437,15 +437,19 @@ class CompanyControllerTest extends ControllerTestCase
         $this->client->request('GET', '/empresas/exportar');
 
         self::assertResponseIsSuccessful();
-        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertResponseHeaderSame(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
         self::assertStringContainsString('attachment', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertStringContainsString('.xlsx', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
 
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('Empresa S.L.', $content);
-        self::assertStringContainsString('B12345678', $content);
-        self::assertStringContainsString('Serrano, Carmen', $content);
-        self::assertStringContainsString('99999999R', $content);
-        self::assertStringContainsString('Administradora', $content);
+        $values = $this->parseXlsxResponse();
+        self::assertContains('Empresa S.L.', $values);
+        self::assertContains('B12345678', $values);
+        self::assertContains('Serrano, Carmen', $values);
+        self::assertContains('99999999R', $values);
+        self::assertContains('Administradora', $values);
     }
 
     public function testExportAppliesSearchFilter(): void
@@ -461,9 +465,38 @@ class CompanyControllerTest extends ControllerTestCase
 
         self::assertResponseIsSuccessful();
 
-        $content = $this->getStreamedContent();
-        self::assertStringContainsString('Alfa Tecnología', $content);
-        self::assertStringNotContainsString('Beta Logística', $content);
+        $values = $this->parseXlsxResponse();
+        self::assertContains('Alfa Tecnología', $values);
+        self::assertNotContains('Beta Logística', $values);
+    }
+
+    /** @return list<string> all non-empty cell values from the first sheet */
+    private function parseXlsxResponse(): array
+    {
+        $tmpFile = sys_get_temp_dir() . '/' . uniqid('nexo_test_xlsx_', true) . '.xlsx';
+        file_put_contents($tmpFile, $this->getStreamedContent());
+
+        try {
+            $reader = new \OpenSpout\Reader\XLSX\Reader();
+            $reader->open($tmpFile);
+            $values = [];
+            foreach ($reader->getSheetIterator() as $sheet) {
+                foreach ($sheet->getRowIterator() as $row) {
+                    foreach ($row->cells as $cell) {
+                        $v = $cell->getValue();
+                        if ($v !== '' && $v !== null) {
+                            $values[] = (string) $v;
+                        }
+                    }
+                }
+                break;
+            }
+            $reader->close();
+        } finally {
+            @unlink($tmpFile);
+        }
+
+        return $values;
     }
 
     public function testExportRequiresSectionPermission(): void

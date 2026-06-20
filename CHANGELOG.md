@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Exportación de listados a Excel (`.xlsx`): los botones de «Exportar» en empresas y en la pantalla de estancia generan ahora un fichero Excel real en lugar de CSV; la fila de cabecera aparece en negrita y el fichero es directamente abrible en Excel, Numbers y LibreOffice Calc sin pasos adicionales
+
 ### Changed
 
 - Importación de estudiantes en dos pasos: al subir el CSV ahora se muestra una pantalla de vista previa con el recuento de altas, actualizaciones y omisiones (y aviso de grupos no encontrados) antes de confirmar; el fichero se guarda temporalmente y se enlaza a la sesión mediante un UUID para evitar doble envío o manipulación
+- Aviso de exportación cambiado de «Generando el archivo CSV…» a «Generando el archivo Excel…»
 
 ## [2.3.2] - 2026-06-19
 
