@@ -1,4 +1,25 @@
 {% import 'components/_pagination_live.html.twig' as pager %}
+
+{# Macros de cabecera ordenable. Se definen al inicio del template (no dentro
+   de la rama {% else %} del tab) para que su ámbito sea claro al lector y no
+   parezca que solo existen en una rama. Twig las publica globalmente. #}
+{%- macro sortIcon(currentSort, col, currentDir) -%}
+    {%- if currentSort == col -%}
+        {%- if currentDir == 'ASC' -%}
+            <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 3l4 6H4z"/></svg>
+        {%- else -%}
+            <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 13l4-6H4z"/></svg>
+        {%- endif -%}
+    {%- else -%}
+        <svg class="h-3.5 w-3.5 ml-1 inline-block text-gray-300" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 3l2-3 2 3H6zm0 10l2 3 2-3H6z"/></svg>
+    {%- endif -%}
+{%- endmacro -%}
+{%- macro ariaSort(currentSort, col, currentDir) -%}
+    {%- if currentSort == col -%}
+        {{- currentDir == 'ASC' ? 'ascending' : 'descending' -}}
+    {%- else -%}none{%- endif -%}
+{%- endmacro -%}
+
 <div {{ attributes.defaults(stimulus_controller('filter-persist', {
     centreId: centre.id.toRfc4122,
     active: this.hasActiveFilters,
@@ -494,23 +515,6 @@
         {% else %}
 
             {# ── Tabla — pantallas medianas y grandes ─────────────────────────── #}
-            {%- macro sortIcon(currentSort, col, currentDir) -%}
-                {%- if currentSort == col -%}
-                    {%- if currentDir == 'ASC' -%}
-                        <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 3l4 6H4z"/></svg>
-                    {%- else -%}
-                        <svg class="h-3.5 w-3.5 ml-1 inline-block text-plum-600" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 13l4-6H4z"/></svg>
-                    {%- endif -%}
-                {%- else -%}
-                    <svg class="h-3.5 w-3.5 ml-1 inline-block text-gray-300" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 3l2-3 2 3H6zm0 10l2 3 2-3H6z"/></svg>
-                {%- endif -%}
-            {%- endmacro -%}
-            {%- macro ariaSort(currentSort, col, currentDir) -%}
-                {%- if currentSort == col -%}
-                    {{- currentDir == 'ASC' ? 'ascending' : 'descending' -}}
-                {%- else -%}none{%- endif -%}
-            {%- endmacro -%}
-
             <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
                 <table class="table-cards min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
