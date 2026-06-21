@@ -514,6 +514,28 @@
             </div>
         {% else %}
 
+            {# ── Barra de acciones ────────────────────────────────────────────── #}
+            <div class="flex items-center justify-end mb-3">
+                <a href="{{ path('app_stays_export_pending', {
+                        search: search,
+                        familyId: familyId,
+                        programmeId: programmeId,
+                        showCurrent: showCurrent ? '1' : '0',
+                        showFuture: showFuture ? '1' : '0',
+                        showPast: showPast ? '1' : '0',
+                    }) }}"
+                   data-controller="download-feedback"
+                   data-download-feedback-message-value="{{ 'ui.export_started'|trans|e('html_attr') }}"
+                   data-action="download-feedback#show"
+                   class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2
+                          text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                   title="{{ 'stays.export_pending.btn'|trans({}, 'stays') }}"
+                   aria-label="{{ 'stays.export_pending.btn'|trans({}, 'stays') }}">
+                    {{ ux_icon('heroicons:table-cells', {class: 'h-4 w-4'}) }}
+                    {{ 'stays.export_pending.btn'|trans({}, 'stays') }}
+                </a>
+            </div>
+
             {# ── Tabla — pantallas medianas y grandes ─────────────────────────── #}
             <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
                 <table class="table-cards min-w-full divide-y divide-gray-200 text-sm">

@@ -442,6 +442,90 @@ class StayController extends AbstractController
         ], $filename);
     }
 
+    #[Route('/exportar-pendientes', name: 'app_stays_export_pending')]
+    public function exportPending(Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $year = $this->tenant->getViewYear($centre);
+        if ($year === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $search      = mb_substr($request->query->getString('search'), 0, 255);
+        $familyId    = $request->query->getString('familyId');
+        $programmeId = $request->query->getString('programmeId');
+        $showCurrent = $request->query->getBoolean('showCurrent', true);
+        $showFuture  = $request->query->getBoolean('showFuture', true);
+        $showPast    = $request->query->getBoolean('showPast', true);
+
+        $periods = [];
+        if ($showCurrent) {
+            $periods[] = 'current';
+        }
+        if ($showFuture) {
+            $periods[] = 'future';
+        }
+        if ($showPast) {
+            $periods[] = 'past';
+        }
+        if ($periods === []) {
+            $periods = ['current', 'future', 'past'];
+        }
+
+        $user   = $this->getUser();
+        $viewer = $user instanceof Teacher ? $user : null;
+
+        $query = $this->positions->createPendingSignaturesQuery(
+            $year, $search, $familyId, $programmeId,
+            $periods, 'startDate', 'ASC', $viewer,
+        );
+
+        $rows = [];
+        foreach ($query->toIterable() as $position) {
+            $student    = $position->getStudent();
+            $stay       = $position->getStay();
+            $workcenter = $position->getWorkcenter();
+            $tutor      = $position->getAcademicTutor();
+
+            $groups = implode(', ', array_map(
+                static fn ($py): string => $py->getName(),
+                $position->getProgrammeYears()->toArray(),
+            ));
+
+            $rows[] = [
+                $student?->getName()->getLastName() ?? '',
+                $student?->getName()->getFirstName() ?? '',
+                $student?->getStudentId() ?? '',
+                $stay->getName(),
+                $stay->getStartDate()->format('d/m/Y'),
+                $groups,
+                $workcenter?->getCompany()->getName() ?? '',
+                $workcenter?->getName() ?? '',
+                $tutor !== null ? $tutor->getName()->getLastName() . ', ' . $tutor->getName()->getFirstName() : '',
+            ];
+        }
+
+        return $this->xlsxExporter->createResponse(
+            'puestos-pendientes-firma-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
+            [
+                $this->t('stays.export_pending.col.last_name'),
+                $this->t('stays.export_pending.col.first_name'),
+                $this->t('stays.export.col.nie'),
+                $this->t('stays.pending.col.stay'),
+                $this->t('stays.pending.col.start_date'),
+                $this->t('stays.pending.col.group'),
+                $this->t('stays.export.col.company'),
+                $this->t('stays.export.col.workcenter'),
+                $this->t('stays.pending.col.tutor'),
+            ],
+            $rows,
+        );
+    }
+
     #[Route('/{id}/exportar', name: 'app_stays_export')]
     public function export(string $id): Response
     {

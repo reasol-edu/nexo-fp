@@ -222,7 +222,7 @@ stays.report.company_vat: 'CIF'
 stays.report.representative: 'Repr.'
 stays.report.national_id: 'DNI'
 
-# Exportación CSV
+# Exportación CSV (por estancia)
 stays.export.btn: 'Exportar CSV'
 stays.export.col.nie: 'NIE'
 stays.export.col.company: 'Empresa'
@@ -230,3 +230,8 @@ stays.export.col.workcenter: 'Centro de trabajo'
 stays.export.col.city: 'Localidad'
 stays.export.yes: 'Sí'
 stays.export.no: 'No'
+
+# Exportación de puestos pendientes de firma
+stays.export_pending.btn: 'Exportar Excel'
+stays.export_pending.col.last_name: 'Apellidos'
+stays.export_pending.col.first_name: 'Nombre'
