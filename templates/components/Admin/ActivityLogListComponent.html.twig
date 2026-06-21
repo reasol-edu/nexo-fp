@@ -1,0 +1,242 @@
+{% import 'components/_sort_header.html.twig' as sort %}
+{% import 'components/_pagination_live.html.twig' as pager %}
+
+{% set pagination = this.pagination %}
+{% set hasFilters = dateFrom is not empty or dateTo is not empty or userId is not empty
+    or centreId is not empty or yearId is not empty or actionType is not empty %}
+
+<div {{ attributes }}>
+
+    {# ── Panel de filtros ──────────────────────────────────────────────────── #}
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 space-y-3">
+
+        {# Fila 1: rango temporal + accesos rápidos #}
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="flex flex-col gap-1 min-w-44">
+                <label class="text-xs font-medium text-gray-500">Desde</label>
+                <input type="datetime-local"
+                       data-model="dateFrom"
+                       value="{{ dateFrom }}"
+                       class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                              focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+            </div>
+            <div class="flex flex-col gap-1 min-w-44">
+                <label class="text-xs font-medium text-gray-500">Hasta</label>
+                <input type="datetime-local"
+                       data-model="dateTo"
+                       value="{{ dateTo }}"
+                       class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                              focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+            </div>
+            <div class="flex flex-wrap gap-1.5 pb-0.5">
+                <button type="button" data-action="live#action" data-live-action-param="quickRange" data-live-range-param="last_hour"
+                        class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600
+                               hover:bg-plum-50 hover:border-plum-200 hover:text-plum-700 transition-colors">
+                    Última hora
+                </button>
+                <button type="button" data-action="live#action" data-live-action-param="quickRange" data-live-range-param="last_24h"
+                        class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600
+                               hover:bg-plum-50 hover:border-plum-200 hover:text-plum-700 transition-colors">
+                    Últimas 24 h
+                </button>
+                <button type="button" data-action="live#action" data-live-action-param="quickRange" data-live-range-param="last_week"
+                        class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600
+                               hover:bg-plum-50 hover:border-plum-200 hover:text-plum-700 transition-colors">
+                    Última semana
+                </button>
+                <button type="button" data-action="live#action" data-live-action-param="quickRange" data-live-range-param="last_month"
+                        class="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600
+                               hover:bg-plum-50 hover:border-plum-200 hover:text-plum-700 transition-colors">
+                    Último mes
+                </button>
+            </div>
+        </div>
+
+        {# Fila 2: usuario, centro, curso, tipo #}
+        <div class="flex flex-wrap items-end gap-3">
+
+            {# Usuario (autocomplete) #}
+            <div class="flex flex-col gap-1 min-w-56 flex-1">
+                <label class="text-xs font-medium text-gray-500">Usuario</label>
+                {% set selectedUser = this.selectedUser %}
+                <select data-model="userId"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
+                        data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="Buscar usuario…"
+                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors w-full">
+                    <option value="">Todos</option>
+                    {% if selectedUser is not null %}
+                        <option value="{{ userId }}" selected>
+                            {{ selectedUser.name.lastName }}, {{ selectedUser.name.firstName }} ({{ selectedUser.username }})
+                        </option>
+                    {% endif %}
+                </select>
+            </div>
+
+            {# Centro #}
+            <div class="flex flex-col gap-1 min-w-44">
+                <label class="text-xs font-medium text-gray-500">Centro</label>
+                <select data-model="centreId"
+                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+                    <option value="">Todos</option>
+                    {% for centre in this.centres %}
+                        <option value="{{ centre.id.toRfc4122 }}" {{ centreId == centre.id.toRfc4122 ? 'selected' }}>
+                            {{ centre.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Curso (dependiente del centro) #}
+            {% set years = this.yearsForSelectedCentre %}
+            <div class="flex flex-col gap-1 min-w-36">
+                <label class="text-xs font-medium text-gray-500">Curso</label>
+                <select data-model="yearId"
+                        {{ centreId is empty or years is empty ? 'disabled' }}
+                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors
+                               disabled:opacity-50 disabled:cursor-not-allowed">
+                    <option value="">Todos</option>
+                    {% for year in years %}
+                        <option value="{{ year.id.toRfc4122 }}" {{ yearId == year.id.toRfc4122 ? 'selected' }}>
+                            {{ year.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Tipo de acción #}
+            <div class="flex flex-col gap-1 min-w-44">
+                <label class="text-xs font-medium text-gray-500">Tipo de acción</label>
+                <select data-model="actionType"
+                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
+                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
+                    <option value="">Todos</option>
+                    {% for type in this.distinctActionTypes %}
+                        <option value="{{ type }}" {{ actionType == type ? 'selected' }}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Spinner + limpiar #}
+            <div class="flex items-center gap-2 pb-0.5">
+                <svg data-loading class="hidden h-4 w-4 text-plum-500 animate-spin shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                {% if hasFilters %}
+                    <button type="button" data-action="live#action" data-live-action-param="clearFilters"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs
+                                   font-medium text-gray-600 hover:bg-gray-100 transition-colors shrink-0">
+                        {{ ux_icon('heroicons:x-mark', {class: 'h-3.5 w-3.5'}) }}
+                        Limpiar filtros
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ── Tabla / tarjetas ──────────────────────────────────────────────────── #}
+    <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
+
+    {% if pagination.totalItems == 0 %}
+        <div class="px-6 py-16 text-center">
+            {{ ux_icon('heroicons:clipboard-document-list', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
+            <p class="text-sm text-gray-500">
+                {{ hasFilters ? 'No hay entradas que coincidan con los filtros.' : 'El registro de actividad está vacío.' }}
+            </p>
+        </div>
+    {% else %}
+        <div class="overflow-x-auto">
+        <table class="table-cards w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-100 bg-gray-50">
+                    {{ sort.th('Fecha / hora', 'createdAt', this.sort, this.sortDir) }}
+                    {{ sort.th('IP', 'ip', this.sort, this.sortDir) }}
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario activo</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Suplantado por</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Centro / Curso</th>
+                    {{ sort.th('Tipo de acción', 'actionType', this.sort, this.sortDir) }}
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Datos</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for entry in pagination.items %}
+                    {% set actionPrefix = entry.actionType|split('.')|first %}
+                    {% set badgeClass = actionPrefix == 'session'
+                        ? 'bg-blue-50 text-blue-700 ring-blue-600/20'
+                        : (actionPrefix == 'http'
+                            ? 'bg-gray-100 text-gray-600 ring-gray-500/20'
+                            : 'bg-plum-50 text-plum-700 ring-plum-600/20') %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+
+                        <td data-label="Fecha / hora" class="px-6 py-3 whitespace-nowrap text-xs text-gray-700 font-mono">
+                            {{ entry.createdAt|date('d/m/Y H:i:s') }}
+                        </td>
+
+                        <td data-label="IP" class="px-6 py-3 whitespace-nowrap font-mono text-xs text-gray-600">
+                            {{ entry.ip }}
+                        </td>
+
+                        <td data-label="Usuario activo" class="px-6 py-3">
+                            {% if entry.activeUser is not null %}
+                                <span class="font-medium text-gray-900 text-xs">
+                                    {{ entry.activeUser.name.lastName }}, {{ entry.activeUser.name.firstName }}
+                                </span>
+                                <div class="text-xs text-gray-400 font-mono">{{ entry.activeUser.username }}</div>
+                            {% else %}
+                                <span class="text-gray-400 text-xs">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td data-label="Suplantado por" class="px-6 py-3">
+                            {% if entry.realUser is not null %}
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                    {{ ux_icon('heroicons:user-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                                    {{ entry.realUser.username }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-300 text-xs">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td data-label="Centro / Curso" class="px-6 py-3">
+                            {% if entry.academicYear is not null %}
+                                <div class="text-xs text-gray-700 font-medium leading-tight">{{ entry.academicYear.educationalCentre.name }}</div>
+                                <div class="text-xs text-gray-400">{{ entry.academicYear.name }}</div>
+                            {% else %}
+                                <span class="text-gray-300 text-xs">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td data-label="Tipo de acción" class="px-6 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-mono font-medium ring-1 ring-inset {{ badgeClass }}">
+                                {{ entry.actionType }}
+                            </span>
+                        </td>
+
+                        <td data-label="Datos" class="px-6 py-3">
+                            {% if entry.data is not null %}
+                                <code class="block max-w-xs truncate text-xs text-gray-500 font-mono"
+                                      title="{{ entry.data|json_encode }}">
+                                    {{ entry.data|json_encode }}
+                                </code>
+                            {% else %}
+                                <span class="text-gray-300 text-xs">—</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        {{ pager.nav(pagination) }}
+    {% endif %}
+    </div>
+</div>

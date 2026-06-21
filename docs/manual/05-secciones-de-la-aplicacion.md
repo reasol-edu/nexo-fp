@@ -238,3 +238,55 @@ Sección exclusiva para administradores globales. Permite:
   administrador, tipo de autenticación).
 - Gestionar **centros educativos**: crearlos, asignarles el equipo directivo y gestionar sus cursos
   académicos.
+- Consultar el **registro de actividad** (ver sección siguiente).
+- Configurar los **ajustes globales** de la plataforma (notificaciones, tamaño de página…).
+
+### Registro de actividad
+
+El registro de actividad es una herramienta de auditoría que guarda un historial de las acciones
+realizadas en la plataforma: inicios y cierres de sesión, suplantaciones de usuario, operaciones de
+escritura (crear, editar, eliminar) y exportaciones de datos.
+
+Para acceder, pulsa la tarjeta **Registro de actividad** en el panel de Administración.
+
+#### Qué se registra
+
+| Categoría | Ejemplos |
+|-----------|---------|
+| **Sesión** | Inicio de sesión, cierre de sesión, inicio/fin de suplantación de usuario |
+| **Escrituras** | Cualquier formulario enviado: crear una estancia, editar un estudiante, importar docentes… |
+| **Exportaciones** | Descarga de datos a Excel o JSON |
+
+Cada entrada almacena la **fecha y hora exacta**, la **dirección IP** del usuario, el **usuario que
+realizó la acción** y, si hay suplantación activa, el **usuario que la ejecutó realmente**. También
+se guarda el **centro educativo y curso académico** sobre los que se actuó, cuando corresponde, y un
+campo de **datos adicionales** con información específica de la acción (ruta, método HTTP y código de
+respuesta).
+
+#### Filtros disponibles
+
+El listado se puede acotar por:
+
+- **Rango temporal** — introduce fechas de inicio y fin manualmente o usa los accesos rápidos
+  («Última hora», «Últimas 24 h», «Última semana», «Último mes»).
+- **Usuario** — busca por nombre o nombre de usuario; el campo autocompleta mientras escribes.
+- **Centro educativo** — muestra solo las acciones relacionadas con un centro concreto.
+- **Curso académico** — disponible una vez seleccionado el centro.
+- **Tipo de acción** — filtra por una acción específica (`session.login`, `app_stays_new`…).
+
+Las columnas **Fecha / hora**, **IP** y **Tipo de acción** son ordenables haciendo clic en su
+cabecera.
+
+#### Retención y privacidad
+
+Las entradas se conservan durante **90 días** (configurable con la variable `APP_LOG_RETENTION_DAYS`).
+Pasado ese plazo, una tarea automática semanal las elimina. Si se elimina un usuario o un curso
+académico, sus referencias en el registro se anulan pero la entrada permanece.
+
+!!! info "Solo para administradores globales"
+    El registro de actividad es visible únicamente para administradores globales; los administradores
+    de centro no tienen acceso a él.
+
+!!! tip "Activar o desactivar el registro"
+    El registro está activado por defecto. Puede desactivarse mediante la variable de entorno
+    `APP_LOG=false` (ver [Referencia de variables](09-despliegue.md#referencia-de-variables-de-entorno)).

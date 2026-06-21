@@ -213,6 +213,9 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `MERCURE_URL` | URL interna que usa la aplicación para publicar avisos (servidor→hub) | *(según el modo)* |
 | `MERCURE_PUBLIC_URL` | URL pública (navegador→hub), relativa al mismo origen | `/.well-known/mercure` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes) | `false` |
+| `APP_LOG` | Activar el [registro de actividad](05-secciones-de-la-aplicacion.md#registro-de-actividad). En el binario nativo es recomendable desactivarlo si no se necesita auditoría | `true` |
+| `APP_LOG_RETENTION_DAYS` | Días que se conservan las entradas del registro antes de la limpieza semanal automática | `90` |
+| `SYMFONY_TRUSTED_PROXIES` | IPs del proxy inverso desde el que recibe peticiones la aplicación (p. ej. nginx, Caddy). Necesario para que el registro muestre la IP real del usuario. Déjalo sin definir si no usas proxy | *(sin definir)* |
 
 ### Sincronización en vivo (Mercure) {#sincronizacion-en-vivo-mercure}
 

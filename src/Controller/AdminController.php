@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\ActivityLogRepository;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,6 +16,7 @@ class AdminController extends AbstractController
     public function __construct(
         private readonly TeacherRepository $teachers,
         private readonly EducationalCentreRepository $centres,
+        private readonly ActivityLogRepository $activityLogs,
     ) {}
 
     #[Route('/admin', name: 'app_admin')]
@@ -26,6 +28,7 @@ class AdminController extends AbstractController
                 'teachers_active' => $this->teachers->countActive(),
                 'teachers_admin'  => $this->teachers->countAdmins(),
                 'centres_total'   => $this->centres->countAll(),
+                'logs_today'      => $this->activityLogs->countToday(),
             ],
         ]);
     }

@@ -544,6 +544,29 @@ Comandos de consola:
 
 ---
 
+## Registro de actividad
+
+<!-- _class: tight -->
+
+**Auditoría completa** de lo que ocurre en la plataforma — accesible desde Administración.
+
+| Se registra | Ejemplos |
+|---|---|
+| 🔐 Sesión | Inicio/cierre de sesión, suplantación de usuario |
+| ✏️ Escrituras | Crear estancias, editar estudiantes, importar docentes… |
+| 📥 Exportaciones | Descargas a Excel o JSON |
+
+Cada entrada incluye: **fecha/hora exacta · IP del usuario · usuario activo · usuario real**
+(si hay suplantación) · **centro y curso** afectados · datos adicionales de la acción.
+
+**Filtros en tiempo real**: rango temporal con accesos rápidos, búsqueda de usuario
+con autocompletar, centro, curso académico y tipo de acción.
+
+- Retención configurable (90 días por defecto); limpieza **automática** semanal.
+- **Activable/desactivable** con `APP_LOG=true/false` (desactivado por defecto en el binario nativo).
+
+---
+
 ## En resumen
 
 <!-- _class: tight -->

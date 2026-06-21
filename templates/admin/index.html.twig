@@ -70,6 +70,32 @@
             </div>
         </a>
 
+        {# ── Card: Registro de actividad ─────────────────────────────────────── #}
+        <a href="{{ path('app_admin_activity_log') }}"
+           class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
+                  hover:border-slate-300 hover:shadow-sm transition-all">
+            <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600
+                            group-hover:bg-slate-600 group-hover:text-white transition-colors">
+                    {{ ux_icon('heroicons:clipboard-document-list', {class: 'h-5 w-5'}) }}
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">Registro de actividad</h2>
+            </div>
+            <div class="px-6 py-4 space-y-2 flex-1">
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-gray-500">Acciones registradas hoy</span>
+                    <span class="text-2xl font-bold text-gray-900">{{ stats.logs_today }}</span>
+                </div>
+                <p class="text-xs text-gray-400">Auditoría de inicios de sesión, escrituras y exportaciones.</p>
+            </div>
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+                    Ver registro
+                    {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
+                </span>
+            </div>
+        </a>
+
         {# ── Card: Ajustes ────────────────────────────────────────────────────── #}
         <a href="{{ path('app_admin_settings') }}"
            class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
