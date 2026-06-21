@@ -37,7 +37,7 @@
             <div class="px-4 py-3 flex flex-wrap gap-3 items-center bg-gray-50/50">
 
                 {# Búsqueda #}
-                <div class="relative flex-1 min-w-48">
+                <div class="relative flex-[2] min-w-36">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
                     </div>
@@ -53,6 +53,7 @@
                 </div>
 
                 {# Familia profesional #}
+                <div class="flex-1 min-w-36">
                 <select data-model="norender|familyId"
                         data-action="change->live#action"
                         data-live-action-param="changeFamilyFilter"
@@ -60,7 +61,7 @@
                         data-symfony--ux-autocomplete--autocomplete-placeholder-value="{{ 'stays.filter.all_families'|trans({}, 'stays') }}"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         data-symfony--ux-autocomplete--autocomplete-tom-select-options-value='{"dropdownParent":"body"}'
-                        class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
+                        class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">{{ 'stays.filter.all_families'|trans({}, 'stays') }}</option>
                     {% for family in this.availableFamilies %}
@@ -69,8 +70,10 @@
                         </option>
                     {% endfor %}
                 </select>
+                </div>
 
                 {# Enseñanza #}
+                <div class="flex-1 min-w-36">
                 <select data-model="norender|programmeId"
                         data-action="change->live#action"
                         data-live-action-param="resetPage"
@@ -78,7 +81,7 @@
                         data-symfony--ux-autocomplete--autocomplete-placeholder-value="{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         data-symfony--ux-autocomplete--autocomplete-tom-select-options-value='{"dropdownParent":"body"}'
-                        class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
+                        class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}</option>
                     {% for p in this.availableProgrammes %}
@@ -87,6 +90,7 @@
                         </option>
                     {% endfor %}
                 </select>
+                </div>
 
                 {# Limpiar filtros #}
                 {% if this.hasActiveFilters %}
