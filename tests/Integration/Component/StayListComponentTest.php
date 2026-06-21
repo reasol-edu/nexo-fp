@@ -14,6 +14,7 @@ use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Service\AppSettings;
+use App\Service\TenantContext;
 use App\Tests\Integration\ControllerTestCase;
 use App\Twig\Components\StayListComponent;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -348,17 +349,20 @@ class StayListComponentTest extends ControllerTestCase
         $appSettings = self::getContainer()->get(AppSettings::class);
         /** @var TrainingPositionRepository $positions */
         $positions = self::getContainer()->get(TrainingPositionRepository::class);
+        /** @var TenantContext $tenantContext */
+        $tenantContext = self::getContainer()->get(TenantContext::class);
 
-        $component = new class($stays, $families, $programmes, $appSettings, $positions, $user) extends StayListComponent {
+        $component = new class($stays, $families, $programmes, $appSettings, $positions, $tenantContext, $user) extends StayListComponent {
             public function __construct(
                 StayRepository $stays,
                 ProfessionalFamilyRepository $families,
                 ProgrammeRepository $programmes,
                 AppSettings $appSettings,
                 TrainingPositionRepository $positions,
+                TenantContext $tenantContext,
                 private readonly ?UserInterface $stubUser,
             ) {
-                parent::__construct($stays, $families, $programmes, $appSettings, $positions);
+                parent::__construct($stays, $families, $programmes, $appSettings, $positions, $tenantContext);
             }
 
             protected function getUser(): ?UserInterface

@@ -113,7 +113,7 @@ class StayCalendarComponent extends AbstractController
     private function computeWeeks(): array
     {
         $centre = $this->tenantContext->getSelectedCentre();
-        $year   = $centre?->getActiveAcademicYear();
+        $year   = $centre !== null ? $this->tenantContext->getViewYear($centre) : null;
         if ($centre === null || $year === null) {
             return [];
         }

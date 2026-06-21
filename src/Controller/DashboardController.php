@@ -29,7 +29,7 @@ class DashboardController extends AbstractController
             return $this->redirectToRoute('app_select_centre');
         }
 
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($centre);
 
         if ($year === null) {
             return $this->render('dashboard/index.html.twig', [

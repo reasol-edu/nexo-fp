@@ -12,6 +12,7 @@ use App\Entity\Programme;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Repository\AcademicYearRepository;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\StayRepository;
 use App\Repository\TrainingPositionRepository;
@@ -103,7 +104,9 @@ class NotificationBellComponentTest extends RepositoryTestCase
 
         /** @var EducationalCentreRepository $centres */
         $centres = self::getContainer()->get(EducationalCentreRepository::class);
-        $tenant  = new TenantContext($stack, $centres, $this->em);
+        /** @var AcademicYearRepository $years */
+        $years  = self::getContainer()->get(AcademicYearRepository::class);
+        $tenant  = new TenantContext($stack, $centres, $years, $this->em);
 
         /** @var StayRepository $stays */
         $stays = self::getContainer()->get(StayRepository::class);

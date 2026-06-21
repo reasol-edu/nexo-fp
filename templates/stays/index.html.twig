@@ -3,16 +3,20 @@
 {% block title %}{{ 'stays.title'|trans({}, 'stays') }} · {{ centre.name }} · {{ app_name }}{% endblock %}
 
 {% block content %}
+{% set vy = view_year() %}
+{% set viewing_past = is_viewing_past_year() %}
 <div class="px-6 py-8 max-w-7xl mx-auto space-y-6">
 
     <div class="flex items-start justify-between gap-4 flex-wrap">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.title'|trans({}, 'stays') }}</h1>
-            {% if centre.activeAcademicYear %}
-                <p class="mt-1 text-sm text-gray-500">{{ centre.activeAcademicYear.name }}</p>
+            {% if vy %}
+                <p class="mt-1 text-sm {{ viewing_past ? 'text-amber-600 font-medium' : 'text-gray-500' }}">
+                    {{ vy.name }}
+                </p>
             {% endif %}
         </div>
-        {% if centre.activeAcademicYear and is_granted('stay.create', centre) %}
+        {% if not viewing_past and centre.activeAcademicYear and is_granted('stay.create', centre) %}
             <a href="{{ path('app_stays_new') }}"
                class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
                       hover:bg-plum-700 transition-colors shadow-xs shrink-0">

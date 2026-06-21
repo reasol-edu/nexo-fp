@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Los **administradores globales y de centro** pueden visualizar datos de cursos académicos anteriores sin cambiar el curso activo: en la barra lateral aparece un icono de calendario junto al nombre del curso que abre un selector. Durante la sesión, el panel de inicio, el listado de estancias, el calendario y la búsqueda global muestran los datos del curso histórico seleccionado; el botón «Nueva estancia» se oculta para evitar crear estancias en años pasados. Un banner ámbar recuerda en todo momento qué curso se está viendo y permite volver al activo con un clic. El cambio es de sesión y no afecta al resto de docentes
+
 ## [2.3.10] - 2026-06-20
 
 ### Fixed

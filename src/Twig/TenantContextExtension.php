@@ -2,6 +2,7 @@
 
 namespace App\Twig;
 
+use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Teacher;
 use App\Service\TenantContext;
@@ -21,6 +22,9 @@ final class TenantContextExtension extends AbstractExtension
         return [
             new TwigFunction('active_centre', $this->getActiveCentre(...)),
             new TwigFunction('can_switch_centre', $this->canSwitchCentre(...)),
+            new TwigFunction('view_year', $this->getViewYear(...)),
+            new TwigFunction('can_switch_year', $this->canSwitchYear(...)),
+            new TwigFunction('is_viewing_past_year', $this->isViewingPastYear(...)),
         ];
     }
 
@@ -37,5 +41,40 @@ final class TenantContextExtension extends AbstractExtension
         }
 
         return $this->context->canSwitchCentre($user);
+    }
+
+    public function getViewYear(): ?AcademicYear
+    {
+        $centre = $this->context->getSelectedCentre();
+        if ($centre === null) {
+            return null;
+        }
+
+        return $this->context->getViewYear($centre);
+    }
+
+    public function canSwitchYear(): bool
+    {
+        $centre = $this->context->getSelectedCentre();
+        if ($centre === null) {
+            return false;
+        }
+
+        $user = $this->security->getUser();
+        if (!$user instanceof Teacher) {
+            return false;
+        }
+
+        return $user->isAdmin() || $centre->getAdmins()->contains($user);
+    }
+
+    public function isViewingPastYear(): bool
+    {
+        $centre = $this->context->getSelectedCentre();
+        if ($centre === null) {
+            return false;
+        }
+
+        return $this->context->isViewingNonActiveYear($centre);
     }
 }

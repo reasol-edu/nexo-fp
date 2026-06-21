@@ -4,6 +4,8 @@
 {% set current_route = app.request.attributes.get('_route') %}
 {% set active_centre = active_centre() %}
 {% set active_year = active_centre ? active_centre.activeAcademicYear : null %}
+{% set vy = view_year() %}
+{% set viewing_past = is_viewing_past_year() %}
 <div data-controller="sidebar command-palette confirm"
      data-command-palette-url-value="{{ path('app_search') }}"
      data-confirm-cancel-value="{{ 'ui.cancel'|trans }}"
@@ -33,14 +35,19 @@
             </div>
         </div>
 
-        {# Centro y curso activo #}
+        {# Centro y curso activo / visualizado #}
         {% if active_centre %}
         <div class="shrink-0 border-b border-white/8 px-5 py-3">
             <div class="flex items-center gap-2">
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs font-medium text-white leading-none">{{ active_centre.name }}</p>
-                    {% if active_year %}
-                        <p class="mt-1 truncate text-xs text-plum-400">{{ active_year.name }}</p>
+                    {% if vy %}
+                        <p class="mt-1 truncate text-xs {{ viewing_past ? 'text-amber-400' : 'text-plum-400' }}">
+                            {{ vy.name }}
+                            {% if viewing_past %}
+                                <span class="sr-only">{{ '(curso histórico)'|trans({}, 'navigation') }}</span>
+                            {% endif %}
+                        </p>
                     {% endif %}
                 </div>
                 {% if can_switch_centre() %}
@@ -49,6 +56,14 @@
                        aria-label="{{ 'switch_centre'|trans({}, 'navigation') }}"
                        class="shrink-0 rounded-md p-1 text-plum-500 hover:bg-plum-800 hover:text-white transition-colors">
                         {{ ux_icon('heroicons:arrows-right-left', {class: 'h-3.5 w-3.5'}) }}
+                    </a>
+                {% endif %}
+                {% if can_switch_year() %}
+                    <a href="{{ path('app_select_year_page', {'return_to': app.request.pathInfo}) }}"
+                       title="{{ 'switch_year'|trans({}, 'navigation') }}"
+                       aria-label="{{ 'switch_year'|trans({}, 'navigation') }}"
+                       class="shrink-0 rounded-md p-1 {{ viewing_past ? 'text-amber-400 hover:bg-amber-500/20 hover:text-amber-300' : 'text-plum-500 hover:bg-plum-800 hover:text-white' }} transition-colors">
+                        {{ ux_icon('heroicons:calendar-days', {class: 'h-3.5 w-3.5'}) }}
                     </a>
                 {% endif %}
             </div>
@@ -255,6 +270,27 @@
                             </div>
                         {% endfor %}
                     {% endfor %}
+                </div>
+            {% endif %}
+
+            {# Banner de año histórico #}
+            {% if viewing_past and vy %}
+                <div class="px-6 pt-4">
+                    <div class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm"
+                         role="status" aria-live="polite">
+                        {{ ux_icon('heroicons:eye', {class: 'h-4 w-4 shrink-0 text-amber-500'}) }}
+                        <span class="flex-1 text-amber-800">
+                            {{ 'viewing_past_year'|trans({'%year%': vy.name}, 'navigation') }}
+                        </span>
+                        <form method="post" action="{{ path('app_reset_year') }}" class="shrink-0">
+                            <input type="hidden" name="_token" value="{{ csrf_token('reset_year') }}">
+                            <input type="hidden" name="_return_to" value="{{ app.request.pathInfo }}">
+                            <button type="submit"
+                                    class="rounded-md bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200 transition-colors">
+                                {{ 'return_to_active_year'|trans({}, 'navigation') }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endif %}
 

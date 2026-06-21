@@ -197,7 +197,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -233,7 +233,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -322,7 +322,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -364,7 +364,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -447,7 +447,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -512,7 +512,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -630,7 +630,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -667,7 +667,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -712,7 +712,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
@@ -1022,7 +1022,7 @@ class StayController extends AbstractController
         }
 
         $stay = $this->stays->findById($id);
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenant->getViewYear($centre);
 
         if ($stay === null || $year === null
             || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()

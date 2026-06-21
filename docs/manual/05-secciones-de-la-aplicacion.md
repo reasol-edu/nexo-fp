@@ -43,6 +43,31 @@ La **búsqueda global** (⌘K / Ctrl+K) permite localizar estancias, empresas, e
 cualquier página, aplicando los mismos permisos que la barra lateral. Los resultados aparecen en tiempo
 real con navegación por teclado (↑ ↓ Enter) y cierre con Esc.
 
+### Cambio de curso académico (administradores)
+
+Los **administradores globales y de centro** pueden visualizar datos de cursos académicos anteriores sin
+alterar el curso activo. En la barra lateral, junto al nombre del curso, aparece un icono de calendario;
+al pulsarlo se abre el **selector de curso**, que lista todos los cursos del centro. Basta con hacer clic
+en el que se desea consultar.
+
+Mientras se visualiza un curso histórico:
+
+- Un **banner ámbar** aparece en la parte superior de cada página recordando qué curso se está viendo y
+  ofreciendo un botón de vuelta al curso activo.
+- El nombre del curso en la barra lateral se muestra en **color ámbar** para mayor visibilidad.
+- El **listado de estancias**, el **panel de inicio** y el **calendario** muestran los datos del curso
+  seleccionado, incluyendo sus estancias y puestos formativos.
+- El botón **«Nueva estancia»** queda oculto: no es posible crear estancias en un curso histórico.
+  Todas las demás acciones (ver, editar, exportar, informes) sí están disponibles.
+
+Para volver al curso activo en cualquier momento: pulsar el botón **«Volver al curso activo»** del
+banner, o usar el selector de curso en la barra lateral.
+
+!!! info "El curso activo no cambia"
+    Cambiar el curso visualizado es una preferencia de sesión: solo afecta a la propia sesión del
+    administrador y no modifica el curso activo del centro. El resto de docentes siguen viendo el curso
+    activo sin ningún cambio.
+
 ## Estancias
 
 ![Listado de estancias con filtros por familia, enseñanza y período](img/estancias.png)

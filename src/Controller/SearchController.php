@@ -42,7 +42,7 @@ class SearchController extends AbstractController
             return $this->json(['groups' => []]);
         }
 
-        $year = $centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($centre);
         if ($year === null) {
             return $this->json(['groups' => []]);
         }

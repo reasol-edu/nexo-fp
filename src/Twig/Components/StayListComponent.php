@@ -15,6 +15,7 @@ use App\Repository\StayRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\AppSettings;
+use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -96,7 +97,7 @@ class StayListComponent extends AbstractController
         // (isset: el componente se construye sin centre en algunos tests unitarios;
         // en uso real el LiveProp obligatorio ya está hidratado al entrar aquí.)
         if (isset($this->centre)) {
-            $year = $this->centre->getActiveAcademicYear();
+            $year = $this->tenantContext->getViewYear($this->centre);
             if ($year === null) {
                 $this->familyId = '';
                 $this->programmeId = '';
@@ -130,6 +131,7 @@ class StayListComponent extends AbstractController
         private readonly ProgrammeRepository $programmes,
         private readonly AppSettings $appSettings,
         private readonly TrainingPositionRepository $positions,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     /** @return Paginator<Stay> */
@@ -139,7 +141,7 @@ class StayListComponent extends AbstractController
             return $this->paginationCache;
         }
 
-        $year = $this->centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($this->centre);
 
         $periods = [];
         if ($this->showCurrent) {
@@ -200,7 +202,7 @@ class StayListComponent extends AbstractController
             return $this->pendingPaginationCache;
         }
 
-        $year = $this->centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($this->centre);
 
         $periods = [];
         if ($this->showCurrent) {
@@ -256,7 +258,7 @@ class StayListComponent extends AbstractController
     /** @return \App\Entity\ProfessionalFamily[] */
     public function getAvailableFamilies(): array
     {
-        $year = $this->centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($this->centre);
         if ($year === null) {
             return [];
         }
@@ -273,7 +275,7 @@ class StayListComponent extends AbstractController
     /** @return \App\Entity\Programme[] */
     public function getAvailableProgrammes(): array
     {
-        $year = $this->centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($this->centre);
         if ($year === null) {
             return [];
         }
