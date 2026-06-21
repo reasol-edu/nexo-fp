@@ -37,7 +37,7 @@
             <div class="px-4 py-3 flex flex-wrap gap-3 items-center bg-gray-50/50">
 
                 {# Búsqueda #}
-                <div class="relative flex-[3] min-w-36">
+                <div class="relative flex-1 min-w-36">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
                     </div>
@@ -53,7 +53,7 @@
                 </div>
 
                 {# Familia profesional #}
-                <div class="flex-1 min-w-36">
+                <div class="flex-1 min-w-36 [&_.ts-wrapper]:w-full">
                 <select data-model="norender|familyId"
                         data-action="change->live#action"
                         data-live-action-param="changeFamilyFilter"
@@ -73,7 +73,7 @@
                 </div>
 
                 {# Enseñanza #}
-                <div class="flex-1 min-w-36">
+                <div class="flex-1 min-w-36 [&_.ts-wrapper]:w-full">
                 <select data-model="norender|programmeId"
                         data-action="change->live#action"
                         data-live-action-param="resetPage"
