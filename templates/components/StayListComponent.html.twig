@@ -215,7 +215,7 @@
                         {{ 'stays.filter.clear'|trans({}, 'stays') }}
                     </button>
                 {% endif %}
-                {% if not has_filters and is_granted('stay.create', centre) %}
+                {% if not has_filters and not is_viewing_past_year() and is_granted('stay.create', centre) %}
                     <a href="{{ path('app_stays_new') }}"
                        class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-plum-600 px-3 py-1.5
                               text-xs font-semibold text-white shadow-xs hover:bg-plum-700 transition-colors">

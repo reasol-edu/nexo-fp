@@ -79,7 +79,7 @@ class StayController extends AbstractController
         }
 
         if ($this->tenant->isViewingNonActiveYear($centre)) {
-            return $this->redirectToRoute('app_stays_index');
+            throw $this->createAccessDeniedException('Write operations are not allowed when viewing a past academic year.');
         }
 
         $year = $centre->getActiveAcademicYear();

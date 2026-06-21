@@ -3,8 +3,10 @@
 {% block title %}{{ 'page_title'|trans({}, 'dashboard') }}{% endblock %}
 
 {% block content %}
-{% set active_centre = active_centre() %}
-{% set active_year   = active_centre ? active_centre.activeAcademicYear : null %}
+{% set active_centre  = active_centre() %}
+{% set active_year    = active_centre ? active_centre.activeAcademicYear : null %}
+{% set vy             = view_year() %}
+{% set viewing_past   = is_viewing_past_year() %}
 {% set today = "now"|date("Y-m-d") %}
 
 <div class="px-6 py-8 max-w-7xl mx-auto space-y-8">
@@ -15,11 +17,11 @@
             <h1 class="text-2xl font-bold text-gray-900">
                 {{ 'greeting'|trans({'%name%': app.user.name.firstName}, 'dashboard') }}
             </h1>
-            {% if active_year %}
-                <p class="mt-1 text-sm text-gray-500">
-                    {{ 'summary_for'|trans({'%year%': active_year.name}, 'dashboard') }}
+            {% if vy %}
+                <p class="mt-1 text-sm {{ viewing_past ? 'text-amber-600 font-medium' : 'text-gray-500' }}">
+                    {{ 'summary_for'|trans({'%year%': vy.name}, 'dashboard') }}
                 </p>
-            {% else %}
+            {% elseif active_year is null %}
                 <p class="mt-1 text-sm text-amber-600">
                     {{ 'no_academic_year'|trans({}, 'dashboard') }}
                 </p>
@@ -39,16 +41,16 @@
     {# ── Accesos rápidos ───────────────────────────────────────────────────── #}
     {% set can_students_section = is_granted('educational_centre.section', active_centre) %}
     {% set can_companies_section = is_granted('company.section', active_centre) %}
-    {% if is_granted('stay.create', active_centre) or can_students_section or can_companies_section %}
+    {% if (not viewing_past and is_granted('stay.create', active_centre)) or (not viewing_past and can_students_section) or can_companies_section %}
         <div class="flex flex-wrap gap-2">
-            {% if is_granted('stay.create', active_centre) %}
+            {% if not viewing_past and is_granted('stay.create', active_centre) %}
                 <a href="{{ path('app_stays_new') }}"
                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:border-plum-300 hover:text-plum-700 transition-colors">
                     {{ ux_icon('heroicons:plus', {class: 'h-3.5 w-3.5'}) }}
                     {{ 'action_new_stay'|trans({}, 'dashboard') }}
                 </a>
             {% endif %}
-            {% if can_students_section %}
+            {% if not viewing_past and can_students_section %}
                 <a href="{{ path('app_admin_students_import', {centreId: active_centre.id}) }}"
                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs hover:border-plum-300 hover:text-plum-700 transition-colors">
                     {{ ux_icon('heroicons:arrow-up-tray', {class: 'h-3.5 w-3.5'}) }}
