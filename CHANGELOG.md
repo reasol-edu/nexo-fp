@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-06-21
+
+### Changed
+
+- La imagen Docker oficial se publica en `reasoledu/nexo-fp` (Docker Hub); `compose.yaml` la usa directamente, por lo que `docker compose up` ya no requiere compilar la imagen localmente
+
 ## [2.4.2] - 2026-06-21
 
 ### Changed
