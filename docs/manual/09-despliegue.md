@@ -248,8 +248,11 @@ canal sigue sin transportar datos. Si arrancas el servidor en otro puerto, ajust
 
 ## Despliegue con Docker
 
-Modo recomendado para producción. La imagen incluye [FrankenPHP](https://frankenphp.dev) como servidor de
-aplicaciones y usa [PostgreSQL](https://www.postgresql.org) 16 como base de datos.
+Modo recomendado para producción. La imagen oficial
+[`reasoledu/nexo-fp`](https://hub.docker.com/r/reasoledu/nexo-fp) se publica automáticamente en
+Docker Hub con cada versión; no es necesario compilar nada. Incluye
+[FrankenPHP](https://frankenphp.dev) como servidor de aplicaciones y usa
+[PostgreSQL](https://www.postgresql.org) 16 como base de datos.
 
 ### Preparación
 
@@ -406,7 +409,7 @@ ejecutable de Docker con `which docker` (en algunas distribuciones es `/usr/loca
 ### Actualización
 
 ```bash
-docker compose pull   # o: docker compose build
+docker compose pull
 docker compose up -d
 ```
 
