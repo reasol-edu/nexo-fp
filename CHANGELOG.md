@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-06-21
+
+### Added
+
+- Botón para exportar a Excel el listado de puestos formativos pendientes de firma desde la pestaña «Firmas pendientes», respetando los filtros activos (búsqueda, familia profesional, enseñanza y período)
+
+### Fixed
+
+- Los desplegables de filtro del registro de actividad (Centro, Curso y Tipo de acción) y del listado de estancias (Familia profesional y Enseñanza) ahora usan TomSelect, unificando su aspecto con el resto de selectores de la aplicación
+
 ## [2.4.3] - 2026-06-21
 
 ### Changed
