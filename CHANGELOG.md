@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-06-21
+
+### Changed
+
+- Eliminada la variable de entorno `APP_PAGE_SIZE` de todos los scripts de despliegue y ficheros de configuración; el tamaño de página ya se gestiona exclusivamente desde los ajustes de la aplicación (base de datos)
+- Añadidas `APP_LOG` y `APP_LOG_RETENTION_DAYS` al `.env` generado por los scripts del binario nativo (`start.sh`, `start.bat`, `start.ps1`) y del instalador Ubuntu, donde faltaban
+
 ## [2.4.1] - 2026-06-21
 
 ### Added
