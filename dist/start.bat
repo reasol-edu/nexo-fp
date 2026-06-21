@@ -25,7 +25,8 @@ set DATABASE_URL=sqlite:///%DATA_FWD%/nexo-fp.db
 
 set MIGRATIONS_PATH=migrations/sqlite
 set DEFAULT_URI=http://localhost:%PORT%
-if "%APP_PAGE_SIZE%"==""               set APP_PAGE_SIZE=20
+if "%APP_LOG%"==""                     set APP_LOG=false
+if "%APP_LOG_RETENTION_DAYS%"==""      set APP_LOG_RETENTION_DAYS=90
 if "%APP_EXTERNAL_ENABLED%"==""        set APP_EXTERNAL_ENABLED=true
 if "%APP_EXTERNAL_URL%"==""            set APP_EXTERNAL_URL=https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp
 if "%APP_EXTERNAL_URL_FORCE_SECURITY%"=="" set APP_EXTERNAL_URL_FORCE_SECURITY=true
@@ -60,7 +61,8 @@ set /p MERCURE_JWT_SECRET=<"%DATA%\.mercure_secret"
     echo DATABASE_URL=%DATABASE_URL%
     echo MIGRATIONS_PATH=%MIGRATIONS_PATH%
     echo DEFAULT_URI=%DEFAULT_URI%
-    echo APP_PAGE_SIZE=%APP_PAGE_SIZE%
+    echo APP_LOG=%APP_LOG%
+    echo APP_LOG_RETENTION_DAYS=%APP_LOG_RETENTION_DAYS%
     echo APP_EXTERNAL_ENABLED=%APP_EXTERNAL_ENABLED%
     echo APP_EXTERNAL_URL=%APP_EXTERNAL_URL%
     echo APP_EXTERNAL_URL_FORCE_SECURITY=%APP_EXTERNAL_URL_FORCE_SECURITY%

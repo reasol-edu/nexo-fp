@@ -22,7 +22,8 @@ x-app-environment: &app-environment
   DATABASE_URL:                 "postgresql://nexo:${DB_PASSWORD:-changeme}@database:5432/nexo?serverVersion=16&charset=utf8"
   DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
   MIGRATIONS_PATH:              migrations/postgresql
-  APP_PAGE_SIZE:                "${APP_PAGE_SIZE:-20}"
+  APP_LOG:                      "${APP_LOG:-true}"
+  APP_LOG_RETENTION_DAYS:       "${APP_LOG_RETENTION_DAYS:-90}"
   APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
   APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
   APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
