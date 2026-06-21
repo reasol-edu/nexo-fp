@@ -166,6 +166,7 @@ final class ActivityLogSubscriber
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    /** @param array<string, mixed>|null $data */
     private function dispatchFromRequest(Request $request, string $actionType, ?array $data): void
     {
         $token = $this->tokenStorage->getToken();
@@ -217,6 +218,7 @@ final class ActivityLogSubscriber
         ));
     }
 
+    /** @param array<string, mixed>|null $data */
     private function dispatchAnonymousEvent(string $actionType, Request $request, ?array $data): void
     {
         $this->bus->dispatch(new ActivityLogMessage(

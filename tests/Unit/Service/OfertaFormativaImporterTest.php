@@ -19,17 +19,20 @@ use App\Repository\TeacherRepository;
 use App\Service\ImportOptions;
 use App\Service\OfertaFormativaImporter;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
+#[AllowMockObjectsWithoutExpectations]
 class OfertaFormativaImporterTest extends TestCase
 {
     private EntityManagerInterface&MockObject $em;
-    private ProfessionalFamilyRepository&MockObject $familyRepo;
-    private ProgrammeRepository&MockObject $programmeRepo;
-    private ProgrammeYearRepository&MockObject $levelRepo;
-    private GroupRepository&MockObject $groupRepo;
+    private ProfessionalFamilyRepository&Stub $familyRepo;
+    private ProgrammeRepository&Stub $programmeRepo;
+    private ProgrammeYearRepository&Stub $levelRepo;
+    private GroupRepository&Stub $groupRepo;
     private TeacherRepository&MockObject $teacherRepo;
     private OfertaFormativaImporter $importer;
     private AcademicYear $year;
@@ -37,10 +40,10 @@ class OfertaFormativaImporterTest extends TestCase
     protected function setUp(): void
     {
         $this->em            = $this->createMock(EntityManagerInterface::class);
-        $this->familyRepo    = $this->createMock(ProfessionalFamilyRepository::class);
-        $this->programmeRepo = $this->createMock(ProgrammeRepository::class);
-        $this->levelRepo     = $this->createMock(ProgrammeYearRepository::class);
-        $this->groupRepo     = $this->createMock(GroupRepository::class);
+        $this->familyRepo    = $this->createStub(ProfessionalFamilyRepository::class);
+        $this->programmeRepo = $this->createStub(ProgrammeRepository::class);
+        $this->levelRepo     = $this->createStub(ProgrammeYearRepository::class);
+        $this->groupRepo     = $this->createStub(GroupRepository::class);
         $this->teacherRepo   = $this->createMock(TeacherRepository::class);
 
         $this->importer = new OfertaFormativaImporter(
@@ -247,7 +250,7 @@ class OfertaFormativaImporterTest extends TestCase
         $teacher = $this->makeTeacher('jefa.dpto');
         $this->familyRepo->method('findByAcademicYearFiltered')->willReturn([]);
         $this->programmeRepo->method('findByFamilyOrderedByName')->willReturn([]);
-        $this->teacherRepo->method('findByUsername')->with('jefa.dpto')->willReturn($teacher);
+        $this->teacherRepo->expects(self::once())->method('findByUsername')->with('jefa.dpto')->willReturn($teacher);
 
         $capturedFamily = null;
         $this->em->method('persist')->willReturnCallback(
@@ -302,7 +305,7 @@ class OfertaFormativaImporterTest extends TestCase
     {
         $teacher = $this->makeTeacher('jdoe');
         $this->setUpEmptyRepositories();
-        $this->teacherRepo->method('findByUsername')->with('jdoe')->willReturn($teacher);
+        $this->teacherRepo->expects(self::once())->method('findByUsername')->with('jdoe')->willReturn($teacher);
 
         $capturedGroup = null;
         $this->em->method('persist')->willReturnCallback(
@@ -390,7 +393,7 @@ class OfertaFormativaImporterTest extends TestCase
     {
         $teacher = $this->makeTeacher('tutor.uno');
         $this->setUpEmptyRepositories();
-        $this->teacherRepo->method('findByUsername')->with('tutor.uno')->willReturn($teacher);
+        $this->teacherRepo->expects(self::once())->method('findByUsername')->with('tutor.uno')->willReturn($teacher);
 
         $capturedGroup = null;
         $this->em->method('persist')->willReturnCallback(

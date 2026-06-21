@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ status_code }} · Nexo FP</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --plum-300: #bfadd8;
+            --plum-400: #a38dc5;
+            --plum-500: #876baf;
+            --plum-600: #67597a;
+            --plum-700: #574a68;
+            --plum-800: #453a54;
+            --plum-900: #362d42;
+            --plum-950: #1f192a;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            background: var(--plum-950);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Parallax orbs ────────────────────────────────────────────────── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .orb-a { width: 460px; height: 460px; top: -140px; right: -140px; background: rgba(255,255,255,0.02); }
+        .orb-b { width: 260px; height: 260px; top: 42%; right: -50px;    background: rgba(103,89,122,0.25); }
+        .orb-c { width: 340px; height: 340px; bottom: -90px; left: -90px; background: rgba(255,255,255,0.018); }
+
+        /* ── Content ──────────────────────────────────────────────────────── */
+        .page {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Logo */
+        .logo {
+            width: 72px;
+            height: 72px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 16px rgba(135,107,175,0.35));
+            animation: logo-float 5s ease-in-out infinite;
+        }
+
+        @keyframes logo-float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
+        }
+
+        /* Error code */
+        .error-code {
+            font-size: clamp(5rem, 14vw, 10rem);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            background: linear-gradient(155deg, var(--plum-300) 0%, var(--plum-500) 55%, var(--plum-800) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            user-select: none;
+        }
+
+        .title {
+            margin-top: 1.25rem;
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: white;
+        }
+
+        .subtitle {
+            margin-top: 0.5rem;
+            font-size: 0.9375rem;
+            line-height: 1.65;
+            color: var(--plum-400);
+            max-width: 24rem;
+        }
+
+        /* ── Actions ──────────────────────────────────────────────────────── */
+        .actions {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--plum-600);
+            color: white;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--plum-700);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(103,89,122,0.5);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo { animation: none; }
+            .btn-primary:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-a" data-speed="28"></div>
+    <div class="orb orb-b" data-speed="50"></div>
+    <div class="orb orb-c" data-speed="34"></div>
+
+    <main class="page">
+        <img class="logo" src="/static/logo.svg" alt="Nexo FP">
+
+        <p class="error-code" aria-hidden="true">{{ status_code }}</p>
+        <h1 class="title">{{ status_text }}</h1>
+        <p class="subtitle">Ha ocurrido un error inesperado. Puedes volver al inicio o intentar acceder de nuevo más tarde.</p>
+
+        <div class="actions">
+            <a href="/" class="btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                </svg>
+                Volver al inicio
+            </a>
+        </div>
+    </main>
+
+    <script>
+    (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var orbs = document.querySelectorAll('.orb[data-speed]');
+        var tx = 0, ty = 0, cx = 0, cy = 0;
+        document.addEventListener('mousemove', function (e) {
+            tx = e.clientX / window.innerWidth  - 0.5;
+            ty = e.clientY / window.innerHeight - 0.5;
+        });
+        (function tick() {
+            cx += (tx - cx) * 0.06;
+            cy += (ty - cy) * 0.06;
+            orbs.forEach(function (o) {
+                var s = +o.dataset.speed;
+                o.style.transform = 'translate(' + (cx*s).toFixed(1) + 'px,' + (cy*s).toFixed(1) + 'px)';
+            });
+            requestAnimationFrame(tick);
+        }());
+    }());
+    </script>
+</body>
+</html>

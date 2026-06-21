@@ -6,6 +6,9 @@ namespace App\Message;
 
 final class ActivityLogMessage
 {
+    /**
+     * @param array<string, mixed>|null $data
+     */
     public function __construct(
         public readonly \DateTimeImmutable $createdAt,
         public readonly string $ip,

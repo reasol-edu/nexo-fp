@@ -41,9 +41,13 @@ class ActivityLog
     #[ORM\Column(length: 100)]
     private string $actionType;
 
+    /** @var array<string, mixed>|null */
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $data = null;
 
+    /**
+     * @param array<string, mixed>|null $data
+     */
     public function __construct(
         \DateTimeImmutable $createdAt,
         string $ip,
@@ -97,6 +101,7 @@ class ActivityLog
         return $this->actionType;
     }
 
+    /** @return array<string, mixed>|null */
     public function getData(): ?array
     {
         return $this->data;

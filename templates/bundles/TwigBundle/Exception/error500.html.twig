@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error del servidor · Nexo FP</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --plum-300: #bfadd8;
+            --plum-400: #a38dc5;
+            --plum-500: #876baf;
+            --plum-600: #67597a;
+            --plum-700: #574a68;
+            --plum-800: #453a54;
+            --plum-900: #362d42;
+            --plum-950: #1f192a;
+            --red-400:   #f87171;
+            --amber-400: #fbbf24;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            background: var(--plum-950);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Parallax orbs ────────────────────────────────────────────────── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .orb-a { width: 440px; height: 440px; top: -130px;  right: -130px; background: rgba(248,113,113,0.04); }
+        .orb-b { width: 280px; height: 280px; top: 44%;     right: -55px;  background: rgba(103,89,122,0.22);  }
+        .orb-c { width: 360px; height: 360px; bottom: -95px; left: -95px;  background: rgba(255,255,255,0.018);}
+        .orb-d { width:  90px; height:  90px; top: 16%;     left: 7%;      background: rgba(248,113,113,0.08); }
+
+        /* ── Content ──────────────────────────────────────────────────────── */
+        .page {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── Glitching logo ───────────────────────────────────────────────── */
+        .glitch-wrap {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            margin-bottom: 0.5rem;
+        }
+
+        .glitch-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            animation: glitch-main 7s ease-in-out infinite;
+            filter: drop-shadow(0 0 18px rgba(248,113,113,0.3));
+        }
+
+        /* Cyan ghost layer */
+        .glitch-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('/static/logo.svg') center/contain no-repeat;
+            z-index: 1;
+            opacity: 0;
+            animation: glitch-cyan 7s ease-in-out infinite;
+            filter: hue-rotate(160deg) saturate(3) brightness(1.8);
+            mix-blend-mode: screen;
+        }
+
+        /* Red ghost layer */
+        .glitch-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('/static/logo.svg') center/contain no-repeat;
+            z-index: 1;
+            opacity: 0;
+            animation: glitch-red 7s ease-in-out infinite;
+            filter: hue-rotate(320deg) saturate(3) brightness(1.8);
+            mix-blend-mode: screen;
+        }
+
+        @keyframes glitch-main {
+            0%, 78%, 100% { transform: none;                clip-path: none;                                       }
+            79%           { transform: translate(-4px,  1px); clip-path: polygon(0 15%, 100% 15%, 100% 40%, 0 40%); }
+            80%           { transform: translate( 4px, -1px); clip-path: polygon(0 55%, 100% 55%, 100% 78%, 0 78%); }
+            81%           { transform: translate(-2px,  2px); clip-path: none;                                       }
+            82%           { transform: none;                clip-path: polygon(0 0,  100% 0, 100% 30%, 0 30%);     }
+            83%           { transform: translate( 3px, -2px); clip-path: none;                                       }
+            84%           { transform: none; }
+        }
+
+        @keyframes glitch-cyan {
+            0%, 78%, 100% { opacity: 0; transform: none; }
+            79%           { opacity: 0.6; transform: translate( 5px, 0); clip-path: polygon(0 15%, 100% 15%, 100% 40%, 0 40%); }
+            80%           { opacity: 0.5; transform: translate(-3px, 0); clip-path: polygon(0 58%, 100% 58%, 100% 76%, 0 76%); }
+            81%           { opacity: 0; }
+            82%           { opacity: 0.4; transform: translate( 4px, 0); clip-path: polygon(0 0, 100% 0, 100% 28%, 0 28%); }
+            83%           { opacity: 0; }
+        }
+
+        @keyframes glitch-red {
+            0%, 78%, 100% { opacity: 0; transform: none; }
+            79%           { opacity: 0.6; transform: translate(-5px, 0); clip-path: polygon(0 15%, 100% 15%, 100% 40%, 0 40%); }
+            80%           { opacity: 0.5; transform: translate( 3px, 0); clip-path: polygon(0 55%, 100% 55%, 100% 80%, 0 80%); }
+            81%           { opacity: 0; }
+            82%           { opacity: 0.4; transform: translate(-4px, 0); clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%); }
+            83%           { opacity: 0; }
+        }
+
+        /* ── Error code badge ─────────────────────────────────────────────── */
+        .code-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #f87171;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        /* ── Typography ───────────────────────────────────────────────────── */
+        .title {
+            margin-top: 1.75rem;
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: white;
+        }
+
+        .subtitle {
+            margin-top: 0.625rem;
+            font-size: 1rem;
+            line-height: 1.65;
+            color: var(--plum-400);
+            max-width: 26rem;
+        }
+
+        /* ── Actions ──────────────────────────────────────────────────────── */
+        .actions {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--plum-600);
+            color: white;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--plum-700);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(103,89,122,0.5);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: var(--plum-400);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--plum-800);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .btn-ghost:hover {
+            color: var(--plum-300);
+            border-color: var(--plum-600);
+            transform: translateY(-1px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .glitch-wrap img,
+            .glitch-wrap::before,
+            .glitch-wrap::after { animation: none; }
+            .btn-primary:hover, .btn-ghost:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-a" data-speed="28"></div>
+    <div class="orb orb-b" data-speed="50"></div>
+    <div class="orb orb-c" data-speed="34"></div>
+    <div class="orb orb-d" data-speed="65"></div>
+
+    <main class="page">
+        <div class="glitch-wrap" aria-hidden="true">
+            <img src="/static/logo.svg" alt="">
+        </div>
+
+        <p class="code-badge">Error 500</p>
+        <h1 class="title">Algo salió mal</h1>
+        <p class="subtitle">Se ha producido un error en el servidor. Si el problema persiste, contacta con el administrador.</p>
+
+        <div class="actions">
+            <button type="button" onclick="location.reload()" class="btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                </svg>
+                Intentar de nuevo
+            </button>
+            <a href="/" class="btn-ghost">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                </svg>
+                Ir al inicio
+            </a>
+        </div>
+    </main>
+
+    <script>
+    (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var orbs = document.querySelectorAll('.orb[data-speed]');
+        var tx = 0, ty = 0, cx = 0, cy = 0;
+        document.addEventListener('mousemove', function (e) {
+            tx = e.clientX / window.innerWidth  - 0.5;
+            ty = e.clientY / window.innerHeight - 0.5;
+        });
+        (function tick() {
+            cx += (tx - cx) * 0.06;
+            cy += (ty - cy) * 0.06;
+            orbs.forEach(function (o) {
+                var s = +o.dataset.speed;
+                o.style.transform = 'translate(' + (cx*s).toFixed(1) + 'px,' + (cy*s).toFixed(1) + 'px)';
+            });
+            requestAnimationFrame(tick);
+        }());
+    }());
+    </script>
+</body>
+</html>

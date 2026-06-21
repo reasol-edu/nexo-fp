@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada · Nexo FP</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('static/favicon.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('static/favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --plum-300: #bfadd8;
+            --plum-400: #a38dc5;
+            --plum-500: #876baf;
+            --plum-600: #67597a;
+            --plum-700: #574a68;
+            --plum-800: #453a54;
+            --plum-900: #362d42;
+            --plum-950: #1f192a;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            background: var(--plum-950);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Decorative parallax orbs ─────────────────────────────────────── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .orb-a { width: 500px; height: 500px; top: -150px; right: -150px; background: rgba(255,255,255,0.022); }
+        .orb-b { width: 300px; height: 300px; top: 42%; right: -60px;   background: rgba(103,89,122,0.28); }
+        .orb-c { width: 380px; height: 380px; bottom: -110px; left: -110px; background: rgba(255,255,255,0.018); }
+        .orb-d { width: 130px; height: 130px; bottom: 26%; right: 9%;   background: rgba(135,107,175,0.22); }
+        .orb-e { width:  72px; height:  72px; top: 18%;    left: 7%;    background: rgba(191,173,216,0.14); }
+
+        /* ── Content ──────────────────────────────────────────────────────── */
+        .page {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+
+        /* 4 [◯] 4 */
+        .code-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.05em;
+            user-select: none;
+        }
+
+        .digit {
+            font-size: clamp(6rem, 17vw, 12rem);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            background: linear-gradient(155deg, var(--plum-300) 0%, var(--plum-500) 55%, var(--plum-800) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* The «0» replaced by the logo in a gradient ring */
+        .logo-ring {
+            width: clamp(5.5rem, 13vw, 10.5rem);
+            height: clamp(5.5rem, 13vw, 10.5rem);
+            border-radius: 50%;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: ring-float 5s ease-in-out infinite;
+        }
+
+        /* Gradient border via background-clip trick */
+        .logo-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--plum-300), var(--plum-600), var(--plum-900));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+        }
+
+        /* Outer glow halo */
+        .logo-ring::after {
+            content: '';
+            position: absolute;
+            inset: -12px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(135,107,175,0.28) 0%, transparent 65%);
+            animation: halo-pulse 5s ease-in-out infinite;
+        }
+
+        .logo-ring img {
+            width: 54%;
+            height: 54%;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 0 8px rgba(191,173,216,0.4));
+        }
+
+        @keyframes ring-float {
+            0%, 100% { transform: translateY(0)    rotate(0deg); }
+            50%       { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        @keyframes halo-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1);    }
+            50%       { opacity: 1;   transform: scale(1.12); }
+        }
+
+        /* ── Typography ───────────────────────────────────────────────────── */
+        .title {
+            margin-top: 2rem;
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: white;
+        }
+
+        .subtitle {
+            margin-top: 0.625rem;
+            font-size: 1rem;
+            line-height: 1.65;
+            color: var(--plum-400);
+            max-width: 26rem;
+        }
+
+        /* ── Actions ──────────────────────────────────────────────────────── */
+        .actions {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--plum-600);
+            color: white;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--plum-700);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(103,89,122,0.5);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: var(--plum-400);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--plum-800);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .btn-ghost:hover {
+            color: var(--plum-300);
+            border-color: var(--plum-600);
+            transform: translateY(-1px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-ring, .logo-ring::after { animation: none; }
+            .btn-primary:hover, .btn-ghost:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-a" data-speed="28"></div>
+    <div class="orb orb-b" data-speed="52"></div>
+    <div class="orb orb-c" data-speed="34"></div>
+    <div class="orb orb-d" data-speed="75"></div>
+    <div class="orb orb-e" data-speed="60"></div>
+
+    <main class="page">
+        <div class="code-row" aria-label="Error 404">
+            <span class="digit" aria-hidden="true">4</span>
+            <div class="logo-ring" aria-hidden="true">
+                <img src="{{ asset('static/logo.svg') }}" alt="">
+            </div>
+            <span class="digit" aria-hidden="true">4</span>
+        </div>
+
+        <h1 class="title">Página no encontrada</h1>
+        <p class="subtitle">La dirección que buscas no existe o ha sido movida a otro lugar.</p>
+
+        <div class="actions">
+            <a href="/" class="btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                </svg>
+                Volver al inicio
+            </a>
+            <button type="button" onclick="history.back()" class="btn-ghost">
+                Volver atrás
+            </button>
+        </div>
+    </main>
+
+    <script>
+    (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var orbs = document.querySelectorAll('.orb[data-speed]');
+        var tx = 0, ty = 0, cx = 0, cy = 0;
+        document.addEventListener('mousemove', function (e) {
+            tx = e.clientX / window.innerWidth  - 0.5;
+            ty = e.clientY / window.innerHeight - 0.5;
+        });
+        (function tick() {
+            cx += (tx - cx) * 0.06;
+            cy += (ty - cy) * 0.06;
+            orbs.forEach(function (o) {
+                var s = +o.dataset.speed;
+                o.style.transform = 'translate(' + (cx*s).toFixed(2) + 'px,' + (cy*s).toFixed(2) + 'px)';
+            });
+            requestAnimationFrame(tick);
+        }());
+    }());
+    </script>
+</body>
+</html>

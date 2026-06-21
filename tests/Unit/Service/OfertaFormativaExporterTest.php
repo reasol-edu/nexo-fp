@@ -16,25 +16,25 @@ use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
 use App\Service\OfertaFormativaExporter;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
 
 class OfertaFormativaExporterTest extends TestCase
 {
-    private ProfessionalFamilyRepository&MockObject $familyRepo;
-    private ProgrammeRepository&MockObject $programmeRepo;
-    private ProgrammeYearRepository&MockObject $levelRepo;
-    private GroupRepository&MockObject $groupRepo;
+    private ProfessionalFamilyRepository&Stub $familyRepo;
+    private ProgrammeRepository&Stub $programmeRepo;
+    private ProgrammeYearRepository&Stub $levelRepo;
+    private GroupRepository&Stub $groupRepo;
     private OfertaFormativaExporter $exporter;
     private AcademicYear $year;
 
     protected function setUp(): void
     {
-        $this->familyRepo    = $this->createMock(ProfessionalFamilyRepository::class);
-        $this->programmeRepo = $this->createMock(ProgrammeRepository::class);
-        $this->levelRepo     = $this->createMock(ProgrammeYearRepository::class);
-        $this->groupRepo     = $this->createMock(GroupRepository::class);
+        $this->familyRepo    = $this->createStub(ProfessionalFamilyRepository::class);
+        $this->programmeRepo = $this->createStub(ProgrammeRepository::class);
+        $this->levelRepo     = $this->createStub(ProgrammeYearRepository::class);
+        $this->groupRepo     = $this->createStub(GroupRepository::class);
 
         $this->exporter = new OfertaFormativaExporter(
             $this->familyRepo,

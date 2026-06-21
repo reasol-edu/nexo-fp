@@ -194,7 +194,10 @@ class OfertaFormativaImporter
         return $stats;
     }
 
-    /** @param array<mixed> $raw @return list<string> */
+    /**
+     * @param array<mixed> $raw
+     * @return list<string>
+     */
     private function uniqueUsernames(array $raw): array
     {
         $seen   = [];

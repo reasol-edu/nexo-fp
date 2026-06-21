@@ -414,7 +414,7 @@ class StudentController extends AbstractController
     }
 
     /** @param array{created: int, updated: int, skipped: int, unknownGroups: array<string, true>} $result */
-    private function buildImportFlash(array $result): array
+    private function buildImportFlash(array $result): void
     {
         $summary = $this->translator->trans('students.import.flash.summary', [
             '%created%' => $result['created'],
@@ -432,8 +432,6 @@ class StudentController extends AbstractController
         }
 
         $this->addFlash('success', $summary);
-
-        return [];
     }
 
     /** @return array<string, Group> */

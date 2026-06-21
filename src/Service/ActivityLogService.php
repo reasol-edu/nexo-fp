@@ -25,6 +25,8 @@ final class ActivityLogService
     /**
      * Registra una acción en el log de actividad de forma asíncrona.
      * Nunca lanza excepciones: el log nunca debe interrumpir la acción principal.
+     *
+     * @param array<string, mixed>|null $data
      */
     public function log(string $actionType, ?array $data = null): void
     {

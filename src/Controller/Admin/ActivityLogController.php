@@ -43,7 +43,6 @@ class ActivityLogController extends AbstractController
                 ->getResult();
 
             foreach ($teachers as $teacher) {
-                \assert($teacher instanceof Teacher);
                 $results[] = [
                     'id'   => $teacher->getId()->toRfc4122(),
                     'text' => $teacher->getName()->getLastName() . ', ' . $teacher->getName()->getFirstName()

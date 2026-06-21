@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-06-21
+
+### Added
+
+- Páginas de error personalizadas (404, 403, 500 y fallback genérico) con diseño coherente con la guía de estilo de la aplicación: fondo oscuro plum, orbes decorativos con efecto parallax que siguen el puntero del ratón. La 404 presenta el logotipo inscrito en el «0» con un anillo de gradiente animado; la 403 muestra un escudo que se repele al acercar el cursor; la 500 aplica un efecto de glitch al logotipo
+
+### Fixed
+
+- Añadidos los iconos `arrow-left.svg` y `user-circle.svg` al repositorio (se usaban en plantillas pero no estaban versionados, lo que causaba fallos en `ux:icons:warm-cache` en instalaciones limpias)
+- PHPStan (nivel 8): corregidas las anotaciones de tipo `array` sin valor genérico en la entidad, mensaje, servicio y suscriptor del registro de actividad, y en `StudentController::buildImportFlash()` y `OfertaFormativaImporter::uniqueUsernames()`; eliminado el `assert(instanceof Teacher)` redundante en `ActivityLogController`
+- Tests de unidad: sustituidos `createMock()` por `createStub()` en los repositorios de `OfertaFormativaExporterTest` e `OfertaFormativaImporterTest` que no configuraban expectativas; añadido `expects(self::once())` en las llamadas `with()` que lo requerían; añadido `#[AllowMockObjectsWithoutExpectations]` en `OfertaFormativaImporterTest` para los mocks de uso mixto. La suite de 1004 tests termina ahora sin notices ni deprecaciones
+
 ## [2.4.0] - 2026-06-21
 
 ### Added
