@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.5] - 2026-06-21
+
+### Fixed
+
+- Los desplegables TomSelect del registro de actividad y del listado de estancias se renderizan ahora en `<body>` (`dropdownParent: "body"`) para evitar que los contenedores con `overflow-hidden` los recorten
+- El filtro de búsqueda del listado de estancias ocupa un tercio del espacio junto a los desplegables de familia profesional y enseñanza (proporción 1:1:1); se corrige además la anchura de los desplegables TomSelect que no respetaban el contenedor flex
+
 ## [2.4.4] - 2026-06-21
 
 ### Added
