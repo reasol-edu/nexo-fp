@@ -56,6 +56,9 @@
                 <select data-model="norender|familyId"
                         data-action="change->live#action"
                         data-live-action-param="changeFamilyFilter"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="{{ 'stays.filter.all_families'|trans({}, 'stays') }}"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">{{ 'stays.filter.all_families'|trans({}, 'stays') }}</option>
@@ -70,6 +73,9 @@
                 <select data-model="norender|programmeId"
                         data-action="change->live#action"
                         data-live-action-param="resetPage"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="{{ 'autocomplete.no_results'|trans({}, 'admin') }}"
                         class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">{{ 'stays.filter.all_programmes'|trans({}, 'stays') }}</option>
