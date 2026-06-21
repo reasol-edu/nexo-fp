@@ -38,10 +38,10 @@ services:
 
   # ── Aplicación (FrankenPHP) ───────────────────────────────────────────────
   app:
+    image: reasoledu/nexo-fp:latest
     build:
       context: .
       dockerfile: Dockerfile
-    image: nexo-fp:latest
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-80}:80"
@@ -64,7 +64,7 @@ services:
   # No ejecuta el entrypoint (migraciones/setup las hace «app»); espera a que «app»
   # las aplique y, si arranca antes, «restart» lo reintenta.
   worker:
-    image: nexo-fp:latest
+    image: reasoledu/nexo-fp:latest
     restart: unless-stopped
     environment:
       <<: *app-environment
