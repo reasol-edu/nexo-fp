@@ -80,6 +80,9 @@
             <div class="flex flex-col gap-1 min-w-44">
                 <label class="text-xs font-medium text-gray-500">Centro</label>
                 <select data-model="centreId"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
                         class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">Todos</option>
@@ -97,6 +100,9 @@
                 <label class="text-xs font-medium text-gray-500">Curso</label>
                 <select data-model="yearId"
                         {{ centreId is empty or years is empty ? 'disabled' }}
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
                         class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors
                                disabled:opacity-50 disabled:cursor-not-allowed">
@@ -113,6 +119,9 @@
             <div class="flex flex-col gap-1 min-w-44">
                 <label class="text-xs font-medium text-gray-500">Tipo de acción</label>
                 <select data-model="actionType"
+                        data-controller="symfony--ux-autocomplete--autocomplete"
+                        data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
+                        data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
                         class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
                                focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
                     <option value="">Todos</option>
