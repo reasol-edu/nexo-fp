@@ -78,6 +78,10 @@ class StayController extends AbstractController
             return $this->redirectToRoute('app_select_centre');
         }
 
+        if ($this->tenant->isViewingNonActiveYear($centre)) {
+            return $this->redirectToRoute('app_stays_index');
+        }
+
         $year = $centre->getActiveAcademicYear();
         if ($year === null) {
             $this->addFlash('error', $this->t('stays.flash.no_active_year'));

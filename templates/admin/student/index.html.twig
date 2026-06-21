@@ -12,11 +12,12 @@
                 {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
             </div>
             <h1 class="text-2xl font-bold text-gray-900">{{ 'students.title'|trans({}, 'admin') }}</h1>
-            {% if centre.activeAcademicYear %}
-                <p class="mt-1 text-sm text-gray-500">{{ centre.activeAcademicYear.name }}</p>
+            {% set vy = view_year() %}
+            {% if vy %}
+                <p class="mt-1 text-sm {{ is_viewing_past_year() ? 'text-amber-600 font-medium' : 'text-gray-500' }}">{{ vy.name }}</p>
             {% endif %}
         </div>
-        {% if centre.activeAcademicYear %}
+        {% if centre.activeAcademicYear and not is_viewing_past_year() %}
             <div class="flex items-center gap-2 shrink-0">
                 <a href="{{ path('app_admin_students_import', {centreId: centre.id}) }}"
                    class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700

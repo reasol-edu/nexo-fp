@@ -14,6 +14,7 @@ use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
 use App\Security\Voter\EducationalCentreVoter;
+use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -35,6 +36,7 @@ class ProfessionalFamilyListComponent extends AbstractController
         private readonly ProgrammeRepository $programmes,
         private readonly ProgrammeYearRepository $levels,
         private readonly GroupRepository $groups,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     public function mount(EducationalCentre $centre): void
@@ -57,7 +59,7 @@ class ProfessionalFamilyListComponent extends AbstractController
      */
     public function getTree(): array
     {
-        $year = $this->centre->getActiveAcademicYear();
+        $year = $this->tenantContext->getViewYear($this->centre);
         if ($year === null) {
             return ['tree' => [], 'counts' => []];
         }

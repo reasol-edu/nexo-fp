@@ -23,8 +23,9 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
                 {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
             </div>
             <h1 class="text-2xl font-bold text-gray-900">{{ 'families.title'|trans({}, 'admin') }}</h1>
-            {% if centre.activeAcademicYear %}
-                <p class="text-sm text-gray-500 mt-0.5">{{ centre.activeAcademicYear.name }}</p>
+            {% set vy = view_year() %}
+            {% if vy %}
+                <p class="text-sm {{ is_viewing_past_year() ? 'text-amber-600 font-medium' : 'text-gray-500' }} mt-0.5">{{ vy.name }}</p>
             {% endif %}
         </div>
         {% if centre.activeAcademicYear %}
@@ -38,6 +39,7 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
                     {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-3.5 w-3.5'}) }}
                     {{ 'families.export'|trans({}, 'admin') }}
                 </a>
+                {% if not is_viewing_past_year() %}
                 <a href="{{ path('app_admin_families_import', {centreId: centre.id}) }}"
                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium
                           text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
@@ -50,6 +52,7 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
                     {{ ux_icon('heroicons:plus', {class: 'h-4 w-4'}) }}
                     {{ 'families.new'|trans({}, 'admin') }}
                 </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>

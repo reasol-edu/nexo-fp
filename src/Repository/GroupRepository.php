@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
@@ -81,9 +82,10 @@ class GroupRepository extends ServiceEntityRepository
     }
 
     /** @return Group[] */
-    public function findByActiveYearOfCentreOrderedByName(EducationalCentre $centre): array
+    public function findByActiveYearOfCentreOrderedByName(EducationalCentre $centre, ?AcademicYear $year = null): array
     {
-        if ($centre->getActiveAcademicYear() === null) {
+        $year ??= $centre->getActiveAcademicYear();
+        if ($year === null) {
             return [];
         }
 
@@ -92,7 +94,7 @@ class GroupRepository extends ServiceEntityRepository
             ->join('py.programme', 'prog')
             ->join('prog.professionalFamily', 'f')
             ->where('f.academicYear = :year')
-            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
             ->orderBy('g.name', 'ASC')
             ->getQuery()
             ->getResult();
@@ -156,9 +158,10 @@ class GroupRepository extends ServiceEntityRepository
      *
      * @return Group[]
      */
-    public function findByActiveYearOfCentreWithProgramme(EducationalCentre $centre): array
+    public function findByActiveYearOfCentreWithProgramme(EducationalCentre $centre, ?AcademicYear $year = null): array
     {
-        if ($centre->getActiveAcademicYear() === null) {
+        $year ??= $centre->getActiveAcademicYear();
+        if ($year === null) {
             return [];
         }
 
@@ -167,7 +170,7 @@ class GroupRepository extends ServiceEntityRepository
             ->join('py.programme', 'prog')->addSelect('prog')
             ->join('prog.professionalFamily', 'f')
             ->where('f.academicYear = :year')
-            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
             ->orderBy('prog.name', 'ASC')
             ->addOrderBy('py.name', 'ASC')
             ->addOrderBy('g.name', 'ASC')

@@ -5,6 +5,7 @@
             <p class="text-sm text-gray-500">{{ 'families.no_active_year'|trans({}, 'admin') }}</p>
         </div>
     {% else %}
+        {% set can_write = not is_viewing_past_year() %}
         {% set result = this.tree %}
         {% set tree   = result.tree %}
         {% set counts = result.counts %}
@@ -65,6 +66,7 @@
                                 {{ prog_count }}
                                 {{ (prog_count == 1 ? 'tree.programme_one' : 'tree.programme_other')|trans({}, 'admin') }}
                             </span>
+                            {% if can_write %}
                             <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                 <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
@@ -84,6 +86,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                         </summary>
 
                         {# ── Enseñanzas (hijos de la familia) ──────────── #}
@@ -112,6 +115,7 @@
                                                 {{ level_count }}
                                                 {{ (level_count == 1 ? 'tree.level_one' : 'tree.level_other')|trans({}, 'admin') }}
                                             </span>
+                                            {% if can_write %}
                                             <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                                 <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
                                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
@@ -131,6 +135,7 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                            {% endif %}
                                         </summary>
 
                                         {# ── Niveles ──────────────────────────────── #}
@@ -159,6 +164,7 @@
                                                                 {{ group_count }}
                                                                 {{ (group_count == 1 ? 'tree.group_one' : 'tree.group_other')|trans({}, 'admin') }}
                                                             </span>
+                                                            {% if can_write %}
                                                             <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
                                                                 <a href="{{ path('app_admin_levels_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
                                                                    class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
@@ -178,6 +184,7 @@
                                                                     </button>
                                                                 </form>
                                                             </div>
+                                                            {% endif %}
                                                         </summary>
 
                                                         {# ── Grupos ──────────────────────── #}
@@ -213,6 +220,7 @@
                                                                                 {{ gc.teachers }}
                                                                             </span>
                                                                         </span>
+                                                                        {% if can_write %}
                                                                         <div class="shrink-0 flex items-center gap-1.5 ml-2">
                                                                             <a href="{{ path('app_admin_groups_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
                                                                                class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1
@@ -232,6 +240,7 @@
                                                                                 </button>
                                                                             </form>
                                                                         </div>
+                                                                        {% endif %}
                                                                     </li>
                                                                 {% endfor %}
                                                             </ul>

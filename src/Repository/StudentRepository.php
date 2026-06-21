@@ -42,7 +42,9 @@ class StudentRepository extends ServiceEntityRepository
         string $groupId = '',
         string $sort = '',
         string $sortDir = 'asc',
+        ?AcademicYear $year = null,
     ): Query {
+        $year ??= $centre->getActiveAcademicYear();
         $qb = $this->createQueryBuilder('s')
             ->distinct()
             ->join('s.groups', 'g')
@@ -51,7 +53,7 @@ class StudentRepository extends ServiceEntityRepository
             ->join('prog.professionalFamily', 'f')
             ->join('f.academicYear', 'ay')
             ->where('ay = :activeYear')
-            ->setParameter('activeYear', $centre->getActiveAcademicYear()->getId(), 'uuid');
+            ->setParameter('activeYear', $year->getId(), 'uuid');
 
         $dir = strtolower($sortDir) === 'desc' ? 'DESC' : 'ASC';
         if (isset(self::SORTABLE[$sort])) {
@@ -93,7 +95,9 @@ class StudentRepository extends ServiceEntityRepository
         EducationalCentre $centre,
         string $search = '',
         string $groupId = '',
+        ?AcademicYear $year = null,
     ): array {
+        $year ??= $centre->getActiveAcademicYear();
         $qb = $this->createQueryBuilder('s')
             ->distinct()
             ->join('s.groups', 'g')
@@ -103,7 +107,7 @@ class StudentRepository extends ServiceEntityRepository
             ->join('f.academicYear', 'ay')
             ->leftJoin('s.groups', 'sg')->addSelect('sg')
             ->where('ay = :activeYear')
-            ->setParameter('activeYear', $centre->getActiveAcademicYear()->getId(), 'uuid')
+            ->setParameter('activeYear', $year->getId(), 'uuid')
             ->orderBy('s.name.lastName', 'ASC')
             ->addOrderBy('s.name.firstName', 'ASC');
 
@@ -147,9 +151,10 @@ class StudentRepository extends ServiceEntityRepository
         return $this->findOneBy(['studentId' => $studentId]);
     }
 
-    public function countByActiveYear(EducationalCentre $centre, ?Teacher $viewer = null): int
+    public function countByActiveYear(EducationalCentre $centre, ?Teacher $viewer = null, ?AcademicYear $year = null): int
     {
-        if ($centre->getActiveAcademicYear() === null) {
+        $year ??= $centre->getActiveAcademicYear();
+        if ($year === null) {
             return 0;
         }
 
@@ -160,7 +165,7 @@ class StudentRepository extends ServiceEntityRepository
             ->join('py.programme', 'prog')
             ->join('prog.professionalFamily', 'f')
             ->where('f.academicYear = :year')
-            ->setParameter('year', $centre->getActiveAcademicYear()->getId(), 'uuid');
+            ->setParameter('year', $year->getId(), 'uuid');
 
         if ($viewer !== null && !$viewer->isAdmin()) {
             $qb->andWhere($qb->expr()->orX(

@@ -10,6 +10,7 @@ use App\Pagination\Paginator;
 use App\Repository\TeacherRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\AppSettings;
+use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -34,6 +35,7 @@ class TeacherCentreListComponent extends AbstractController
     public function __construct(
         private readonly TeacherRepository $teachers,
         private readonly AppSettings $appSettings,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     public function mount(EducationalCentre $centre): void
@@ -45,13 +47,14 @@ class TeacherCentreListComponent extends AbstractController
     /** @return Paginator<Teacher> */
     public function getPagination(): Paginator
     {
-        if ($this->centre->getActiveAcademicYear() === null) {
+        $year = $this->tenantContext->getViewYear($this->centre);
+        if ($year === null) {
             return new Paginator($this->teachers->findNoneQuery(), 1, (int) $this->appSettings->get('page.size'));
         }
 
         return new Paginator(
             $this->teachers->createByAcademicYearFilteredQuery(
-                $this->centre->getActiveAcademicYear(),
+                $year,
                 trim($this->search),
             ),
             max(1, $this->page),

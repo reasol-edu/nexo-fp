@@ -20,6 +20,7 @@ use App\Repository\TeacherRepository;
 use App\Service\ImportOptions;
 use App\Service\OfertaFormativaExporter;
 use App\Service\OfertaFormativaImporter;
+use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,6 +44,7 @@ class ProfessionalFamilyController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly OfertaFormativaExporter $exporter,
         private readonly OfertaFormativaImporter $importer,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     // ── Exportación / Importación JSON ────────────────────────────────────────
@@ -64,7 +66,7 @@ class ProfessionalFamilyController extends AbstractController
     #[Route('/importar', name: 'app_admin_families_import')]
     public function import(string $centreId, Request $request): Response
     {
-        $centre = $this->requireCentreWithActiveYear($centreId);
+        $centre = $this->requireCentreForWrite($centreId);
 
         if (!$request->isMethod('POST')) {
             return $this->render('admin/family/import.html.twig', ['centre' => $centre]);
@@ -130,7 +132,7 @@ class ProfessionalFamilyController extends AbstractController
     #[Route('/nueva', name: 'app_admin_families_new')]
     public function new(string $centreId, Request $request): Response
     {
-        $centre = $this->requireCentreWithActiveYear($centreId);
+        $centre = $this->requireCentreForWrite($centreId);
         $errors = [];
         $values = ['name' => ''];
         $selectedHead = null;
@@ -180,7 +182,7 @@ class ProfessionalFamilyController extends AbstractController
     #[Route('/{familyId}', name: 'app_admin_families_edit')]
     public function edit(string $centreId, string $familyId, Request $request): Response
     {
-        $centre = $this->requireCentreWithActiveYear($centreId);
+        $centre = $this->requireCentreForWrite($centreId);
         $family = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
 
         $errors = [];
@@ -233,7 +235,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre = $this->requireCentreWithActiveYear($centreId);
+        $centre = $this->requireCentreForWrite($centreId);
         $family = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
 
         try {
@@ -256,7 +258,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre = $this->requireCentreWithActiveYear($centreId);
+        $centre = $this->requireCentreForWrite($centreId);
         $family = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
 
         $name = trim($request->request->getString('name'));
@@ -288,7 +290,7 @@ class ProfessionalFamilyController extends AbstractController
         string $programmeId,
         Request $request,
     ): Response {
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
 
@@ -369,7 +371,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
 
@@ -400,7 +402,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
 
@@ -434,7 +436,7 @@ class ProfessionalFamilyController extends AbstractController
         string $levelId,
         Request $request,
     ): Response {
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
         $level     = $this->requireLevel($programme, $levelId);
@@ -495,7 +497,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
         $level     = $this->requireLevel($programme, $levelId);
@@ -529,7 +531,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
         $level     = $this->requireLevel($programme, $levelId);
@@ -566,7 +568,7 @@ class ProfessionalFamilyController extends AbstractController
         string $groupId,
         Request $request,
     ): Response {
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
         $level     = $this->requireLevel($programme, $levelId);
@@ -676,7 +678,7 @@ class ProfessionalFamilyController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $centre    = $this->requireCentreWithActiveYear($centreId);
+        $centre    = $this->requireCentreForWrite($centreId);
         $family    = $this->requireFamily($centre->getActiveAcademicYear(), $familyId);
         $programme = $this->requireProgramme($family, $programmeId);
         $level     = $this->requireLevel($programme, $levelId);
@@ -717,6 +719,16 @@ class ProfessionalFamilyController extends AbstractController
         $centre = $this->requireCentre($centreId);
         if ($centre->getActiveAcademicYear() === null) {
             throw $this->createNotFoundException();
+        }
+
+        return $centre;
+    }
+
+    private function requireCentreForWrite(string $centreId): EducationalCentre
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+        if ($this->tenantContext->isViewingNonActiveYear($centre)) {
+            throw $this->createAccessDeniedException('Write operations are not allowed when viewing a past academic year.');
         }
 
         return $centre;

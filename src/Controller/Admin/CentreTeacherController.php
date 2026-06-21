@@ -11,6 +11,7 @@ use App\Entity\Teacher;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\GroupRepository;
 use App\Repository\TeacherRepository;
+use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +31,7 @@ class CentreTeacherController extends AbstractController
         private readonly GroupRepository $groups,
         private readonly UserPasswordHasherInterface $hasher,
         private readonly TranslatorInterface $translator,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     #[Route('', name: 'app_admin_centre_teachers_index')]
@@ -44,6 +46,7 @@ class CentreTeacherController extends AbstractController
     public function add(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
 
         if (!$this->isCsrfTokenValid('add_centre_teacher', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -73,6 +76,7 @@ class CentreTeacherController extends AbstractController
     public function import(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
 
         if (!$request->isMethod('POST')) {
             return $this->render('admin/centre_teacher/import.html.twig', ['centre' => $centre]);
@@ -172,6 +176,7 @@ class CentreTeacherController extends AbstractController
     public function importAssignments(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
 
         if (!$request->isMethod('POST')) {
             return $this->render('admin/centre_teacher/import_assignments.html.twig', ['centre' => $centre]);
@@ -295,6 +300,7 @@ class CentreTeacherController extends AbstractController
     public function register(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
 
         $errors = [];
         $values = [
@@ -364,6 +370,7 @@ class CentreTeacherController extends AbstractController
     public function edit(string $centreId, string $teacherId, Request $request): Response
     {
         $centre  = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
         $teacher = $this->teachers->findById($teacherId);
 
         if ($teacher === null || !$centre->getActiveAcademicYear()->getTeachers()->contains($teacher)) {
@@ -419,6 +426,7 @@ class CentreTeacherController extends AbstractController
     public function remove(string $centreId, string $teacherId, Request $request): Response
     {
         $centre  = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
         $teacher = $this->teachers->findById($teacherId);
 
         if ($teacher === null) {
@@ -430,7 +438,7 @@ class CentreTeacherController extends AbstractController
         }
 
         $year = $centre->getActiveAcademicYear();
-        if ($year->getTeachers()->contains($teacher)) {
+        if ($year !== null && $year->getTeachers()->contains($teacher)) {
             $year->removeTeacher($teacher);
             $this->em->flush();
         }
@@ -460,6 +468,13 @@ class CentreTeacherController extends AbstractController
         }
 
         return $centre;
+    }
+
+    private function denyIfViewingPastYear(EducationalCentre $centre): void
+    {
+        if ($this->tenantContext->isViewingNonActiveYear($centre)) {
+            throw $this->createAccessDeniedException('Write operations are not allowed when viewing a past academic year.');
+        }
     }
 
     /**

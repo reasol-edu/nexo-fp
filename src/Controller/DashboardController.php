@@ -50,7 +50,7 @@ class DashboardController extends AbstractController
 
         return $this->render('dashboard/index.html.twig', [
             'stats'              => $this->stayRepository->findDashboardStats($year, $viewer),
-            'studentCount'       => $this->studentRepository->countByActiveYear($centre, $viewer),
+            'studentCount'       => $this->studentRepository->countByActiveYear($centre, $viewer, $year),
             'upcomingStays'      => $this->stayRepository->findActiveAndUpcoming($year, $viewer),
             'alerts'             => $this->pendingTasksProvider->findAlertsByStay($year, $viewer),
             'familyStats'        => $canSeeFamilyStats ? $this->stayRepository->countPositionsByFamily($year, $viewer) : [],

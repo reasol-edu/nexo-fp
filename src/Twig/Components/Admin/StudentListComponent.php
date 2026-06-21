@@ -12,6 +12,7 @@ use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\AppSettings;
+use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -46,6 +47,7 @@ class StudentListComponent extends AbstractController
         private readonly StudentRepository $students,
         private readonly GroupRepository $groups,
         private readonly AppSettings $appSettings,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     public function mount(EducationalCentre $centre): void
@@ -57,13 +59,17 @@ class StudentListComponent extends AbstractController
     /** @return Group[] */
     public function getAvailableGroups(): array
     {
-        return $this->groups->findByActiveYearOfCentreOrderedByName($this->centre);
+        return $this->groups->findByActiveYearOfCentreOrderedByName(
+            $this->centre,
+            $this->tenantContext->getViewYear($this->centre),
+        );
     }
 
     /** @return Paginator<Student> */
     public function getPagination(): Paginator
     {
-        if ($this->centre->getActiveAcademicYear() === null) {
+        $year = $this->tenantContext->getViewYear($this->centre);
+        if ($year === null) {
             return new Paginator($this->students->findNoneQuery(), 1, (int) $this->appSettings->get('page.size'));
         }
 
@@ -74,6 +80,7 @@ class StudentListComponent extends AbstractController
                 trim($this->groupId),
                 $this->sort,
                 $this->sortDir,
+                $year,
             ),
             max(1, $this->page),
             (int) $this->appSettings->get('page.size'),

@@ -11,6 +11,7 @@ use App\Entity\Student;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
+use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +30,7 @@ class StudentController extends AbstractController
         private readonly StudentRepository $students,
         private readonly GroupRepository $groups,
         private readonly TranslatorInterface $translator,
+        private readonly TenantContext $tenantContext,
     ) {}
 
     #[Route('', name: 'app_admin_students_index')]
@@ -43,6 +45,7 @@ class StudentController extends AbstractController
     public function new(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
         $errors = [];
         $values = ['firstName' => '', 'lastName' => '', 'studentId' => '', 'details' => ''];
         $selectedGroupIds = [];
@@ -106,6 +109,7 @@ class StudentController extends AbstractController
     public function edit(string $centreId, string $id, Request $request): Response
     {
         $centre  = $this->requireCentre($centreId);
+        $this->denyIfViewingPastYear($centre);
         $student = $this->requireStudent($id);
 
         $centreGroupsById = $this->indexGroupsById($centre);
@@ -191,6 +195,7 @@ class StudentController extends AbstractController
     public function import(string $centreId, Request $request): Response
     {
         $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
 
         if (!$request->isMethod('POST')) {
             return $this->render('admin/student/import.html.twig', ['centre' => $centre]);
@@ -446,6 +451,7 @@ class StudentController extends AbstractController
     public function delete(string $centreId, string $id, Request $request): Response
     {
         $centre  = $this->requireCentre($centreId);
+        $this->denyIfViewingPastYear($centre);
         $student = $this->requireStudent($id);
 
         if (!$this->isCsrfTokenValid('delete_student_' . $student->getId(), $request->request->getString('_token'))) {
@@ -480,6 +486,13 @@ class StudentController extends AbstractController
         }
 
         return $centre;
+    }
+
+    private function denyIfViewingPastYear(EducationalCentre $centre): void
+    {
+        if ($this->tenantContext->isViewingNonActiveYear($centre)) {
+            throw $this->createAccessDeniedException('Write operations are not allowed when viewing a past academic year.');
+        }
     }
 
     private function requireStudent(string $id): Student

@@ -6,6 +6,7 @@
             <p class="text-sm text-gray-500">{{ 'centre_teachers.no_active_year'|trans({}, 'admin') }}</p>
         </div>
     {% else %}
+        {% set can_write = not is_viewing_past_year() %}
         {% set pagination = this.pagination %}
 
         {# Barra de búsqueda #}
@@ -49,7 +50,7 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ 'centre_teachers.col.username'|trans({}, 'admin') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">{{ 'centre_teachers.col.email'|trans({}, 'admin') }}</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">{{ 'centre_teachers.col.roles'|trans({}, 'admin') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'centre_teachers.col.actions'|trans({}, 'admin') }}</th>
+                        {% if can_write %}<th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'centre_teachers.col.actions'|trans({}, 'admin') }}</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -84,6 +85,7 @@
                                     {% endif %}
                                 </div>
                             </td>
+                            {% if can_write %}
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ path('app_admin_centre_teachers_edit', {centreId: centre.id, teacherId: teacher.id}) }}"
@@ -106,6 +108,7 @@
                                     </form>
                                 </div>
                             </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
