@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
+use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\SettingDefinition;
 use App\Entity\SettingType;
@@ -112,5 +113,16 @@ abstract class ControllerTestCase extends WebTestCase
             $session->set('tenant.centre_id', $centre->getId()->toRfc4122());
             $session->save();
         }
+    }
+
+    /**
+     * Simulates an admin switching to a past (non-active) academic year.
+     * Must be called after loginAs() so the session already exists.
+     */
+    protected function viewPastYear(AcademicYear $year): void
+    {
+        $session = $this->client->getRequest()->getSession();
+        $session->set('tenant.year_id', $year->getId()->toRfc4122());
+        $session->save();
     }
 }
