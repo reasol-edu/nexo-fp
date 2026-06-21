@@ -57,8 +57,12 @@ Mientras se visualiza un curso histórico:
 - El nombre del curso en la barra lateral se muestra en **color ámbar** para mayor visibilidad.
 - El **listado de estancias**, el **panel de inicio** y el **calendario** muestran los datos del curso
   seleccionado, incluyendo sus estancias y puestos formativos.
-- El botón **«Nueva estancia»** queda oculto: no es posible crear estancias en un curso histórico.
-  Todas las demás acciones (ver, editar, exportar, informes) sí están disponibles.
+- Las **acciones de escritura** quedan bloqueadas: no es posible crear, editar ni eliminar estancias,
+  estudiantes, docentes del curso ni familias/enseñanzas. Los botones correspondientes desaparecen de
+  la interfaz y, si se intenta acceder a esas acciones directamente, la aplicación lo impide mostrando
+  un mensaje de acceso denegado.
+- Las **acciones de solo lectura** siguen disponibles: ver listados, exportar a Excel o JSON, generar
+  informes y navegar por la estructura de enseñanzas del curso histórico.
 
 Para volver al curso activo en cualquier momento: pulsar el botón **«Volver al curso activo»** del
 banner, o usar el selector de curso en la barra lateral.
