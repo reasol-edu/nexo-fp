@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-06-21
+
 ### Added
 
-- Los **administradores globales y de centro** pueden visualizar datos de cursos académicos anteriores sin cambiar el curso activo: en la barra lateral aparece un icono de calendario junto al nombre del curso que abre un selector. Durante la sesión, el panel de inicio, el listado de estancias, el calendario y la búsqueda global muestran los datos del curso histórico seleccionado; el botón «Nueva estancia» se oculta para evitar crear estancias en años pasados. Un banner ámbar recuerda en todo momento qué curso se está viendo y permite volver al activo con un clic. El cambio es de sesión y no afecta al resto de docentes
+- Los **administradores globales y de centro** pueden visualizar datos de cursos académicos anteriores sin cambiar el curso activo: en la barra lateral aparece un icono de calendario junto al nombre del curso que abre un selector. Durante la sesión, el panel de inicio, el listado de estancias, el calendario y la búsqueda global muestran los datos del curso histórico seleccionado. Un banner ámbar recuerda en todo momento qué curso se está viendo y permite volver al activo con un clic. El cambio es de sesión y no afecta al resto de docentes
+- Todas las **operaciones de escritura** (crear, editar, eliminar, importar) quedan bloqueadas cuando se visualiza un curso histórico: los botones desaparecen de la interfaz y cualquier acceso directo devuelve un error de acceso denegado. Afecta a estancias, estudiantes, docentes del curso y familias/enseñanzas; las acciones de solo lectura (ver, exportar, informes) siguen disponibles
+- **Registro de auditoría de actividad**: los administradores globales pueden consultar un historial de acciones desde la sección Administración. Se registran inicios y cierres de sesión, suplantaciones de usuario, operaciones de escritura y exportaciones de datos. Cada entrada incluye fecha/hora, IP, usuario activo, usuario real (en suplantaciones) y centro/curso afectados. El listado dispone de filtros en tiempo real (rango temporal con accesos rápidos, autocompletar de usuario, centro, curso y tipo de acción), columnas ordenables y paginación. La captura es asíncrona para no penalizar el rendimiento. Las entradas se purgan automáticamente cada semana según el período de retención configurable (`APP_LOG_RETENTION_DAYS`, 90 días por defecto)
 
 ## [2.3.10] - 2026-06-20
 
