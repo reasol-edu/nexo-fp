@@ -212,6 +212,20 @@ Gestión interna del centro. Reúne en un único espacio:
   para copiar la estructura entre cursos o centros (ver más abajo).
 - **Cursos académicos:** crear y activar cursos del centro.
 
+### Estructurar la oferta formativa
+
+![Oferta formativa: navegación en columnas (familias, enseñanzas, niveles y grupos) con edición en el mismo panel](img/oferta-formativa.png)
+
+La oferta se gestiona en una sola pantalla con **navegación en columnas**: al seleccionar una familia
+se muestran sus enseñanzas, al elegir una enseñanza aparecen sus niveles y, dentro de cada nivel, sus
+grupos. Cada nueva columna se va rellenando sin recargar la página, y un buscador ayuda a localizar
+familias en ofertas grandes.
+
+El elemento seleccionado se **edita en el mismo panel**, sin pasar a otra pantalla: su nombre, sus
+observaciones y el personal asociado (responsable de familia, coordinadores/as de la enseñanza y
+tutores/as y docentes de cada grupo). Los cambios de personal se guardan al instante; el resto se
+confirma con **Guardar cambios**.
+
 ### Exportar e importar la oferta formativa
 
 Desde la página principal de **Oferta formativa** están disponibles dos acciones:

@@ -124,17 +124,7 @@ class PastYearGuardTest extends ControllerTestCase
     /** @return iterable<string, array{string, string}> */
     public static function provideFamilyWriteRoutes(): iterable
     {
-        $f = '00000000-0000-0000-0000-000000000001';
-        $p = '00000000-0000-0000-0000-000000000002';
-        $l = '00000000-0000-0000-0000-000000000003';
-        $g = '00000000-0000-0000-0000-000000000004';
-
-        yield 'new family GET'       => ['GET',  '/nueva'];
-        yield 'import GET'           => ['GET',  '/importar'];
-        yield 'edit family GET'      => ['GET',  "/{$f}"];
-        yield 'edit programme GET'   => ['GET',  "/{$f}/ense%C3%B1anzas/{$p}"];
-        yield 'edit level GET'       => ['GET',  "/{$f}/ense%C3%B1anzas/{$p}/niveles/{$l}"];
-        yield 'edit group GET'       => ['GET',  "/{$f}/ense%C3%B1anzas/{$p}/niveles/{$l}/grupos/{$g}"];
+        yield 'import GET' => ['GET', '/importar'];
     }
 
     public function testFamilyIndexHidesWriteButtonsAndKeepsExportWhenViewingPastYear(): void
@@ -146,8 +136,7 @@ class PastYearGuardTest extends ControllerTestCase
         $crawler = $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/familias');
 
         self::assertResponseIsSuccessful();
-        // Write buttons hidden
-        self::assertSelectorNotExists('a[href*="/nueva"]');
+        // Write button (import) hidden
         self::assertSelectorNotExists('a[href*="/importar"]');
         // Export (read-only) remains visible
         self::assertSelectorExists('a[href*="/exportar"]');
@@ -241,7 +230,7 @@ class PastYearGuardTest extends ControllerTestCase
         [$admin, $centre] = $this->makeCentreWithTwoYears();
         $this->loginAs($admin, $centre);
 
-        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/familias/nueva');
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/familias/importar');
 
         self::assertResponseIsSuccessful();
     }

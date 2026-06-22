@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-06-22
+
+### Changed
+
+- Rediseñada la gestión de la **oferta formativa** en una única pantalla con **navegación en columnas** (familias → enseñanzas → niveles → grupos): al seleccionar un elemento se despliega la columna siguiente sin recargar la página, con un buscador para localizar familias en ofertas grandes
+- El elemento seleccionado se **crea, edita y elimina en el mismo panel**: las asignaciones de personal (responsable de familia, coordinadores/as, tutores/as y docentes) se guardan al instante, y el nombre y las observaciones se confirman con «Guardar cambios»; el borrado pide confirmación en dos pasos
+- En el detalle de grupo, las observaciones pasan al final del formulario, los tutores/as ocupan su lugar junto al nombre y los docentes disponen de una línea propia
+- Los desplegables de personal del panel filtran sobre la lista local (muestran todas las opciones y filtran desde la primera letra); se corrige el texto de ayuda, que antes indicaba un mínimo de dos caracteres propio de la búsqueda remota de las pantallas anteriores
+
+### Removed
+
+- Eliminadas las pantallas independientes de alta y edición de familias, enseñanzas, niveles y grupos, ahora redundantes con la edición integrada en la pantalla de oferta formativa
+
 ## [2.4.5] - 2026-06-21
 
 ### Fixed

@@ -38,6 +38,42 @@ class GroupRepository extends ServiceEntityRepository
             ->getOneOrNullResult() !== null;
     }
 
+    /**
+     * Number of groups per level, keyed by level UUID (RFC4122). Single grouped query.
+     *
+     * @param  ProgrammeYear[] $levels
+     * @return array<string, int>
+     */
+    public function countByLevel(array $levels): array
+    {
+        if ($levels === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('g')
+            ->select('IDENTITY(g.programmeYear) AS lid', 'COUNT(g.id) AS cnt')
+            ->where('g.programmeYear IN (:levels)')
+            ->setParameter('levels', $levels)
+            ->groupBy('g.programmeYear')
+            ->getQuery()
+            ->getScalarResult();
+
+        $uuidNorm = [];
+        foreach ($levels as $level) {
+            $rfc = $level->getId()->toRfc4122();
+            $uuidNorm[$rfc]                      = $rfc;
+            $uuidNorm[$level->getId()->toBinary()] = $rfc;
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $key = $uuidNorm[(string) $row['lid']] ?? (string) $row['lid'];
+            $map[$key] = (int) $row['cnt'];
+        }
+
+        return $map;
+    }
+
     /** @return Group[] */
     public function findByLevelOrderedByName(ProgrammeYear $level): array
     {

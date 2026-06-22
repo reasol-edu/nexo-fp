@@ -19,6 +19,42 @@ class ProgrammeYearRepository extends ServiceEntityRepository
         parent::__construct($registry, ProgrammeYear::class);
     }
 
+    /**
+     * Number of levels per programme, keyed by programme UUID (RFC4122). Single grouped query.
+     *
+     * @param  Programme[] $programmes
+     * @return array<string, int>
+     */
+    public function countByProgramme(array $programmes): array
+    {
+        if ($programmes === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('py')
+            ->select('IDENTITY(py.programme) AS pid', 'COUNT(py.id) AS cnt')
+            ->where('py.programme IN (:programmes)')
+            ->setParameter('programmes', $programmes)
+            ->groupBy('py.programme')
+            ->getQuery()
+            ->getScalarResult();
+
+        $uuidNorm = [];
+        foreach ($programmes as $programme) {
+            $rfc = $programme->getId()->toRfc4122();
+            $uuidNorm[$rfc]                          = $rfc;
+            $uuidNorm[$programme->getId()->toBinary()] = $rfc;
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $key = $uuidNorm[(string) $row['pid']] ?? (string) $row['pid'];
+            $map[$key] = (int) $row['cnt'];
+        }
+
+        return $map;
+    }
+
     /** @return ProgrammeYear[] */
     public function findByProgrammeOrderedByName(Programme $programme): array
     {

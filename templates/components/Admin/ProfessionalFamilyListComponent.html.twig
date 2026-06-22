@@ -1,262 +1,419 @@
-<div {{ attributes }}>
+{% macro column(title, icon, items, counts, selected_id, select_action, count_one, count_other, can_write, ready, placeholder, empty_msg, add_action, add_model, add_value, add_placeholder, active) %}
+    <div class="flex min-h-0 flex-col {{ active ? 'flex' : 'hidden' }} lg:flex">
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50/70">
+            {{ ux_icon(icon, {class: 'h-4 w-4 text-gray-400'}) }}
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ title }}</span>
+            {% if ready %}
+                <span class="ml-auto text-xs text-gray-400">{{ items|length }}</span>
+            {% endif %}
+        </div>
+
+        {% if not ready %}
+            <div class="flex flex-1 items-center justify-center px-4 py-10 text-center">
+                <p class="text-xs text-gray-400">{{ placeholder }}</p>
+            </div>
+        {% else %}
+            <div class="flex-1 overflow-y-auto lg:max-h-[28rem]">
+                {% if items is empty %}
+                    <p class="px-4 py-6 text-center text-xs italic text-gray-400">{{ empty_msg }}</p>
+                {% else %}
+                    <ul class="divide-y divide-gray-50">
+                        {% for item in items %}
+                            {% set is_sel = selected_id == item.id.toRfc4122 %}
+                            {% set n = counts[item.id.toRfc4122] ?? 0 %}
+                            <li>
+                                <button type="button"
+                                        data-action="live#action"
+                                        data-live-action-param="{{ select_action }}"
+                                        data-live-id-param="{{ item.id }}"
+                                        class="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors
+                                               {{ is_sel ? 'bg-plum-50 ring-1 ring-inset ring-plum-200' : 'hover:bg-gray-50' }}">
+                                    <span class="flex-1 min-w-0 truncate text-sm {{ is_sel ? 'font-semibold text-plum-800' : 'text-gray-800' }}">
+                                        {{ item.name }}
+                                    </span>
+                                    <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                                                 {{ n > 0 ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-gray-300' }}">
+                                        {{ n }} {{ (n == 1 ? count_one : count_other)|trans({}, 'admin') }}
+                                    </span>
+                                    {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0 ' ~ (is_sel ? 'text-plum-400' : 'text-gray-300')}) }}
+                                </button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {% if can_write %}
+                <form data-action="submit->live#action:prevent"
+                      data-live-action-param="{{ add_action }}"
+                      class="flex items-center gap-2 border-t border-gray-100 bg-gray-50/40 px-3 py-2.5">
+                    <input type="text"
+                           data-model="norender|{{ add_model }}"
+                           value="{{ add_value }}"
+                           placeholder="{{ add_placeholder }}"
+                           class="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm
+                                  placeholder-gray-400 focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-500/20">
+                    <button type="submit"
+                            class="inline-flex shrink-0 items-center justify-center rounded-lg bg-plum-600 p-1.5 text-white
+                                   hover:bg-plum-700 transition-colors"
+                            title="{{ 'offer.add'|trans({}, 'admin') }}">
+                        {{ ux_icon('heroicons:plus', {class: 'h-4 w-4'}) }}
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% import _self as ui %}
+
+<div {{ attributes }} class="js-offer-tree">
     {% if centre.activeAcademicYear is null %}
         <div class="px-6 py-16 text-center">
             {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
             <p class="text-sm text-gray-500">{{ 'families.no_active_year'|trans({}, 'admin') }}</p>
         </div>
     {% else %}
-        {% set can_write = not is_viewing_past_year() %}
-        {% set result = this.tree %}
-        {% set tree   = result.tree %}
-        {% set counts = result.counts %}
+        {% set can_write       = this.canWrite %}
+        {% set families        = this.familyList %}
+        {% set family_counts   = this.familyCounts %}
+        {% set programmes      = this.programmeList %}
+        {% set programme_counts = this.programmeCounts %}
+        {% set levels          = this.levelList %}
+        {% set level_counts    = this.levelCounts %}
+        {% set groups          = this.groupList %}
+        {% set group_counts    = this.groupCounts %}
+        {% set sel             = this.selected %}
+        {% set sel_family      = this.selectedFamily %}
+        {% set sel_programme   = this.selectedProgramme %}
+        {% set sel_level       = this.selectedLevel %}
+        {% set sel_group       = this.selectedGroup %}
+        {% set teacher_options = this.teacherOptions %}
+        {% set mobile_col      = levelId ? 'groups' : (programmeId ? 'levels' : (familyId ? 'programmes' : 'families')) %}
 
-        {# Barra de búsqueda #}
-        <div class="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-            <div class="relative flex-1 max-w-xs">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
-                </div>
-                <input type="search"
-                       data-model="search"
-                       placeholder="{{ 'families.search'|trans({}, 'admin') }}"
-                       value="{{ search }}"
-                       class="block w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm
-                              text-gray-900 placeholder-gray-400 focus:border-plum-500 focus:outline-none
-                              focus:ring-3 focus:ring-plum-500/20 transition-colors">
-            </div>
-            <svg data-loading class="hidden h-4 w-4 text-plum-500 animate-spin shrink-0 ml-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-            </svg>
-        </div>
-
-        <div data-loading="addClass(opacity-50 pointer-events-none animate-pulse)" class="transition-opacity">
-        {% if tree is empty %}
-            <div class="px-6 py-16 text-center">
-                {{ ux_icon('heroicons:academic-cap', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
-                <p class="text-sm text-gray-500">
-                    {{ (search is not empty ? 'families.search_empty' : 'families.empty')|trans({}, 'admin') }}
-                </p>
-            </div>
-        {% else %}
-            <div class="divide-y divide-gray-100">
-                {% for family_node in tree %}
-                    {% set family = family_node.family %}
-                    {% set prog_count = family_node.programmes|length %}
-
-                    {# ── Familia ────────────────────────────────────────── #}
-                    <details id="family-{{ family.id }}"
-                             class="group/family"
-                             {{ search is not empty or prog_count == 0 ? '' : '' }}>
-                        <summary class="flex items-center gap-3 px-6 py-3.5 cursor-pointer
-                                        hover:bg-gray-50 transition-colors select-none list-none">
-                            <span class="tree-chevron shrink-0 text-gray-400 group-open/family:text-plum-600 transition-colors">
-                                {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
-                            </span>
-                            <span class="font-semibold text-sm text-gray-900 flex-1 min-w-0 truncate">
-                                {{ family.name }}
-                            </span>
-                            {% if family.head %}
-                                <span class="hidden sm:inline text-xs text-gray-500 shrink-0">
-                                    {{ family.head.name.lastName }}, {{ family.head.name.firstName }}
-                                </span>
-                            {% endif %}
-                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                         {{ prog_count > 0 ? 'bg-plum-50 text-plum-700' : 'bg-gray-100 text-gray-400' }}">
-                                {{ prog_count }}
-                                {{ (prog_count == 1 ? 'tree.programme_one' : 'tree.programme_other')|trans({}, 'admin') }}
-                            </span>
-                            {% if can_write %}
-                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
-                                <a href="{{ path('app_admin_families_edit', {centreId: centre.id, familyId: family.id}) }}"
-                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
-                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
-                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                    {{ 'families.edit'|trans({}, 'admin') }}
-                                </a>
-                                <form method="post"
-                                      action="{{ path('app_admin_families_delete', {centreId: centre.id, familyId: family.id}) }}"
-                                      class="js-confirm-form"
-                                      data-confirm="{{ 'families.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_family_' ~ family.id) }}">
-                                    <button type="submit"
-                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
-                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
-                                        {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
-                                    </button>
-                                </form>
-                            </div>
-                            {% endif %}
-                        </summary>
-
-                        {# ── Enseñanzas (hijos de la familia) ──────────── #}
-                        {% if family_node.programmes is empty %}
-                            <div class="pl-14 pr-6 py-3 text-xs text-gray-400 italic border-t border-gray-50">
-                                {{ 'programmes.empty'|trans({}, 'admin') }}
-                            </div>
-                        {% else %}
-                            <div class="border-t border-gray-50 divide-y divide-gray-50 bg-gray-50/40">
-                                {% for prog_node in family_node.programmes %}
-                                    {% set programme = prog_node.programme %}
-                                    {% set level_count = prog_node.levels|length %}
-
-                                    <details id="programme-{{ programme.id }}"
-                                             class="group/programme">
-                                        <summary class="flex items-center gap-3 pl-14 pr-6 py-3 cursor-pointer
-                                                        hover:bg-gray-100/60 transition-colors select-none list-none">
-                                            <span class="tree-chevron shrink-0 text-gray-300 group-open/programme:text-plum-500 transition-colors">
-                                                {{ ux_icon('heroicons:chevron-right', {class: 'h-3.5 w-3.5'}) }}
-                                            </span>
-                                            <span class="text-sm text-gray-800 flex-1 min-w-0 truncate">
-                                                {{ programme.name }}
-                                            </span>
-                                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                                         {{ level_count > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-400' }}">
-                                                {{ level_count }}
-                                                {{ (level_count == 1 ? 'tree.level_one' : 'tree.level_other')|trans({}, 'admin') }}
-                                            </span>
-                                            {% if can_write %}
-                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
-                                                <a href="{{ path('app_admin_programmes_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
-                                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
-                                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
-                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                                    {{ 'programmes.action.edit'|trans({}, 'admin') }}
-                                                </a>
-                                                <form method="post"
-                                                      action="{{ path('app_admin_programmes_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id}) }}"
-                                                      class="js-confirm-form"
-                                                      data-confirm="{{ 'programmes.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_programme_' ~ programme.id) }}">
-                                                    <button type="submit"
-                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
-                                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
-                                                        {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            {% endif %}
-                                        </summary>
-
-                                        {# ── Niveles ──────────────────────────────── #}
-                                        {% if prog_node.levels is empty %}
-                                            <div class="pl-24 pr-6 py-3 text-xs text-gray-400 italic border-t border-gray-100/80">
-                                                {{ 'levels.empty'|trans({}, 'admin') }}
-                                            </div>
-                                        {% else %}
-                                            <div class="border-t border-gray-100/80 divide-y divide-gray-100/80 bg-white/60">
-                                                {% for level_node in prog_node.levels %}
-                                                    {% set level = level_node.level %}
-                                                    {% set group_count = level_node.groups|length %}
-
-                                                    <details id="level-{{ level.id }}"
-                                                             class="group/level">
-                                                        <summary class="flex items-center gap-3 pl-24 pr-6 py-2.5 cursor-pointer
-                                                                        hover:bg-gray-50 transition-colors select-none list-none">
-                                                            <span class="tree-chevron shrink-0 text-gray-300 group-open/level:text-plum-400 transition-colors">
-                                                                {{ ux_icon('heroicons:chevron-right', {class: 'h-3 w-3'}) }}
-                                                            </span>
-                                                            <span class="text-sm text-gray-700 flex-1 min-w-0 truncate">
-                                                                {{ level.name }}
-                                                            </span>
-                                                            <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                                                         {{ group_count > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-400' }}">
-                                                                {{ group_count }}
-                                                                {{ (group_count == 1 ? 'tree.group_one' : 'tree.group_other')|trans({}, 'admin') }}
-                                                            </span>
-                                                            {% if can_write %}
-                                                            <div class="shrink-0 flex items-center gap-1.5 ml-2" onclick="event.stopPropagation()">
-                                                                <a href="{{ path('app_admin_levels_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
-                                                                   class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5
-                                                                          text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
-                                                                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                                                    {{ 'levels.action.edit'|trans({}, 'admin') }}
-                                                                </a>
-                                                                <form method="post"
-                                                                      action="{{ path('app_admin_levels_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id}) }}"
-                                                                      class="js-confirm-form"
-                                                                      data-confirm="{{ 'levels.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
-                                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_level_' ~ level.id) }}">
-                                                                    <button type="submit"
-                                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1.5
-                                                                                   text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
-                                                                        {{ ux_icon('heroicons:trash', {class: 'h-3 w-3'}) }}
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                            {% endif %}
-                                                        </summary>
-
-                                                        {# ── Grupos ──────────────────────── #}
-                                                        {% if level_node.groups is empty %}
-                                                            <div class="pl-32 pr-6 py-2.5 text-xs text-gray-400 italic border-t border-gray-100/60">
-                                                                {{ 'groups.empty'|trans({}, 'admin') }}
-                                                            </div>
-                                                        {% else %}
-                                                            <ul class="border-t border-gray-100/60 divide-y divide-gray-50 bg-gray-50/20">
-                                                                {% for group in level_node.groups %}
-                                                                    {% set gc = counts[group.id.toRfc4122] ?? {students: 0, teachers: 0} %}
-                                                                    <li class="flex items-center gap-3 pl-32 pr-6 py-2 hover:bg-gray-50/60 transition-colors">
-                                                                        <span class="shrink-0 h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-                                                                        <span class="text-xs font-medium text-gray-700 flex-1 min-w-0 truncate">
-                                                                            {{ group.name }}
-                                                                        </span>
-                                                                        {% if group.tutors|length > 0 %}
-                                                                            <span class="hidden md:inline text-xs text-gray-400 shrink-0">
-                                                                                {{ group.tutors|map(t => t.name.lastName ~ ', ' ~ t.name.firstName)|join(' · ') }}
-                                                                            </span>
-                                                                        {% endif %}
-                                                                        <span class="shrink-0 inline-flex items-center gap-1">
-                                                                            <span title="{{ 'groups.col.students'|trans({}, 'admin') }}"
-                                                                                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
-                                                                                         {{ gc.students > 0 ? 'bg-sky-50 text-sky-700' : 'bg-gray-100 text-gray-400' }}">
-                                                                                {{ ux_icon('heroicons:users', {class: 'h-3 w-3'}) }}
-                                                                                {{ gc.students }}
-                                                                            </span>
-                                                                            <span title="{{ 'groups.col.teachers'|trans({}, 'admin') }}"
-                                                                                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
-                                                                                         {{ gc.teachers > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-100 text-gray-400' }}">
-                                                                                {{ ux_icon('heroicons:academic-cap', {class: 'h-3 w-3'}) }}
-                                                                                {{ gc.teachers }}
-                                                                            </span>
-                                                                        </span>
-                                                                        {% if can_write %}
-                                                                        <div class="shrink-0 flex items-center gap-1.5 ml-2">
-                                                                            <a href="{{ path('app_admin_groups_edit', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
-                                                                               class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1
-                                                                                      text-xs font-medium text-gray-600 hover:bg-white hover:border-gray-300 transition-colors">
-                                                                                {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                                                                                {{ 'groups.action.edit'|trans({}, 'admin') }}
-                                                                            </a>
-                                                                            <form method="post"
-                                                                                  action="{{ path('app_admin_groups_delete', {centreId: centre.id, familyId: family.id, programmeId: programme.id, levelId: level.id, groupId: group.id}) }}"
-                                                                                  class="js-confirm-form"
-                                                                                  data-confirm="{{ 'groups.delete_confirm'|trans({}, 'admin')|e('html_attr') }}">
-                                                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_group_' ~ group.id) }}">
-                                                                                <button type="submit"
-                                                                                        class="js-confirm-trigger inline-flex items-center rounded-lg border border-transparent px-2 py-1
-                                                                                               text-xs text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-colors">
-                                                                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}
-                                                                                </button>
-                                                                            </form>
-                                                                        </div>
-                                                                        {% endif %}
-                                                                    </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        {% endif %}
-                                                    </details>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </details>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </details>
-                {% endfor %}
+        {# ── Migas de pan (solo móvil) ─────────────────────────────────────── #}
+        {% if familyId %}
+            <div class="flex flex-wrap items-center gap-1 border-b border-gray-100 px-4 py-2 text-xs text-gray-500 lg:hidden">
+                <button type="button" data-action="live#action" data-live-action-param="clearSelection"
+                        class="rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-plum-700">
+                    {{ 'offer.col.families'|trans({}, 'admin') }}
+                </button>
+                {% if sel_family %}
+                    {{ ux_icon('heroicons:chevron-right', {class: 'h-3 w-3 text-gray-300'}) }}
+                    <button type="button" data-action="live#action" data-live-action-param="selectFamily" data-live-id-param="{{ sel_family.id }}"
+                            class="max-w-[10rem] truncate rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-plum-700 {{ not programmeId ? 'font-semibold text-plum-700' : '' }}">
+                        {{ sel_family.name }}
+                    </button>
+                {% endif %}
+                {% if sel_programme %}
+                    {{ ux_icon('heroicons:chevron-right', {class: 'h-3 w-3 text-gray-300'}) }}
+                    <button type="button" data-action="live#action" data-live-action-param="selectProgramme" data-live-id-param="{{ sel_programme.id }}"
+                            class="max-w-[10rem] truncate rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-plum-700 {{ not levelId ? 'font-semibold text-plum-700' : '' }}">
+                        {{ sel_programme.name }}
+                    </button>
+                {% endif %}
+                {% if sel_level %}
+                    {{ ux_icon('heroicons:chevron-right', {class: 'h-3 w-3 text-gray-300'}) }}
+                    <button type="button" data-action="live#action" data-live-action-param="selectLevel" data-live-id-param="{{ sel_level.id }}"
+                            class="max-w-[10rem] truncate rounded px-1.5 py-0.5 font-semibold text-plum-700">
+                        {{ sel_level.name }}
+                    </button>
+                {% endif %}
             </div>
         {% endif %}
+
+        {# ── Columnas ──────────────────────────────────────────────────────── #}
+        <div data-loading="addClass(opacity-50 pointer-events-none)" class="transition-opacity">
+            <div class="grid grid-cols-1 divide-y divide-gray-100 lg:grid-cols-[3fr_3fr_2fr_2fr] lg:divide-x lg:divide-y-0">
+                {{ ui.column(
+                    'offer.col.families'|trans({}, 'admin'), 'heroicons:academic-cap',
+                    families, family_counts, familyId, 'selectFamily',
+                    'tree.programme_one', 'tree.programme_other',
+                    can_write, true, null,
+                    'families.empty'|trans({}, 'admin'),
+                    'addFamily', 'addFamilyName', addFamilyName, 'family.field.name'|trans({}, 'admin'),
+                    mobile_col == 'families'
+                ) }}
+
+                {{ ui.column(
+                    'offer.col.programmes'|trans({}, 'admin'), 'heroicons:rectangle-stack',
+                    programmes, programme_counts, programmeId, 'selectProgramme',
+                    'tree.level_one', 'tree.level_other',
+                    can_write, sel_family is not null, 'offer.placeholder.programmes'|trans({}, 'admin'),
+                    'programmes.empty'|trans({}, 'admin'),
+                    'addProgramme', 'addProgrammeName', addProgrammeName, 'programmes.field.name_placeholder'|trans({}, 'admin'),
+                    mobile_col == 'programmes'
+                ) }}
+
+                {{ ui.column(
+                    'offer.col.levels'|trans({}, 'admin'), 'heroicons:bars-3-bottom-left',
+                    levels, level_counts, levelId, 'selectLevel',
+                    'tree.group_one', 'tree.group_other',
+                    can_write, sel_programme is not null, 'offer.placeholder.levels'|trans({}, 'admin'),
+                    'levels.empty'|trans({}, 'admin'),
+                    'addLevel', 'addLevelName', addLevelName, 'levels.field.name_placeholder'|trans({}, 'admin'),
+                    mobile_col == 'levels'
+                ) }}
+
+                {# ── Grupos (badges de estudiantes/docentes) ──────────────── #}
+                <div class="flex min-h-0 flex-col {{ mobile_col == 'groups' ? 'flex' : 'hidden' }} lg:flex">
+                    <div class="flex items-center gap-2 border-b border-gray-100 bg-gray-50/70 px-4 py-2.5">
+                        {{ ux_icon('heroicons:user-group', {class: 'h-4 w-4 text-gray-400'}) }}
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ 'offer.col.groups'|trans({}, 'admin') }}</span>
+                        {% if sel_level %}<span class="ml-auto text-xs text-gray-400">{{ groups|length }}</span>{% endif %}
+                    </div>
+
+                    {% if sel_level is null %}
+                        <div class="flex flex-1 items-center justify-center px-4 py-10 text-center">
+                            <p class="text-xs text-gray-400">{{ 'offer.placeholder.groups'|trans({}, 'admin') }}</p>
+                        </div>
+                    {% else %}
+                        <div class="flex-1 overflow-y-auto lg:max-h-[28rem]">
+                            {% if groups is empty %}
+                                <p class="px-4 py-6 text-center text-xs italic text-gray-400">{{ 'groups.empty'|trans({}, 'admin') }}</p>
+                            {% else %}
+                                <ul class="divide-y divide-gray-50">
+                                    {% for group in groups %}
+                                        {% set is_sel = groupId == group.id.toRfc4122 %}
+                                        {% set gc = group_counts[group.id.toRfc4122] ?? {students: 0, teachers: 0} %}
+                                        <li>
+                                            <button type="button"
+                                                    data-action="live#action"
+                                                    data-live-action-param="selectGroup"
+                                                    data-live-id-param="{{ group.id }}"
+                                                    class="flex w-full items-center gap-2 px-4 py-2.5 text-left transition-colors
+                                                           {{ is_sel ? 'bg-plum-50 ring-1 ring-inset ring-plum-200' : 'hover:bg-gray-50' }}">
+                                                <span class="flex-1 min-w-0 truncate text-sm {{ is_sel ? 'font-semibold text-plum-800' : 'text-gray-800' }}">
+                                                    {{ group.name }}
+                                                </span>
+                                                <span title="{{ 'groups.col.students'|trans({}, 'admin') }}"
+                                                      class="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
+                                                             {{ gc.students > 0 ? 'bg-sky-50 text-sky-700' : 'bg-gray-50 text-gray-300' }}">
+                                                    {{ ux_icon('heroicons:users', {class: 'h-3 w-3'}) }}{{ gc.students }}
+                                                </span>
+                                                <span title="{{ 'groups.col.teachers'|trans({}, 'admin') }}"
+                                                      class="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
+                                                             {{ gc.teachers > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-300' }}">
+                                                    {{ ux_icon('heroicons:academic-cap', {class: 'h-3 w-3'}) }}{{ gc.teachers }}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        {% if can_write %}
+                            <form data-action="submit->live#action:prevent"
+                                  data-live-action-param="addGroup"
+                                  class="flex items-center gap-2 border-t border-gray-100 bg-gray-50/40 px-3 py-2.5">
+                                <input type="text"
+                                       data-model="norender|addGroupName"
+                                       value="{{ addGroupName }}"
+                                       placeholder="{{ 'groups.field.name_placeholder'|trans({}, 'admin') }}"
+                                       class="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm
+                                              placeholder-gray-400 focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-500/20">
+                                <button type="submit"
+                                        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-plum-600 p-1.5 text-white hover:bg-plum-700 transition-colors"
+                                        title="{{ 'offer.add'|trans({}, 'admin') }}">
+                                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4'}) }}
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── Panel de detalle ──────────────────────────────────────────── #}
+            {% if sel %}
+                {% set type = sel.type %}
+                {% set title_keys   = {family: 'family.edit.title', programme: 'programme.edit.title', level: 'level.edit.title', group: 'group.edit.title'} %}
+                {% set name_keys    = {family: 'family.field.name', programme: 'programme.field.name', level: 'level.field.name', group: 'group.field.name'} %}
+                {% set confirm_keys = {family: 'families.delete_confirm', programme: 'programmes.delete_confirm', level: 'levels.delete_confirm', group: 'groups.delete_confirm'} %}
+                <div class="border-t border-gray-200 bg-gray-50/60 px-4 py-4 sm:px-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4 text-plum-500'}) }}
+                        <h3 class="text-sm font-semibold text-gray-900">{{ title_keys[type]|trans({}, 'admin') }}</h3>
+                    </div>
+
+                    {% if can_write %}
+                        <form data-action="submit->live#action:prevent" data-live-action-param="saveDetail"
+                              class="grid grid-cols-1 gap-3 {{ type != 'family' ? 'sm:grid-cols-3' : '' }}">
+                            <div class="{{ type != 'family' ? 'sm:col-span-1' : '' }}">
+                                <label class="mb-1 block text-xs font-medium text-gray-600">{{ name_keys[type]|trans({}, 'admin') }}</label>
+                                <input type="text"
+                                       data-model="norender|editName"
+                                       value="{{ editName }}"
+                                       class="block w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2
+                                              {{ errors.name is defined ? 'border-red-300 focus:ring-red-400/20' : 'border-gray-200 focus:border-plum-500 focus:ring-plum-500/20' }}">
+                                {% if errors.name is defined %}<p class="mt-1 text-xs text-red-600">{{ errors.name }}</p>{% endif %}
+                            </div>
+                            {% if type == 'programme' %}
+                                <div class="sm:col-span-2">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'programme.field.details'|trans({}, 'admin') }}</label>
+                                    <textarea data-model="norender|editDetails" rows="2"
+                                              class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-500/20">{{ editDetails }}</textarea>
+                                </div>
+                            {% elseif type == 'group' %}
+                                {% set tutor_ids = [] %}
+                                {% for tu in sel_group.tutors %}{% set tutor_ids = tutor_ids|merge([tu.id.toRfc4122]) %}{% endfor %}
+                                <div class="sm:col-span-2">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.tutor'|trans({}, 'admin') }}</label>
+                                    <select id="staff-tutors" multiple class="js-staff-select w-full"
+                                            data-staff-action="setGroupTutors" data-staff-arg="ids"
+                                            data-placeholder="{{ 'group.field.tutor_help'|trans({}, 'admin') }}">
+                                        {% for t in teacher_options %}
+                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in tutor_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% endif %}
+
+                            {# ── Personal: jefatura / coordinación / docentes ── #}
+                            {% if type == 'family' %}
+                                <div class="border-t border-gray-100 pt-4">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'family.field.head'|trans({}, 'admin') }}</label>
+                                    <select id="staff-head" class="js-staff-select w-full"
+                                            data-staff-action="setFamilyHead" data-staff-arg="teacherId"
+                                            data-placeholder="{{ 'family.field.head_help'|trans({}, 'admin') }}">
+                                        <option value="">—</option>
+                                        {% for t in teacher_options %}
+                                            <option value="{{ t.id.toRfc4122 }}" {{ sel_family.head and sel_family.head.id.toRfc4122 == t.id.toRfc4122 ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% elseif type == 'programme' %}
+                                {% set coord_ids = [] %}
+                                {% for c in sel_programme.coordinators %}{% set coord_ids = coord_ids|merge([c.id.toRfc4122]) %}{% endfor %}
+                                <div class="border-t border-gray-100 pt-4 sm:col-span-3">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'programme.field.coordinators'|trans({}, 'admin') }}</label>
+                                    <select id="staff-coordinators" multiple class="js-staff-select w-full"
+                                            data-staff-action="setCoordinators" data-staff-arg="ids"
+                                            data-placeholder="{{ 'programme.field.coordinators_help'|trans({}, 'admin') }}">
+                                        {% for t in teacher_options %}
+                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in coord_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% elseif type == 'group' %}
+                                {% set teacher_ids = [] %}
+                                {% for te in sel_group.teachers %}{% set teacher_ids = teacher_ids|merge([te.id.toRfc4122]) %}{% endfor %}
+                                <div class="border-t border-gray-100 pt-4 sm:col-span-3">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.teachers'|trans({}, 'admin') }}</label>
+                                    <select id="staff-teachers" multiple class="js-staff-select w-full"
+                                            data-staff-action="setGroupTeachers" data-staff-arg="ids"
+                                            data-placeholder="{{ 'group.field.teachers_help'|trans({}, 'admin') }}">
+                                        {% for t in teacher_options %}
+                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in teacher_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="border-t border-gray-100 pt-4 sm:col-span-3">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.details'|trans({}, 'admin') }}</label>
+                                    <textarea data-model="norender|editDetails" rows="2"
+                                              class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-500/20">{{ editDetails }}</textarea>
+                                </div>
+                            {% endif %}
+
+                            <div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4 sm:col-span-3">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 rounded-xl bg-plum-600 px-4 py-2 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                                    {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}{{ 'offer.detail.save'|trans({}, 'admin') }}
+                                </button>
+
+                                <span class="ml-auto"></span>
+
+                                {% if confirmingDelete %}
+                                    <span class="text-xs text-gray-600">{{ confirm_keys[type]|trans({}, 'admin') }}</span>
+                                    <button type="button" data-action="live#action" data-live-action-param="deleteSelected"
+                                            class="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">
+                                        {{ 'offer.detail.confirm_yes'|trans({}, 'admin') }}
+                                    </button>
+                                    <button type="button" data-action="live#action" data-live-action-param="cancelDelete"
+                                            class="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                                        {{ 'offer.detail.cancel'|trans({}, 'admin') }}
+                                    </button>
+                                {% else %}
+                                    <button type="button" data-action="live#action" data-live-action-param="askDelete"
+                                            class="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                        {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}{{ 'offer.detail.delete'|trans({}, 'admin') }}
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    {% else %}
+                        <p class="text-sm text-gray-700">{{ editName }}</p>
+                        {% if type != 'family' and editDetails %}<p class="mt-1 text-xs text-gray-500">{{ editDetails }}</p>{% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     {% endif %}
+
+    <style>
+    .ts-wrapper { font-size: 0.875rem; }
+    .ts-control { border-radius: 0.75rem !important; border-color: #e5e7eb !important; background-color: #fff !important; padding: 0.5rem 0.875rem !important; box-shadow: none !important; gap: 0.25rem; }
+    .ts-control:focus-within { border-color: #876baf !important; box-shadow: 0 0 0 3px rgb(135 107 175 / 0.2) !important; }
+    .ts-control .item { background: #ece6f4; color: #574a68; border: 1px solid #d8cce8; border-radius: 0.5rem; padding: 0.125rem 0.375rem; font-size: 0.8125rem; }
+    .ts-control .item .remove { color: #876baf; border-left-color: #d8cce8; }
+    .ts-dropdown { border-radius: 0.75rem; border-color: #e5e7eb; box-shadow: 0 4px 12px rgb(0 0 0 / 0.08); overflow: hidden; }
+    .ts-dropdown .option { padding: 0.5rem 0.875rem; }
+    .ts-dropdown .option.active { background-color: #f6f3f9; color: #1f192a; }
+    </style>
+
+    <script type="module" data-live-ignore>
+    import TomSelect from 'tom-select';
+    import { getComponent } from '@symfony/ux-live-component';
+
+    let liveEl   = null;
+    let liveComp = null;
+
+    // Idiomorph restores a plain <select> from the server HTML on every re-render,
+    // so dropdown.tomselect is undefined on each fresh render cycle: re-init then.
+    function initStaffSelect(select) {
+        if (select.tomselect) return;
+        const multiple   = select.multiple;
+        const actionName = select.dataset.staffAction;
+        const argName    = select.dataset.staffArg;
+        let ready = false;
+
+        new TomSelect(select, {
+            plugins: multiple ? ['remove_button'] : [],
+            valueField: 'value', labelField: 'text', searchField: ['text'],
+            maxOptions: null, create: false, dropdownParent: 'body',
+            allowEmptyOption: !multiple,
+            placeholder: select.dataset.placeholder || '',
+            onInitialize: function () { requestAnimationFrame(function () { ready = true; }); },
+            onChange: function (value) {
+                if (!ready || !liveComp) return;
+                const params = {};
+                params[argName] = multiple ? (value || []) : (value || '');
+                liveComp.action(actionName, params);
+            },
+        });
+    }
+
+    // Restore plain <select> elements before Idiomorph morphs, so it never has to
+    // reconcile a Tom Select wrapper against fresh server HTML (which leaves stale
+    // wrappers behind when the detail panel swaps between select types).
+    function destroyAll() {
+        liveEl.querySelectorAll('.js-staff-select').forEach(function (select) {
+            if (select.tomselect) select.tomselect.destroy();
+        });
+    }
+
+    function onRender() {
+        liveEl.querySelectorAll('select.js-staff-select').forEach(initStaffSelect);
+    }
+
+    liveEl = document.querySelector('.js-offer-tree');
+    if (liveEl) {
+        getComponent(liveEl).then(function (component) {
+            liveComp = component;
+            onRender();
+            component.on('render:started', destroyAll);
+            component.on('render:finished', onRender);
+        });
+    }
+    </script>
 </div>

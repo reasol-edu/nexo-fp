@@ -46,12 +46,6 @@ details[open] > summary .tree-chevron { transform: rotate(90deg); }
                     {{ ux_icon('heroicons:arrow-up-tray', {class: 'h-3.5 w-3.5'}) }}
                     {{ 'families.import.button'|trans({}, 'admin') }}
                 </a>
-                <a href="{{ path('app_admin_families_new', {centreId: centre.id}) }}"
-                   class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white
-                          hover:bg-plum-700 transition-colors shadow-xs">
-                    {{ ux_icon('heroicons:plus', {class: 'h-4 w-4'}) }}
-                    {{ 'families.new'|trans({}, 'admin') }}
-                </a>
                 {% endif %}
             </div>
         {% endif %}

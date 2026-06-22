@@ -101,6 +101,42 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * Number of programmes per family, keyed by family UUID (RFC4122). Single grouped query.
+     *
+     * @param  ProfessionalFamily[] $families
+     * @return array<string, int>
+     */
+    public function countByFamily(array $families): array
+    {
+        if ($families === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('p')
+            ->select('IDENTITY(p.professionalFamily) AS fid', 'COUNT(p.id) AS cnt')
+            ->where('p.professionalFamily IN (:families)')
+            ->setParameter('families', $families)
+            ->groupBy('p.professionalFamily')
+            ->getQuery()
+            ->getScalarResult();
+
+        $uuidNorm = [];
+        foreach ($families as $family) {
+            $rfc = $family->getId()->toRfc4122();
+            $uuidNorm[$rfc]                       = $rfc;
+            $uuidNorm[$family->getId()->toBinary()] = $rfc;
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $key = $uuidNorm[(string) $row['fid']] ?? (string) $row['fid'];
+            $map[$key] = (int) $row['cnt'];
+        }
+
+        return $map;
+    }
+
     /** @return Programme[] */
     public function findByFamilyOrderedByName(ProfessionalFamily $family): array
     {

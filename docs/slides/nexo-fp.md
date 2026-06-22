@@ -175,9 +175,10 @@ En **Centro educativo › Docentes del curso**:
 
 En **Centro educativo › Oferta formativa**:
 
+- Navegación en **columnas**: familias → enseñanzas → niveles → grupos.
 - Cada **familia profesional** tiene un jefe/a de departamento.
 - Dentro, sus **enseñanzas** (ciclos): CFGM, CFGS…
-- La búsqueda y el plegado facilitan navegar ofertas grandes.
+- Todo se **edita en el mismo panel**, sin cambiar de pantalla; la búsqueda facilita ofertas grandes.
 - **Exportar / importar en JSON** para copiar la oferta entre cursos.
 
 ---
@@ -188,11 +189,11 @@ En **Centro educativo › Oferta formativa**:
 
 ![bg right:52%](img/05_admin_ensenanza.png)
 
-Al editar una **enseñanza**:
+Al seleccionar un elemento, su detalle se edita **en el mismo panel**:
 
-- **Coordinadores duales** (gestionan sus estancias).
+- **Coordinadores duales** de cada enseñanza (gestionan sus estancias).
 - **Niveles** del ciclo (1.º, 2.º…), y dentro de cada nivel, los **grupos**.
-- En los grupos se asignan **tutores** y **docentes**.
+- En cada grupo se asignan **tutores/as** y **docentes**, sin salir de la pantalla.
 - También por CSV de Séneca: **Personal › Personal del centro › Materia y grupos › Exportar datos** (formato CSV)
 
 > Coordinación, jefatura y tutoría son **personas concretas**: de ahí salen los permisos.

@@ -36,6 +36,18 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         return $this->createByAcademicYearFilteredQuery($year)->getResult();
     }
 
+    public function findByAcademicYearAndId(AcademicYear $year, string $id): ?Teacher
+    {
+        return $this->createQueryBuilder('t')
+            ->join('t.academicYears', 'ay')
+            ->where('t.id = :id')
+            ->andWhere('ay.id = :year')
+            ->setParameter('id', $id, 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * Returns teachers who teach (group.teachers or group.tutor) in any group
      * that belongs to the given programme, ordered by name.

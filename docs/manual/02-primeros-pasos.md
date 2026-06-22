@@ -46,6 +46,37 @@ La oferta formativa es una estructura jerárquica que se construye de arriba a a
   Para evitar problemas de importación, los nombres de los grupos tienen que ser
   exactamente iguales que los que aparecen en Séneca (por ejemplo, `1º DAW A` o `1DAWA`, `1º DAW-A`, etc.)
 
+### Cómo registrarla, paso a paso
+
+Entra en **Centro Educativo → Oferta formativa**. Toda la oferta se gestiona en **una sola pantalla**
+organizada en columnas, de izquierda a derecha: **Familias**, **Enseñanzas**, **Niveles** y **Grupos**.
+No hace falta cambiar de página ni guardar entre paso y paso: cada columna se va abriendo al pulsar sobre
+un elemento de la columna anterior.
+
+1. **Crea una familia profesional.** En la primera columna, escribe el nombre en la casilla inferior
+   («Añadir familia…») y pulsa el botón **+**. La familia aparece en la lista y queda seleccionada.
+2. **Añade sus enseñanzas.** Con la familia seleccionada, la segunda columna queda activa: escribe el
+   nombre del ciclo y pulsa **+**. Repite para cada enseñanza de esa familia.
+3. **Añade los niveles.** Selecciona una enseñanza y, en la tercera columna, añade sus cursos
+   (1.º, 2.º…) de la misma forma.
+4. **Añade los grupos.** Selecciona un nivel y, en la cuarta columna, añade cada grupo escribiendo su
+   nombre **tal cual aparece en Séneca**.
+5. **Completa los datos de cada elemento.** Al seleccionar cualquier familia, enseñanza, nivel o grupo,
+   a la derecha se abre un panel donde puedes cambiar su nombre, escribir observaciones y asignar al
+   personal correspondiente (responsable de familia, coordinadores/as, tutores/as y docentes). Para
+   asignar personal, pulsa el desplegable y elige de la lista o escribe unas letras para filtrar; las
+   asignaciones de personal **se guardan solas**, y el nombre y las observaciones se confirman con
+   **Guardar cambios**.
+
+Para borrar un elemento, selecciónalo y usa el botón de eliminar del panel de la derecha; te pedirá
+confirmación. Al borrar una familia, enseñanza o nivel se eliminan también los elementos que cuelgan de
+él.
+
+!!! tip "¿Ya tienes la oferta en otro curso o centro?"
+    No hace falta teclearla de nuevo: desde la página de **Oferta formativa** puedes **exportarla a un
+    fichero** e **importarla** en otro curso o centro. Consulta
+    [Exportar e importar la oferta formativa](05-secciones-de-la-aplicacion.md#exportar-e-importar-la-oferta-formativa).
+
 !!! info
     Los roles de coordinación de FP dual, jefatura de familia profesional y tutoría se asignan a
     **personas concretas**: de esas asignaciones se derivan los permisos de cada docente
@@ -56,8 +87,9 @@ La oferta formativa es una estructura jerárquica que se construye de arriba a a
 Para cada grupo se designan el tutor/a del mismo (puede seleccionarse más de uno) y los docentes
 que imparten clase en él. Estas asignaciones determinan qué estancias podrá ver cada docente.
 
-Las asignaciones pueden hacerse manualmente desde cada grupo o mediante **importación masiva desde
-CSV de Séneca**.
+Las asignaciones pueden hacerse manualmente —seleccionando el grupo en la columna **Grupos** y
+eligiendo el personal en el panel de la derecha, como se explica en el paso anterior— o mediante
+**importación masiva desde CSV de Séneca**.
 
 ### Cómo exportar el CSV de asignaciones de Séneca (perfil Dirección)
 
