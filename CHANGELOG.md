@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-06-23
+
+### Changed
+
+- Los desplegables de personal (responsable de familia, coordinadores/as, tutores/as y docentes) de la pantalla de oferta formativa vuelven a la **búsqueda remota bajo demanda**: cargan las opciones al escribir (mínimo 2 caracteres) en lugar de enviar la lista completa, ya que un centro puede tener cientos de docentes
+
+### Fixed
+
+- Corregida la **sincronización en vivo** de los desplegables de personal del panel de oferta formativa: al añadir o quitar responsables, coordinadores/as, tutores/as o docentes, el cambio se guardaba en la base de datos pero no se reflejaba en pantalla hasta recargar; ahora la selección se reconstruye desde un atributo `data-selected` que sobrevive al morphing del DOM
+- El instalador de Ubuntu entrecomilla `DATABASE_URL` en el `.env.local` generado: el `&` sin comillas hacía que bash lo interpretara como operador de segundo plano al cargar la configuración, dejando la variable vacía e impidiendo el arranque de FrankenPHP
+- Corregida en el instalador de Ubuntu la sentencia `CREATE DATABASE` (no incluía el nombre de la base de datos) y la URL de descarga del binario (faltaba el prefijo `v` en el nombre del paquete); se añade además la asignación de propiedad del esquema `public`, necesaria en PostgreSQL 15+ para que las migraciones puedan crear tablas
+- En la documentación de despliegue continuo, el script de actualización descarga el paquete a una ruta fija dentro del directorio de instalación en lugar de un temporal aleatorio, porque `sudo` rechaza los comodines en los argumentos de las reglas de sudoers
+
 ## [2.5.0] - 2026-06-22
 
 ### Changed
