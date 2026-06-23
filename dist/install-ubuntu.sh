@@ -115,9 +115,15 @@ BEGIN
   END IF;
 END
 \$\$;
-SELECT 'CREATE DATABASE' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'nexo')\gexec
+SELECT 'CREATE DATABASE nexo' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'nexo')\gexec
 GRANT ALL PRIVILEGES ON DATABASE nexo TO nexo;
 ALTER DATABASE nexo OWNER TO nexo;
+-- En PostgreSQL 15+ el dueño de la base de datos no puede crear tablas en el
+-- esquema 'public' (sigue siendo de 'postgres'). Sin esto, las migraciones
+-- fallan con «permission denied for schema public».
+\c nexo
+ALTER SCHEMA public OWNER TO nexo;
+GRANT ALL ON SCHEMA public TO nexo;
 SQL
 ok "Base de datos 'nexo' y usuario 'nexo' listos"
 
@@ -146,7 +152,7 @@ step "4/7 · Descargar el binario de Nexo FP (última versión)"
 VERSION=$(curl -fsSL https://api.github.com/repos/reasol-edu/nexo-fp/releases/latest \
     | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
 [[ -n "$VERSION" ]] || die "No se pudo obtener la versión más reciente desde GitHub."
-TARBALL_URL="https://github.com/reasol-edu/nexo-fp/releases/download/v${VERSION}/nexo-fp-${VERSION}-${ASSET_ARCH}.tar.gz"
+TARBALL_URL="https://github.com/reasol-edu/nexo-fp/releases/download/v${VERSION}/nexo-fp-v${VERSION}-${ASSET_ARCH}.tar.gz"
 echo "   Descargando nexo-fp v${VERSION} (${ASSET_ARCH})..."
 curl -fsSL "$TARBALL_URL" | sudo -u nexofp tar xzf - -C /opt/nexo-fp --strip-components=1
 ok "Nexo FP v${VERSION} extraído en /opt/nexo-fp"
@@ -164,7 +170,7 @@ sudo -u nexofp tee /opt/nexo-fp/.env.local > /dev/null << ENVFILE
 
 SERVER_ADDR=${DOMAIN}
 DEFAULT_URI=https://${DOMAIN}
-DATABASE_URL=postgresql://nexo:${DB_PASS}@localhost:5432/nexo?serverVersion=16&charset=utf8
+DATABASE_URL="postgresql://nexo:${DB_PASS}@localhost:5432/nexo?serverVersion=16&charset=utf8"
 MIGRATIONS_PATH=migrations/postgresql
 MAILER_DSN=null://null
 MAILER_FROM=${MAIL_FROM}

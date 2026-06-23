@@ -895,16 +895,18 @@ fi
 log "Actualizando ${LOCAL_TAG} → ${REMOTE_TAG}…"
 
 # ── Descarga ──────────────────────────────────────────────────────────────────
+# Ruta fija dentro del directorio de instalación (solo escribible por nexofp).
+# Evita el comodín en /tmp, que sudo rechaza en los argumentos de la regla.
 VERSION=${REMOTE_TAG#v}
-TMP=$(mktemp /tmp/nexo-fp-update.XXXXXX.tar.gz)
+PKG="${INSTALL_DIR}/.nexo-fp-update.tar.gz"
 curl -fsSL \
-  "https://github.com/${REPO}/releases/download/${REMOTE_TAG}/nexo-fp-${VERSION}-linux-x86_64.tar.gz" \
-  -o "$TMP"
+  "https://github.com/${REPO}/releases/download/${REMOTE_TAG}/nexo-fp-v${VERSION}-linux-x86_64.tar.gz" \
+  -o "$PKG"
 
 # ── Parada, extracción y arranque ─────────────────────────────────────────────
 sudo systemctl stop nexo-fp-worker nexo-fp
-sudo tar xzf "$TMP" -C "$INSTALL_DIR" --strip-components=1
-rm -f "$TMP"
+sudo tar xzf "$PKG" -C "$INSTALL_DIR" --strip-components=1
+rm -f "$PKG"
 sudo systemctl start nexo-fp nexo-fp-worker
 
 log "Actualización a ${REMOTE_TAG} completada."
@@ -919,7 +921,7 @@ sudo tee /etc/sudoers.d/nexo-update > /dev/null << 'EOF'
 nexofp ALL=(root) NOPASSWD: \
   /usr/bin/systemctl stop nexo-fp nexo-fp-worker, \
   /usr/bin/systemctl start nexo-fp nexo-fp-worker, \
-  /usr/bin/tar xzf /tmp/nexo-fp-update.*.tar.gz -C /opt/nexo-fp --strip-components=1
+  /usr/bin/tar xzf /opt/nexo-fp/.nexo-fp-update.tar.gz -C /opt/nexo-fp --strip-components=1
 EOF
 sudo chmod 440 /etc/sudoers.d/nexo-update
 ```
