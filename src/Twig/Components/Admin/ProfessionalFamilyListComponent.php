@@ -169,15 +169,13 @@ class ProfessionalFamilyListComponent extends AbstractController
     }
 
     /**
-     * Teachers of the viewed year, used to populate the staff selects in the detail panel.
-     *
-     * @return Teacher[]
+     * Viewed-year id used to scope the remote teacher autocomplete in the
+     * detail panel. The staff selects fetch their options on demand from the
+     * `teacher_centre` endpoint instead of rendering every teacher up front.
      */
-    public function getTeacherOptions(): array
+    public function getViewYearId(): string
     {
-        $year = $this->tenantContext->getViewYear($this->centre);
-
-        return $year === null ? [] : $this->teachers->findByAcademicYearOrderedByName($year);
+        return $this->tenantContext->getViewYear($this->centre)?->getId()->toRfc4122() ?? '';
     }
 
     // ── Selected entities ────────────────────────────────────────────────────

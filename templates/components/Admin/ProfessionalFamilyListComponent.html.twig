@@ -88,7 +88,7 @@
         {% set sel_programme   = this.selectedProgramme %}
         {% set sel_level       = this.selectedLevel %}
         {% set sel_group       = this.selectedGroup %}
-        {% set teacher_options = this.teacherOptions %}
+        {% set staff_url       = path('ux_entity_autocomplete', {alias: 'teacher_centre', academicYearId: this.viewYearId}) %}
         {% set mobile_col      = levelId ? 'groups' : (programmeId ? 'levels' : (familyId ? 'programmes' : 'families')) %}
 
         {# ── Migas de pan (solo móvil) ─────────────────────────────────────── #}
@@ -255,58 +255,52 @@
                                               class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-plum-500 focus:outline-none focus:ring-2 focus:ring-plum-500/20">{{ editDetails }}</textarea>
                                 </div>
                             {% elseif type == 'group' %}
-                                {% set tutor_ids = [] %}
-                                {% for tu in sel_group.tutors %}{% set tutor_ids = tutor_ids|merge([tu.id.toRfc4122]) %}{% endfor %}
+                                {% set tutor_sel = [] %}
+                                {% for tu in sel_group.tutors %}{% set tutor_sel = tutor_sel|merge([{value: tu.id.toRfc4122, text: tu.name.lastName ~ ', ' ~ tu.name.firstName}]) %}{% endfor %}
                                 <div class="sm:col-span-2">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.tutor'|trans({}, 'admin') }}</label>
                                     <select id="staff-tutors" multiple class="js-staff-select w-full"
                                             data-staff-action="setGroupTutors" data-staff-arg="ids"
-                                            data-placeholder="{{ 'group.field.tutor_help'|trans({}, 'admin') }}">
-                                        {% for t in teacher_options %}
-                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in tutor_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
-                                        {% endfor %}
-                                    </select>
+                                            data-staff-url="{{ staff_url }}"
+                                            data-selected="{{ tutor_sel|json_encode|e('html_attr') }}"
+                                            data-placeholder="{{ 'group.field.tutor_help'|trans({}, 'admin') }}"></select>
                                 </div>
                             {% endif %}
 
                             {# ── Personal: jefatura / coordinación / docentes ── #}
                             {% if type == 'family' %}
+                                {% set head_sel = sel_family.head ? [{value: sel_family.head.id.toRfc4122, text: sel_family.head.name.lastName ~ ', ' ~ sel_family.head.name.firstName}] : [] %}
                                 <div class="border-t border-gray-100 pt-4">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'family.field.head'|trans({}, 'admin') }}</label>
                                     <select id="staff-head" class="js-staff-select w-full"
                                             data-staff-action="setFamilyHead" data-staff-arg="teacherId"
+                                            data-staff-url="{{ staff_url }}"
+                                            data-selected="{{ head_sel|json_encode|e('html_attr') }}"
                                             data-placeholder="{{ 'family.field.head_help'|trans({}, 'admin') }}">
                                         <option value="">—</option>
-                                        {% for t in teacher_options %}
-                                            <option value="{{ t.id.toRfc4122 }}" {{ sel_family.head and sel_family.head.id.toRfc4122 == t.id.toRfc4122 ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
-                                        {% endfor %}
                                     </select>
                                 </div>
                             {% elseif type == 'programme' %}
-                                {% set coord_ids = [] %}
-                                {% for c in sel_programme.coordinators %}{% set coord_ids = coord_ids|merge([c.id.toRfc4122]) %}{% endfor %}
+                                {% set coord_sel = [] %}
+                                {% for c in sel_programme.coordinators %}{% set coord_sel = coord_sel|merge([{value: c.id.toRfc4122, text: c.name.lastName ~ ', ' ~ c.name.firstName}]) %}{% endfor %}
                                 <div class="border-t border-gray-100 pt-4 sm:col-span-3">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'programme.field.coordinators'|trans({}, 'admin') }}</label>
                                     <select id="staff-coordinators" multiple class="js-staff-select w-full"
                                             data-staff-action="setCoordinators" data-staff-arg="ids"
-                                            data-placeholder="{{ 'programme.field.coordinators_help'|trans({}, 'admin') }}">
-                                        {% for t in teacher_options %}
-                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in coord_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
-                                        {% endfor %}
-                                    </select>
+                                            data-staff-url="{{ staff_url }}"
+                                            data-selected="{{ coord_sel|json_encode|e('html_attr') }}"
+                                            data-placeholder="{{ 'programme.field.coordinators_help'|trans({}, 'admin') }}"></select>
                                 </div>
                             {% elseif type == 'group' %}
-                                {% set teacher_ids = [] %}
-                                {% for te in sel_group.teachers %}{% set teacher_ids = teacher_ids|merge([te.id.toRfc4122]) %}{% endfor %}
+                                {% set teacher_sel = [] %}
+                                {% for te in sel_group.teachers %}{% set teacher_sel = teacher_sel|merge([{value: te.id.toRfc4122, text: te.name.lastName ~ ', ' ~ te.name.firstName}]) %}{% endfor %}
                                 <div class="border-t border-gray-100 pt-4 sm:col-span-3">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.teachers'|trans({}, 'admin') }}</label>
                                     <select id="staff-teachers" multiple class="js-staff-select w-full"
                                             data-staff-action="setGroupTeachers" data-staff-arg="ids"
-                                            data-placeholder="{{ 'group.field.teachers_help'|trans({}, 'admin') }}">
-                                        {% for t in teacher_options %}
-                                            <option value="{{ t.id.toRfc4122 }}" {{ t.id.toRfc4122 in teacher_ids ? 'selected' : '' }}>{{ t.name.lastName }}, {{ t.name.firstName }}</option>
-                                        {% endfor %}
-                                    </select>
+                                            data-staff-url="{{ staff_url }}"
+                                            data-selected="{{ teacher_sel|json_encode|e('html_attr') }}"
+                                            data-placeholder="{{ 'group.field.teachers_help'|trans({}, 'admin') }}"></select>
                                 </div>
                                 <div class="border-t border-gray-100 pt-4 sm:col-span-3">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'group.field.details'|trans({}, 'admin') }}</label>
@@ -370,19 +364,42 @@
 
     // Idiomorph restores a plain <select> from the server HTML on every re-render,
     // so dropdown.tomselect is undefined on each fresh render cycle: re-init then.
+    const MIN_QUERY = 2;
+
     function initStaffSelect(select) {
         if (select.tomselect) return;
         const multiple   = select.multiple;
         const actionName = select.dataset.staffAction;
         const argName    = select.dataset.staffArg;
+        const remoteUrl  = select.dataset.staffUrl;
         let ready = false;
 
-        new TomSelect(select, {
+        // Source of truth for the current selection. A plain string attribute
+        // morphs reliably through Idiomorph (unlike <option selected> state),
+        // so we rebuild the value from it on every re-render.
+        let preselected = [];
+        try { preselected = JSON.parse(select.dataset.selected || '[]'); } catch (e) { preselected = []; }
+
+        const ts = new TomSelect(select, {
             plugins: multiple ? ['remove_button'] : [],
             valueField: 'value', labelField: 'text', searchField: ['text'],
             maxOptions: null, create: false, dropdownParent: 'body',
             allowEmptyOption: !multiple,
             placeholder: select.dataset.placeholder || '',
+            options: preselected,
+            // Remote filtering: fetch matching teachers on demand so the page
+            // never ships every teacher of the centre.
+            preload: false,
+            loadThrottle: 300,
+            shouldLoad: function (query) { return query.length >= MIN_QUERY; },
+            load: function (query, callback) {
+                fetch(remoteUrl + '&query=' + encodeURIComponent(query), {
+                    headers: { 'Accept': 'application/json' },
+                })
+                    .then(function (response) { return response.json(); })
+                    .then(function (json) { callback(json.results || []); })
+                    .catch(function () { callback(); });
+            },
             onInitialize: function () { requestAnimationFrame(function () { ready = true; }); },
             onChange: function (value) {
                 if (!ready || !liveComp) return;
@@ -391,6 +408,9 @@
                 liveComp.action(actionName, params);
             },
         });
+
+        // Apply the server-provided selection without firing onChange.
+        ts.setValue(preselected.map(function (o) { return o.value; }), true);
     }
 
     // Restore plain <select> elements before Idiomorph morphs, so it never has to

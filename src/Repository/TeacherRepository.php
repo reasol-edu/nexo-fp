@@ -30,12 +30,6 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             ->getOneOrNullResult();
     }
 
-    /** @return Teacher[] */
-    public function findByAcademicYearOrderedByName(AcademicYear $year): array
-    {
-        return $this->createByAcademicYearFilteredQuery($year)->getResult();
-    }
-
     public function findByAcademicYearAndId(AcademicYear $year, string $id): ?Teacher
     {
         return $this->createQueryBuilder('t')
