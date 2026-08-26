@@ -150,14 +150,14 @@ class StayRepositoryTest extends RepositoryTestCase
     {
         [$year, $prog] = $this->makeChain('41000011');
 
-        $past    = $this->makeStay($year, $prog, 'FFEOE Past',    '2025-01-01', '2025-06-30');
-        $future  = $this->makeStay($year, $prog, 'FFEOE Future',  '2027-01-01', '2027-06-30');
+        $past    = $this->makeStay($year, $prog, 'FFEOE Past',    '-2 years', '-18 months');
+        $future  = $this->makeStay($year, $prog, 'FFEOE Future',  '+18 months', '+2 years');
         $this->persist($past, $future);
 
         $results = $this->repo->createByCentreFilteredQuery($year, '', '', '', ['current'])->getResult();
 
-        // The first stay from makeChain starts 2026-03-01 and ends 2026-06-30;
-        // today is 2026-06-05 so it is still current
+        // The first stay from makeChain uses makeStay()'s default window (-30 days to +365
+        // days from today), so it is always "current" regardless of when the test runs.
         self::assertCount(1, $results);
     }
 
@@ -1046,10 +1046,12 @@ class StayRepositoryTest extends RepositoryTestCase
     {
         [$year, , $stay] = $this->makeChain('41000090');
 
+        // The stay from makeChain uses makeStay()'s default window (-30 days to +365 days
+        // from today), so a query range around today always falls inside it.
         $results = $this->repo->findOverlappingPeriod(
             $year,
-            new \DateTimeImmutable('2026-06-01'),
-            new \DateTimeImmutable('2026-06-30'),
+            new \DateTimeImmutable('-7 days'),
+            new \DateTimeImmutable('+7 days'),
         );
 
         self::assertCount(1, $results);
@@ -1105,10 +1107,12 @@ class StayRepositoryTest extends RepositoryTestCase
         $stayB  = $this->makeStay($year, $progB, 'FFEOE Enfermería 93');
         $this->persist($centre, $year, $head, $famA, $famB, $progA, $progB, $stayA, $stayB);
 
+        // Both stays use makeStay()'s default window (-30 days to +365 days from today),
+        // so a query range around today always overlaps them.
         $results = $this->repo->findOverlappingPeriod(
             $year,
-            new \DateTimeImmutable('2026-03-01'),
-            new \DateTimeImmutable('2026-06-30'),
+            new \DateTimeImmutable('-7 days'),
+            new \DateTimeImmutable('+7 days'),
             $head,
         );
 
@@ -1138,8 +1142,8 @@ class StayRepositoryTest extends RepositoryTestCase
         AcademicYear $year,
         Programme $programme,
         string $name,
-        string $start = '2026-03-01',
-        string $end = '2026-06-30',
+        string $start = '-30 days',
+        string $end = '+365 days',
     ): Stay {
         return (new Stay())
             ->setName($name)
