@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-08-26
+
+### Fixed
+
+- El **buscador global** (⌘K) ya encuentra las secciones de la aplicación (Estancias, Empresas, Calendario, Centro educativo, Administración…) además de estancias, empresas, estudiantes y docentes
+- Las etiquetas truncadas de las tarjetas de **Estancias** («Estudiantes con puesto asignado», «Puestos sin asignar»…) muestran el texto completo al pasar el ratón por encima
+- El **calendario de estancias** muestra un mensaje con enlace a Estancias cuando el mes no tiene ninguna programada, y una leyenda con el color de cada familia profesional cuando sí las tiene
+- La tipografía Inter se **autoaloja** en vez de cargarse desde Google Fonts, evitando que la carga de la página dependa de una red externa
+- Los filtros de **Estancias** se apilan en una sola columna en móvil en lugar de compartir fila y cortar sus textos
+- Los avisos flash de éxito y error se **pausan** al pasar el ratón o el foco por encima, y dan más tiempo a los mensajes de error antes de desaparecer
+
 ## [2.5.1] - 2026-06-23
 
 ### Changed
