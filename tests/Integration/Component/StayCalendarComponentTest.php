@@ -173,6 +173,42 @@ class StayCalendarComponentTest extends RepositoryTestCase
         self::assertSame([], $this->allSegments($component));
     }
 
+    // ── getFamilyLegend ───────────────────────────────────────────────────────────
+
+    public function testFamilyLegendListsFamiliesVisibleInMonth(): void
+    {
+        $centre = $this->makeCentre('44000005');
+        $this->makeStayWithPositions($centre, 'FFEOE Marzo', '2026-03-10', '2026-03-20');
+
+        $component = $this->makeComponent($centre, null);
+        $component->year  = 2026;
+        $component->month = 3;
+
+        self::assertArrayHasKey('Fam FFEOE Marzo', $component->getFamilyLegend());
+    }
+
+    public function testFamilyLegendEmptyForMonthWithoutStays(): void
+    {
+        $centre = $this->makeCentre('44000006');
+        $this->makeStayWithPositions($centre, 'FFEOE Marzo', '2026-03-10', '2026-03-20');
+
+        $component = $this->makeComponent($centre, null);
+        $component->year  = 2026;
+        $component->month = 8; // no stays in August
+
+        self::assertSame([], $component->getFamilyLegend());
+        self::assertNotEmpty($component->getWeeks());
+    }
+
+    public function testFamilyLegendEmptyWithoutSelectedCentre(): void
+    {
+        $component = $this->makeComponent(null, null);
+        $component->year  = 2026;
+        $component->month = 3;
+
+        self::assertSame([], $component->getFamilyLegend());
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /** @return list<array<string, mixed>> */

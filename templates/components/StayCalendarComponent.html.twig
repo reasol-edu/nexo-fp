@@ -21,6 +21,22 @@
         </button>
     </div>
 
+    {# ── Leyenda de colores — siempre visible cuando hay estancias que explicar ──── #}
+    {% if this.familyLegend is not empty %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60 text-xs text-gray-500">
+            {% for family, colorClass in this.familyLegend %}
+                <span class="inline-flex items-center gap-1.5">
+                    <span class="h-2.5 w-2.5 rounded-full shrink-0 {{ colorClass|split(' ')|first }}"></span>
+                    {{ family }}
+                </span>
+            {% endfor %}
+            <span class="inline-flex items-center gap-1.5">
+                <span class="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-400 text-white text-[9px] font-bold px-0.5 shrink-0">!</span>
+                {{ 'legend_pending_signatures'|trans({}, 'calendar') }}
+            </span>
+        </div>
+    {% endif %}
+
     {# ── Day-of-week headers ───────────────────────────────────────────────── #}
     <div class="grid grid-cols-7 border-b border-gray-100 bg-gray-50">
         {% for key in ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'] %}
@@ -35,6 +51,15 @@
     {% if this.weeks is empty %}
         <div class="py-12 text-center text-sm text-gray-400">
             {{ 'no_active_year'|trans({}, 'calendar') }}
+        </div>
+    {% elseif this.familyLegend is empty %}
+        <div class="flex flex-col items-center justify-center py-12 px-6 text-center">
+            {{ ux_icon('heroicons:calendar-days', {class: 'h-8 w-8 text-gray-300 mb-2'}) }}
+            <p class="text-sm text-gray-400">{{ 'empty_month'|trans({'%month%': this.monthLabel}, 'calendar') }}</p>
+            <a href="{{ path('app_stays_index') }}"
+               class="mt-2 text-xs font-medium text-plum-600 hover:text-plum-800 transition-colors">
+                {{ 'view_all_stays'|trans({}, 'calendar') }} →
+            </a>
         </div>
     {% else %}
         {% for week in this.weeks %}

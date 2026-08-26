@@ -27,6 +27,9 @@ class StayCalendarComponent extends AbstractController
     /** @var list<array<string, mixed>>|null */
     private ?array $weeksCache = null;
 
+    /** @var array<string, string>|null family name => Tailwind color classes, alphabetically sorted */
+    private ?array $familyLegendCache = null;
+
     private const FAMILY_COLORS = [
         'bg-plum-100 text-plum-700',
         'bg-sky-100 text-sky-700',
@@ -96,6 +99,22 @@ class StayCalendarComponent extends AbstractController
         return $this->weeksCache;
     }
 
+    /**
+     * Familias profesionales visibles en la cuadrícula actual, con el color que les corresponde en
+     * las barras de estancia — sirve de leyenda y, si está vacía, de señal de que el mes no tiene
+     * ninguna estancia que mostrar.
+     *
+     * @return array<string, string> nombre de familia => clases de color Tailwind
+     */
+    public function getFamilyLegend(): array
+    {
+        if ($this->familyLegendCache === null) {
+            $this->computeWeeks();
+        }
+
+        return $this->familyLegendCache ?? [];
+    }
+
     public function isToday(\DateTimeImmutable $day): bool
     {
         return $day->format('Y-m-d') === (new \DateTimeImmutable())->format('Y-m-d');
@@ -115,6 +134,8 @@ class StayCalendarComponent extends AbstractController
         $centre = $this->tenantContext->getSelectedCentre();
         $year   = $centre !== null ? $this->tenantContext->getViewYear($centre) : null;
         if ($centre === null || $year === null) {
+            $this->familyLegendCache = [];
+
             return [];
         }
 
@@ -131,6 +152,7 @@ class StayCalendarComponent extends AbstractController
         $stays = $this->stayRepository->findOverlappingPeriod($year, $gridStart, $gridEnd, $viewer);
 
         $stayMeta = [];
+        $legend   = [];
         foreach ($stays as $stay) {
             $family   = $stay->getProgramme()->getProfessionalFamily()->getName();
             $colorIdx = abs(crc32($family)) % count(self::FAMILY_COLORS);
@@ -144,7 +166,10 @@ class StayCalendarComponent extends AbstractController
                 'colorClass'   => self::FAMILY_COLORS[$colorIdx],
                 'unsignedCount' => $unsigned,
             ];
+            $legend[$family] ??= self::FAMILY_COLORS[$colorIdx];
         }
+        ksort($legend, SORT_STRING);
+        $this->familyLegendCache = $legend;
 
         $weeks  = [];
         $cursor = $gridStart;
