@@ -1,15 +1,8 @@
 import { Controller } from '@hotwired/stimulus';
 
-const GROUP_LABELS = {
-    stays:     'Estancias',
-    companies: 'Empresas',
-    students:  'Estudiantes',
-    teachers:  'Docentes',
-};
-
 export default class extends Controller {
     static targets = ['backdrop', 'dialog', 'input', 'results', 'itemTemplate', 'groupTemplate'];
-    static values  = { url: String };
+    static values  = { url: String, groupLabels: Object, noResults: String };
 
     #debounce = null;
     #abort    = null;
@@ -109,7 +102,7 @@ export default class extends Controller {
         if (keys.length === 0) {
             const empty = document.createElement('p');
             empty.className = 'px-4 py-6 text-center text-sm text-gray-400';
-            empty.textContent = 'Sin resultados';
+            empty.textContent = this.noResultsValue;
             this.resultsTarget.appendChild(empty);
             return;
         }
@@ -120,7 +113,7 @@ export default class extends Controller {
 
             // Group header
             const header = this.groupTemplateTarget.content.cloneNode(true);
-            header.querySelector('[data-slot="name"]').textContent = GROUP_LABELS[key] ?? key;
+            header.querySelector('[data-slot="name"]').textContent = this.groupLabelsValue[key] ?? key;
             this.resultsTarget.appendChild(header);
 
             for (const item of items) {

@@ -39,6 +39,33 @@ class SearchControllerTest extends ControllerTestCase
         self::assertSame(['groups' => []], $data);
     }
 
+    public function testSearchReturnsMatchingNavigationPage(): void
+    {
+        [$centre, $admin] = $this->makeChain('41000079', 'search.admin.79');
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/buscar?q=estanc');
+
+        self::assertResponseIsSuccessful();
+        $data = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertArrayHasKey('pages', $data['groups']);
+        self::assertSame('Estancias', $data['groups']['pages'][0]['label']);
+    }
+
+    public function testSearchHidesAdministrationPageFromNonAdmin(): void
+    {
+        [$centre] = $this->makeChain('41000080', 'search.admin.80');
+        $teacher = (new Teacher(new PersonName('Sin', 'Admin')))->setUsername('noadmin.80');
+        $this->persist($teacher);
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/buscar?q=administra');
+
+        self::assertResponseIsSuccessful();
+        $data = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertArrayNotHasKey('pages', $data['groups']);
+    }
+
     public function testSearchReturnsStayMatchingQuery(): void
     {
         [$centre, $admin, $stay] = $this->makeChain('41000071', 'search.admin.71');

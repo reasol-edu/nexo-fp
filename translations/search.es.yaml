@@ -2,6 +2,7 @@ placeholder: 'Buscar…'
 open: 'Abrir búsqueda'
 no_results: 'Sin resultados'
 groups:
+    pages: 'Secciones'
     stays: 'Estancias'
     companies: 'Empresas'
     students: 'Estudiantes'
