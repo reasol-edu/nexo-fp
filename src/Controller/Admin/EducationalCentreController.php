@@ -11,6 +11,7 @@ use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +29,7 @@ class EducationalCentreController extends AbstractController
         private readonly AcademicYearRepository $years,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
+        private readonly ClockInterface $clock,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
@@ -65,7 +67,7 @@ class EducationalCentreController extends AbstractController
                     ->setName($values['name'])
                     ->setCity($values['city']);
 
-                $year = (int) (new \DateTimeImmutable())->format('Y');
+                $year = (int) $this->clock->now()->format('Y');
                 $academicYear = (new AcademicYear())
                     ->setName($year . '-' . ($year + 1))
                     ->setEducationalCentre($centre);

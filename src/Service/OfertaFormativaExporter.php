@@ -9,6 +9,7 @@ use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\ProgrammeYearRepository;
+use Symfony\Component\Clock\ClockInterface;
 
 class OfertaFormativaExporter
 {
@@ -17,13 +18,14 @@ class OfertaFormativaExporter
         private readonly ProgrammeRepository $programmes,
         private readonly ProgrammeYearRepository $levels,
         private readonly GroupRepository $groups,
+        private readonly ClockInterface $clock,
     ) {}
 
     /** @return array<string, mixed> */
     public function export(AcademicYear $year): array
     {
         $data = [
-            'exported_at'   => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'exported_at'   => $this->clock->now()->format(\DateTimeInterface::ATOM),
             'academic_year' => $year->getName(),
             'families'      => [],
         ];

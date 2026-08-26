@@ -7,6 +7,7 @@ use App\Entity\Teacher;
 use App\Repository\StayRepository;
 use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -45,11 +46,12 @@ class StayCalendarComponent extends AbstractController
         private readonly StayRepository $stayRepository,
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
+        private readonly ClockInterface $clock,
     ) {}
 
     public function mount(): void
     {
-        $today = new \DateTimeImmutable();
+        $today = $this->clock->now();
         if ($this->year < 2000 || $this->year > 2100) {
             $this->year = (int) $today->format('Y');
         }
@@ -61,7 +63,7 @@ class StayCalendarComponent extends AbstractController
     #[LiveAction]
     public function previousMonth(): void
     {
-        $d = (new \DateTimeImmutable())->setDate($this->year, $this->month, 1)->modify('-1 month');
+        $d = $this->clock->now()->setDate($this->year, $this->month, 1)->modify('-1 month');
         $this->year  = (int) $d->format('Y');
         $this->month = (int) $d->format('n');
     }
@@ -69,7 +71,7 @@ class StayCalendarComponent extends AbstractController
     #[LiveAction]
     public function nextMonth(): void
     {
-        $d = (new \DateTimeImmutable())->setDate($this->year, $this->month, 1)->modify('+1 month');
+        $d = $this->clock->now()->setDate($this->year, $this->month, 1)->modify('+1 month');
         $this->year  = (int) $d->format('Y');
         $this->month = (int) $d->format('n');
     }
@@ -77,7 +79,7 @@ class StayCalendarComponent extends AbstractController
     #[LiveAction]
     public function goToday(): void
     {
-        $today       = new \DateTimeImmutable();
+        $today       = $this->clock->now();
         $this->year  = (int) $today->format('Y');
         $this->month = (int) $today->format('n');
     }
@@ -117,7 +119,7 @@ class StayCalendarComponent extends AbstractController
 
     public function isToday(\DateTimeImmutable $day): bool
     {
-        return $day->format('Y-m-d') === (new \DateTimeImmutable())->format('Y-m-d');
+        return $day->format('Y-m-d') === $this->clock->now()->format('Y-m-d');
     }
 
     public function isCurrentMonth(\DateTimeImmutable $day): bool
@@ -142,7 +144,7 @@ class StayCalendarComponent extends AbstractController
         $user   = $this->getUser();
         $viewer = $user instanceof Teacher ? $user : null;
 
-        $firstDay  = (new \DateTimeImmutable())->setDate($this->year, $this->month, 1)->setTime(0, 0, 0);
+        $firstDay  = $this->clock->now()->setDate($this->year, $this->month, 1)->setTime(0, 0, 0);
         $lastDay   = $firstDay->modify('last day of this month');
         $startDow  = (int) $firstDay->format('N'); // 1=Mon
         $gridStart = $firstDay->modify('-' . ($startDow - 1) . ' days');

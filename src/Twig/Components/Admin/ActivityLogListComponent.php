@@ -14,6 +14,7 @@ use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use App\Service\AppSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -58,6 +59,7 @@ class ActivityLogListComponent extends AbstractController
         private readonly AcademicYearRepository $years,
         private readonly TeacherRepository $teachers,
         private readonly AppSettings $appSettings,
+        private readonly ClockInterface $clock,
     ) {}
 
     public function mount(): void
@@ -140,7 +142,7 @@ class ActivityLogListComponent extends AbstractController
     #[LiveAction]
     public function quickRange(#[LiveArg] string $range): void
     {
-        $now = new \DateTimeImmutable();
+        $now = $this->clock->now();
 
         [$from, $to] = match ($range) {
             'last_hour'  => [$now->modify('-1 hour'),  $now],

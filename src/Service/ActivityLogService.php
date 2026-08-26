@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Teacher;
 use App\Message\ActivityLogMessage;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -19,6 +20,7 @@ final class ActivityLogService
         private readonly TokenStorageInterface $tokenStorage,
         private readonly RequestStack $requestStack,
         private readonly TenantContext $tenantContext,
+        private readonly ClockInterface $clock,
         #[Autowire(env: 'bool:APP_LOG')] private readonly bool $enabled,
     ) {}
 
@@ -64,7 +66,7 @@ final class ActivityLogService
             }
 
             $this->bus->dispatch(new ActivityLogMessage(
-                createdAt:      new \DateTimeImmutable(),
+                createdAt:      $this->clock->now(),
                 ip:             $ip,
                 actionType:     $actionType,
                 activeUserId:   $activeUser->getId()->toRfc4122(),

@@ -8,6 +8,7 @@ use App\Entity\PersonName;
 use App\Entity\Teacher;
 use App\Repository\TeacherRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,6 +25,7 @@ class SetupCommand extends Command
         private readonly TeacherRepository $teachers,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly TranslatorInterface $translator,
+        private readonly ClockInterface $clock,
     ) {
         parent::__construct();
     }
@@ -44,7 +46,7 @@ class SetupCommand extends Command
             return Command::SUCCESS;
         }
 
-        $year     = (int) (new \DateTimeImmutable())->format('Y');
+        $year     = (int) $this->clock->now()->format('Y');
         $yearName = $year . '-' . ($year + 1);
 
         $centre = new EducationalCentre();

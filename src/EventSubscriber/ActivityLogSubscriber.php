@@ -7,6 +7,7 @@ namespace App\EventSubscriber;
 use App\Entity\Teacher;
 use App\Message\ActivityLogMessage;
 use App\Service\TenantContext;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,6 +34,7 @@ final class ActivityLogSubscriber
         private readonly MessageBusInterface $bus,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TenantContext $tenantContext,
+        private readonly ClockInterface $clock,
         #[Autowire(env: 'bool:APP_LOG')] private readonly bool $enabled,
     ) {}
 
@@ -154,7 +156,7 @@ final class ActivityLogSubscriber
         $actionType = $isExiting ? 'session.impersonate_stop' : 'session.impersonate_start';
 
         $this->bus->dispatch(new ActivityLogMessage(
-            createdAt:      new \DateTimeImmutable(),
+            createdAt:      $this->clock->now(),
             ip:             $request->getClientIp() ?? '0.0.0.0',
             actionType:     $actionType,
             activeUserId:   $activeUser instanceof Teacher ? $activeUser->getId()->toRfc4122() : null,
@@ -195,7 +197,7 @@ final class ActivityLogSubscriber
         }
 
         $this->bus->dispatch(new ActivityLogMessage(
-            createdAt:      new \DateTimeImmutable(),
+            createdAt:      $this->clock->now(),
             ip:             $request->getClientIp() ?? '0.0.0.0',
             actionType:     $actionType,
             activeUserId:   $activeUser->getId()->toRfc4122(),
@@ -208,7 +210,7 @@ final class ActivityLogSubscriber
     private function dispatchSessionEvent(string $actionType, Request $request, Teacher $activeUser, ?Teacher $realUser): void
     {
         $this->bus->dispatch(new ActivityLogMessage(
-            createdAt:      new \DateTimeImmutable(),
+            createdAt:      $this->clock->now(),
             ip:             $request->getClientIp() ?? '0.0.0.0',
             actionType:     $actionType,
             activeUserId:   $activeUser->getId()->toRfc4122(),
@@ -222,7 +224,7 @@ final class ActivityLogSubscriber
     private function dispatchAnonymousEvent(string $actionType, Request $request, ?array $data): void
     {
         $this->bus->dispatch(new ActivityLogMessage(
-            createdAt:      new \DateTimeImmutable(),
+            createdAt:      $this->clock->now(),
             ip:             $request->getClientIp() ?? '0.0.0.0',
             actionType:     $actionType,
             activeUserId:   null,

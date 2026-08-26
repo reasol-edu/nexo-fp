@@ -6,6 +6,7 @@ use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Repository\EducationalCentreRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,6 +22,7 @@ class CreateEducationalCentreCommand extends Command
         private readonly EntityManagerInterface $em,
         private readonly EducationalCentreRepository $centres,
         private readonly TranslatorInterface $translator,
+        private readonly ClockInterface $clock,
     ) {
         parent::__construct();
     }
@@ -54,7 +56,7 @@ class CreateEducationalCentreCommand extends Command
             return Command::FAILURE;
         }
 
-        $year = (int) (new \DateTimeImmutable())->format('Y');
+        $year = (int) $this->clock->now()->format('Y');
         $yearName = $year . '-' . ($year + 1);
 
         $centre = new EducationalCentre();

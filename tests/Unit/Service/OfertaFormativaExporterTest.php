@@ -18,14 +18,18 @@ use App\Repository\ProgrammeYearRepository;
 use App\Service\OfertaFormativaExporter;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Uid\Uuid;
 
 class OfertaFormativaExporterTest extends TestCase
 {
+    private const NOW = '2026-06-15 12:00:00';
+
     private ProfessionalFamilyRepository&Stub $familyRepo;
     private ProgrammeRepository&Stub $programmeRepo;
     private ProgrammeYearRepository&Stub $levelRepo;
     private GroupRepository&Stub $groupRepo;
+    private MockClock $clock;
     private OfertaFormativaExporter $exporter;
     private AcademicYear $year;
 
@@ -35,12 +39,14 @@ class OfertaFormativaExporterTest extends TestCase
         $this->programmeRepo = $this->createStub(ProgrammeRepository::class);
         $this->levelRepo     = $this->createStub(ProgrammeYearRepository::class);
         $this->groupRepo     = $this->createStub(GroupRepository::class);
+        $this->clock         = new MockClock(new \DateTimeImmutable(self::NOW));
 
         $this->exporter = new OfertaFormativaExporter(
             $this->familyRepo,
             $this->programmeRepo,
             $this->levelRepo,
             $this->groupRepo,
+            $this->clock,
         );
 
         $this->year = new AcademicYear();
@@ -64,7 +70,7 @@ class OfertaFormativaExporterTest extends TestCase
         $data = $this->exporter->export($this->year);
 
         self::assertArrayHasKey('exported_at', $data);
-        self::assertNotEmpty($data['exported_at']);
+        self::assertSame($this->clock->now()->format(\DateTimeInterface::ATOM), $data['exported_at']);
     }
 
     public function testExportReturnsEmptyFamiliesWhenNoneExist(): void

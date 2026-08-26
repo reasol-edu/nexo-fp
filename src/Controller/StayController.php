@@ -26,6 +26,7 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -55,6 +56,7 @@ class StayController extends AbstractController
         private readonly StayNotifier $notifier,
         private readonly StayRealtimeNotifier $realtime,
         private readonly Authorization $mercureAuthorization,
+        private readonly ClockInterface $clock,
         #[Target('training_position')]
         private readonly WorkflowInterface $trainingPositionWorkflow,
     ) {}
@@ -428,7 +430,7 @@ class StayController extends AbstractController
 
         $reportFilenameBase = $this->t('stays.report.filename_base');
         $slug               = preg_replace('/[^a-z0-9]+/i', '-', $stay->getName()) ?? $reportFilenameBase;
-        $filename           = $reportFilenameBase . '-' . strtolower($slug) . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.pdf';
+        $filename           = $reportFilenameBase . '-' . strtolower($slug) . '-' . $this->clock->now()->format('Y-m-d') . '.pdf';
 
         return $this->pdf->renderPdf('pdf/stay_report.html.twig', [
             'stay'                 => $stay,
@@ -510,7 +512,7 @@ class StayController extends AbstractController
         }
 
         return $this->xlsxExporter->createResponse(
-            'puestos-pendientes-firma-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
+            'puestos-pendientes-firma-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
             [
                 $this->t('stays.export_pending.col.last_name'),
                 $this->t('stays.export_pending.col.first_name'),
@@ -574,7 +576,7 @@ class StayController extends AbstractController
         $slug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '-', $stay->getName()));
 
         return $this->xlsxExporter->createResponse(
-            'estancia-' . $slug . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
+            'estancia-' . $slug . '-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
             [
                 $this->t('stays.show.col.student'),
                 $this->t('stays.export.col.nie'),

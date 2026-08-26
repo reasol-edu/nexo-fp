@@ -19,6 +19,7 @@ use App\Service\XlsxExporter;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,6 +42,7 @@ class CompanyController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly ValidatorInterface $validator,
         private readonly XlsxExporter $xlsxExporter,
+        private readonly ClockInterface $clock,
         #[Autowire(service: 'html_sanitizer.sanitizer.app.company_contact')]
         private readonly HtmlSanitizerInterface $contactSanitizer,
     ) {}
@@ -185,7 +187,7 @@ class CompanyController extends AbstractController
         }
 
         return $this->xlsxExporter->createResponse(
-            'empresas-' . $centre->getCode() . '-' . (new \DateTimeImmutable())->format('Y-m-d') . '.xlsx',
+            'empresas-' . $centre->getCode() . '-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
             [
                 $this->t('company.field.name'),
                 $this->t('company.field.vat_number'),

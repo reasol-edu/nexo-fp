@@ -18,6 +18,8 @@ use App\Repository\StayRepository;
 use App\Service\TenantContext;
 use App\Tests\Integration\RepositoryTestCase;
 use App\Twig\Components\StayCalendarComponent;
+use Symfony\Component\Clock\ClockInterface;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -27,11 +29,21 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class StayCalendarComponentTest extends RepositoryTestCase
 {
+    private const NOW = '2026-06-15 12:00:00';
+
+    private MockClock $clock;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->clock = new MockClock(new \DateTimeImmutable(self::NOW));
+    }
+
     // ── mount: clamping de año y mes ───────────────────────────────────────────
 
     public function testMountDefaultsInvalidYearAndMonthToToday(): void
     {
-        $today     = new \DateTimeImmutable();
+        $today     = new \DateTimeImmutable(self::NOW);
         $component  = $this->makeComponent(null, null);
         $component->year  = 0;
         $component->month = 0;
@@ -43,7 +55,7 @@ class StayCalendarComponentTest extends RepositoryTestCase
 
     public function testMountRejectsOutOfRangeYear(): void
     {
-        $today     = new \DateTimeImmutable();
+        $today     = new \DateTimeImmutable(self::NOW);
         $component = $this->makeComponent(null, null);
         $component->year  = 1999;
         $component->month = 5;
@@ -90,7 +102,7 @@ class StayCalendarComponentTest extends RepositoryTestCase
 
     public function testGoTodayResetsToCurrentMonth(): void
     {
-        $today     = new \DateTimeImmutable();
+        $today     = new \DateTimeImmutable(self::NOW);
         $component = $this->makeComponent(null, null);
         $component->year  = 2000;
         $component->month = 1;
@@ -250,14 +262,15 @@ class StayCalendarComponentTest extends RepositoryTestCase
         /** @var TranslatorInterface $translator */
         $translator = self::getContainer()->get(TranslatorInterface::class);
 
-        return new class($stays, $tenant, $translator, $user) extends StayCalendarComponent {
+        return new class($stays, $tenant, $translator, $this->clock, $user) extends StayCalendarComponent {
             public function __construct(
                 StayRepository $stays,
                 TenantContext $tenant,
                 TranslatorInterface $translator,
+                ClockInterface $clock,
                 private readonly ?UserInterface $stubUser,
             ) {
-                parent::__construct($stays, $tenant, $translator);
+                parent::__construct($stays, $tenant, $translator, $clock);
             }
 
             protected function getUser(): ?UserInterface
