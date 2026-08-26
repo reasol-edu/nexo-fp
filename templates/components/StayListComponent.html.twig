@@ -380,24 +380,24 @@
                             {# Stats centrales #}
                             <div class="flex-1 flex flex-col justify-center gap-2 min-w-0 text-xs">
                                 <div class="flex items-center justify-between gap-1 min-w-0">
-                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
+                                    <span class="text-gray-400 truncate min-w-0" title="{{ 'stays.card.students_with_position'|trans({}, 'stays') }}">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
                                     <span class="font-semibold tabular-nums shrink-0
                                                  {{ pct_students >= 100 ? 'text-green-600' : (pct_students >= 50 ? 'text-amber-600' : 'text-gray-700') }}">
                                         {{ _sw }}/{{ _st }}&nbsp;<span class="font-normal text-gray-400">({{ pct_students }}%)</span>
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between gap-1 min-w-0">
-                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.companies'|trans({}, 'stays') }}</span>
+                                    <span class="text-gray-400 truncate min-w-0" title="{{ 'stays.card.companies'|trans({}, 'stays') }}">{{ 'stays.card.companies'|trans({}, 'stays') }}</span>
                                     <span class="font-semibold text-gray-700 tabular-nums shrink-0">{{ s.companies }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-1 min-w-0">
-                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
+                                    <span class="text-gray-400 truncate min-w-0" title="{{ 'stays.card.occupied'|trans({}, 'stays') }}">{{ 'stays.card.occupied'|trans({}, 'stays') }}</span>
                                     <span class="font-semibold text-gray-700 tabular-nums shrink-0">
                                         {{ s.occupied }}/{{ _pt }}&nbsp;<span class="font-normal text-gray-400">({{ pct_occupied }}%)</span>
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between gap-1 min-w-0">
-                                    <span class="text-gray-400 truncate min-w-0">{{ 'stays.card.free'|trans({}, 'stays') }}</span>
+                                    <span class="text-gray-400 truncate min-w-0" title="{{ 'stays.card.free'|trans({}, 'stays') }}">{{ 'stays.card.free'|trans({}, 'stays') }}</span>
                                     <span class="font-semibold text-gray-700 tabular-nums shrink-0">
                                         {{ s.free }}/{{ _pt }}&nbsp;<span class="font-normal text-gray-400">({{ pct_free }}%)</span>
                                     </span>
