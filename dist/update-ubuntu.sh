@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# =============================================================================
+# update-ubuntu.sh — Actualiza una instalación de Nexo FP en Ubuntu Server
+# (systemd + FrankenPHP + PostgreSQL, ver install-ubuntu.sh) a la última
+# versión publicada en GitHub Releases.
+#
+# Uso (en el servidor, si ya tienes el paquete):
+#   sudo bash update-ubuntu.sh [--force]
+#
+# Uso (descarga y ejecución directa, sin bajar el paquete):
+#   curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/update-ubuntu.sh \
+#     | sudo bash -s -- [--force]
+#
+# --force reinstala aunque la versión publicada parezca igual o anterior a la
+# instalada (útil tras una re-release que mueve la misma etiqueta a un commit
+# distinto, p. ej. v1.0.0 -f).
+#
+# Qué hace:
+#   1. Comprueba que existe una instalación previa en /opt/nexo-fp
+#      (creada con install-ubuntu.sh).
+#   2. Consulta la última versión publicada en GitHub Releases y la compara
+#      con la instalada (fichero .version). Si coinciden y no se usa
+#      --force, no hace nada.
+#   3. Si hay una versión más reciente (o se ha pasado --force): para los
+#      servicios, descarga y extrae el paquete nuevo sobre /opt/nexo-fp
+#      (data/ y .env.local no forman parte del paquete, así que se conservan
+#      intactos), borrando de app/ los ficheros que ya no formen parte del
+#      paquete nuevo (p. ej. clases eliminadas en un refactor; var/ se excluye
+#      por ser caché y logs en tiempo de ejecución), y vuelve a arrancar los
+#      servicios. nexo-start.sh aplica las migraciones pendientes y regenera
+#      la caché en el arranque.
+#
+# Es seguro ejecutarlo repetidamente (p. ej. desde un cron o un systemd
+# timer): si ya está en la última versión, no hace nada y termina en 0. Ver
+# la guía de despliegue continuo para automatizarlo:
+# https://reasol-edu.github.io/nexo-fp/09-despliegue.html#despliegue-continuo
+# =============================================================================
+set -euo pipefail
+
+# ── colores y helpers ──────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+
+step() { echo -e "\n${CYAN}${BOLD}▶  $*${NC}"; }
+ok()   { echo -e "   ${GREEN}✔${NC}  $*"; }
+warn() { echo -e "   ${YELLOW}⚠${NC}   $*"; }
+die()  { echo -e "\n${RED}✘  Error: $*${NC}" >&2; exit 1; }
+
+# ── argumentos ─────────────────────────────────────────────────────────────────
+FORCE=false
+for arg in "$@"; do
+    case "$arg" in
+        --force) FORCE=true ;;
+        *)       die "Argumento desconocido: ${arg}. Uso: $0 [--force]" ;;
+    esac
+done
+
+# ── verificaciones previas ────────────────────────────────────────────────────
+[[ $EUID -eq 0 ]] || die "Ejecuta el script como root:  sudo bash $0"
+
+REPO="reasol-edu/nexo-fp"
+INSTALL_DIR="/opt/nexo-fp"
+
+[[ -f "${INSTALL_DIR}/frankenphp" ]] \
+    || die "No se encuentra ${INSTALL_DIR}/frankenphp. ¿Está instalado Nexo FP? Para una instalación nueva usa install-ubuntu.sh."
+id nexofp &> /dev/null \
+    || die "No existe el usuario del sistema 'nexofp'. ¿Está instalado Nexo FP? Para una instalación nueva usa install-ubuntu.sh."
+
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)  ASSET_ARCH="linux-x86_64"  ;;
+    aarch64) ASSET_ARCH="linux-aarch64" ;;
+    *)       die "Arquitectura no soportada: ${ARCH}. Solo x86_64 y aarch64." ;;
+esac
+
+# ── comprobar si hay una versión más reciente ─────────────────────────────────
+step "Comprobando la última versión disponible"
+
+REMOTE_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+    | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+[[ -n "$REMOTE_TAG" ]] || die "No se pudo obtener la última versión desde GitHub."
+
+LOCAL_TAG="$(cat "${INSTALL_DIR}/.version" 2>/dev/null || echo "")"
+
+if [[ -n "$LOCAL_TAG" ]]; then
+    ok "Instalada: ${LOCAL_TAG} · Disponible: ${REMOTE_TAG}"
+else
+    warn "No se encontró ${INSTALL_DIR}/.version; se actualizará de todas formas."
+fi
+
+if [[ "$LOCAL_TAG" == "$REMOTE_TAG" ]]; then
+    if [[ "$FORCE" == true ]]; then
+        warn "Ya estás en la última versión (${REMOTE_TAG}), pero se reinstala por --force."
+    else
+        ok "Ya estás en la última versión (${REMOTE_TAG}). Nada que hacer."
+        exit 0
+    fi
+fi
+
+# ── descargar ─────────────────────────────────────────────────────────────────
+step "Descargando Nexo FP ${REMOTE_TAG} (${ASSET_ARCH})"
+
+TARBALL_URL="https://github.com/${REPO}/releases/download/${REMOTE_TAG}/nexo-fp-${REMOTE_TAG}-${ASSET_ARCH}.tar.gz"
+TMP_FILE="$(mktemp)"
+STAGE_DIR=""
+trap 'rm -f "$TMP_FILE"; [[ -n "$STAGE_DIR" ]] && rm -rf "$STAGE_DIR"' EXIT
+
+curl -fsSL "$TARBALL_URL" -o "$TMP_FILE" || die "No se pudo descargar ${TARBALL_URL}."
+ok "Descargado"
+
+# ── parar, extraer y arrancar ─────────────────────────────────────────────────
+step "Deteniendo los servicios"
+systemctl stop nexo-fp-worker nexo-fp
+ok "Servicios detenidos"
+
+step "Extrayendo sobre ${INSTALL_DIR}"
+# Se extrae primero a un directorio de preparación, propiedad de "nexofp", en
+# vez de directamente sobre ${INSTALL_DIR}: así se puede comparar qué había
+# antes con lo que trae el paquete nuevo y borrar lo que ya no exista (ver más
+# abajo), algo que un `tar` directo no puede hacer.
+#
+# El fichero temporal lo crea `mktemp` con permisos 600, propiedad de root, así
+# que "nexofp" no puede abrirlo por su cuenta aunque se le hiciera legible
+# (p. ej. si /tmp tiene un ACL por defecto que anula el bit "other"). En vez de
+# depender de eso, root abre aquí el fichero (la redirección la resuelve el
+# propio bash, que ya se ejecuta como root) y le pasa el descriptor ya abierto
+# al `tar` que corre como "nexofp": no hace falta reabrir el fichero con otra
+# identidad.
+STAGE_DIR="$(mktemp -d)"
+chown nexofp:nexofp "$STAGE_DIR"
+sudo -u nexofp tar xzf - -C "$STAGE_DIR" --strip-components=1 < "$TMP_FILE"
+
+# tar (y por tanto el paso anterior) solo añade y sobrescribe: un fichero
+# eliminado del código en un release (p. ej. una clase renombrada en un
+# refactor) se queda huérfano en el servidor para siempre si no se borra
+# explícitamente — Symfony falla al arrancar si encuentra uno de estos
+# huérfanos bajo app/src/. Se compara el app/ instalado con el app/ del
+# paquete nuevo y se borra lo que ya no exista en este último; var/ (caché y
+# logs en tiempo de ejecución, no parte del código fuente) se excluye.
+if [[ -d "${INSTALL_DIR}/app" ]]; then
+    while IFS= read -r -d '' rel; do
+        [[ "$rel" == "var" || "$rel" == var/* ]] && continue
+        [[ -e "${STAGE_DIR}/app/${rel}" ]] || rm -rf -- "${INSTALL_DIR}/app/${rel}"
+    done < <(cd "${INSTALL_DIR}/app" && find . -mindepth 1 -printf '%P\0')
+fi
+
+# data/ (base de datos, secretos, caché) llega vacío dentro del paquete —
+# copiar sobre un directorio existente no borra su contenido, igual que hacía
+# el `tar` directo de antes.
+sudo -u nexofp cp -a "${STAGE_DIR}/." "$INSTALL_DIR"
+ok "Nexo FP actualizado a ${REMOTE_TAG}"
+
+step "Arrancando los servicios"
+systemctl start nexo-fp nexo-fp-worker
+ok "Servicios activos"
+
+echo -e "
+${GREEN}${BOLD}✔  Actualización a ${REMOTE_TAG} completada${NC}
+
+  data/ (base de datos, secretos, caché) y .env.local se han conservado
+  intactos: no forman parte del paquete descargado.
+
+  Comprobar estado:  sudo systemctl status nexo-fp nexo-fp-worker
+  Ver logs:          sudo journalctl -u nexo-fp -f
+"

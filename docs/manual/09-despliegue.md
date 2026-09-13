@@ -820,147 +820,60 @@ sudo systemctl restart nexo-fp nexo-fp-worker
 
 ### Actualización a una nueva versión
 
-1. Descarga el nuevo paquete y detén los servicios:
+El script `update-ubuntu.sh`, disponible en el repositorio (carpeta `dist/`), comprueba la última
+versión publicada contra la instalada y, si es más reciente, para los servicios, descarga el
+paquete nuevo, lo extrae y los vuelve a arrancar. Si ya está en la última versión no hace nada:
 
-   ```bash
-   VERSION=X.Y.Z
-   curl -fsSL https://github.com/reasol-edu/nexo-fp/releases/download/v${VERSION}/nexo-fp-${VERSION}-linux-x86_64.tar.gz \
-     -o /tmp/nexo-fp-new.tar.gz
-   sudo systemctl stop nexo-fp-worker nexo-fp
-   ```
+```bash
+curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/update-ubuntu.sh \
+  | sudo bash
+```
 
-2. Extrae el nuevo paquete sobre la instalación existente. El directorio `data/` (secretos y base de
-   datos) y el fichero `.env.local` no están en el paquete, por lo que se conservan intactos:
+El directorio `data/` (secretos y base de datos) y el fichero `.env.local` no forman parte del
+paquete descargado, por lo que se conservan intactos. `nexo-start.sh` aplica automáticamente las
+migraciones pendientes y regenera la caché en el siguiente arranque.
 
-   ```bash
-   sudo -u nexofp tar xzf /tmp/nexo-fp-new.tar.gz -C /opt/nexo-fp --strip-components=1
-   ```
+Si necesitas reinstalar la versión ya publicada aunque el script la detecte como igual a la
+instalada (por ejemplo, tras una re-release que mueve la misma etiqueta a un commit distinto),
+añade `--force`:
 
-3. Vuelve a arrancar los servicios. `nexo-start.sh` aplica automáticamente las migraciones
-   pendientes y regenera la caché:
+```bash
+curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/update-ubuntu.sh \
+  | sudo bash -s -- --force
+```
 
-   ```bash
-   sudo systemctl start nexo-fp nexo-fp-worker
-   ```
+!!! info "¿Prefieres los pasos manuales?"
+    1. Descarga el paquete de la nueva versión desde la
+       [página de Releases](https://github.com/reasol-edu/nexo-fp/releases) y detén los
+       servicios: `sudo systemctl stop nexo-fp-worker nexo-fp`.
+    2. Extrae el paquete sobre la instalación existente:
+       `sudo -u nexofp tar xzf nexo-fp-vX.Y.Z-linux-x86_64.tar.gz -C /opt/nexo-fp --strip-components=1`.
+    3. Vuelve a arrancarlos: `sudo systemctl start nexo-fp nexo-fp-worker`.
+
+Si prefieres que el servidor se actualice solo con cada nueva versión —mediante un systemd timer o
+un webhook de GitHub—, sigue la [guía de despliegue continuo](#despliegue-continuo) de más abajo,
+que usa este mismo script.
 
 ### Despliegue continuo (CD) {#despliegue-continuo}
 
 Con CD el servidor se actualiza solo cada vez que se publica una nueva versión, sin intervención
-manual. La base es siempre el mismo script de actualización; la diferencia está en cómo se activa:
-**sondeo periódico** (más sencillo, sin puertos extra) o **webhook** (instantáneo, requiere un
-puerto adicional).
-
-!!! info "Etiquetas reescritas"
-    El repositorio puede publicar una versión reescribiendo la etiqueta existente con
-    `git push --force`. Ambas estrategias usan `git fetch --tags --force` para detectar ese caso
-    correctamente.
-
-#### Script de actualización compartido
-
-Crea `/opt/nexo-fp/nexo-update.sh` con el usuario `nexofp`:
-
-```bash
-sudo -u nexofp tee /opt/nexo-fp/nexo-update.sh > /dev/null << 'EOF'
-#!/usr/bin/env bash
-# Actualiza Nexo FP a la última versión publicada en GitHub.
-# Compara la etiqueta activa con la etiqueta remota más reciente; si difieren,
-# descarga el paquete y reinicia los servicios. Compatible con etiquetas
-# reescritas (git push --force sobre una etiqueta existente).
-set -euo pipefail
-
-INSTALL_DIR=/opt/nexo-fp
-REPO=reasol-edu/nexo-fp
-LOG_TAG=nexo-update
-
-log()  { logger -t "$LOG_TAG" "$*"; echo "$*"; }
-error(){ logger -t "$LOG_TAG" -p user.err "ERROR: $*"; echo "ERROR: $*" >&2; }
-
-# ── Obtener etiqueta remota más reciente ──────────────────────────────────────
-REMOTE_TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-  | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\(.*\)".*/\1/')
-
-if [[ -z "$REMOTE_TAG" ]]; then
-  error "No se pudo obtener la versión remota."
-  exit 1
-fi
-
-# ── Comparar con la versión instalada ────────────────────────────────────────
-LOCAL_TAG=$(cat "${INSTALL_DIR}/VERSION" 2>/dev/null || echo "none")
-
-if [[ "$LOCAL_TAG" == "$REMOTE_TAG" ]]; then
-  log "Ya en ${REMOTE_TAG}. Sin cambios."
-  exit 0
-fi
-
-log "Actualizando ${LOCAL_TAG} → ${REMOTE_TAG}…"
-
-# ── Descarga ──────────────────────────────────────────────────────────────────
-# Ruta fija dentro del directorio de instalación (solo escribible por nexofp).
-# Evita el comodín en /tmp, que sudo rechaza en los argumentos de la regla.
-VERSION=${REMOTE_TAG#v}
-PKG="${INSTALL_DIR}/.nexo-fp-update.tar.gz"
-curl -fsSL \
-  "https://github.com/${REPO}/releases/download/${REMOTE_TAG}/nexo-fp-v${VERSION}-linux-x86_64.tar.gz" \
-  -o "$PKG"
-
-# ── Parada, extracción y arranque ─────────────────────────────────────────────
-sudo systemctl stop nexo-fp-worker nexo-fp
-sudo tar xzf "$PKG" -C "$INSTALL_DIR" --strip-components=1
-rm -f "$PKG"
-sudo systemctl start nexo-fp nexo-fp-worker
-
-log "Actualización a ${REMOTE_TAG} completada."
-EOF
-sudo chmod +x /opt/nexo-fp/nexo-update.sh
-```
-
-El script necesita poder invocar `sudo systemctl` sin contraseña. Añade la regla de sudoers:
-
-```bash
-sudo tee /etc/sudoers.d/nexo-update > /dev/null << 'EOF'
-nexofp ALL=(root) NOPASSWD: \
-  /usr/bin/systemctl stop nexo-fp nexo-fp-worker, \
-  /usr/bin/systemctl start nexo-fp nexo-fp-worker, \
-  /usr/bin/tar xzf /opt/nexo-fp/.nexo-fp-update.tar.gz -C /opt/nexo-fp --strip-components=1
-EOF
-sudo chmod 440 /etc/sudoers.d/nexo-update
-```
+manual. La base es siempre el mismo script `update-ubuntu.sh` de la sección anterior; la diferencia
+está en cómo se activa: **sondeo periódico** (más sencillo, sin puertos extra) o **webhook**
+(instantáneo, requiere un puerto adicional).
 
 #### Opción A — Sondeo periódico con systemd timer
 
-El timer comprueba si hay nueva versión cada 15 minutos. No requiere abrir ningún puerto extra
-ni configurar el repositorio remoto.
+El timer comprueba si hay nueva versión cada 15 minutos. No requiere abrir ningún puerto extra ni
+configurar el repositorio remoto.
+
+El script `setup-update-timer.sh` del repositorio hace todo esto: descarga `update-ubuntu.sh` a
+`/opt/nexo-fp/nexo-update.sh`, crea el servicio y el timer de systemd, y activa el timer. Es
+idempotente (puede volver a ejecutarse sin duplicar nada, p. ej. para refrescar `nexo-update.sh` a
+su última versión):
 
 ```bash
-sudo tee /etc/systemd/system/nexo-update.service > /dev/null << 'UNIT'
-[Unit]
-Description=Nexo FP — actualización automática
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-User=nexofp
-ExecStart=/opt/nexo-fp/nexo-update.sh
-StandardOutput=journal
-StandardError=journal
-UNIT
-
-sudo tee /etc/systemd/system/nexo-update.timer > /dev/null << 'UNIT'
-[Unit]
-Description=Nexo FP — comprueba actualizaciones cada 15 minutos
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=15min
-RandomizedDelaySec=60
-
-[Install]
-WantedBy=timers.target
-UNIT
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now nexo-update.timer
+curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/setup-update-timer.sh \
+  | sudo bash
 ```
 
 Verifica que el timer está activo:
@@ -978,9 +891,18 @@ journalctl -u nexo-update.service -n 20
 
 #### Opción B — Webhook desde GitHub
 
-El webhook recibe la señal de GitHub en el momento exacto en que se publica la release,
-sin ningún retardo de sondeo. Requiere abrir el puerto elegido en el cortafuegos y configurar
-un secreto compartido en GitHub.
+El webhook recibe la señal de GitHub en el momento exacto en que se publica la release, sin ningún
+retardo de sondeo. Requiere abrir el puerto elegido en el cortafuegos y configurar un secreto
+compartido en GitHub.
+
+Descarga primero el script de actualización a la instalación (si ya has ejecutado
+`setup-update-timer.sh` de la opción anterior, este paso ya está hecho):
+
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/reasol-edu/nexo-fp/main/dist/update-ubuntu.sh \
+  -o /opt/nexo-fp/nexo-update.sh
+sudo chmod +x /opt/nexo-fp/nexo-update.sh
+```
 
 **1. Instala `webhook`:**
 
@@ -995,7 +917,10 @@ sudo -u nexofp tee /opt/nexo-fp/webhook.json > /dev/null << 'EOF'
 [
   {
     "id": "nexo-update",
-    "execute-command": "/opt/nexo-fp/nexo-update.sh",
+    "execute-command": "/usr/bin/sudo",
+    "pass-arguments-to-command": [
+      { "source": "string", "name": "/opt/nexo-fp/nexo-update.sh" }
+    ],
     "command-working-directory": "/opt/nexo-fp",
     "response-message": "Actualización iniciada",
     "trigger-rule": {
@@ -1025,7 +950,15 @@ Sustituye `WEBHOOK_SECRET` por una cadena aleatoria larga (p. ej. `openssl rand 
 
 **3. Crea el servicio systemd para el receptor:**
 
+El propio proceso `webhook` se ejecuta sin privilegios, como `nexofp`; solo el script de
+actualización necesita root, así que se le concede permiso justo para ese único comando:
+
 ```bash
+sudo tee /etc/sudoers.d/nexo-update > /dev/null << 'EOF'
+nexofp ALL=(root) NOPASSWD: /opt/nexo-fp/nexo-update.sh
+EOF
+sudo chmod 440 /etc/sudoers.d/nexo-update
+
 sudo tee /etc/systemd/system/nexo-webhook.service > /dev/null << 'UNIT'
 [Unit]
 Description=Nexo FP — receptor de webhooks
