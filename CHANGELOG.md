@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-09-13
+
+### Added
+
+- Nuevo ajuste **«Prefijo del asunto de los emails»** (configurable a nivel global y de centro, vacío por defecto) que se antepone al asunto de los correos de notificación de estancias (tutoría asignada, puestos creados, recordatorio de firma)
+
 ## [2.5.2] - 2026-08-26
 
 ### Fixed
