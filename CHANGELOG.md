@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-09-13
+
+### Added
+
+- Scripts `dist/update-ubuntu.sh` y `dist/setup-update-timer.sh` para actualizar una instalación en Ubuntu Server con un solo comando (`curl | sudo bash`), incluyendo limpieza de ficheros huérfanos tras un refactor y despliegue continuo por sondeo periódico
+
+### Changed
+
+- Simplificada la guía de actualización y despliegue continuo de Ubuntu Server en el manual, apoyándose en los nuevos scripts descargables en vez de instrucciones para crearlos a mano
+
 ## [2.6.0] - 2026-09-13
 
 ### Added
