@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Platforms\SqlitePlatform;
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+final class Version20260628000000 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Ajuste email.subject_prefix: prefijo configurable para el asunto de los correos de notificación (SQLite)';
+    }
+
+    public function up(Schema $schema): void
+    {
+        $this->abortIf(
+            !$this->connection->getDatabasePlatform() instanceof SqlitePlatform,
+            'Esta migración sólo puede ejecutarse en SQLite.'
+        );
+
+        // CAST(x'...' AS TEXT): mismo estilo de UUID que el resto de ajustes sembrados.
+        $this->addSql("INSERT INTO setting_definition (id, key, type, default_value, global_scope, centre_scope, teacher_scope, min_value, max_value) VALUES
+            (CAST(x'1A000000000040008000000000000007' AS TEXT), 'email.subject_prefix', 'string', '', 1, 1, 0, NULL, 50)
+        ");
+    }
+
+    public function down(Schema $schema): void
+    {
+        $this->abortIf(
+            !$this->connection->getDatabasePlatform() instanceof SqlitePlatform,
+            'Esta migración sólo puede ejecutarse en SQLite.'
+        );
+
+        $this->addSql("DELETE FROM setting_definition WHERE key = 'email.subject_prefix'");
+    }
+}

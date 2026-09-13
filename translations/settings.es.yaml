@@ -35,6 +35,9 @@ settings.key.email_notification_signature_reminder.description: 'Recuerda a quie
 settings.key.email_notification_signature_reminder_days.label: 'Días de antelación del recordatorio de firma'
 settings.key.email_notification_signature_reminder_days.description: 'Días antes del inicio de la estancia a partir de los cuales se empieza a enviar el recordatorio diario de los puestos registrados sin firmar.'
 
+settings.key.email_subject_prefix.label: 'Prefijo del asunto de los emails'
+settings.key.email_subject_prefix.description: 'Texto que se añade al principio del asunto de los correos de notificación (por ejemplo, «[Nexo FP]»). Vacío por defecto.'
+
 # ── Errores de validación ──────────────────────────────────────────────────────
 settings.error.integer_range: 'Debe ser un número entre %min% y %max%'
 settings.error.invalid_value: 'Valor no válido'

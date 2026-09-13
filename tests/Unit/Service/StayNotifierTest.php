@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
+use App\Entity\AcademicYear;
 use App\Entity\Company;
+use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\Stay;
 use App\Entity\Teacher;
@@ -155,6 +157,46 @@ class StayNotifierTest extends TestCase
         self::assertFalse($sent);
     }
 
+    // ── Subject prefix ───────────────────────────────────────────────────────
+
+    public function testSubjectIsPrefixedWithConfiguredCentrePrefix(): void
+    {
+        $position = $this->makePosition();
+        $position->setAcademicTutor($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'));
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::once())
+            ->method('send')
+            ->with(self::callback(function (TemplatedEmail $email): bool {
+                self::assertSame('[IES Test] emails.tutor_assigned.subject', $email->getSubject());
+
+                return true;
+            }));
+
+        $settings = $this->createStub(AppSettingsInterface::class);
+        $settings->method('getForTeacher')->willReturn(true);
+        $settings->method('getForCentre')->willReturn('[IES Test]');
+
+        $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
+    }
+
+    public function testSubjectHasNoLeadingSpaceWhenPrefixIsEmpty(): void
+    {
+        $position = $this->makePosition();
+        $position->setAcademicTutor($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'));
+
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::once())
+            ->method('send')
+            ->with(self::callback(function (TemplatedEmail $email): bool {
+                self::assertSame('emails.tutor_assigned.subject', $email->getSubject());
+
+                return true;
+            }));
+
+        $this->makeNotifier($mailer)->notifyTutorAssigned($position);
+    }
+
     // ── Settings-based suppression ────────────────────────────────────────────
 
     public function testNotifyTutorAssignedIsSkippedWhenMasterNotificationsDisabled(): void
@@ -240,6 +282,7 @@ class StayNotifierTest extends TestCase
     {
         $stub = $this->createStub(AppSettingsInterface::class);
         $stub->method('getForTeacher')->willReturn(true);
+        $stub->method('getForCentre')->willReturn('');
 
         return $stub;
     }
@@ -256,7 +299,10 @@ class StayNotifierTest extends TestCase
 
     private function makeStay(): Stay
     {
-        $stay = (new Stay())->setName('Estancia Test');
+        $centre       = (new EducationalCentre())->setCode('41012345')->setName('IES Test')->setCity('Sevilla');
+        $academicYear = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+
+        $stay = (new Stay())->setName('Estancia Test')->setAcademicYear($academicYear);
         $this->setId($stay);
 
         return $stay;

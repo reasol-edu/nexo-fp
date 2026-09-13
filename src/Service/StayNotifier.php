@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Company;
+use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
@@ -44,11 +45,12 @@ class StayNotifier
             return;
         }
 
-        $stay = $position->getStay();
+        $stay   = $position->getStay();
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
 
         $this->send((new TemplatedEmail())
             ->to(new Address((string) $tutor->getEmail(), $this->fullName($tutor)))
-            ->subject($this->translator->trans('emails.tutor_assigned.subject', [], 'emails'))
+            ->subject($this->subject('emails.tutor_assigned.subject', $centre))
             ->htmlTemplate('email/tutor_assigned.html.twig')
             ->context([
                 'tutor'    => $tutor,
@@ -60,6 +62,8 @@ class StayNotifier
 
     public function notifyLiaisonsPositionsCreated(Stay $stay, Company $company, int $count, ?Teacher $skip = null): void
     {
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
+
         foreach ($company->getLiaisons() as $liaison) {
             if ($skip !== null && $liaison->getId()->toRfc4122() === $skip->getId()->toRfc4122()) {
                 continue;
@@ -70,7 +74,7 @@ class StayNotifier
 
             $this->send((new TemplatedEmail())
                 ->to(new Address((string) $liaison->getEmail(), $this->fullName($liaison)))
-                ->subject($this->translator->trans('emails.positions_created.subject', [], 'emails'))
+                ->subject($this->subject('emails.positions_created.subject', $centre))
                 ->htmlTemplate('email/positions_created.html.twig')
                 ->context([
                     'liaison'  => $liaison,
@@ -101,9 +105,11 @@ class StayNotifier
             $stayUrls[$stayId] ??= $this->stayUrl($group['stay']);
         }
 
+        $centre = $groups[0]['stay']->getAcademicYear()->getEducationalCentre();
+
         $this->send((new TemplatedEmail())
             ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
-            ->subject($this->translator->trans('emails.signature_reminder.subject', [], 'emails'))
+            ->subject($this->subject('emails.signature_reminder.subject', $centre))
             ->htmlTemplate('email/signature_reminder.html.twig')
             ->context([
                 'recipient' => $recipient,
@@ -112,6 +118,15 @@ class StayNotifier
             ]));
 
         return true;
+    }
+
+    /** Antepone el prefijo de asunto configurado (global o de centro) al texto traducido, si lo hay. */
+    private function subject(string $translationKey, EducationalCentre $centre): string
+    {
+        $text   = $this->translator->trans($translationKey, [], 'emails');
+        $prefix = (string) $this->appSettings->getForCentre('email.subject_prefix', $centre);
+
+        return $prefix === '' ? $text : $prefix . ' ' . $text;
     }
 
     private function send(TemplatedEmail $email): void
