@@ -101,9 +101,9 @@ class EducationalCentreRepository extends ServiceEntityRepository
             $q = '%' . $search . '%';
             $qb->where(
                 $qb->expr()->orX(
-                    'LOWER(ec.name) LIKE LOWER(:q)',
-                    'LOWER(ec.code) LIKE LOWER(:q)',
-                    'LOWER(ec.city) LIKE LOWER(:q)',
+                    'UNACCENT(LOWER(ec.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(ec.code)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(ec.city)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
         }

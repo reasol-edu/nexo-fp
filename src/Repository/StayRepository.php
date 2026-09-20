@@ -56,8 +56,8 @@ class StayRepository extends ServiceEntityRepository
             $q = '%' . $search . '%';
             $qb->andWhere(
                 $qb->expr()->orX(
-                    'LOWER(s.name) LIKE LOWER(:q)',
-                    'LOWER(p.name) LIKE LOWER(:q)',
+                    'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
         }
@@ -480,8 +480,8 @@ class StayRepository extends ServiceEntityRepository
             ->orderBy('s.name', 'ASC')
             ->setMaxResults($limit);
         $qb->andWhere($qb->expr()->orX(
-            'LOWER(s.name) LIKE LOWER(:q)',
-            'LOWER(p.name) LIKE LOWER(:q)',
+            'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
+            'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
         ));
         $this->addViewerFilter($qb, $viewer);
 

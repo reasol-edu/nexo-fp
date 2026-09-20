@@ -70,11 +70,11 @@ class TrainingPositionRepository extends ServiceEntityRepository
             $q = '%' . $search . '%';
             $qb->andWhere(
                 $qb->expr()->orX(
-                    'LOWER(s.name) LIKE LOWER(:q)',
-                    'LOWER(p.name) LIKE LOWER(:q)',
-                    'LOWER(st.name.lastName) LIKE LOWER(:q)',
-                    'LOWER(st.name.firstName) LIKE LOWER(:q)',
-                    'EXISTS(SELECT 1 FROM App\Entity\Group sg JOIN sg.programmeYear sgpy WHERE sgpy MEMBER OF tp.programmeYears AND LOWER(sg.name) LIKE LOWER(:q))',
+                    'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(st.name.lastName)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(st.name.firstName)) LIKE UNACCENT(LOWER(:q))',
+                    'EXISTS(SELECT 1 FROM App\Entity\Group sg JOIN sg.programmeYear sgpy WHERE sgpy MEMBER OF tp.programmeYears AND UNACCENT(LOWER(sg.name)) LIKE UNACCENT(LOWER(:q)))',
                 )
             )->setParameter('q', $q);
         }

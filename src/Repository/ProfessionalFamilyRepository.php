@@ -59,7 +59,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->orderBy('pf.name', 'ASC');
 
         if ($search !== '') {
-            $qb->andWhere('LOWER(pf.name) LIKE LOWER(:search)')
+            $qb->andWhere('UNACCENT(LOWER(pf.name)) LIKE UNACCENT(LOWER(:search))')
                ->setParameter('search', '%' . $search . '%');
         }
 
@@ -121,7 +121,7 @@ class ProfessionalFamilyRepository extends ServiceEntityRepository
             ->orderBy('pf.name', 'ASC');
 
         if ($search !== '') {
-            $qb->andWhere('LOWER(pf.name) LIKE LOWER(:search)')
+            $qb->andWhere('UNACCENT(LOWER(pf.name)) LIKE UNACCENT(LOWER(:search))')
                ->setParameter('search', '%' . $search . '%');
         }
 

@@ -48,9 +48,9 @@ class CompanyRepository extends ServiceEntityRepository
             $q = '%' . $search . '%';
             $qb->andWhere(
                 $qb->expr()->orX(
-                    'LOWER(c.name) LIKE LOWER(:q)',
-                    'LOWER(c.vatNumber) LIKE LOWER(:q)',
-                    'LOWER(c.city) LIKE LOWER(:q)',
+                    'UNACCENT(LOWER(c.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(c.vatNumber)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(c.city)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
         }
@@ -79,9 +79,9 @@ class CompanyRepository extends ServiceEntityRepository
             $q = '%' . $search . '%';
             $qb->andWhere(
                 $qb->expr()->orX(
-                    'LOWER(c.name) LIKE LOWER(:q)',
-                    'LOWER(c.vatNumber) LIKE LOWER(:q)',
-                    'LOWER(c.city) LIKE LOWER(:q)',
+                    'UNACCENT(LOWER(c.name)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(c.vatNumber)) LIKE UNACCENT(LOWER(:q))',
+                    'UNACCENT(LOWER(c.city)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
         }
