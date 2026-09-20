@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-09-20
+
+### Added
+
+- Las búsquedas y filtros por texto (docentes, empresas, estancias, puestos formativos, centros educativos, familias profesionales y alumnado) ya no distinguen tildes en PostgreSQL: buscar «Jose» encuentra también a «José». No requiere ninguna acción manual — se activa sola al actualizar, y si por algún motivo no puede activarse (permisos insuficientes en el servidor de base de datos), la aplicación sigue funcionando con normalidad, simplemente sin esta mejora. No aplica a instalaciones que usen SQLite
+
+### Fixed
+
+- La búsqueda de alumnado (buscador global y listado de Administración) ya no distingue mayúsculas de minúsculas, igual que el resto de búsquedas de la aplicación
+
 ## [2.6.1] - 2026-09-13
 
 ### Added
