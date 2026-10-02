@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Importación de empresas desde un libro Excel (`.xlsx`): desde el listado de empresas, el botón «Importar Excel» permite crear y actualizar empresas, sus centros de trabajo y sus empleados a partir de un libro con hojas «Empresas», «Centros de trabajo» y «Empleados». Las empresas se identifican por su CIF/NIF, una celda vacía no borra datos existentes y nunca se elimina nada. Antes de guardar se muestra un resumen, y si hay errores no se importa nada y se indica la hoja y la fila. Incluye una plantilla descargable con una hoja de instrucciones
+
+### Changed
+
+- La exportación de empresas a Excel pasa a ser un libro editable y reimportable: separa el nombre y los apellidos del representante, e incluye los centros de trabajo, los empleados, la información de contacto y las observaciones en hojas propias. Ya no incluye los recuentos de centros y empleados, y el botón pasa a llamarse «Exportar Excel» (antes ponía «Exportar CSV»)
+
 ## [2.7.1] - 2026-10-03
 
 ### Fixed

@@ -183,8 +183,38 @@ Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 
 ![Formulario de edición de empresa con el editor de información de contacto y pestañas](img/empresa-editar.png)
 
-El listado de empresas puede exportarse a **Excel** respetando el filtro de búsqueda activo; la exportación
-incluye también el representante (nombre, DNI/NIE y cargo).
+### Exportar e importar empresas desde Excel
+
+Desde el listado de empresas, los botones **«Exportar Excel»** e **«Importar Excel»** permiten
+mantener las empresas en un libro `.xlsx` fácil de rellenar a mano. El libro tiene cuatro hojas:
+
+| Hoja | Contenido |
+|---|---|
+| **Empresas** | Una fila por empresa: nombre\*, CIF/NIF\*, localidad\*, representante (nombre, apellidos, DNI/NIE y cargo), información de contacto, observaciones y, solo como información, los docentes de enlace |
+| **Centros de trabajo** | Una fila por centro: CIF/NIF de la empresa\*, nombre del centro\* y localidad |
+| **Empleados** | Una fila por empleado: CIF/NIF de la empresa\*, nombre\*, apellidos\*, DNI/NIE\*, correo electrónico y teléfono |
+| **Instrucciones** | Resumen de las reglas de este apartado, dentro del propio libro |
+
+Las columnas marcadas con \* son obligatorias. La exportación respeta el filtro de búsqueda activo, y el
+botón **«Descargar plantilla»** de la pantalla de importación entrega el libro vacío para empezar de cero.
+
+**Reglas de la importación:**
+
+- Cada empresa se identifica por su **CIF/NIF** dentro del centro (sin distinguir mayúsculas ni tener en
+  cuenta espacios o guiones): si ya existe se **actualiza** y, si no, se **crea**.
+- **No se elimina nada**: lo que no aparezca en el libro se queda como está.
+- Al actualizar, una **celda vacía conserva el valor actual**; no borra datos.
+- Si una empresa nueva no tiene centros en la hoja «Centros de trabajo», se crea uno por defecto con la
+  localidad de la empresa.
+- Los empleados se identifican por su **DNI/NIE**, único en toda la aplicación: si ya existe (por ejemplo,
+  en otra empresa) se vincula a la empresa sin modificar sus datos.
+- Los **docentes de enlace** no se importan (conceden permisos de edición sobre la empresa); se gestionan
+  desde su ficha.
+- Solo se pueden actualizar las empresas sobre las que se tiene permiso de edición; si el libro incluye
+  otras, la importación se detiene indicándolo.
+- Antes de guardar, la aplicación muestra un **resumen** de lo que se creará y actualizará. Si alguna fila
+  tiene errores, **no se importa nada** y se indica la hoja y la fila de cada uno.
+- Exportar un libro y volver a importarlo sin cambios no modifica nada.
 
 ### Historial de cambios
 

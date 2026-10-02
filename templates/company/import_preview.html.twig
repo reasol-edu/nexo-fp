@@ -1,0 +1,63 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'companies.import.preview.title'|trans({}, 'companies') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            <a href="{{ path('app_companies_index') }}" class="hover:text-plum-600 transition-colors">{{ 'companies.title'|trans({}, 'companies') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_companies_import') }}" class="hover:text-plum-600 transition-colors">{{ 'companies.import.title'|trans({}, 'companies') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'companies.import.preview.title'|trans({}, 'companies') }}</h1>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <form method="post" action="{{ path('app_companies_import') }}" data-controller="form-submit">
+            <input type="hidden" name="import_confirmed" value="1">
+            <input type="hidden" name="import_id" value="{{ importId }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('import_companies_confirm') }}">
+
+            <div class="px-6 py-6 space-y-6">
+                <p class="text-sm text-gray-600">{{ 'companies.import.preview.intro'|trans({}, 'companies') }}</p>
+
+                {% set rows = [
+                    {count: result.companiesCreated,    key: 'companies.import.preview.companies_created',    tone: 'green'},
+                    {count: result.companiesUpdated,    key: 'companies.import.preview.companies_updated',    tone: 'blue'},
+                    {count: result.workcentersCreated,  key: 'companies.import.preview.workcenters_created',  tone: 'green'},
+                    {count: result.workcentersUpdated,  key: 'companies.import.preview.workcenters_updated',  tone: 'blue'},
+                    {count: result.workersCreated,      key: 'companies.import.preview.workers_created',      tone: 'green'},
+                    {count: result.workersLinked,       key: 'companies.import.preview.workers_linked',       tone: 'blue'},
+                    {count: result.companiesUnchanged,  key: 'companies.import.preview.companies_unchanged',  tone: 'gray'},
+                ] %}
+
+                <ul class="space-y-2">
+                    {% for row in rows %}
+                        {% if row.count > 0 %}
+                        <li class="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm
+                            {{ row.tone == 'green' ? 'bg-green-50 border-green-200 text-green-800' : (row.tone == 'blue' ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-600') }}">
+                            <span class="font-semibold">{{ row.key|trans({'%count%': row.count}, 'companies') }}</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <div class="flex items-center justify-between pt-2">
+                    <a href="{{ path('app_companies_import') }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                        {{ 'companies.import.preview.back'|trans({}, 'companies') }}
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                        {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}
+                        {{ 'companies.import.preview.confirm'|trans({}, 'companies') }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

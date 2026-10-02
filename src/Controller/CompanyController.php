@@ -15,16 +15,19 @@ use App\Repository\TeacherRepository;
 use App\Repository\WorkcenterRepository;
 use App\Repository\WorkerRepository;
 use App\Security\Voter\CompanyVoter;
-use App\Service\XlsxExporter;
+use App\Service\CompanyXlsxExporter;
+use App\Service\CompanyXlsxImporter;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -41,7 +44,8 @@ class CompanyController extends AbstractController
         private readonly TenantContext $tenantContext,
         private readonly TranslatorInterface $translator,
         private readonly ValidatorInterface $validator,
-        private readonly XlsxExporter $xlsxExporter,
+        private readonly CompanyXlsxExporter $companyExporter,
+        private readonly CompanyXlsxImporter $companyImporter,
         private readonly ClockInterface $clock,
         #[Autowire(service: 'html_sanitizer.sanitizer.app.company_contact')]
         private readonly HtmlSanitizerInterface $contactSanitizer,
@@ -154,53 +158,118 @@ class CompanyController extends AbstractController
 
         $search = trim($request->query->getString('search'));
 
-        $rows = [];
-        foreach ($this->companies->findByCentreFilteredForExport($centre, $search) as $row) {
-            $company = $row['company'];
+        $companies = array_map(
+            static fn (array $row): Company => $row['company'],
+            $this->companies->findByCentreFilteredForExport($centre, $search),
+        );
 
-            $liaisonNames = [];
-            foreach ($company->getLiaisons() as $liaison) {
-                $liaisonNames[] = $liaison->getName()->getLastName() . ', ' . $liaison->getName()->getFirstName();
-            }
-            sort($liaisonNames);
+        return $this->companyExporter->createResponse(
+            'empresas-' . $centre->getCode() . '-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
+            $companies,
+            $this->workcenters->findByCentreOrdered($centre),
+            $this->workers->findGroupedByCompanies($companies),
+        );
+    }
 
-            $repLast  = $company->getRepresentativeLastName();
-            $repFirst = $company->getRepresentativeFirstName();
-            $repName  = match (true) {
-                $repLast !== null && $repFirst !== null => $repLast . ', ' . $repFirst,
-                $repLast !== null                       => $repLast,
-                $repFirst !== null                      => $repFirst,
-                default                                 => '',
-            };
-
-            $rows[] = [
-                $company->getName(),
-                $company->getVatNumber(),
-                $company->getCity(),
-                $row['workcenter_count'],
-                count($company->getWorkers()),
-                implode('; ', $liaisonNames),
-                $repName,
-                $company->getRepresentativeNationalId() ?? '',
-                $company->getRepresentativeRole() ?? '',
-            ];
+    /** Libro vacío con la estructura y las instrucciones, para rellenarlo a mano desde cero. */
+    #[Route('/plantilla', name: 'app_companies_template')]
+    public function template(): Response
+    {
+        $centre = $this->tenantContext->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
         }
 
-        return $this->xlsxExporter->createResponse(
-            'empresas-' . $centre->getCode() . '-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
-            [
-                $this->t('company.field.name'),
-                $this->t('company.field.vat_number'),
-                $this->t('company.field.city'),
-                $this->t('companies.export.col.workcenters'),
-                $this->t('companies.export.col.workers'),
-                $this->t('companies.liaisons'),
-                $this->t('companies.export.col.representative'),
-                $this->t('companies.export.col.representative_id'),
-                $this->t('companies.export.col.representative_role'),
-            ],
-            $rows,
-        );
+        $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
+
+        return $this->companyExporter->createResponse('plantilla-empresas.xlsx', [], [], []);
+    }
+
+    #[Route('/importar', name: 'app_companies_import')]
+    public function import(Request $request): Response
+    {
+        $centre = $this->tenantContext->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $this->denyAccessUnlessGranted(CompanyVoter::SECTION, $centre);
+
+        if (!$request->isMethod('POST')) {
+            return $this->render('company/import.html.twig');
+        }
+
+        // Paso 2: confirmación de una simulación previa
+        if ($request->request->getString('import_confirmed') === '1') {
+            if (!$this->isCsrfTokenValid('import_companies_confirm', $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $importId = $request->request->getString('import_id');
+            $session  = $request->getSession();
+            $path     = $this->getTempImportPath($importId);
+
+            if ($importId === '' || $importId !== $session->get('company_import_id') || !is_file($path)) {
+                $this->addFlash('error', $this->t('companies.import.error.expired'));
+
+                return $this->redirectToRoute('app_companies_import');
+            }
+
+            $session->remove('company_import_id');
+            $result = $this->companyImporter->import($path, $centre, apply: true);
+            @unlink($path);
+
+            if ($result->hasErrors()) {
+                return $this->render('company/import.html.twig', ['errors' => $result->errors]);
+            }
+
+            $this->addFlash('success', $this->translator->trans('companies.import.flash.done', [
+                '%created%' => $result->companiesCreated,
+                '%updated%' => $result->companiesUpdated,
+            ], 'companies'));
+
+            return $this->redirectToRoute('app_companies_index');
+        }
+
+        // Paso 1: subida del fichero y simulación
+        if (!$this->isCsrfTokenValid('import_companies', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $file = $request->files->get('xlsx');
+        if (!$file instanceof UploadedFile || !$file->isValid()) {
+            $this->addFlash('error', $this->t('companies.import.error.no_file'));
+
+            return $this->render('company/import.html.twig');
+        }
+        if (strtolower($file->getClientOriginalExtension()) !== 'xlsx') {
+            return $this->render('company/import.html.twig', ['errors' => [$this->t('companies.import.error.not_xlsx')]]);
+        }
+
+        $importId = Uuid::v4()->toRfc4122();
+        $path     = $this->getTempImportPath($importId);
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+        $file->move(dirname($path), basename($path));
+
+        $result = $this->companyImporter->import($path, $centre, apply: false);
+
+        if ($result->hasErrors() || !$result->hasChanges()) {
+            @unlink($path);
+
+            return $this->render('company/import.html.twig', [
+                'errors' => $result->errors,
+                'notice' => $result->hasErrors() ? null : $this->t('companies.import.nothing_to_import'),
+            ]);
+        }
+
+        $request->getSession()->set('company_import_id', $importId);
+
+        return $this->render('company/import_preview.html.twig', [
+            'importId' => $importId,
+            'result'   => $result,
+        ]);
     }
 
     #[Route('/{id}', name: 'app_companies_edit')]
@@ -562,6 +631,11 @@ class CompanyController extends AbstractController
         }
 
         return $errors;
+    }
+
+    private function getTempImportPath(string $importId): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/var/tmp/company-imports/' . basename($importId) . '.xlsx';
     }
 
     private function t(string $key): string

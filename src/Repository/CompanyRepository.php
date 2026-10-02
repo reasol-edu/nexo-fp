@@ -95,6 +95,20 @@ class CompanyRepository extends ServiceEntityRepository
         ], $rows);
     }
 
+    /** @return list<Company> */
+    public function findAllByCentre(EducationalCentre $centre): array
+    {
+        /** @var list<Company> $companies */
+        $companies = $this->createQueryBuilder('c')
+            ->where('c.educationalCentre = :centre')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $companies;
+    }
+
     public function findByIdAndCentre(string $id, EducationalCentre $centre): ?Company
     {
         return $this->createQueryBuilder('c')

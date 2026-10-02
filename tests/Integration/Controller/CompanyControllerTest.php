@@ -447,7 +447,8 @@ class CompanyControllerTest extends ControllerTestCase
         $values = $this->parseXlsxResponse();
         self::assertContains('Empresa S.L.', $values);
         self::assertContains('B12345678', $values);
-        self::assertContains('Serrano, Carmen', $values);
+        self::assertContains('Carmen', $values);
+        self::assertContains('Serrano', $values);
         self::assertContains('99999999R', $values);
         self::assertContains('Administradora', $values);
     }
