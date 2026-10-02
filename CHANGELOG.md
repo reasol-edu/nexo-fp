@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Al asignar puestos formativos a varios estudiantes con la asignación rápida (o dos personas a la vez), si a un mismo estudiante le llegaban dos asignaciones seguidas se producía un error 500 y la pantalla quedaba sin actualizar aunque el primer puesto sí se había guardado. Ahora se mantiene un único puesto por estudiante y estancia, y la pantalla avisa cuando un puesto ya no está disponible, cuando el estudiante ya tiene puesto o cuando otra persona se ha adelantado
+
 ### Added
 
 - Importación de empresas desde un libro Excel (`.xlsx`): desde el listado de empresas, el botón «Importar Excel» permite crear y actualizar empresas, sus centros de trabajo y sus empleados a partir de un libro con hojas «Empresas», «Centros de trabajo» y «Empleados». Las empresas se identifican por su CIF/NIF, una celda vacía no borra datos existentes y nunca se elimina nada. Antes de guardar se muestra un resumen, y si hay errores no se importa nada y se indica la hoja y la fila. Incluye una plantilla descargable con una hoja de instrucciones

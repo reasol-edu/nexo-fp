@@ -112,6 +112,7 @@ stays.flash.position_unassigned: 'Estudiante desasignado del puesto formativo co
 stays.flash.position_updated: 'Puesto formativo actualizado correctamente.'
 stays.flash.position_deleted: 'Puesto formativo eliminado correctamente.'
 stays.flash.position_duplicated: 'Puesto formativo duplicado. Revisa y completa los datos del nuevo puesto.'
+stays.flash.assign_conflict: 'Otra persona ha asignado a ese estudiante a un puesto mientras tanto. Revisa los datos actualizados antes de volver a asignar.'
 stays.flash.position_conflict: 'Otra persona ha modificado este puesto mientras lo editabas. Revisa los datos actualizados antes de volver a guardar.'
 stays.position.conflict.title: 'Cambios en conflicto'
 stays.position.conflict.body: 'Otra persona ha modificado este puesto mientras lo editabas. Hemos conservado lo que habías escrito; revisa los datos vigentes (ya cargados arriba) y vuelve a guardar para aplicar tus cambios sobre la versión actual.'
@@ -157,6 +158,9 @@ stays.position.field.count_hint: 'Si indicas más de 1, se crearán tantas copia
 stays.position.assignment_locked_hint: 'Este puesto no está en borrador: los datos están bloqueados.'
 
 stays.toast.position_assigned: 'Puesto asignado a %student%.'
+stays.toast.student_not_in_stay: 'Ese estudiante ya no pertenece a esta estancia.'
+stays.toast.position_unavailable: 'Ese puesto ya no está disponible: otra persona lo ha asignado.'
+stays.toast.student_already_assigned: '%student% ya tiene un puesto asignado en esta estancia.'
 stays.toast.position_unassigned: 'Puesto de %student% liberado.'
 stays.toast.academic_tutor_set: 'Tutoría dual docente asignada a %teacher%.'
 stays.toast.workplace_mentor_set: '%mentor% asignado/a como tutor/a dual de empresa.'

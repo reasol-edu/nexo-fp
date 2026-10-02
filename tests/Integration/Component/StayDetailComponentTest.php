@@ -49,6 +49,61 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertNotNull($updated->getStudent());
     }
 
+    public function testAssigningASecondPositionToTheSameStudentIsRejectedWithoutError(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $second = (new TrainingPosition())->setStay($stay)->setWorkcenter($position->getWorkcenter());
+        $this->persist($second);
+        $firstId  = $position->getId();
+        $secondId = $second->getId();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        $component->call('assignPosition', [
+            'studentId'  => $student->getId()->toRfc4122(),
+            'positionId' => $firstId->toRfc4122(),
+        ]);
+        // Segunda asignación del mismo alumno (p. ej. dos cambios rápidos agrupados en un lote):
+        // antes provocaba una violación de la restricción única (error 500).
+        $component->call('assignPosition', [
+            'studentId'  => $student->getId()->toRfc4122(),
+            'positionId' => $secondId->toRfc4122(),
+        ]);
+
+        self::assertStringContainsString('Ana Martinez ya tiene un puesto asignado en esta estancia.', (string) $component->render());
+
+        $this->em->clear();
+        self::assertNotNull($this->em->find(TrainingPosition::class, $firstId)->getStudent());
+        self::assertNull($this->em->find(TrainingPosition::class, $secondId)->getStudent());
+    }
+
+    public function testAssigningAnAlreadyTakenPositionShowsMessage(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $other = (new Student(new PersonName('Luis', 'Perez')))->setStudentId('2024-002');
+        $stay->addStudent($other);
+        $this->persist($other);
+        $position->setStudent($other);
+        $this->flush();
+
+        $component = $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($admin);
+
+        $component->call('assignPosition', [
+            'studentId'  => $student->getId()->toRfc4122(),
+            'positionId' => $position->getId()->toRfc4122(),
+        ]);
+
+        self::assertStringContainsString('Ese puesto ya no está disponible', (string) $component->render());
+    }
+
     public function testSetAcademicTutorShowsToast(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();

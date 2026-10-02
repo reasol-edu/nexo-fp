@@ -9,6 +9,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
 use App\Entity\Stay;
+use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
@@ -148,6 +149,17 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->andWhere('tp.stay = :stay')
             ->setParameter('id', $id, 'uuid')
             ->setParameter('stay', $stay->getId(), 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findByStayAndStudent(Stay $stay, Student $student): ?TrainingPosition
+    {
+        return $this->createQueryBuilder('tp')
+            ->where('tp.stay = :stay')
+            ->andWhere('tp.student = :student')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('student', $student->getId(), 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
     }

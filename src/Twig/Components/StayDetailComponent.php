@@ -16,6 +16,7 @@ use App\Repository\WorkerRepository;
 use App\Security\Voter\StayVoter;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -209,16 +210,31 @@ class StayDetailComponent extends AbstractController
             }
         }
         if ($student === null) {
+            $this->toast('stays.toast.student_not_in_stay', []);
+
             return null;
         }
 
         $position = $this->positions->findByIdAndStay($positionId, $stay);
         if ($position === null || $position->getStudent() !== null) {
+            $this->toast('stays.toast.position_unavailable', []);
+
             return null;
         }
 
         if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
             throw new AccessDeniedException();
+        }
+
+        // Un alumno solo puede tener un puesto por estancia. Sin esta comprobación, dos asignaciones
+        // seguidas (asignación rápida agrupada en un lote, o dos docentes a la vez) violarían la
+        // restricción única y devolverían un error 500 dejando la pantalla desincronizada.
+        if ($this->positions->findByStayAndStudent($stay, $student) !== null) {
+            $this->toast('stays.toast.student_already_assigned', [
+                '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
+            ]);
+
+            return null;
         }
 
         $position->setStudent($student);
@@ -358,6 +374,11 @@ class StayDetailComponent extends AbstractController
             $this->em->flush();
         } catch (OptimisticLockException) {
             $this->addFlash('error', $this->translator->trans('stays.flash.position_conflict', [], 'stays'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $this->stayId]);
+        } catch (UniqueConstraintViolationException) {
+            // Otra persona asignó a ese alumno a otro puesto en paralelo.
+            $this->addFlash('error', $this->translator->trans('stays.flash.assign_conflict', [], 'stays'));
 
             return $this->redirectToRoute('app_stays_show', ['id' => $this->stayId]);
         }
