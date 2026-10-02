@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Al eliminar una estancia que tenía puestos formativos se producía un error 500 en instalaciones con PostgreSQL o MySQL. La estancia y sus puestos ahora se eliminan correctamente. Requiere ejecutar las migraciones al actualizar
+
 ## [2.7.0] - 2026-09-20
 
 ### Added

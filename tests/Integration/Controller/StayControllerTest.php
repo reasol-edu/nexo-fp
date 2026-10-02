@@ -381,6 +381,37 @@ class StayControllerTest extends ControllerTestCase
         self::assertNull($this->em->find(Stay::class, $stay->getId()));
     }
 
+    public function testDeleteStayWithPositionsDeletesStayAndPositions(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia con puestos', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        [$level, $group, $student] = $this->makeGroupWithStudent($programme);
+        $position   = $this->makePosition($stay, $workcenter);
+        $position->setStudent($student)->addProgrammeYear($level);
+        $stay->addStudent($student);
+        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $student, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->em->clear();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId();
+
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId);
+        $token   = $crawler->filter('form[action*="' . $stayId . '/eliminar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/eliminar', ['_token' => $token]);
+
+        self::assertResponseRedirects();
+
+        $this->em->clear();
+        self::assertNull($this->em->find(Stay::class, $stay->getId()));
+        self::assertNull($this->em->find(TrainingPosition::class, $positionId));
+    }
+
     public function testDeleteStayWithInvalidCsrfIsDenied(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
