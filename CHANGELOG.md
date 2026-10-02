@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-10-03
+
 ### Fixed
 
 - La actualización a la versión con registro de actividad fallaba en instalaciones con MySQL por un tipo de columna incompatible; ya se completa correctamente
