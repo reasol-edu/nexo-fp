@@ -25,10 +25,10 @@ final class Version20260627000000 extends AbstractMigration
         $this->addSql(<<<'SQL'
             CREATE TABLE activity_log (
                 id               INT UNSIGNED     NOT NULL AUTO_INCREMENT,
-                active_user_id   CHAR(36)         DEFAULT NULL COMMENT '(DC2Type:uuid)',
-                real_user_id     CHAR(36)         DEFAULT NULL COMMENT '(DC2Type:uuid)',
-                academic_year_id CHAR(36)         DEFAULT NULL COMMENT '(DC2Type:uuid)',
-                created_at       DATETIME         NOT NULL COMMENT '(DC2Type:datetime_immutable)',
+                active_user_id   BINARY(16)       DEFAULT NULL,
+                real_user_id     BINARY(16)       DEFAULT NULL,
+                academic_year_id BINARY(16)       DEFAULT NULL,
+                created_at       DATETIME         NOT NULL,
                 ip               VARCHAR(45)      NOT NULL,
                 action_type      VARCHAR(100)     NOT NULL,
                 data             JSON             DEFAULT NULL,

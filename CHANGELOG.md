@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- La actualización a la versión con registro de actividad fallaba en instalaciones con MySQL por un tipo de columna incompatible; ya se completa correctamente
 - Al eliminar una estancia que tenía puestos formativos se producía un error 500 en instalaciones con PostgreSQL o MySQL. La estancia y sus puestos ahora se eliminan correctamente. Requiere ejecutar las migraciones al actualizar
 
 ## [2.7.0] - 2026-09-20
