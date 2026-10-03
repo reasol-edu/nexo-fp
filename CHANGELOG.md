@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.3] - 2026-10-03
+
+### Fixed
+
+- La insignia de preferencia de enseñanza de un puesto compartido no mostraba su icono (una estrella) en las instalaciones desplegadas, porque no se había incluido en los iconos locales de la aplicación
+
 ## [2.9.2] - 2026-10-03
 
 ### Fixed
