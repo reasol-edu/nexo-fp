@@ -4,6 +4,47 @@ Tareas habituales para mantener una instalación de Nexo FP en marcha.
 
 ## Copias de seguridad
 
+### Los comandos `app:backup` y `app:restore`
+
+Funcionan igual con SQLite, PostgreSQL y MySQL/MariaDB. Todo lo que guarda Nexo FP vive en la base de
+datos, así que su volcado es la copia completa de los datos.
+
+```bash
+php bin/console app:backup [carpeta-o-fichero.zip] [--password[=CONTRASEÑA]]
+php bin/console app:restore <copia.zip> [--password[=CONTRASEÑA]] [--force]
+```
+
+`app:backup` vuelca toda la base de datos a un único ZIP. Sin argumento lo deja en `var/backups/` con un
+nombre con la fecha y la hora; también acepta una carpeta de destino o la ruta completa de un `.zip`. El
+volcado es lógico e independiente del motor (una tabla por fichero NDJSON, con los valores binarios en
+base64 y un `manifest.json` con la versión de la aplicación, el motor y el número de filas de cada
+tabla), de modo que una copia hecha con SQLite se puede leer con PostgreSQL y al revés. La cola de correos
+y tareas (`messenger_messages`) se excluye a propósito: restaurarla reviviría avisos ya obsoletos.
+
+**Cifrado (opcional).** Con `--password=CONTRASEÑA` el ZIP se cifra entero con AES-256; con `--password`
+sin valor la contraseña se pide por consola y se confirma. El archivo cifrado se abre con cualquier
+herramienta compatible con AES de WinZip (7-Zip, keka, WinRAR) o con `app:restore`. **Si pierdes la
+contraseña, la copia es irrecuperable**: guárdala en un gestor de contraseñas.
+
+!!! warning "La copia no incluye el secreto de la aplicación"
+    Sin `--password` la copia **no está cifrada**: contiene los datos de todos los centros y los hashes
+    de contraseña de los docentes. En ningún caso incluye el `APP_SECRET` (en `.env.local`, o
+    `data/.secret` en el binario nativo): guárdalo aparte.
+
+`app:restore` reemplaza **todos** los datos actuales por los de la copia. Antes de tocar nada muestra la
+fecha, la versión de la aplicación y el contenido de la copia y pide confirmación; `--force` la omite
+(obligatorio en modo no interactivo). Si el esquema con el que se hizo la copia no coincide con el de la
+base de datos actual —hay migraciones pendientes o de más—, se niega salvo que se añada `--force`.
+
+La carga es **transaccional**: si algo falla, la base de datos queda como estaba. Mientras dura, se
+suspenden las comprobaciones de clave ajena; en **PostgreSQL** esto requiere conectarse con un rol con
+privilegios (el propietario de la base de datos o un superusuario), igual que
+`pg_restore --disable-triggers`. En SQLite y MySQL no hace falta nada especial. Tras restaurar,
+**reinicia los procesos de la aplicación** (incluido el worker de Messenger) para descartar cualquier dato
+en caché.
+
+### Copia directa de los ficheros o de la base de datos
+
 - **Binario nativo (SQLite):** todo lo generado en tiempo de ejecución se guarda en el directorio
   `data/` del paquete. Para hacer una copia de seguridad basta con **copiar ese directorio** (incluye la
   base de datos `data/nexo-fp.db` y el secreto `data/.secret`).

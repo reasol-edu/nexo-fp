@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Copias de seguridad desde la consola: el comando `app:backup` vuelca toda la base de datos a un único ZIP (en `var/backups`, o en la carpeta o el `.zip` que se indique), con cifrado AES-256 opcional (`--password`), y `app:restore` la restaura reemplazando los datos actuales tras pedir confirmación. Funciona igual con SQLite, PostgreSQL y MySQL/MariaDB, y una copia hecha con un motor se puede restaurar en otro. La copia nunca incluye el `APP_SECRET`
 - Importación de empresas desde un libro Excel (`.xlsx`): desde el listado de empresas, el botón «Importar Excel» permite crear y actualizar empresas, sus centros de trabajo y sus empleados a partir de un libro con hojas «Empresas», «Centros de trabajo» y «Empleados». Las empresas se identifican por su CIF/NIF, una celda vacía no borra datos existentes y nunca se elimina nada. Antes de guardar se muestra un resumen, y si hay errores no se importa nada y se indica la hoja y la fila. Incluye una plantilla descargable con una hoja de instrucciones
 
 ### Changed

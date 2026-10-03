@@ -50,6 +50,35 @@ php bin/console app:create-admin <nombre_de_usuario> [<contraseña>]
 
 El comando falla si el nombre de usuario ya está registrado. La contraseña se almacena siempre hasheada.
 
+## app:backup
+
+Crea una copia de seguridad completa de la base de datos en un único fichero ZIP (ver
+[Operación y mantenimiento → Copias de seguridad](10-operacion-y-mantenimiento.md#copias-de-seguridad)).
+
+```bash
+php bin/console app:backup [carpeta-o-fichero.zip] [--password[=CONTRASEÑA]]
+```
+
+| Argumento / opción | Descripción | Valor por defecto |
+|--------------------|-------------|-------------------|
+| `carpeta-o-fichero.zip` | Carpeta de destino (el fichero se nombra con la fecha y la hora) o ruta completa de un `.zip` | `var/backups/` |
+| `--password` | Cifra la copia con AES-256. Sin valor, la contraseña se pide por consola y se confirma | Sin cifrar |
+
+## app:restore
+
+Restaura una copia creada con `app:backup`, **reemplazando todos los datos actuales**. Muestra la fecha, la
+versión y el contenido de la copia y pide confirmación antes de tocar nada.
+
+```bash
+php bin/console app:restore <copia.zip> [--password[=CONTRASEÑA]] [--force]
+```
+
+| Argumento / opción | Descripción |
+|--------------------|-------------|
+| `copia.zip` | Fichero de la copia de seguridad (**obligatorio**) |
+| `--password` | Contraseña de la copia si está cifrada. Sin valor, se pide por consola |
+| `--force` | No pide confirmación (obligatorio en modo no interactivo) y restaura aunque el esquema de la copia no coincida con el de la base de datos |
+
 ## app:send-reminders
 
 Envía el aviso diario de puestos formativos «Registrados en Séneca» sin firmar cuyas estancias comienzan
