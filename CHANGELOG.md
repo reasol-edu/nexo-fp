@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.2] - 2026-10-03
+
+### Fixed
+
+- En la pantalla de oferta formativa (Centro educativo) los contadores de enseñanzas, niveles y grupos de cada familia, enseñanza y nivel salían siempre a 0 en instalaciones con MySQL o MariaDB y con SQLite. Con PostgreSQL funcionaban. No requiere ninguna acción: los datos nunca se habían perdido, solo no se contaban
+
 ## [2.9.1] - 2026-10-03
 
 ### Fixed
