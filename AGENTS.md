@@ -74,6 +74,8 @@ config/packages/*.yaml Symfony bundle configuration
 | `make fixtures` | Load demo fixtures (`doctrine:fixtures:load --append`) |
 | `make migrate` | Run Doctrine migrations |
 | `make setup` | Run `app:setup` (initial app setup) |
+| `make check-migrations` | Prueba las migraciones en PostgreSQL, MySQL y MariaDB reales (Docker) |
+| `make screenshots` | Regenera las capturas del manual y la presentación (`ARGS=manual\|slides\|<nombre>`) |
 | `make dev` / `make dev-stop` | Start/stop local dev environment (DB + Mercure hub + `symfony serve`) |
 | `make docs` / `docs-pdf` / `docs-web` / `docs-serve` | Build the user manual (PDF / MkDocs web) |
 | `make slides` | Build the Marp presentation to PDF |

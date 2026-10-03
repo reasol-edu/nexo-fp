@@ -37,9 +37,8 @@ npx --yes @marp-team/marp-cli docs/slides/nexo-fp.md --allow-local-files -o docs
 
 ## Editar y previsualizar
 
-La extensión [Marp for VS Code] ofrece vista previa en vivo. Para regenerar las capturas,
-arranca el entorno de desarrollo con datos de demostración (`make fixtures`) y reejecuta el
-script de capturas.
+La extensión [Marp for VS Code] ofrece vista previa en vivo. Para regenerar las capturas basta con `scripts/screenshots/run.sh slides` (o `make screenshots ARGS=slides`):
+monta un entorno aislado con datos de demostración y las reescribe en `img/` (ver `skills/documentation.md`).
 
 [Marp]: https://marp.app
 [Marp for VS Code]: https://marketplace.visualstudio.com/items?itemName=marp-team.marp-vscode

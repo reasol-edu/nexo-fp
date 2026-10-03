@@ -11,6 +11,10 @@ php -d memory_limit=512M bin/phpunit
 
 Do not continue if there are failures.
 
+If the release adds or changes migrations, also run `scripts/check-migrations.sh` (Docker) to try them on
+PostgreSQL, MySQL and MariaDB — SQLite alone does not catch engine-specific errors
+(see [`skills/testing.md`](testing.md#migrations-against-real-databases)).
+
 ## 2. Update `config/services.yaml`
 
 - `app.version`: the new version string (e.g. `"2.5.1"`)

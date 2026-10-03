@@ -1,4 +1,4 @@
-.PHONY: dev dev-stop fixtures migrate setup test slides docs docs-pdf docs-web docs-serve
+.PHONY: dev dev-stop fixtures migrate setup test check-migrations screenshots slides docs docs-pdf docs-web docs-serve
 
 # Versión publicada, leída de config/services.yaml (app.version). La portada del
 # manual en PDF la muestra automáticamente, así que en cada release basta con
@@ -23,6 +23,14 @@ fixtures:
 
 migrate:
 	php bin/console doctrine:migrations:migrate --no-interaction
+
+# Prueba las migraciones recientes en PostgreSQL, MySQL y MariaDB reales (requiere Docker)
+check-migrations:
+	scripts/check-migrations.sh
+
+# Regenera las capturas del manual y la presentación en un entorno aislado (make screenshots ARGS=manual)
+screenshots:
+	scripts/screenshots/run.sh $(ARGS)
 
 setup:
 	php bin/console app:setup --no-interaction

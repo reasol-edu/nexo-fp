@@ -44,3 +44,18 @@ vendor/bin/phpstan analyse
 Runs the standard rules plus the project-specific
 `ForbidGenericDoctrineMethodsRule` (see [`skills/doctrine-repositories.md`](doctrine-repositories.md)).
 Configuration: `phpstan.dist.neon`.
+
+## Migrations against real databases
+
+PHPUnit runs on SQLite, which hides engine-specific migration bugs (2.9.0 shipped a MySQL migration that
+failed because the foreign key must be dropped before its index). Whenever a release adds or changes
+migrations, run — with Docker available:
+
+```bash
+scripts/check-migrations.sh            # or: make check-migrations   (pg | mysql | mariadb | all)
+```
+
+For PostgreSQL 16, MySQL 8 and MariaDB 11 it migrates up to the previous version with real rows, migrates up,
+checks the data moved, migrates down, up again, and prints the schema diff against the ORM mapping. The
+seed data and assertions in that script are specific to the stay/programme migration of 2.9.0: when a future
+migration needs checking, adapt the seed and the checks.
