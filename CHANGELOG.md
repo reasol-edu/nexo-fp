@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-10-03
+### Added
+
+- Una estancia puede reunir varias enseñanzas (por ejemplo DAW y DAM). Cada coordinación gestiona solo a su propio alumnado —lo inscribe, le asigna puesto y designa sus tutores—, pero ve todo el alumnado de la estancia y todas las asignaciones, aunque no sean suyos (el NIE del alumnado ajeno no se muestra). Los puestos formativos se pueden ofertar a niveles de varias de las enseñanzas de la estancia y, en cuanto se asignan a un estudiante, dejan de estar disponibles para cualquier otro. Los puestos libres son compartidos: cualquier coordinación de la estancia puede crearlos, editarlos o eliminarlos. Una estancia solo la elimina quien gestiona todas sus enseñanzas y no se puede quitar una enseñanza con alumnado inscrito o puestos ofertados. Requiere ejecutar las migraciones al actualizar
+- Si dos coordinaciones intentan asignar a la vez el mismo puesto compartido, la segunda recibe un aviso con el nombre de quien se ha adelantado, en lugar de un error y una recarga de la página
+- Aviso por correo a las coordinaciones de las demás enseñanzas cuando se asigna un puesto compartido que también se les ofertaba, o se elimina un puesto libre compartido (ajuste personal, de centro y global «Email por cambios en puestos compartidos»)
+- Preferencia temporal de enseñanza en un puesto: hasta una fecha (inclusive) solo se puede asignar a alumnado de la enseñanza preferente; después se abre a todas las enseñanzas a las que se oferta
+- En las estancias con varias enseñanzas, panel de reparto por enseñanza (estudiantes, estudiantes sin puesto y puestos libres disponibles), botón «Mis estudiantes» para filtrar la lista y columna «Enseñanza» en la exportación a Excel
+- Escenario de demostración con una estancia compartida entre DAW y SMR en el IES Ada Lovelace
+
+### Changed
+
+- Al asignar un puesto se comprueba también en el servidor que esté ofertado al nivel del estudiante y que no esté reservado por una preferencia vigente a otra enseñanza
+- Los recordatorios de firma de una estancia con varias enseñanzas llegan a la coordinación y la jefatura de las enseñanzas del estudiante, no a las de toda la estancia
+- Las estadísticas por familia profesional del inicio cuentan cada estudiante y cada puesto en la familia de sus enseñanzas dentro de la estancia
+
 ## [2.8.0] - 2026-10-03
 
 ### Security
