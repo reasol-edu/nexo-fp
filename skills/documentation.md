@@ -56,10 +56,7 @@ How it works / how to extend it:
 - Manual screenshots are 1440×900 at scale 1; slide screenshots reuse the sizes of the original images.
 - The server runs with `APP_DEBUG=1` and 8 workers: with `APP_DEBUG=0` AssetMapper assets 404 and the page
   renders unstyled. `public/assets/` must not exist (the script refuses to run if it does).
-- `releases.png` (a GitHub page) is taken by hand. `oferta-formativa.png`, `04_admin_familias.png` and
-  `05_admin_ensenanza.png` can be regenerated (`oferta-formativa`, `slide-admin-familias`,
-  `slide-admin-ensenanza`) but the family-tree badges render as «0» on the migrated SQLite demo database
-  (a pre-existing id-format quirk), so they are kept from older captures until that is fixed.
+- `releases.png` (a GitHub page) is taken by hand; every other image is generated.
 - After changing the UI, regenerate and **look at the images** before committing: layout changes can break a
   selector in `capture.mjs`; failures are listed at the end and make the script exit non-zero.
 

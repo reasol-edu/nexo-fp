@@ -6,7 +6,11 @@
 # han trasladado, baja, vuelve a subir, comprueba que no se puede borrar una enseñanza en uso (FK RESTRICT)
 # y muestra las diferencias entre el esquema migrado y el mapeo del ORM.
 #
-# USO:   scripts/check-migrations.sh [pg|mysql|mariadb|all]      (necesita Docker; cada motor tarda ~1 min)
+# Además carga las fixtures de demostración y comprueba que los contadores de la oferta formativa
+# (consultas con `IN (:entidades)`) devuelven datos: con ids binarios (MySQL, SQLite con migraciones)
+# devolvían 0 y los tests en memoria no lo detectaban.
+#
+# USO:   scripts/check-migrations.sh [pg|mysql|mariadb|sqlite|all]      (necesita Docker; cada motor tarda ~1 min)
 # Variables: FROM=<versión anterior> (por defecto 20260702000000), KEEP=1 para no parar los contenedores.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -67,10 +71,41 @@ run_engine() {
   echo "▸ volviendo a subir"; mig
   [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 2 ] && ok "stay_programme recreada con los datos" || fail "stay_programme incorrecta tras volver a subir"
 
+  check_counts
+
   echo "▸ diferencias esquema migrado ↔ mapeo del ORM (relativas a esta versión):"
   php -d memory_limit=1G bin/console doctrine:schema:update --dump-sql 2>&1 | grep -iE "stay_programme|priority|training_position|shared" | sed 's/^/    /' || true
   echo "    (vacío = sin diferencias en las tablas tocadas)"
   [ -n "${KEEP:-}" ] || docker stop "nx-$name" >/dev/null 2>&1
+}
+
+# Con la base ya migrada: fixtures de demo y contadores de la oferta formativa.
+check_counts() {
+  echo "▸ fixtures de demostración y contadores de la oferta formativa"
+  if ! php -d memory_limit=1G bin/console doctrine:fixtures:load --no-interaction --append >/tmp/nx-fixtures.log 2>&1; then
+    fail "las fixtures no se cargan ($(tail -1 /tmp/nx-fixtures.log | cut -c1-120))"; return
+  fi
+  local snippet; snippet="$(mktemp)"
+  cat >"$snippet" <<'PHP'
+<?php
+require getcwd().'/vendor/autoload.php';
+(new Symfony\Component\Dotenv\Dotenv())->bootEnv(getcwd().'/.env');
+$k = new App\Kernel('dev', true); $k->boot();
+$em = $k->getContainer()->get('doctrine')->getManager();
+$families   = $em->getRepository(App\Entity\ProfessionalFamily::class)->findAll();
+$programmes = $em->getRepository(App\Entity\Programme::class)->findAll();
+$levels     = $em->getRepository(App\Entity\ProgrammeYear::class)->findAll();
+echo count($em->getRepository(App\Entity\Programme::class)->countByFamily($families)), ' ',
+     count($em->getRepository(App\Entity\ProgrammeYear::class)->countByProgramme($programmes)), ' ',
+     count($em->getRepository(App\Entity\Group::class)->countByLevel($levels)), ' ', count($families), "\n";
+PHP
+  local out; out="$(php "$snippet" 2>&1 | tail -1)"; rm -f "$snippet"
+  read -r f p l total <<<"$out"
+  if [ -n "${total:-}" ] && [ "$total" -gt 0 ] && [ "$f" = "$total" ] && [ "$p" -gt 0 ] && [ "$l" -gt 0 ]; then
+    ok "contadores correctos (familias $f/$total, enseñanzas $p, niveles $l)"
+  else
+    fail "contadores a cero o error: «${out}»"
+  fi
 }
 
 # q <pg|my> "<sql>": ejecuta SQL y devuelve el valor (sin cabeceras ni espacios)
@@ -84,6 +119,16 @@ q() {
 kq() { [ "$1" = pg ] && echo '"key"' || echo '`key`'; }
 colcount() { q "$1" "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = '$2' AND column_name = '$3' AND table_schema = $( [ "$1" = pg ] && echo "current_schema()" || echo "DATABASE()" )"; echo; }
 
+run_sqlite() {
+  echo; echo "══ sqlite ══"
+  local db; db="$(mktemp -u).db"
+  export MIGRATIONS_PATH=migrations/sqlite DATABASE_URL="sqlite:///$db"
+  echo "▸ migrando"; mig
+  check_counts
+  rm -f "$db"
+}
+
+[[ "$ONLY" = all || "$ONLY" = sqlite ]] && run_sqlite
 [[ "$ONLY" = all || "$ONLY" = pg ]]      && run_engine pg      postgres:16 "54320:5432" migrations/postgresql "postgresql://app:pw@127.0.0.1:54320/app?serverVersion=16&charset=utf8" pg -e POSTGRES_PASSWORD=pw -e POSTGRES_USER=app -e POSTGRES_DB=app
 [[ "$ONLY" = all || "$ONLY" = mysql ]]   && run_engine mysql   mysql:8.0    "33060:3306" migrations/mysql      "mysql://root:pw@127.0.0.1:33060/app?serverVersion=8.0.32&charset=utf8mb4"      my -e MYSQL_ROOT_PASSWORD=pw -e MYSQL_DATABASE=app
 [[ "$ONLY" = all || "$ONLY" = mariadb ]] && run_engine mariadb mariadb:11   "33061:3306" migrations/mysql      "mysql://root:pw@127.0.0.1:33061/app?serverVersion=11.4.0-MariaDB&charset=utf8mb4" ma -e MARIADB_ROOT_PASSWORD=pw -e MARIADB_DATABASE=app

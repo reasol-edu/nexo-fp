@@ -57,5 +57,8 @@ scripts/check-migrations.sh            # or: make check-migrations   (pg | mysql
 
 For PostgreSQL 16, MySQL 8 and MariaDB 11 it migrates up to the previous version with real rows, migrates up,
 checks the data moved, migrates down, up again, and prints the schema diff against the ORM mapping. The
-seed data and assertions in that script are specific to the stay/programme migration of 2.9.0: when a future
+script also loads the demo fixtures and checks the offering counters (`countByFamily`, `countByProgramme`,
+`countByLevel`): they once used `IN (:entities)`, which matched nothing on MySQL and migrated SQLite because
+ids are stored as binary there — the in-memory tests did not catch it, so **never pass arrays of entities to
+`IN (:param)`; compare one by one with an explicit `'uuid'` type**. The seed data and assertions in that script are specific to the stay/programme migration of 2.9.0: when a future
 migration needs checking, adapt the seed and the checks.
