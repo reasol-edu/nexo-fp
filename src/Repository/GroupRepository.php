@@ -10,6 +10,7 @@ use App\Entity\Group;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use App\Entity\Teacher;
+use App\Entity\Stay;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -21,21 +22,6 @@ class GroupRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Group::class);
-    }
-
-    public function isTeacherInProgramme(Teacher $teacher, Programme $programme): bool
-    {
-        return $this->createQueryBuilder('g')
-            ->select('1')
-            ->join('g.programmeYear', 'py')
-            ->leftJoin('g.teachers', 't')
-            ->where('py.programme = :programme')
-            ->andWhere(':teacher MEMBER OF g.tutors OR t.id = :teacher')
-            ->setParameter('programme', $programme->getId(), 'uuid')
-            ->setParameter('teacher', $teacher->getId(), 'uuid')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult() !== null;
     }
 
     /**
@@ -94,27 +80,6 @@ class GroupRepository extends ServiceEntityRepository
             ->setParameter('id', $id, 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
-    }
-
-    /**
-     * Returns all groups (with students eagerly loaded) that belong to ProgrammeYears
-     * of the given programme. Ordered by level name → group name → student surname.
-     *
-     * @return Group[]
-     */
-    public function findByProgrammeWithStudents(Programme $programme): array
-    {
-        return $this->createQueryBuilder('g')
-            ->leftJoin('g.students', 's')->addSelect('s')
-            ->join('g.programmeYear', 'py')
-            ->where('py.programme = :programme')
-            ->setParameter('programme', $programme->getId(), 'uuid')
-            ->orderBy('py.name', 'ASC')
-            ->addOrderBy('g.name', 'ASC')
-            ->addOrderBy('s.name.lastName', 'ASC')
-            ->addOrderBy('s.name.firstName', 'ASC')
-            ->getQuery()
-            ->getResult();
     }
 
     /** @return Group[] */
@@ -212,5 +177,48 @@ class GroupRepository extends ServiceEntityRepository
             ->addOrderBy('g.name', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Grupos (con su alumnado) de todas las enseñanzas de la estancia, ordenados por enseñanza,
+     * nivel y grupo.
+     *
+     * @return list<Group>
+     */
+    public function findByStayWithStudents(Stay $stay): array
+    {
+        return $this->createQueryBuilder('g')
+            ->leftJoin('g.students', 's')->addSelect('s')
+            // Los grupos de cada alumno se cargan aquí para no lanzar una consulta por alumno al deducir sus enseñanzas.
+            ->leftJoin('s.groups', 'sg')->addSelect('sg')
+            ->leftJoin('sg.programmeYear', 'sgpy')->addSelect('sgpy')
+            ->leftJoin('sgpy.programme', 'sgp')->addSelect('sgp')
+            ->join('g.programmeYear', 'py')->addSelect('py')
+            ->join('py.programme', 'p')->addSelect('p')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->orderBy('p.name', 'ASC')
+            ->addOrderBy('py.name', 'ASC')
+            ->addOrderBy('g.name', 'ASC')
+            ->addOrderBy('s.name.lastName', 'ASC')
+            ->addOrderBy('s.name.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** ¿Imparte o tutoriza el docente algún grupo de alguna enseñanza de la estancia? */
+    public function isTeacherInStayProgrammes(Teacher $teacher, Stay $stay): bool
+    {
+        return $this->createQueryBuilder('g')
+            ->select('1')
+            ->join('g.programmeYear', 'py')
+            ->leftJoin('g.teachers', 't')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = py.programme)')
+            ->andWhere(':teacher MEMBER OF g.tutors OR t.id = :teacher')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
     }
 }

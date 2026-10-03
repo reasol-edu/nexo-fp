@@ -159,7 +159,7 @@ class NotificationBellComponentTest extends RepositoryTestCase
         $stay   = (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-10 days'))
             ->setEndDate(new \DateTimeImmutable('+20 days'));
         $position = (new TrainingPosition())->setStay($stay);

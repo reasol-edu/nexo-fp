@@ -41,15 +41,13 @@ class StayRepository extends ServiceEntityRepository
         array $periods = ['current', 'future', 'past'],
         ?Teacher $viewer = null,
     ): Query {
+        // Una estancia puede tener varias enseñanzas: se filtra con EXISTS (sin join) para
+        // no duplicar filas ni romper la paginación.
         $qb = $this->createQueryBuilder('s')
-            ->join('s.programme', 'p')
-            ->join('p.professionalFamily', 'f')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
             ->orderBy('s.endDate', 'DESC')
             ->addOrderBy('s.startDate', 'DESC')
-            ->addOrderBy('f.name', 'ASC')
-            ->addOrderBy('p.name', 'ASC')
             ->addOrderBy('s.name', 'ASC');
 
         if ($search !== '') {
@@ -57,18 +55,18 @@ class StayRepository extends ServiceEntityRepository
             $qb->andWhere(
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-                    'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
+                    $this->programmeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
                 )
             )->setParameter('q', $q);
         }
 
         if ($familyId !== '') {
-            $qb->andWhere('f.id = :familyId')
+            $qb->andWhere($this->programmeExists('xf.id = :familyId'))
                ->setParameter('familyId', $familyId, 'uuid');
         }
 
         if ($programmeId !== '') {
-            $qb->andWhere('p.id = :programmeId')
+            $qb->andWhere($this->programmeExists('xp.id = :programmeId'))
                ->setParameter('programmeId', $programmeId, 'uuid');
         }
 
@@ -220,119 +218,234 @@ class StayRepository extends ServiceEntityRepository
     /**
      * Position counters grouped by professional family, ordered by family name.
      *
+     * Una estancia puede reunir enseñanzas de varias familias. Un puesto libre cuenta en cada
+     * familia a la que están ofertados sus niveles; un puesto asignado, en la familia (o
+     * familias) de las enseñanzas del estudiante dentro de la estancia. Si no se puede deducir
+     * (puesto sin niveles, estudiante sin grupo en la estancia) cuenta en todas las de la estancia.
+     *
      * @return list<array{family_name: string, total: int, occupied: int, signed: int}>
      */
     public function countPositionsByFamily(AcademicYear $year, ?Teacher $viewer = null): array
     {
-        $qb = $this->createQueryBuilder('s')
-            ->select(
-                'f.name AS family_name',
-                'COUNT(tp.id) AS total',
-                'SUM(CASE WHEN tp.student IS NOT NULL THEN 1 ELSE 0 END) AS occupied',
-                'SUM(CASE WHEN tp.signed = :btrue THEN 1 ELSE 0 END) AS signed',
-            )
-            ->join('s.programme', 'p')
-            ->join('p.professionalFamily', 'f')
-            ->leftJoin('s.trainingPositions', 'tp')
-            ->where('s.academicYear = :year')
-            ->groupBy('f.id, f.name')
-            ->orderBy('f.name', 'ASC')
-            ->setParameter('year', $year->getId(), 'uuid')
-            ->setParameter('btrue', true);
-        $this->addViewerFilter($qb, $viewer);
+        $stayFamilies    = $this->findFamiliesByStay($year, $viewer);
+        $studentFamilies = $this->findStudentFamiliesByStay($year, $viewer);
 
-        /** @var list<array{family_name: string, total: string|int, occupied: string|int|null, signed: string|int|null}> $rows */
-        $rows = $qb->getQuery()->getResult();
+        $names  = [];
+        $counts = [];
+        foreach ($stayFamilies as $families) {
+            foreach ($families as $familyId => $familyName) {
+                $names[$familyId]  = $familyName;
+                $counts[$familyId] ??= ['free' => [], 'occupied' => [], 'signed' => []];
+            }
+        }
 
-        return array_map(static fn (array $row): array => [
-            'family_name' => $row['family_name'],
-            'total'       => (int) $row['total'],
-            'occupied'    => (int) $row['occupied'],
-            'signed'      => (int) $row['signed'],
-        ], $rows);
-    }
-
-    /**
-     * Student counters grouped by professional family, classified by the state of
-     * their assigned training position. Students enrolled in a stay without an
-     * assigned position are counted as "unassigned". Counts are distinct students.
-     *
-     * @return list<array{family_name: string, unassigned: int, draft: int, pending: int, registered: int, signed: int}>
-     */
-    public function countStudentsByFamilyState(AcademicYear $year, ?Teacher $viewer = null): array
-    {
-        // Query 1: enrolled students per family (the universe).
-        $enrolledQb = $this->createQueryBuilder('s')
-            ->select('f.id AS family_id', 'f.name AS family_name', 'COUNT(DISTINCT st.id) AS enrolled')
-            ->join('s.programme', 'p')
-            ->join('p.professionalFamily', 'f')
-            ->join('s.students', 'st')
-            ->where('s.academicYear = :year')
-            ->groupBy('f.id, f.name')
-            ->setParameter('year', $year->getId(), 'uuid');
-        $this->addViewerFilter($enrolledQb, $viewer);
-
-        /** @var list<array{family_id: string, family_name: string, enrolled: string|int}> $enrolledRows */
-        $enrolledRows = $enrolledQb->getQuery()->getResult();
-
-        // Query 2: distinct assigned students per family, grouped by position state
-        // and signed flag. Buckets are derived in PHP for portability across engines.
-        $assignedQb = $this->createQueryBuilder('s')
-            ->select(
-                'f.id AS family_id',
-                'tp.state AS state',
-                'tp.signed AS signed',
-                'COUNT(DISTINCT tps.id) AS cnt',
-            )
-            ->join('s.programme', 'p')
-            ->join('p.professionalFamily', 'f')
+        // Familias de los niveles de cada puesto (sin niveles → null).
+        $levelQb = $this->createQueryBuilder('s')
+            ->select('s.id AS stay_id', 'tp.id AS tp_id', 'tps.id AS student_id', 'tp.signed AS signed', 'f.id AS family_id')
             ->join('s.trainingPositions', 'tp')
-            ->join('tp.student', 'tps')
+            ->leftJoin('tp.student', 'tps')
+            ->leftJoin('tp.programmeYears', 'py')
+            ->leftJoin('py.programme', 'p')
+            ->leftJoin('p.professionalFamily', 'f')
             ->where('s.academicYear = :year')
-            ->groupBy('f.id, tp.state, tp.signed')
             ->setParameter('year', $year->getId(), 'uuid');
-        $this->addViewerFilter($assignedQb, $viewer);
+        $this->addViewerFilter($levelQb, $viewer);
 
-        /** @var list<array{family_id: string, state: TrainingPositionState|string, signed: bool|int, cnt: string|int}> $assignedRows */
-        $assignedRows = $assignedQb->getQuery()->getResult();
+        /** @var list<array{stay_id: mixed, tp_id: mixed, student_id: mixed, signed: bool|int, family_id: mixed}> $rows */
+        $rows = $levelQb->getQuery()->getResult();
 
-        $bucketsByFamily = [];
-        foreach ($assignedRows as $row) {
-            $familyId = (string) $row['family_id'];
-            $bucketsByFamily[$familyId] ??= ['draft' => 0, 'pending' => 0, 'registered' => 0, 'signed' => 0];
-            $cnt    = (int) $row['cnt'];
-            $signed = (bool) $row['signed'];
-            $state  = $row['state'] instanceof TrainingPositionState ? $row['state'] : TrainingPositionState::from((string) $row['state']);
+        /** @var array<string, array{stay: string, student: string|null, signed: bool, families: array<string, true>}> $positions */
+        $positions = [];
+        foreach ($rows as $row) {
+            $tpId = (string) $row['tp_id'];
+            $positions[$tpId] ??= [
+                'stay'     => (string) $row['stay_id'],
+                'student'  => $row['student_id'] !== null ? (string) $row['student_id'] : null,
+                'signed'   => (bool) $row['signed'],
+                'families' => [],
+            ];
+            if ($row['family_id'] !== null) {
+                $positions[$tpId]['families'][(string) $row['family_id']] = true;
+            }
+        }
 
-            $bucket = match ($state) {
-                TrainingPositionState::DRAFT   => 'draft',
-                TrainingPositionState::PENDING => 'pending',
-                TrainingPositionState::DONE    => $signed ? 'signed' : 'registered',
-            };
-            $bucketsByFamily[$familyId][$bucket] += $cnt;
+        foreach ($positions as $tpId => $position) {
+            if ($position['student'] === null) {
+                $familyIds = $position['families'] !== [] ? array_keys($position['families']) : array_keys($stayFamilies[$position['stay']] ?? []);
+                foreach ($familyIds as $familyId) {
+                    $counts[$familyId]['free'][$tpId] = true;
+                }
+                continue;
+            }
+
+            $familyIds = $studentFamilies[$position['stay']][$position['student']] ?? array_keys($stayFamilies[$position['stay']] ?? []);
+            foreach ($familyIds as $familyId) {
+                $counts[$familyId]['occupied'][$tpId] = true;
+                if ($position['signed']) {
+                    $counts[$familyId]['signed'][$tpId] = true;
+                }
+            }
         }
 
         $result = [];
-        foreach ($enrolledRows as $row) {
-            $familyId = (string) $row['family_id'];
-            $buckets  = $bucketsByFamily[$familyId] ?? ['draft' => 0, 'pending' => 0, 'registered' => 0, 'signed' => 0];
-
-            $assignedCount = $buckets['draft'] + $buckets['pending'] + $buckets['registered'] + $buckets['signed'];
-            $unassigned    = max(0, (int) $row['enrolled'] - $assignedCount);
-
+        foreach ($counts as $familyId => $family) {
+            $occupied = count($family['occupied']);
             $result[] = [
-                'family_name' => $row['family_name'],
-                'unassigned'  => $unassigned,
-                'draft'       => $buckets['draft'],
-                'pending'     => $buckets['pending'],
-                'registered'  => $buckets['registered'],
-                'signed'      => $buckets['signed'],
+                'family_name' => $names[$familyId],
+                'total'       => count($family['free']) + $occupied,
+                'occupied'    => $occupied,
+                'signed'      => count($family['signed']),
             ];
         }
 
         usort($result, static fn (array $a, array $b): int => strcmp($a['family_name'], $b['family_name']));
 
         return $result;
+    }
+
+    /**
+     * Student counters grouped by professional family, classified by the state of
+     * their assigned training position. Students enrolled in a stay without an
+     * assigned position are counted as "unassigned". Counts are distinct students.
+     * Un estudiante cuenta en la familia de cada una de sus enseñanzas dentro de la estancia
+     * (o en todas las de la estancia si no tiene grupo en ninguna).
+     *
+     * @return list<array{family_name: string, unassigned: int, draft: int, pending: int, registered: int, signed: int}>
+     */
+    public function countStudentsByFamilyState(AcademicYear $year, ?Teacher $viewer = null): array
+    {
+        $stayFamilies    = $this->findFamiliesByStay($year, $viewer);
+        $studentFamilies = $this->findStudentFamiliesByStay($year, $viewer);
+
+        // Alumnado matriculado por estancia (el universo).
+        $enrolledQb = $this->createQueryBuilder('s')
+            ->select('DISTINCT s.id AS stay_id', 'st.id AS student_id')
+            ->join('s.students', 'st')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($enrolledQb, $viewer);
+
+        /** @var list<array{stay_id: mixed, student_id: mixed}> $enrolledRows */
+        $enrolledRows = $enrolledQb->getQuery()->getResult();
+
+        // Estado del puesto de cada estudiante asignado. Los cubos se derivan en PHP por portabilidad.
+        $assignedQb = $this->createQueryBuilder('s')
+            ->select('s.id AS stay_id', 'tps.id AS student_id', 'tp.state AS state', 'tp.signed AS signed')
+            ->join('s.trainingPositions', 'tp')
+            ->join('tp.student', 'tps')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($assignedQb, $viewer);
+
+        /** @var list<array{stay_id: mixed, student_id: mixed, state: TrainingPositionState|string, signed: bool|int}> $assignedRows */
+        $assignedRows = $assignedQb->getQuery()->getResult();
+
+        $bucketOf = [];
+        foreach ($assignedRows as $row) {
+            $state  = $row['state'] instanceof TrainingPositionState ? $row['state'] : TrainingPositionState::from((string) $row['state']);
+            $signed = (bool) $row['signed'];
+
+            $bucketOf[(string) $row['stay_id'] . '|' . (string) $row['student_id']] = match ($state) {
+                TrainingPositionState::DRAFT   => 'draft',
+                TrainingPositionState::PENDING => 'pending',
+                TrainingPositionState::DONE    => $signed ? 'signed' : 'registered',
+            };
+        }
+
+        $names   = [];
+        $buckets = [];
+        foreach ($stayFamilies as $families) {
+            foreach ($families as $familyId => $familyName) {
+                $names[$familyId]   = $familyName;
+                $buckets[$familyId] ??= ['unassigned' => [], 'draft' => [], 'pending' => [], 'registered' => [], 'signed' => []];
+            }
+        }
+
+        foreach ($enrolledRows as $row) {
+            $stayId    = (string) $row['stay_id'];
+            $studentId = (string) $row['student_id'];
+            $bucket    = $bucketOf[$stayId . '|' . $studentId] ?? 'unassigned';
+            $familyIds = $studentFamilies[$stayId][$studentId] ?? array_keys($stayFamilies[$stayId] ?? []);
+            foreach ($familyIds as $familyId) {
+                $buckets[$familyId][$bucket][$studentId] = true;
+            }
+        }
+
+        $result = [];
+        foreach ($buckets as $familyId => $family) {
+            // Las familias de estancias sin alumnado matriculado no aparecen.
+            if (array_sum(array_map('count', $family)) === 0) {
+                continue;
+            }
+            $result[] = [
+                'family_name' => $names[$familyId],
+                'unassigned'  => count($family['unassigned']),
+                'draft'       => count($family['draft']),
+                'pending'     => count($family['pending']),
+                'registered'  => count($family['registered']),
+                'signed'      => count($family['signed']),
+            ];
+        }
+
+        usort($result, static fn (array $a, array $b): int => strcmp($a['family_name'], $b['family_name']));
+
+        return $result;
+    }
+
+    /**
+     * Familias profesionales de las enseñanzas de cada estancia del curso.
+     *
+     * @return array<string, array<string, string>> [id de estancia => [id de familia => nombre]]
+     */
+    private function findFamiliesByStay(AcademicYear $year, ?Teacher $viewer): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('DISTINCT s.id AS stay_id', 'f.id AS family_id', 'f.name AS family_name')
+            ->join('s.programmes', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{stay_id: mixed, family_id: mixed, family_name: string}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        $byStay = [];
+        foreach ($rows as $row) {
+            $byStay[(string) $row['stay_id']][(string) $row['family_id']] = $row['family_name'];
+        }
+
+        return $byStay;
+    }
+
+    /**
+     * Familias de las enseñanzas de la estancia a las que pertenece cada estudiante matriculado o
+     * con puesto, según sus grupos. Un estudiante sin grupo en la estancia no aparece.
+     *
+     * @return array<string, array<string, list<string>>> [id de estancia => [id de estudiante => ids de familia]]
+     */
+    private function findStudentFamiliesByStay(AcademicYear $year, ?Teacher $viewer): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('DISTINCT s.id AS stay_id', 'st.id AS student_id', 'f.id AS family_id')
+            ->join('s.students', 'st')
+            ->join('st.groups', 'g')
+            ->join('g.programmeYear', 'gpy')
+            ->join('s.programmes', 'sp', 'WITH', 'sp = gpy.programme')
+            ->join('sp.professionalFamily', 'f')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer);
+
+        /** @var list<array{stay_id: mixed, student_id: mixed, family_id: mixed}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        $byStay = [];
+        foreach ($rows as $row) {
+            $byStay[(string) $row['stay_id']][(string) $row['student_id']][] = (string) $row['family_id'];
+        }
+
+        return $byStay;
     }
 
     /**
@@ -450,8 +563,6 @@ class StayRepository extends ServiceEntityRepository
         $today = $this->clock->now()->setTime(0, 0, 0);
 
         $qb = $this->createQueryBuilder('s')
-            ->join('s.programme', 'p')->addSelect('p')
-            ->join('p.professionalFamily', 'f')->addSelect('f')
             ->where('s.academicYear = :year')
             ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
             ->setParameter('year', $year->getId(), 'uuid')
@@ -472,8 +583,6 @@ class StayRepository extends ServiceEntityRepository
     public function searchByYearForViewer(AcademicYear $year, string $q, ?Teacher $viewer = null, int $limit = 5): array
     {
         $qb = $this->createQueryBuilder('s')
-            ->join('s.programme', 'p')->addSelect('p')
-            ->join('p.professionalFamily', 'f')->addSelect('f')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
             ->setParameter('q', '%' . $q . '%')
@@ -481,7 +590,7 @@ class StayRepository extends ServiceEntityRepository
             ->setMaxResults($limit);
         $qb->andWhere($qb->expr()->orX(
             'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-            'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
+            $this->programmeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
         ));
         $this->addViewerFilter($qb, $viewer);
 
@@ -504,7 +613,7 @@ class StayRepository extends ServiceEntityRepository
         ?Teacher $viewer = null,
     ): array {
         $qb = $this->createQueryBuilder('s')
-            ->join('s.programme', 'p')->addSelect('p')
+            ->join('s.programmes', 'p')->addSelect('p')
             ->join('p.professionalFamily', 'f')->addSelect('f')
             ->leftJoin('s.trainingPositions', 'tp')->addSelect('tp')
             ->where('s.academicYear = :year')
@@ -636,22 +745,35 @@ class StayRepository extends ServiceEntityRepository
         return $stats;
     }
 
+    /**
+     * Condición EXISTS sobre las enseñanzas de la estancia `s`. Dentro de $condition están
+     * disponibles los alias `xp` (enseñanza) y `xf` (su familia profesional).
+     */
+    private function programmeExists(string $condition): string
+    {
+        return 'EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp JOIN xp.professionalFamily xf'
+            . ' WHERE xs = s AND (' . $condition . '))';
+    }
+
     private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer): void
     {
         if ($viewer === null || $viewer->isAdmin()) {
             return;
         }
 
-        $qb->join('s.programme', 'vvp')
-           ->join('vvp.professionalFamily', 'vvf')
-           ->join('s.academicYear', 'vvay')
+        $qb->join('s.academicYear', 'vvay')
            ->join('vvay.educationalCentre', 'vvc');
+
+        // Cualquier enseñanza de la estancia que el docente coordine, dirija (familia) o imparta.
+        $viaProgramme = 'EXISTS(SELECT 1 FROM ' . Stay::class . ' vs JOIN vs.programmes vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
+            . 'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)'
+            . ' OR vvf.head = :vViewer'
+            . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
+            . '))';
 
         $qb->andWhere($qb->expr()->orX(
             'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vvc AND vcea.id = :vViewer)',
-            'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)',
-            'vvf.head = :vViewer',
-            'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))',
+            $viaProgramme,
             'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
         ))->setParameter('vViewer', $viewer->getId(), 'uuid');
     }

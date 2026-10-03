@@ -1,0 +1,90 @@
+{# Selector múltiple de enseñanzas de la estancia, agrupadas por familia profesional.
+   Variables: by_family, values.programme_ids, errors.programme_ids, locked_ids (opcional),
+   creatable_ids (opcional; marca las que el docente puede crear). #}
+{% set locked_ids = locked_ids|default([]) %}
+<div>
+    <label for="programme_ids" class="block text-sm font-medium text-gray-700 mb-1.5">
+        {{ 'stays.field.programmes'|trans({}, 'stays') }}
+        <span class="text-red-400 ml-0.5">*</span>
+    </label>
+    <select id="programme_ids" name="programme_ids[]" multiple
+            data-ts-has-error="{{ errors.programme_ids is defined ? '1' : '' }}"
+            data-locked="{{ locked_ids|join(',') }}"
+            class="w-full text-sm">
+        {% for group in by_family %}
+            <optgroup label="{{ group.family.name }}">
+                {% for p in group.programmes %}
+                    <option value="{{ p.id }}" {{ p.id.toRfc4122 in values.programme_ids ? 'selected' : '' }}>
+                        {{ p.name }}
+                    </option>
+                {% endfor %}
+            </optgroup>
+        {% endfor %}
+    </select>
+    <p class="mt-1.5 text-xs text-gray-500">{{ 'stays.field.programmes_hint'|trans({}, 'stays') }}</p>
+    {% if locked_ids is not empty %}
+        <p class="mt-1 text-xs text-gray-500">{{ 'stays.field.programmes_locked_hint'|trans({}, 'stays') }}</p>
+    {% endif %}
+    {% if errors.programme_ids is defined %}
+        <p class="mt-1.5 text-xs text-red-600">{{ errors.programme_ids }}</p>
+    {% endif %}
+</div>
+
+<script type="module">
+import TomSelect from 'tom-select';
+
+const el = document.getElementById('programme_ids');
+if (el) {
+
+const locked = (el.dataset.locked || '').split(',').filter(Boolean);
+const selected = Array.from(el.selectedOptions).map(o => o.value);
+
+// Opciones y grupos para que la búsqueda encuentre por enseñanza y por familia
+const options   = [];
+const optgroups = [];
+
+el.querySelectorAll('optgroup').forEach((og, i) => {
+    const gid = String(i);
+    optgroups.push({ id: gid, label: og.label });
+    og.querySelectorAll('option').forEach(opt => {
+        options.push({
+            value: opt.value,
+            text:  opt.textContent.trim(),
+            optgroup: gid,
+            search: og.label + ' ' + opt.textContent.trim(),
+        });
+    });
+});
+
+const ts = new TomSelect(el, {
+    options,
+    items:              selected,
+    optgroups,
+    valueField:         'value',
+    labelField:         'text',
+    optgroupField:      'optgroup',
+    optgroupValueField: 'id',
+    optgroupLabelField: 'label',
+    searchField:        ['text', 'search'],
+    create:             false,
+    maxOptions:         null,
+    hidePlaceholder:    true,
+    closeAfterSelect:   false,
+    placeholder:        '{{ 'stays.field.programmes_placeholder'|trans({}, 'stays')|e('js') }}',
+    wrapperClass:       'ts-wrapper ts-local',
+    plugins:            ['remove_button'],
+    // Las enseñanzas con alumnado o puestos no se pueden quitar de la estancia
+    onDelete:           (values) => !values.some(v => locked.includes(String(v))),
+    render: {
+        option:     (d, esc) => `<div class="py-0.5">${esc(d.text)}</div>`,
+        item:       (d, esc) => `<div>${esc(d.text)}</div>`,
+        no_results: () => `<div class="no-results px-3 py-2 text-sm">{{ 'stays.field.programme_no_results'|trans({}, 'stays')|e('js') }}</div>`,
+    },
+});
+
+if (el.dataset.tsHasError) {
+    ts.wrapper.classList.add('has-error');
+}
+
+} // end if (el)
+</script>

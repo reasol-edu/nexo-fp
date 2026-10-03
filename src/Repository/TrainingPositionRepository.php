@@ -54,8 +54,6 @@ class TrainingPositionRepository extends ServiceEntityRepository
 
         $qb = $this->createQueryBuilder('tp')
             ->join('tp.stay', 's')
-            ->join('s.programme', 'p')
-            ->join('p.professionalFamily', 'f')
             ->leftJoin('tp.student', 'st')
             ->leftJoin('tp.workcenter', 'wc')
             ->leftJoin('wc.company', 'co')
@@ -72,7 +70,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
             $qb->andWhere(
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-                    'UNACCENT(LOWER(p.name)) LIKE UNACCENT(LOWER(:q))',
+                    $this->stayProgrammeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
                     'UNACCENT(LOWER(st.name.lastName)) LIKE UNACCENT(LOWER(:q))',
                     'UNACCENT(LOWER(st.name.firstName)) LIKE UNACCENT(LOWER(:q))',
                     'EXISTS(SELECT 1 FROM App\Entity\Group sg JOIN sg.programmeYear sgpy WHERE sgpy MEMBER OF tp.programmeYears AND UNACCENT(LOWER(sg.name)) LIKE UNACCENT(LOWER(:q)))',
@@ -81,12 +79,12 @@ class TrainingPositionRepository extends ServiceEntityRepository
         }
 
         if ($familyId !== '') {
-            $qb->andWhere('f.id = :familyId')
+            $qb->andWhere($this->stayProgrammeExists('xf.id = :familyId'))
                ->setParameter('familyId', $familyId, 'uuid');
         }
 
         if ($programmeId !== '') {
-            $qb->andWhere('p.id = :programmeId')
+            $qb->andWhere($this->stayProgrammeExists('xp.id = :programmeId'))
                ->setParameter('programmeId', $programmeId, 'uuid');
         }
 
@@ -211,7 +209,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->leftJoin('wc.company', 'co')->addSelect('co')
             ->leftJoin('tp.academicTutor', 'at')->addSelect('at')
             ->leftJoin('tp.workplaceMentor', 'wm')->addSelect('wm')
-            ->join('s.programme', 'p')->addSelect('p')
+            ->join('s.programmes', 'p')->addSelect('p')
             ->leftJoin('p.coordinators', 'pc')->addSelect('pc')
             ->join('p.professionalFamily', 'pf')->addSelect('pf')
             ->leftJoin('pf.head', 'ph')->addSelect('ph')
@@ -231,21 +229,35 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Condición EXISTS sobre las enseñanzas de la estancia `s`. Dentro de $condition están
+     * disponibles los alias `xp` (enseñanza) y `xf` (su familia profesional).
+     */
+    private function stayProgrammeExists(string $condition): string
+    {
+        return 'EXISTS(SELECT 1 FROM App\Entity\Stay xs JOIN xs.programmes xp JOIN xp.professionalFamily xf'
+            . ' WHERE xs = s AND (' . $condition . '))';
+    }
+
     private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer): void
     {
         if ($viewer === null || $viewer->isAdmin()) {
             return;
         }
 
-        // 's' = stay alias, 'p' = programme alias, 'f' = family alias already in qb
+        // 's' = alias de la estancia ya presente en el qb
         $qb->join('s.academicYear', 'vvay')
            ->join('vvay.educationalCentre', 'vvc');
 
+        $viaProgramme = 'EXISTS(SELECT 1 FROM App\Entity\Stay vs JOIN vs.programmes vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
+            . 'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)'
+            . ' OR vvf.head = :vViewer'
+            . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
+            . '))';
+
         $qb->andWhere($qb->expr()->orX(
             'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vvc AND vcea.id = :vViewer)',
-            'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = p AND vcrd.id = :vViewer)',
-            'f.head = :vViewer',
-            'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = p AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))',
+            $viaProgramme,
             'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
         ))->setParameter('vViewer', $viewer->getId(), 'uuid');
     }

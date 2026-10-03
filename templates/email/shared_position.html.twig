@@ -1,0 +1,20 @@
+{% extends 'email/_layout.html.twig' %}
+
+{% block content %}
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': recipient.name.firstName}, 'emails') }}</p>
+
+    {% set company = position.workcenter ? position.workcenter.company.name ~ ' — ' ~ position.workcenter.name : '—' %}
+    <p style="margin: 0 0 16px;">
+        {% if change == 'taken' %}
+            {{ 'emails.shared_position.intro.taken'|trans({'%company%': company, '%stay%': stay.name, '%actor%': actor.name.full(), '%programme%': position.programmeNames}, 'emails') }}
+        {% else %}
+            {{ 'emails.shared_position.intro.removed'|trans({'%company%': company, '%stay%': stay.name, '%actor%': actor.name.full()}, 'emails') }}
+        {% endif %}
+    </p>
+
+    <p style="margin: 0;">
+        <a href="{{ stay_url }}" style="display: inline-block; background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold;">
+            {{ 'emails.view_stay'|trans({}, 'emails') }}
+        </a>
+    </p>
+{% endblock %}

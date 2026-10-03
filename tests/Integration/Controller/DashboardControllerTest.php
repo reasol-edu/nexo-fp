@@ -143,7 +143,7 @@ class DashboardControllerTest extends ControllerTestCase
         $stay   = (new Stay())
             ->setName('FFEOE DAM ' . $code)
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
         $admin  = (new Teacher(new PersonName('Ana', 'Admin')))->setUsername($username);

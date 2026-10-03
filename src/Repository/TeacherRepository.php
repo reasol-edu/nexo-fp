@@ -42,26 +42,6 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             ->getOneOrNullResult();
     }
 
-    /**
-     * Returns teachers who teach (group.teachers or group.tutor) in any group
-     * that belongs to the given programme, ordered by name.
-     *
-     * @return Teacher[]
-     */
-    public function findByProgrammeOrderedByName(\App\Entity\Programme $programme): array
-    {
-        return $this->getEntityManager()->createQuery('
-            SELECT DISTINCT t
-            FROM App\Entity\Teacher t, App\Entity\Group g
-            JOIN g.programmeYear py
-            WHERE py.programme = :programme
-              AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)
-            ORDER BY t.name.lastName ASC, t.name.firstName ASC
-        ')
-        ->setParameter('programme', $programme->getId(), 'uuid')
-        ->getResult();
-    }
-
     /** @return Teacher[] */
     public function findAllOrderedByName(): array
     {
@@ -244,5 +224,24 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             ->getResult();
 
         return $result;
+    }
+
+    /**
+     * Docentes (profesorado y tutores de grupo) de todas las enseñanzas de la estancia.
+     *
+     * @return Teacher[]
+     */
+    public function findByStayProgrammesOrderedByName(\App\Entity\Stay $stay): array
+    {
+        return $this->getEntityManager()->createQuery('
+            SELECT DISTINCT t
+            FROM App\Entity\Teacher t, App\Entity\Group g
+            JOIN g.programmeYear py
+            WHERE EXISTS(SELECT 1 FROM App\Entity\Stay xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = py.programme)
+              AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)
+            ORDER BY t.name.lastName ASC, t.name.firstName ASC
+        ')
+        ->setParameter('stay', $stay->getId(), 'uuid')
+        ->getResult();
     }
 }

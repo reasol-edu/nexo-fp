@@ -69,6 +69,7 @@ class AppFixtures extends Fixture
 
         $this->buildStays($manager, $aYear, $aProgrammes, $aPyears, $aGroups, $mWorkcenters, $aTeachers);
         $this->buildDAWStays($manager, $aYear, $dawProg, $dawPy1, $dawPy2, $dawMGroups, $dawTGroups, $mWorkcenters, $aTeachers);
+        $this->buildSharedStay($manager, $aYear, $dawProg, $aProgrammes[0], $dawPy2, $aPyears[1], $dawMGroups[1], $aGroups[1], $mWorkcenters, $aTeachers);
         $this->buildStays($manager, $mYear, $mProgrammes, $mPyears, $sGroups, $sWorkcenters, $mTeachers);
 
         $manager->flush();
@@ -616,7 +617,7 @@ class AppFixtures extends Fixture
             $pastStay = (new Stay())
                 ->setName('FFEOE ' . $abbr . ' 2025 (1.er trimestre)')
                 ->setAcademicYear($year)
-                ->setProgramme($programme)
+                ->addProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2025-09-15'))
                 ->setEndDate(new \DateTimeImmutable('2026-01-31'));
             $manager->persist($pastStay);
@@ -648,7 +649,7 @@ class AppFixtures extends Fixture
             $currentStay = (new Stay())
                 ->setName('FFEOE ' . $abbr . ' 2026 (2.º trimestre)')
                 ->setAcademicYear($year)
-                ->setProgramme($programme)
+                ->addProgramme($programme)
                 ->setStartDate(new \DateTimeImmutable('2026-03-01'))
                 ->setEndDate(new \DateTimeImmutable('2026-06-30'));
             $manager->persist($currentStay);
@@ -760,7 +761,7 @@ class AppFixtures extends Fixture
         $pastStay = (new Stay())
             ->setName('FFEOE DAW 2025 (1.er trimestre)')
             ->setAcademicYear($year)
-            ->setProgramme($daw)
+            ->addProgramme($daw)
             ->setStartDate(new \DateTimeImmutable('2025-09-15'))
             ->setEndDate(new \DateTimeImmutable('2026-01-31'));
         $manager->persist($pastStay);
@@ -787,7 +788,7 @@ class AppFixtures extends Fixture
         $currentStay = (new Stay())
             ->setName('FFEOE DAW 2026 (2.º trimestre)')
             ->setAcademicYear($year)
-            ->setProgramme($daw)
+            ->addProgramme($daw)
             ->setStartDate(new \DateTimeImmutable('2026-03-01'))
             ->setEndDate(new \DateTimeImmutable('2026-06-30'));
         $manager->persist($currentStay);
@@ -882,6 +883,76 @@ class AppFixtures extends Fixture
             if (isset($students2T[$si])) {
                 $currentStay->addStudent($students2T[$si]);
             }
+        }
+    }
+
+    /**
+     * Estancia compartida entre DAW y SMR: cada coordinación gestiona a su alumnado, los puestos se
+     * ofertan a niveles de ambas enseñanzas y uno tiene preferencia para SMR hasta una fecha.
+     *
+     * @param Workcenter[] $workcenters
+     * @param array<string, Teacher> $teachers
+     */
+    private function buildSharedStay(
+        ObjectManager $manager,
+        AcademicYear $year,
+        Programme $daw,
+        Programme $smr,
+        ProgrammeYear $py2daw,
+        ProgrammeYear $py2smr,
+        Group $dawGroup,
+        Group $smrGroup,
+        array $workcenters,
+        array $teachers,
+    ): void {
+        $wcCount  = count($workcenters);
+        $mentorOf = static fn (Workcenter $wc): ?Worker => $wc->getCompany()->getWorkers()->first() ?: null;
+
+        $stay = (new Stay())
+            ->setName('FFEOE DAW + SMR 2026 (compartida)')
+            ->setAcademicYear($year)
+            ->addProgramme($daw)
+            ->addProgramme($smr)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $manager->persist($stay);
+
+        $dawStudents = array_slice($dawGroup->getStudents()->toArray(), 0, 6);
+        $smrStudents = array_slice($smrGroup->getStudents()->toArray(), 0, 6);
+        foreach ([...$dawStudents, ...$smrStudents] as $student) {
+            $stay->addStudent($student);
+        }
+
+        $position = function (Workcenter $wc, ProgrammeYear ...$levels) use ($manager, $stay): TrainingPosition {
+            $position = (new TrainingPosition())->setStay($stay)->setWorkcenter($wc);
+            foreach ($levels as $level) {
+                $position->addProgrammeYear($level);
+            }
+            $manager->persist($position);
+
+            return $position;
+        };
+
+        // Puestos libres compartidos por ambas enseñanzas
+        $position($workcenters[0 % $wcCount], $py2daw, $py2smr);
+        $position($workcenters[1 % $wcCount], $py2daw, $py2smr);
+        // Compartido con preferencia para SMR hasta el 31 de marzo: después se abre a DAW
+        $position($workcenters[2 % $wcCount], $py2daw, $py2smr)->setPriority($smr, new \DateTimeImmutable('2026-03-31'));
+        // Puestos exclusivos de cada enseñanza
+        $position($workcenters[3 % $wcCount], $py2smr);
+        $position($workcenters[4 % $wcCount], $py2daw);
+
+        // Un alumno de cada enseñanza ya tiene su puesto compartido asignado
+        foreach ([[$dawStudents[0] ?? null, 5, $teachers['diego.romero']], [$smrStudents[0] ?? null, 6, $teachers['maria.garcia']]] as [$student, $wcIdx, $tutor]) {
+            if ($student === null) {
+                continue;
+            }
+            $wc = $workcenters[$wcIdx % $wcCount];
+            $position($wc, $py2daw, $py2smr)
+                ->setStudent($student)
+                ->setAcademicTutor($tutor)
+                ->setWorkplaceMentor($mentorOf($wc))
+                ->setState(TrainingPositionState::PENDING);
         }
     }
 }

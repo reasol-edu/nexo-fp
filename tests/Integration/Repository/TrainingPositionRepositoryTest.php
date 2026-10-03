@@ -384,7 +384,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         $centre = $year->getEducationalCentre();
         $fam    = $this->makeFamily($year);
         $prog   = $this->makeProgramme($year, $fam);
-        $stayB  = (new Stay())->setName('Estancia XYZ')->setAcademicYear($year)->setProgramme($prog)
+        $stayB  = (new Stay())->setName('Estancia XYZ')->setAcademicYear($year)->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('2025-03-01'))->setEndDate(new \DateTimeImmutable('2025-06-30'));
         $this->persist($fam, $prog, $stayB);
 
@@ -411,7 +411,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         $currentStay = (new Stay())
             ->setName('Actual ' . uniqid())
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
 
@@ -419,7 +419,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         $pastStay = (new Stay())
             ->setName('Pasada ' . uniqid())
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('2020-01-01'))
             ->setEndDate(new \DateTimeImmutable('2020-06-30'));
 
@@ -465,7 +465,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         $fam2      = $this->makeFamily($otherYear);
         $prog2     = $this->makeProgramme($otherYear, $fam2);
         $stay2     = (new Stay())->setName('Otra año ' . uniqid())->setAcademicYear($otherYear)
-            ->setProgramme($prog2)->setStartDate(new \DateTimeImmutable('2024-03-01'))
+            ->addProgramme($prog2)->setStartDate(new \DateTimeImmutable('2024-03-01'))
             ->setEndDate(new \DateTimeImmutable('2024-06-30'));
         $this->persist($otherYear, $fam2, $prog2, $stay2);
 
@@ -537,7 +537,7 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
         return (new Stay())
             ->setName('FFEOE ' . uniqid())
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable('2025-03-01'))
             ->setEndDate(new \DateTimeImmutable('2025-06-30'));
     }

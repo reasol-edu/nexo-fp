@@ -881,7 +881,7 @@ class StayVoterTest extends RepositoryTestCase
         $stay = new Stay();
         $stay->setName('Estancia DAW')
              ->setAcademicYear($year)
-             ->setProgramme($programme)
+             ->addProgramme($programme)
              ->setStartDate(new \DateTimeImmutable('2025-03-01'))
              ->setEndDate(new \DateTimeImmutable('2025-06-30'));
 

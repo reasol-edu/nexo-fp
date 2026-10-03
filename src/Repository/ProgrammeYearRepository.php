@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
+use App\Entity\Stay;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -73,6 +74,36 @@ class ProgrammeYearRepository extends ServiceEntityRepository
             ->andWhere('py.id = :id')
             ->setParameter('programme', $programme->getId(), 'uuid')
             ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Niveles de todas las enseñanzas de la estancia, ordenados por enseñanza y nivel.
+     *
+     * @return list<ProgrammeYear>
+     */
+    public function findByStayOrderedByName(Stay $stay): array
+    {
+        return $this->createQueryBuilder('py')
+            ->join('py.programme', 'p')->addSelect('p')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->orderBy('p.name', 'ASC')
+            ->addOrderBy('py.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** Un nivel por id, siempre que pertenezca a una enseñanza de la estancia. */
+    public function findByStayAndId(Stay $stay, string $id): ?ProgrammeYear
+    {
+        return $this->createQueryBuilder('py')
+            ->join('py.programme', 'p')
+            ->where('py.id = :id')
+            ->andWhere('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->setParameter('id', $id, 'uuid')
+            ->setParameter('stay', $stay->getId(), 'uuid')
             ->getQuery()
             ->getOneOrNullResult();
     }

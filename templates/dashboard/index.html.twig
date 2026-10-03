@@ -321,9 +321,9 @@
                                     {{ stay.name }}
                                 </p>
                                 <p class="truncate text-xs text-gray-400 mt-0.5">
-                                    {{ stay.programme.name }}
+                                    {{ stay.programmeNames }}
                                     <span class="mx-1">·</span>
-                                    {{ stay.programme.professionalFamily.name }}
+                                    {{ stay.familyNames }}
                                 </p>
                             </div>
 
@@ -448,7 +448,7 @@
                                 {{ alert.stay.name }}
                             </p>
                             <p class="truncate text-xs text-gray-400 mt-0.5">
-                                {{ alert.stay.programme.name }}
+                                {{ alert.stay.programmeNames }}
                                 {% if alert.stay.endDate %}
                                     <span class="mx-1">·</span>
                                     {{ alert.stay.endDate|date('d/m/Y') }}

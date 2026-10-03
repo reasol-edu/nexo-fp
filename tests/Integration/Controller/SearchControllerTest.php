@@ -155,7 +155,7 @@ class SearchControllerTest extends ControllerTestCase
         $stay     = (new Stay())
             ->setName($longName)
             ->setAcademicYear($centre->getActiveAcademicYear())
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
         $this->persist($stay);
@@ -180,7 +180,7 @@ class SearchControllerTest extends ControllerTestCase
         $stay     = (new Stay())
             ->setName($longName)
             ->setAcademicYear($centre->getActiveAcademicYear())
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
         $this->persist($stay);
@@ -210,7 +210,7 @@ class SearchControllerTest extends ControllerTestCase
         $stay    = (new Stay())
             ->setName('FCT-DAW-' . $code)
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
         $admin   = (new Teacher(new PersonName('Admin', 'Centro')))->setUsername($username);

@@ -18,7 +18,7 @@
             {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
         </div>
         <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.position.edit.title'|trans({}, 'stays') }}</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ stay.name }} · {{ stay.programme.name }}</p>
+        <p class="mt-1 text-sm text-gray-500">{{ stay.name }} · {{ stay.programmeNames }}</p>
     </div>
 
     {# ── Stepper de estado ────────────────────────────────────────────────── #}
@@ -150,26 +150,11 @@
                 {% if errors.programme_year_ids is defined %}
                     <p class="mb-2 text-xs text-red-600">{{ errors.programme_year_ids }}</p>
                 {% endif %}
-                <div class="flex flex-wrap gap-2">
-                    {% for py in programme_years %}
-                        <label class="inline-flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer
-                                       text-sm transition-colors
-                                       border-gray-200 bg-gray-50 text-gray-700
-                                       hover:border-plum-300 hover:bg-plum-50
-                                       has-[:checked]:border-plum-400 has-[:checked]:bg-plum-50 has-[:checked]:text-plum-700">
-                            <input type="checkbox"
-                                   name="programme_year_ids[]"
-                                   value="{{ py.id.toRfc4122 }}"
-                                   {{ is_assignment_locked ? 'disabled' : '' }}
-                                   class="sr-only peer"
-                                   {{ py.id.toRfc4122 in values.programme_year_ids ? 'checked' : '' }}>
-                            <span class="h-1.5 w-1.5 rounded-full shrink-0 bg-gray-300 peer-checked:bg-green-500"></span>
-                            {{ py.name }}
-                        </label>
-                    {% endfor %}
-                </div>
+                {% include 'stays/_programme_year_checkboxes.html.twig' with {locked: is_assignment_locked} %}
             </div>
             {% endif %}
+
+            {% include 'stays/_priority_fields.html.twig' with {locked: is_assignment_locked} %}
 
             {# ── Estudiante ───────────────────────────────────────────────────── #}
             <div>

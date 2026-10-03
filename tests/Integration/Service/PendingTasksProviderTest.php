@@ -244,7 +244,7 @@ class PendingTasksProviderTest extends RepositoryTestCase
         return (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable($start))
             ->setEndDate(new \DateTimeImmutable($end));
     }

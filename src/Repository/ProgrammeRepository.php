@@ -9,6 +9,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Programme;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Teacher;
+use App\Entity\Stay;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -238,5 +239,37 @@ class ProgrammeRepository extends ServiceEntityRepository
         );
 
         return $all;
+    }
+
+    /**
+     * Enseñanzas de la estancia que el docente coordina.
+     *
+     * @return list<Programme>
+     */
+    public function findCoordinatedByInStay(Teacher $teacher, Stay $stay): array
+    {
+        return $this->getEntityManager()->createQuery(
+            'SELECT p FROM ' . Programme::class . ' p JOIN p.coordinators c'
+            . ' WHERE c.id = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmes sp WHERE s.id = :stay AND sp = p)'
+        )
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getResult();
+    }
+
+    /**
+     * Enseñanzas de la estancia cuya familia profesional dirige el docente.
+     *
+     * @return list<Programme>
+     */
+    public function findHeadedByInStay(Teacher $teacher, Stay $stay): array
+    {
+        return $this->getEntityManager()->createQuery(
+            'SELECT p FROM ' . Programme::class . ' p JOIN p.professionalFamily f'
+            . ' WHERE f.head = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmes sp WHERE s.id = :stay AND sp = p)'
+        )
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getResult();
     }
 }

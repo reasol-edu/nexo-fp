@@ -115,7 +115,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->createByCentreFilteredQuery($year, '', $famAId)->getResult();
 
         self::assertCount(1, $results);
-        self::assertSame($prog->getProfessionalFamily()->getName(), $results[0]->getProgramme()->getProfessionalFamily()->getName());
+        self::assertSame($prog->getProfessionalFamily()->getName(), $results[0]->getProgrammesSorted()[0]->getProfessionalFamily()->getName());
     }
 
     public function testCreateByCentreFilteredQueryFiltersByProgrammeId(): void
@@ -134,7 +134,7 @@ class StayRepositoryTest extends RepositoryTestCase
         )->getResult();
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testCreateByCentreFilteredQueryWithEmptyPeriodsReturnsNothing(): void
@@ -296,7 +296,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->createByCentreFilteredQuery($year, viewer: $coord)->getResult();
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testFilteredQueryFamilyHeadSeesOwnFamilyOnly(): void
@@ -622,7 +622,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->findActiveAndUpcoming($year, $tutor);
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testFindActiveAndUpcomingFiltersByFamilyHead(): void
@@ -641,7 +641,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->findActiveAndUpcoming($year, $head);
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testFindActiveAndUpcomingFiltersByProgrammeCoordinator(): void
@@ -661,7 +661,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->findActiveAndUpcoming($year, $coord);
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testFindActiveAndUpcomingFiltersByCentreAdmin(): void
@@ -702,7 +702,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $results = $this->repo->findActiveAndUpcoming($year, $teacher);
 
         self::assertCount(1, $results);
-        self::assertSame($progA->getName(), $results[0]->getProgramme()->getName());
+        self::assertSame($progA->getName(), $results[0]->getProgrammesSorted()[0]->getName());
     }
 
     public function testFindActiveAndUpcomingFiltersByCompanyLiaison(): void
@@ -1148,7 +1148,7 @@ class StayRepositoryTest extends RepositoryTestCase
         return (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable($start))
             ->setEndDate(new \DateTimeImmutable($end));
     }

@@ -36,7 +36,7 @@
         <div class="page-header">
             <div class="centre-info">{{ app_name }} · {{ centre.name }} · {{ academic_year.name }}</div>
             <h1>{{ stay.name }}</h1>
-            <div class="subtitle">{{ stay.programme.professionalFamily.name }} · {{ stay.programme.name }}</div>
+            <div class="subtitle">{{ stay.familyNames }} · {{ stay.programmeNames }}</div>
             <div class="meta">
                 {{ stay.startDate|date('d/m/Y') }} – {{ stay.endDate|date('d/m/Y') }}
                 &nbsp;·&nbsp;

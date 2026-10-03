@@ -305,7 +305,7 @@ class StayCalendarComponentTest extends RepositoryTestCase
         $stay   = (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
-            ->setProgramme($prog)
+            ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable($start))
             ->setEndDate(new \DateTimeImmutable($end));
         $this->persist($family, $prog, $stay);

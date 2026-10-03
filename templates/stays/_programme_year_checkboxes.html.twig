@@ -1,0 +1,35 @@
+{# Niveles a los que se oferta el puesto. Con varias enseñanzas en la estancia se agrupan por enseñanza.
+   Variables: programme_years (ordenados por enseñanza y nivel), values.programme_year_ids, stay,
+   locked (opcional). #}
+{% set multi = stay.programmes|length > 1 %}
+{% set current_programme = null %}
+<div class="space-y-2">
+    {% for py in programme_years %}
+        {% if multi and current_programme != py.programme.id.toRfc4122 %}
+            {% set current_programme = py.programme.id.toRfc4122 %}
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 {{ loop.first ? '' : 'pt-1' }}">{{ py.programme.name }}</p>
+            <div class="flex flex-wrap gap-2">
+        {% elseif not multi and loop.first %}
+            <div class="flex flex-wrap gap-2">
+        {% endif %}
+        <label class="inline-flex items-center gap-2 rounded-xl border px-3 py-2 cursor-pointer
+                       text-sm transition-colors
+                       border-gray-200 bg-gray-50 text-gray-700
+                       hover:border-plum-300 hover:bg-plum-50
+                       has-[:checked]:border-plum-400 has-[:checked]:bg-plum-50 has-[:checked]:text-plum-700">
+            <input type="checkbox"
+                   name="programme_year_ids[]"
+                   value="{{ py.id.toRfc4122 }}"
+                   {{ locked|default(false) ? 'disabled' : '' }}
+                   class="sr-only peer"
+                   {{ py.id.toRfc4122 in values.programme_year_ids ? 'checked' : '' }}>
+            <span class="h-1.5 w-1.5 rounded-full shrink-0 bg-gray-300 peer-checked:bg-green-500"></span>
+            {{ py.name }}
+        </label>
+        {% if multi and (loop.last or programme_years[loop.index].programme.id.toRfc4122 != py.programme.id.toRfc4122) %}
+            </div>
+        {% elseif not multi and loop.last %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>

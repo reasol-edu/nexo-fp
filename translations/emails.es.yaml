@@ -12,6 +12,11 @@ emails.tutor_assigned.no_workcenter: 'Sin centro asignado'
 emails.positions_created.subject: 'Nuevos puestos formativos en una empresa de la que eres enlace'
 emails.positions_created.intro: '{1} Se ha creado 1 puesto formativo de la empresa «%company%» en la estancia «%stay%».|]1,Inf[ Se han creado %count% puestos formativos de la empresa «%company%» en la estancia «%stay%».'
 
+emails.shared_position.subject.taken: 'Un puesto compartido de la estancia ya no está disponible'
+emails.shared_position.subject.removed: 'Se ha eliminado un puesto compartido de la estancia'
+emails.shared_position.intro.taken: 'El puesto de «%company%» de la estancia «%stay%», que también se ofertaba a tu alumnado, acaba de asignarlo %actor% a un estudiante de %programme%. Ya no está disponible.'
+emails.shared_position.intro.removed: 'El puesto libre de «%company%» de la estancia «%stay%», que también se ofertaba a tu alumnado, ha sido eliminado por %actor%.'
+
 emails.signature_reminder.subject: 'Recordatorio: puestos registrados sin firmar'
 emails.signature_reminder.intro: 'Estos son los puestos formativos registrados en Séneca que aún no se han firmado en estancias próximas a comenzar. Conviene firmarlos antes de que empiece la estancia.'
 emails.signature_reminder.stay_heading: 'Estancia «%stay%» · comienza el %date%'

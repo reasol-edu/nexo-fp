@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\AcademicYear;
+use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
+use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
+use App\Security\StayScope;
 use App\Security\Voter\StayVoter;
 use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
@@ -49,6 +54,8 @@ class StayController extends AbstractController
         private readonly ProgrammeYearRepository $programmeYears,
         private readonly GroupRepository $groups,
         private readonly ProgrammeRepository $programmes,
+        private readonly ProfessionalFamilyRepository $families,
+        private readonly StayScope $scope,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
         private readonly PdfService $pdf,
@@ -99,22 +106,18 @@ class StayController extends AbstractController
         $canSeeAll = $teacher->isAdmin()
             || $centre->getAdmins()->exists(fn(int $k, Teacher $a) => $a->getId()->toRfc4122() === $uid);
 
-        $allProgrammes = $canSeeAll
-            ? $this->programmes->findByAcademicYearOrderedByFamilyAndName($year)
-            : $this->programmes->findCreatableByAcademicYear($teacher, $year);
-
-        /** @var array<string, array{family: \App\Entity\ProfessionalFamily, programmes: \App\Entity\Programme[]}> $byFamily */
-        $byFamily = [];
-        foreach ($allProgrammes as $p) {
-            $fid = $p->getProfessionalFamily()->getId()->toRfc4122();
-            if (!isset($byFamily[$fid])) {
-                $byFamily[$fid] = ['family' => $p->getProfessionalFamily(), 'programmes' => []];
-            }
-            $byFamily[$fid]['programmes'][] = $p;
+        // Una estancia puede reunir varias enseñanzas: se ofrecen todas las del curso, pero quien no
+        // administra el centro debe poder crear estancias para al menos una de las elegidas.
+        $allProgrammes = $this->programmes->findByAcademicYearOrderedByFamilyAndName($year);
+        $creatableIds  = [];
+        foreach ($canSeeAll ? $allProgrammes : $this->programmes->findCreatableByAcademicYear($teacher, $year) as $p) {
+            $creatableIds[$p->getId()->toRfc4122()] = true;
         }
 
+        $byFamily = $this->groupProgrammesByFamily($allProgrammes);
+
         $errors = [];
-        $values = ['name' => '', 'programme_id' => '', 'start_date' => '', 'end_date' => ''];
+        $values = ['name' => '', 'programme_ids' => [], 'start_date' => '', 'end_date' => ''];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_stay', $request->request->getString('_token'))) {
@@ -122,10 +125,10 @@ class StayController extends AbstractController
             }
 
             $values = [
-                'name'         => trim($request->request->getString('name')),
-                'programme_id' => trim($request->request->getString('programme_id')),
-                'start_date'   => trim($request->request->getString('start_date')),
-                'end_date'     => trim($request->request->getString('end_date')),
+                'name'          => trim($request->request->getString('name')),
+                'programme_ids' => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'start_date'    => trim($request->request->getString('start_date')),
+                'end_date'      => trim($request->request->getString('end_date')),
             ];
 
             if ($values['name'] === '') {
@@ -134,14 +137,17 @@ class StayController extends AbstractController
                 $errors['name'] = $this->t('stays.error.name_duplicate');
             }
 
-            $programme = null;
-            if ($values['programme_id'] !== '') {
-                $programme = $this->programmes->findByAcademicYearAndId($year, $values['programme_id']);
-            }
-            if ($programme === null) {
-                $errors['programme_id'] = $this->t('stays.error.programme_required');
-            } elseif (!$canSeeAll && !$this->programmes->isCoordinatorOf($teacher, $programme)) {
-                throw $this->createAccessDeniedException();
+            $selectedProgrammes = $this->findProgrammesOfYear($year, $values['programme_ids']);
+            if ($selectedProgrammes === [] || count($selectedProgrammes) !== count(array_unique($values['programme_ids']))) {
+                $errors['programme_ids'] = $this->t('stays.error.programme_required');
+            } else {
+                $anyCreatable = false;
+                foreach ($selectedProgrammes as $selected) {
+                    $anyCreatable = $anyCreatable || isset($creatableIds[$selected->getId()->toRfc4122()]);
+                }
+                if (!$anyCreatable) {
+                    throw $this->createAccessDeniedException();
+                }
             }
 
             $startDate = null;
@@ -169,13 +175,15 @@ class StayController extends AbstractController
                 }
             }
 
-            if (empty($errors) && $programme !== null && $startDate !== null && $endDate !== null) {
+            if (empty($errors) && $selectedProgrammes !== [] && $startDate !== null && $endDate !== null) {
                 $stay = new Stay();
                 $stay->setName($values['name'])
                      ->setAcademicYear($year)
-                     ->setProgramme($programme)
                      ->setStartDate($startDate)
                      ->setEndDate($endDate);
+                foreach ($selectedProgrammes as $selected) {
+                    $stay->addProgramme($selected);
+                }
 
                 $this->em->persist($stay);
                 $this->em->flush();
@@ -189,6 +197,7 @@ class StayController extends AbstractController
         return $this->render('stays/new.html.twig', [
             'centre'    => $centre,
             'by_family' => $byFamily,
+            'creatable_ids' => array_keys($creatableIds),
             'errors'    => $errors,
             'values'    => $values,
         ]);
@@ -211,7 +220,7 @@ class StayController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
+        $this->denyAccessUnlessGranted(StayVoter::DELETE, $stay);
 
         if (!$this->isCsrfTokenValid('delete_stay_' . $id, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
@@ -249,11 +258,18 @@ class StayController extends AbstractController
 
         $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
+        /** @var Teacher $teacher */
+        $teacher = $this->getUser();
+
+        // Enseñanzas que no se pueden quitar porque ya tienen alumnado matriculado o puestos ofertados.
+        $lockedProgrammeIds = $this->programmeIdsInUse($stay);
+
         $errors = [];
         $values = [
-            'name'       => $stay->getName(),
-            'start_date' => $stay->getStartDate()->format('Y-m-d'),
-            'end_date'   => $stay->getEndDate()->format('Y-m-d'),
+            'name'          => $stay->getName(),
+            'programme_ids' => array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $stay->getProgrammes()->toArray()),
+            'start_date'    => $stay->getStartDate()->format('Y-m-d'),
+            'end_date'      => $stay->getEndDate()->format('Y-m-d'),
         ];
 
         if ($request->isMethod('POST')) {
@@ -262,10 +278,34 @@ class StayController extends AbstractController
             }
 
             $values = [
-                'name'       => trim($request->request->getString('name')),
-                'start_date' => trim($request->request->getString('start_date')),
-                'end_date'   => trim($request->request->getString('end_date')),
+                'name'          => trim($request->request->getString('name')),
+                'programme_ids' => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'start_date'    => trim($request->request->getString('start_date')),
+                'end_date'      => trim($request->request->getString('end_date')),
             ];
+
+            $selectedIds = [];
+            $selectedProgrammes = $this->findProgrammesOfYear($year, $values['programme_ids']);
+            if ($selectedProgrammes === [] || count($selectedProgrammes) !== count(array_unique($values['programme_ids']))) {
+                $errors['programme_ids'] = $this->t('stays.error.programme_required');
+            } else {
+                $selectedIds = array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $selectedProgrammes);
+                if (array_diff($lockedProgrammeIds, $selectedIds) !== []) {
+                    $errors['programme_ids'] = $this->t('stays.error.programme_in_use');
+                } else {
+                    // Quien edita debe seguir gestionando al menos una de las enseñanzas resultantes.
+                    $keepsAccess = $teacher->isAdmin();
+                    foreach ($selectedProgrammes as $selected) {
+                        $keepsAccess = $keepsAccess
+                            || $this->programmes->isCoordinatorOf($teacher, $selected)
+                            || $this->families->isFamilyHeadOfProgramme($teacher, $selected)
+                            || $centre->getAdmins()->contains($teacher);
+                    }
+                    if (!$keepsAccess) {
+                        $errors['programme_ids'] = $this->t('stays.error.programme_keep_one');
+                    }
+                }
+            }
 
             if ($values['name'] === '') {
                 $errors['name'] = $this->t('stays.error.name_required');
@@ -302,8 +342,17 @@ class StayController extends AbstractController
                 $stay->setName($values['name'])
                      ->setStartDate($startDate)
                      ->setEndDate($endDate);
+                foreach ($stay->getProgrammes()->toArray() as $current) {
+                    if (!in_array($current->getId()->toRfc4122(), $selectedIds, true)) {
+                        $stay->removeProgramme($current);
+                    }
+                }
+                foreach ($selectedProgrammes as $selected) {
+                    $stay->addProgramme($selected);
+                }
 
                 $this->em->flush();
+                $this->realtime->publishStayChanged($stay);
 
                 $this->addFlash('success', $this->t('stays.flash.updated'));
 
@@ -312,10 +361,12 @@ class StayController extends AbstractController
         }
 
         return $this->render('stays/edit.html.twig', [
-            'centre' => $centre,
-            'stay'   => $stay,
-            'errors' => $errors,
-            'values' => $values,
+            'centre'     => $centre,
+            'stay'       => $stay,
+            'by_family'  => $this->groupProgrammesByFamily($this->programmes->findByAcademicYearOrderedByFamilyAndName($year)),
+            'locked_ids' => $lockedProgrammeIds,
+            'errors'     => $errors,
+            'values'     => $values,
         ]);
     }
 
@@ -400,7 +451,7 @@ class StayController extends AbstractController
 
         $byGroup          = [];
         $placedStudentIds = [];
-        foreach ($this->groups->findByProgrammeWithStudents($stay->getProgramme()) as $group) {
+        foreach ($this->groups->findByStayWithStudents($stay) as $group) {
             $groupStudents = [];
             foreach ($group->getStudents() as $student) {
                 $sid = $student->getId()->toRfc4122();
@@ -549,19 +600,26 @@ class StayController extends AbstractController
 
         $canViewUnassigned = $this->isGranted(StayVoter::VIEW_UNASSIGNED, $stay);
 
+        /** @var Teacher $actor */
+        $actor = $this->getUser();
+
         $rows = [];
         foreach ($this->positions->findByStayOrdered($stay) as $position) {
             $student    = $position->getStudent();
             if ($student === null && !$canViewUnassigned) {
                 continue;
             }
+            // El NIE solo lo ve la coordinación del alumno cuando la estancia reúne varias enseñanzas.
+            $showNie = $student !== null
+                && ($stay->getProgrammes()->count() < 2 || $this->scope->canManageStudent($actor, $stay, $student));
             $tutor      = $position->getAcademicTutor();
             $mentor     = $position->getWorkplaceMentor();
             $workcenter = $position->getWorkcenter();
 
             $rows[] = [
                 $student !== null ? $student->getName()->getLastName() . ', ' . $student->getName()->getFirstName() : '',
-                $student?->getStudentId() ?? '',
+                $showNie ? $student->getStudentId() : '',
+                $position->getProgrammeNames(),
                 $workcenter?->getCompany()->getName() ?? '',
                 $workcenter?->getName() ?? '',
                 $workcenter?->getCity() ?? '',
@@ -580,6 +638,7 @@ class StayController extends AbstractController
             [
                 $this->t('stays.show.col.student'),
                 $this->t('stays.export.col.nie'),
+                $this->t('stays.export.col.programme'),
                 $this->t('stays.export.col.company'),
                 $this->t('stays.export.col.workcenter'),
                 $this->t('stays.export.col.city'),
@@ -629,10 +688,10 @@ class StayController extends AbstractController
             $byCompany[$cid]['workcenters'][] = $wc;
         }
 
-        $programmeYears = $this->programmeYears->findByProgrammeOrderedByName($stay->getProgramme());
+        $programmeYears = $this->programmeYears->findByStayOrderedByName($stay);
 
         $errors = [];
-        $values = ['workcenter_id' => '', 'programme_year_ids' => [], 'details' => '', 'count' => '1'];
+        $values = ['workcenter_id' => '', 'programme_year_ids' => [], 'priority_programme_id' => '', 'priority_until' => '', 'details' => '', 'count' => '1'];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_position_' . $id, $request->request->getString('_token'))) {
@@ -642,6 +701,8 @@ class StayController extends AbstractController
             $values = [
                 'workcenter_id'      => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids' => $request->request->all('programme_year_ids'),
+                'priority_programme_id' => trim($request->request->getString('priority_programme_id')),
+                'priority_until'     => trim($request->request->getString('priority_until')),
                 'details'            => trim($request->request->getString('details')),
                 'count'              => trim($request->request->getString('count')),
             ];
@@ -666,7 +727,7 @@ class StayController extends AbstractController
 
             $selectedYears = [];
             foreach ($values['programme_year_ids'] as $pyId) {
-                $py = $this->programmeYears->findByProgrammeAndId($stay->getProgramme(), (string) $pyId);
+                $py = $this->programmeYears->findByStayAndId($stay, (string) $pyId);
                 if ($py !== null) {
                     $selectedYears[] = $py;
                 }
@@ -675,11 +736,16 @@ class StayController extends AbstractController
                 $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
             }
 
+            [$priorityProgramme, $priorityUntil] = $this->resolvePriority(
+                $stay, $selectedYears, $values['priority_programme_id'], $values['priority_until'], $errors,
+            );
+
             if (empty($errors)) {
                 for ($i = 0; $i < $count; $i++) {
                     $position = new TrainingPosition();
                     $position->setStay($stay)
                              ->setWorkcenter($workcenter)
+                             ->setPriority($priorityProgramme, $priorityUntil)
                              ->setDetails($values['details'] !== '' ? $values['details'] : null);
                     foreach ($selectedYears as $py) {
                         $position->addProgrammeYear($py);
@@ -739,9 +805,22 @@ class StayController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        /** @var Teacher $actor */
+        $actor = $this->getUser();
+        $wasFree = $position->getStudent() === null;
+
         $this->em->remove($position);
         $this->em->flush();
         $this->realtime->publishStayChanged($stay);
+
+        // Un puesto libre puede estar ofertado a otras enseñanzas: se avisa a sus coordinaciones.
+        if ($wasFree) {
+            $actorProgrammes = array_values(array_filter(
+                $stay->getProgrammes()->toArray(),
+                fn (Programme $p): bool => $this->scope->canManageProgramme($actor, $stay, $p),
+            ));
+            $this->notifier->notifySharedPositionRemoved($position, $actor, $actorProgrammes);
+        }
 
         $this->addFlash('success', $this->t('stays.flash.position_deleted'));
 
@@ -779,6 +858,7 @@ class StayController extends AbstractController
         $copy = new TrainingPosition();
         $copy->setStay($stay)
              ->setWorkcenter($original->getWorkcenter())
+             ->setPriority($original->getPriorityProgramme(), $original->getPriorityUntil())
              ->setDetails($original->getDetails());
         foreach ($original->getProgrammeYears() as $py) {
             $copy->addProgrammeYear($py);
@@ -856,10 +936,10 @@ class StayController extends AbstractController
             }
         }
 
-        $programmeYears = $this->programmeYears->findByProgrammeOrderedByName($stay->getProgramme());
+        $programmeYears = $this->programmeYears->findByStayOrderedByName($stay);
 
         // Only teachers who teach in the programme's groups
-        $teachers = $this->teachers->findByProgrammeOrderedByName($stay->getProgramme());
+        $teachers = $this->teachers->findByStayProgrammesOrderedByName($stay);
         // Ensure the current tutor is in the list even if they no longer teach in the programme
         $currentTutor = $position->getAcademicTutor();
         if ($currentTutor !== null) {
@@ -868,6 +948,10 @@ class StayController extends AbstractController
                 array_unshift($teachers, $currentTutor);
             }
         }
+
+        // Los grupos se cargan antes que el alumnado: así este llega con sus grupos inicializados y
+        // deducir sus enseñanzas (alcance de la coordinación) no lanza una consulta por alumno.
+        $stayGroups = $this->groups->findByStayWithStudents($stay);
 
         // Enrolled students in the stay
         $enrolledStudents = [];
@@ -879,9 +963,18 @@ class StayController extends AbstractController
             ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
         );
 
+        // Quien edita solo puede asignar a este puesto a estudiantes que gestiona (el actual se conserva).
+        /** @var Teacher $actor */
+        $actor = $this->getUser();
+        $assignableStudents = array_filter(
+            $enrolledStudents,
+            fn ($s) => $s->getId()->toRfc4122() === ($position->getStudent()?->getId()->toRfc4122() ?? '')
+                || $this->scope->canManageStudent($actor, $stay, $s)
+        );
+
         // Student → group map (group within the programme)
         $studentGroupMap = [];
-        foreach ($this->groups->findByProgrammeWithStudents($stay->getProgramme()) as $group) {
+        foreach ($stayGroups as $group) {
             foreach ($group->getStudents() as $s) {
                 $sid = $s->getId()->toRfc4122();
                 if (isset($enrolledStudents[$sid]) && !isset($studentGroupMap[$sid])) {
@@ -914,6 +1007,8 @@ class StayController extends AbstractController
         $values = [
             'workcenter_id'       => $position->getWorkcenter()?->getId()->toRfc4122() ?? '',
             'programme_year_ids'  => $currentPyIds,
+            'priority_programme_id' => $position->getPriorityProgramme()?->getId()->toRfc4122() ?? '',
+            'priority_until'      => $position->getPriorityUntil()?->format('Y-m-d') ?? '',
             'details'             => $position->getDetails() ?? '',
             'student_id'          => $currentStudentId,
             'academic_tutor_id'   => $currentTutorId,
@@ -930,6 +1025,8 @@ class StayController extends AbstractController
             $values = [
                 'workcenter_id'       => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids'  => $request->request->all('programme_year_ids'),
+                'priority_programme_id' => trim($request->request->getString('priority_programme_id')),
+                'priority_until'      => trim($request->request->getString('priority_until')),
                 'details'             => trim($request->request->getString('details')),
                 'student_id'          => trim($request->request->getString('student_id')),
                 'academic_tutor_id'   => trim($request->request->getString('academic_tutor_id')),
@@ -944,6 +1041,8 @@ class StayController extends AbstractController
                 $values['academic_tutor_id'] = $currentTutorId;
                 $values['workplace_mentor_id'] = $currentMentorId;
                 $values['programme_year_ids'] = $currentPyIds;
+                $values['priority_programme_id'] = $position->getPriorityProgramme()?->getId()->toRfc4122() ?? '';
+                $values['priority_until'] = $position->getPriorityUntil()?->format('Y-m-d') ?? '';
             }
 
             // Bloqueo optimista: si otra persona guardó mientras se editaba, la
@@ -965,7 +1064,7 @@ class StayController extends AbstractController
                     'workers_by_company'  => $workersByCompany,
                     'programme_years'     => $programmeYears,
                     'teachers'            => $teachers,
-                    'enrolled_students'   => $enrolledStudents,
+                    'enrolled_students'   => $assignableStudents,
                     'student_group_map'   => $studentGroupMap,
                     'other_assigned_ids'  => $otherAssignedIds,
                     'errors'              => [],
@@ -988,7 +1087,7 @@ class StayController extends AbstractController
             // Validate programme years
             $selectedYears = [];
             foreach ($values['programme_year_ids'] as $pyId) {
-                $py = $this->programmeYears->findByProgrammeAndId($stay->getProgramme(), (string) $pyId);
+                $py = $this->programmeYears->findByStayAndId($stay, (string) $pyId);
                 if ($py !== null) {
                     $selectedYears[] = $py;
                 }
@@ -997,12 +1096,29 @@ class StayController extends AbstractController
                 $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
             }
 
+            [$priorityProgramme, $priorityUntil] = $isAssignmentLocked
+                ? [$position->getPriorityProgramme(), $position->getPriorityUntil()]
+                : $this->resolvePriority($stay, $selectedYears, $values['priority_programme_id'], $values['priority_until'], $errors);
+
             // Validate student (optional)
             $student = null;
             if ($values['student_id'] !== '') {
                 if (isset($enrolledStudents[$values['student_id']])) {
                     if (isset($otherAssignedIds[$values['student_id']])) {
                         $errors['student_id'] = $this->t('stays.error.student_already_assigned');
+                    } elseif ($values['student_id'] !== $currentStudentId
+                        && !isset($assignableStudents[$values['student_id']])
+                    ) {
+                        $errors['student_id'] = $this->t('stays.error.student_not_yours');
+                    } elseif ($values['student_id'] !== $currentStudentId
+                        && !$position->acceptsStudent($enrolledStudents[$values['student_id']], $selectedYears)
+                    ) {
+                        $errors['student_id'] = $this->t('stays.error.student_incompatible');
+                    } elseif ($values['student_id'] !== $currentStudentId
+                        && $priorityProgramme !== null && $priorityUntil !== null
+                        && $position->isReservedAgainst($enrolledStudents[$values['student_id']], $this->clock->now(), $priorityProgramme, $priorityUntil)
+                    ) {
+                        $errors['student_id'] = $this->t('stays.error.student_reserved');
                     } else {
                         $student = $enrolledStudents[$values['student_id']];
                     }
@@ -1056,6 +1172,7 @@ class StayController extends AbstractController
                 // Apply assignment changes first so the state-machine guards
                 // evaluate the new tutors before deciding the transition.
                 $position->setWorkcenter($workcenter)
+                         ->setPriority($priorityProgramme, $priorityUntil)
                          ->setDetails($values['details'] !== '' ? $values['details'] : null)
                          ->setStudent($student)
                          ->setAcademicTutor($academicTutor)
@@ -1095,7 +1212,7 @@ class StayController extends AbstractController
             'workers_by_company'  => $workersByCompany,
             'programme_years'     => $programmeYears,
             'teachers'            => $teachers,
-            'enrolled_students'   => $enrolledStudents,
+            'enrolled_students'   => $assignableStudents,
             'student_group_map'   => $studentGroupMap,
             'other_assigned_ids'  => $otherAssignedIds,
             'errors'              => $errors,
@@ -1122,12 +1239,16 @@ class StayController extends AbstractController
 
         $this->denyAccessUnlessGranted(StayVoter::MANAGE, $stay);
 
-        // Groups with students, eager-loaded, for the stay's programme
-        $groupList = $this->groups->findByProgrammeWithStudents($stay->getProgramme());
+        /** @var Teacher $actor */
+        $actor = $this->getUser();
 
-        // Organize by ProgrammeYear for template
+        // Grupos con su alumnado de todas las enseñanzas de la estancia
+        $groupList = $this->groups->findByStayWithStudents($stay);
+
+        // Se organiza por nivel (cada nivel pertenece a una enseñanza) para la plantilla
         $byLevel = [];
         $eligibleStudents = [];
+        $manageableIds = [];
         foreach ($groupList as $group) {
             $pyId = $group->getProgrammeYear()->getId()->toRfc4122();
             if (!isset($byLevel[$pyId])) {
@@ -1135,9 +1256,12 @@ class StayController extends AbstractController
             }
             $byLevel[$pyId]['groups'][] = $group;
             foreach ($group->getStudents() as $student) {
-                $eligibleStudents[$student->getId()->toRfc4122()] = $student;
+                $sid = $student->getId()->toRfc4122();
+                $eligibleStudents[$sid] = $student;
+                $manageableIds[$sid] ??= $this->scope->canManageStudent($actor, $stay, $student);
             }
         }
+        $manageableIds = array_keys(array_filter($manageableIds));
 
         // Currently enrolled students
         $enrolledStudents = [];
@@ -1158,34 +1282,33 @@ class StayController extends AbstractController
                 throw $this->createAccessDeniedException();
             }
 
+            // Solo se tocan los estudiantes que gestiona quien edita: el alumnado de las demás
+            // enseñanzas (de otras coordinaciones) ni se matricula ni se quita desde aquí.
+            $manageable = array_flip($manageableIds);
+
             $submittedIds = [];
             foreach ($request->request->all('student_ids') as $sid) {
                 $sid = (string) $sid;
-                if (isset($eligibleStudents[$sid])) {
-                    $submittedIds[$sid] = true;
-                }
-            }
-
-            // Students with positions are always kept regardless of form submission
-            foreach (array_keys($hasPositionIds) as $sid) {
-                if (isset($enrolledStudents[$sid])) {
+                if (isset($eligibleStudents[$sid]) && isset($manageable[$sid])) {
                     $submittedIds[$sid] = true;
                 }
             }
 
             foreach (array_keys($submittedIds) as $sid) {
-                if (!isset($enrolledStudents[$sid]) && isset($eligibleStudents[$sid])) {
+                if (!isset($enrolledStudents[$sid])) {
                     $stay->addStudent($eligibleStudents[$sid]);
                 }
             }
 
-            foreach (array_keys($enrolledStudents) as $sid) {
-                if (!isset($submittedIds[$sid])) {
-                    $stay->removeStudent($enrolledStudents[$sid]);
+            foreach ($enrolledStudents as $sid => $enrolled) {
+                $mine = isset($manageable[$sid]) || !isset($eligibleStudents[$sid]) && $this->scope->canManageStudent($actor, $stay, $enrolled);
+                if ($mine && !isset($submittedIds[$sid]) && !isset($hasPositionIds[$sid])) {
+                    $stay->removeStudent($enrolled);
                 }
             }
 
             $this->em->flush();
+            $this->realtime->publishStayChanged($stay);
 
             $this->addFlash('success', $this->t('stays.flash.students_saved'));
 
@@ -1197,8 +1320,106 @@ class StayController extends AbstractController
             'stay'            => $stay,
             'by_level'        => $byLevel,
             'enrolled_ids'    => $enrolledStudents,
+            'manageable_ids'  => $manageableIds,
             'position_ids'    => $hasPositionIds,
         ]);
+    }
+
+    /**
+     * @param iterable<Programme> $programmes
+     * @return array<string, array{family: ProfessionalFamily, programmes: list<Programme>}>
+     */
+    private function groupProgrammesByFamily(iterable $programmes): array
+    {
+        $byFamily = [];
+        foreach ($programmes as $p) {
+            $fid = $p->getProfessionalFamily()->getId()->toRfc4122();
+            $byFamily[$fid] ??= ['family' => $p->getProfessionalFamily(), 'programmes' => []];
+            $byFamily[$fid]['programmes'][] = $p;
+        }
+
+        return $byFamily;
+    }
+
+    /**
+     * Enseñanzas del curso a partir de ids recibidos del formulario (ignora los desconocidos).
+     *
+     * @param list<string> $ids
+     * @return list<Programme>
+     */
+    private function findProgrammesOfYear(AcademicYear $year, array $ids): array
+    {
+        $found = [];
+        foreach (array_unique($ids) as $id) {
+            $programme = $this->programmes->findByAcademicYearAndId($year, $id);
+            if ($programme !== null) {
+                $found[] = $programme;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Ids de las enseñanzas de la estancia que ya tienen alumnado matriculado o puestos
+     * ofertados a alguno de sus niveles; no se pueden quitar de la estancia.
+     *
+     * @return list<string>
+     */
+    private function programmeIdsInUse(Stay $stay): array
+    {
+        $ids = [];
+        foreach ($stay->getStudents() as $student) {
+            foreach ($stay->getProgrammesOfStudent($student) as $programme) {
+                $ids[$programme->getId()->toRfc4122()] = true;
+            }
+        }
+        foreach ($this->positions->findByStayOrdered($stay) as $position) {
+            foreach ($position->getProgrammeYears() as $programmeYear) {
+                $ids[$programmeYear->getProgramme()->getId()->toRfc4122()] = true;
+            }
+        }
+
+        return array_keys($ids);
+    }
+
+    /**
+     * Interpreta la preferencia de enseñanza de un puesto (enseñanza + fecha límite). Sin ninguno de
+     * los dos campos no hay preferencia. La enseñanza debe ser una de las de los niveles elegidos
+     * (o de la estancia si el puesto no tiene niveles).
+     *
+     * @param list<\App\Entity\ProgrammeYear> $selectedYears
+     * @param array<string, string>              $errors
+     * @return array{0: ?Programme, 1: ?\DateTimeImmutable}
+     */
+    private function resolvePriority(Stay $stay, array $selectedYears, string $programmeId, string $until, array &$errors): array
+    {
+        if ($programmeId === '' && $until === '') {
+            return [null, null];
+        }
+
+        $candidates = $selectedYears !== []
+            ? array_map(static fn ($py): Programme => $py->getProgramme(), $selectedYears)
+            : $stay->getProgrammes()->toArray();
+
+        $programme = null;
+        foreach ($candidates as $candidate) {
+            if ($candidate->getId()->toRfc4122() === $programmeId) {
+                $programme = $candidate;
+                break;
+            }
+        }
+        if ($programme === null) {
+            $errors['priority_programme_id'] = $this->t('stays.error.priority_programme_invalid');
+        }
+
+        $date = $until !== '' ? \DateTimeImmutable::createFromFormat('!Y-m-d', $until) : false;
+        if ($date === false) {
+            $errors['priority_until'] = $this->t('stays.error.priority_date_required');
+            $date = null;
+        }
+
+        return [$programme, $date];
     }
 
     private function t(string $key): string

@@ -59,17 +59,8 @@
                 {% endif %}
             </div>
 
-            {# Enseñanza (solo lectura) #}
-            <div>
-                <span class="block text-sm font-medium text-gray-700 mb-1.5">
-                    {{ 'stays.field.programme'|trans({}, 'stays') }}
-                </span>
-                <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 py-2.5 px-3.5">
-                    <span class="text-sm text-gray-500">{{ stay.programme.professionalFamily.name }}</span>
-                    <span class="text-gray-300">·</span>
-                    <span class="text-sm text-gray-700 font-medium">{{ stay.programme.name }}</span>
-                </div>
-            </div>
+            {# Enseñanzas #}
+            {% include 'stays/_programmes_select.html.twig' %}
 
             {# Fechas #}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

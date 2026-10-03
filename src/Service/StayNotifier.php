@@ -6,7 +6,9 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\Programme;
 use App\Entity\Stay;
+use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use Psr\Log\LoggerInterface;
@@ -84,6 +86,78 @@ class StayNotifier
                     'count'    => $count,
                     'stay_url' => $this->stayUrl($stay),
                 ]), 'positions_created', $centre, $liaison);
+        }
+    }
+
+    /**
+     * Avisa a las coordinaciones de las demás enseñanzas a las que se ofertaba un puesto compartido
+     * de que otra coordinación lo ha asignado a un estudiante suyo y ya no está disponible.
+     * No envía nada si el puesto no se compartía con ninguna otra enseñanza.
+     */
+    public function notifySharedPositionTaken(TrainingPosition $position, Student $student, Teacher $actor): void
+    {
+        $own = $position->getStay()->getProgrammesOfStudent($student);
+
+        $this->notifySharedPosition($position, 'taken', $actor, $own, $student);
+    }
+
+    /**
+     * Avisa a las coordinaciones de las demás enseñanzas a las que se ofertaba un puesto libre
+     * compartido de que otra persona lo ha eliminado.
+     *
+     * @param list<Programme> $actorProgrammes enseñanzas de la estancia que gestiona quien lo elimina
+     */
+    public function notifySharedPositionRemoved(TrainingPosition $position, Teacher $actor, array $actorProgrammes): void
+    {
+        $this->notifySharedPosition($position, 'removed', $actor, $actorProgrammes, null);
+    }
+
+    /**
+     * @param list<Programme> $ownProgrammes enseñanzas ya implicadas en el cambio, que no se avisan
+     */
+    private function notifySharedPosition(
+        TrainingPosition $position,
+        string $change,
+        Teacher $actor,
+        array $ownProgrammes,
+        ?Student $student,
+    ): void {
+        $stay   = $position->getStay();
+        $centre = $stay->getAcademicYear()->getEducationalCentre();
+
+        $ownIds = array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $ownProgrammes);
+
+        /** @var array<string, Teacher> $recipients */
+        $recipients = [];
+        foreach ($position->getProgrammeYears() as $programmeYear) {
+            $programme = $programmeYear->getProgramme();
+            if (in_array($programme->getId()->toRfc4122(), $ownIds, true)) {
+                continue;
+            }
+            foreach ($programme->getCoordinators() as $coordinator) {
+                $recipients[$coordinator->getId()->toRfc4122()] = $coordinator;
+            }
+        }
+        unset($recipients[$actor->getId()->toRfc4122()]);
+
+        foreach ($recipients as $recipient) {
+            if (!$this->hasEmail($recipient, 'shared_position')) {
+                continue;
+            }
+
+            $this->send((new TemplatedEmail())
+                ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
+                ->subject($this->subject('emails.shared_position.subject.' . $change, $centre))
+                ->htmlTemplate('email/shared_position.html.twig')
+                ->context([
+                    'recipient' => $recipient,
+                    'change'    => $change,
+                    'stay'      => $stay,
+                    'position'  => $position,
+                    'student'   => $student,
+                    'actor'     => $actor,
+                    'stay_url'  => $this->stayUrl($stay),
+                ]), 'shared_position', $centre, $recipient);
         }
     }
 

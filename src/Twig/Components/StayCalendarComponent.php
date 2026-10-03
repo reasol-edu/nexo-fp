@@ -156,7 +156,8 @@ class StayCalendarComponent extends AbstractController
         $stayMeta = [];
         $legend   = [];
         foreach ($stays as $stay) {
-            $family   = $stay->getProgramme()->getProfessionalFamily()->getName();
+            // Con enseñanzas de varias familias, la estancia se colorea con la primera por nombre.
+            $family   = $stay->getProfessionalFamilies()[0]->getName();
             $colorIdx = abs(crc32($family)) % count(self::FAMILY_COLORS);
             $unsigned = 0;
             foreach ($stay->getTrainingPositions() as $tp) {

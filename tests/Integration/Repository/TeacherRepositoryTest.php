@@ -11,6 +11,7 @@ use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
+use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Repository\TeacherRepository;
 use App\Tests\Integration\RepositoryTestCase;
@@ -102,9 +103,9 @@ class TeacherRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $results);
     }
 
-    // ── findByProgrammeOrderedByName ──────────────────────────────────────────
+    // ── findByStayProgrammesOrderedByName ─────────────────────────────────────
 
-    public function testFindByProgrammeOrderedByNameReturnsTutors(): void
+    public function testFindByStayProgrammesOrderedByNameReturnsTutors(): void
     {
         $prog    = $this->makeProgrammeChain('41000003');
         $py      = (new ProgrammeYear())->setName('1.º DAM')->setProgramme($prog);
@@ -114,13 +115,13 @@ class TeacherRepositoryTest extends RepositoryTestCase
         $group->addTutor($teacher);
         $this->flush();
 
-        $results = $this->repo->findByProgrammeOrderedByName($prog);
+        $results = $this->repo->findByStayProgrammesOrderedByName($this->stayOf($prog));
 
         self::assertCount(1, $results);
         self::assertSame('tutor.prog', $results[0]->getUsername());
     }
 
-    public function testFindByProgrammeOrderedByNameReturnsGroupTeachers(): void
+    public function testFindByStayProgrammesOrderedByNameReturnsGroupTeachers(): void
     {
         $prog    = $this->makeProgrammeChain('41000004');
         $py      = (new ProgrammeYear())->setName('1.º DAM')->setProgramme($prog);
@@ -130,24 +131,24 @@ class TeacherRepositoryTest extends RepositoryTestCase
         $group->addTeacher($teacher);
         $this->flush();
 
-        $results = $this->repo->findByProgrammeOrderedByName($prog);
+        $results = $this->repo->findByStayProgrammesOrderedByName($this->stayOf($prog));
 
         self::assertCount(1, $results);
         self::assertSame('grp.teacher', $results[0]->getUsername());
     }
 
-    public function testFindByProgrammeOrderedByNameExcludesUnrelatedTeachers(): void
+    public function testFindByStayProgrammesOrderedByNameExcludesUnrelatedTeachers(): void
     {
         $prog      = $this->makeProgrammeChain('41000005');
         $unrelated = $this->makeTeacher('unrelated.one');
         $this->persist($unrelated);
 
-        $results = $this->repo->findByProgrammeOrderedByName($prog);
+        $results = $this->repo->findByStayProgrammesOrderedByName($this->stayOf($prog));
 
         self::assertCount(0, $results);
     }
 
-    public function testFindByProgrammeOrderedByNameDeduplicatesAcrossGroups(): void
+    public function testFindByStayProgrammesOrderedByNameDeduplicatesAcrossGroups(): void
     {
         $prog    = $this->makeProgrammeChain('41000006');
         $py      = (new ProgrammeYear())->setName('1.º DAM')->setProgramme($prog);
@@ -159,7 +160,7 @@ class TeacherRepositoryTest extends RepositoryTestCase
         $g2->addTutor($teacher);
         $this->flush();
 
-        $results = $this->repo->findByProgrammeOrderedByName($prog);
+        $results = $this->repo->findByStayProgrammesOrderedByName($this->stayOf($prog));
 
         self::assertCount(1, $results);
     }
@@ -405,5 +406,19 @@ class TeacherRepositoryTest extends RepositoryTestCase
         $prog   = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
         $this->persist($centre, $year, $family, $prog);
         return $prog;
+    }
+
+    /** Estancia de una sola enseñanza, para consultar por «las enseñanzas de la estancia». */
+    private function stayOf(Programme $programme): Stay
+    {
+        $stay = (new Stay())
+            ->setName('Estancia ' . $programme->getName() . ' ' . uniqid())
+            ->setAcademicYear($programme->getAcademicYear())
+            ->addProgramme($programme)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2025-06-30'));
+        $this->persist($stay);
+
+        return $stay;
     }
 }

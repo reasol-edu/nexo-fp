@@ -191,7 +191,7 @@ class StayDetailComponentTest extends ControllerTestCase
         $otherStay = (new Stay())
             ->setName('Estancia ENF 2025')
             ->setAcademicYear($year)
-            ->setProgramme($otherProg)
+            ->addProgramme($otherProg)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
         $company    = (new Company())->setName('Clínica X')->setVatNumber('B99999999')->setCity('Sevilla')
@@ -510,7 +510,7 @@ class StayDetailComponentTest extends ControllerTestCase
         $stay = (new Stay())
             ->setName('Estancia DAW 2025')
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable('-30 days'))
             ->setEndDate(new \DateTimeImmutable('+30 days'));
 

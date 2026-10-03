@@ -17,6 +17,9 @@
 {%- set d                              = this.getData() -%}
 {%- set stay                           = d.stay -%}
 {%- set can_manage                     = d.can_manage -%}
+{%- set can_delete                     = d.can_delete -%}
+{%- set manageable_student_ids        = d.manageable_student_ids -%}
+{%- set multi_programme               = stay.programmes|length > 1 -%}
 {%- set can_add_position               = d.can_add_position -%}
 {%- set can_view_unassigned            = d.can_view_unassigned -%}
 {%- set manageable_position_ids        = d.manageable_position_ids -%}
@@ -74,7 +77,7 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2 mb-1">
                         <span class="inline-flex items-center rounded-full bg-plum-50 px-2.5 py-0.5 text-xs font-medium text-plum-700">
-                            {{ stay.programme.professionalFamily.name }}
+                            {{ stay.familyNames }}
                         </span>
                         {% if is_current %}
                             <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
@@ -93,7 +96,7 @@
                         {% endif %}
                     </div>
                     <h1 class="text-2xl font-bold text-gray-900 leading-tight line-clamp-2 min-w-0" title="{{ stay.name }}">{{ stay.name }}</h1>
-                    <p class="mt-0.5 text-sm text-gray-500">{{ stay.programme.name }}</p>
+                    <p class="mt-0.5 text-sm text-gray-500">{{ stay.programmeNames }}</p>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
@@ -126,6 +129,7 @@
                            title="{{ 'stays.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.edit.title'|trans({}, 'stays') }}">
                             {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
                         </a>
+                        {% if can_delete %}
                         <form method="post"
                               action="{{ path('app_stays_delete', {id: stay.id.toRfc4122}) }}"
                               class="js-confirm-form"
@@ -138,6 +142,7 @@
                                 {{ ux_icon('heroicons:trash', {class: 'h-4 w-4'}) }}
                             </button>
                         </form>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -175,6 +180,38 @@
         </div>
     </div>
 
+    {# ── Reparto por enseñanza (estancias con varias enseñanzas) ─────────── #}
+    {% if d.programme_summary is not empty %}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+            <div class="px-6 py-3 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-900">{{ 'stays.summary.title'|trans({}, 'stays') }}</h2>
+                <p class="text-xs text-gray-500 mt-0.5">{{ 'stays.summary.hint'|trans({}, 'stays') }}</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 {{ d.programme_summary|length == 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3' }} divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                {% for row in d.programme_summary %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <p class="text-sm font-semibold text-gray-900 truncate" title="{{ row.programme.name }}">{{ row.programme.name }}</p>
+                            {% if row.mine %}
+                                <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700 shrink-0">{{ 'stays.summary.mine'|trans({}, 'stays') }}</span>
+                            {% endif %}
+                        </div>
+                        <dl class="space-y-1 text-xs text-gray-600">
+                            <div class="flex justify-between gap-2"><dt>{{ 'stays.summary.students'|trans({}, 'stays') }}</dt><dd class="font-semibold tabular-nums text-gray-900">{{ row.students }}</dd></div>
+                            <div class="flex justify-between gap-2"><dt>{{ 'stays.summary.without_position'|trans({}, 'stays') }}</dt><dd class="font-semibold tabular-nums {{ row.without_position > 0 ? 'text-red-600' : 'text-green-600' }}">{{ row.without_position }}</dd></div>
+                            {% if can_view_unassigned %}
+                                <div class="flex justify-between gap-2"><dt>{{ 'stays.summary.free'|trans({}, 'stays') }}</dt><dd class="font-semibold tabular-nums text-gray-900">{{ row.free }}</dd></div>
+                                {% if row.reserved_elsewhere > 0 %}
+                                    <div class="flex justify-between gap-2 text-amber-700"><dt>{{ 'stays.summary.reserved_elsewhere'|trans({}, 'stays') }}</dt><dd class="font-semibold tabular-nums">{{ row.reserved_elsewhere }}</dd></div>
+                                {% endif %}
+                            {% endif %}
+                        </dl>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
     {# ── Estudiantes ──────────────────────────────────────────────────────── #}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
 
@@ -199,6 +236,17 @@
             {% endif %}
 
             <span class="ml-auto"></span>
+            {% if multi_programme and manageable_student_ids is not empty %}
+                <button type="button"
+                        aria-pressed="false"
+                        class="js-mine-toggle inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
+                               px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs
+                               hover:border-gray-400 hover:bg-gray-50 transition-colors shrink-0"
+                        title="{{ 'stays.show.mine_only_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.mine_only_hint'|trans({}, 'stays') }}">
+                    {{ ux_icon('heroicons:user', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'stays.show.mine_only'|trans({}, 'stays') }}
+                </button>
+            {% endif %}
             {% if manageable_position_ids is not empty and (by_group is not empty or ungrouped_students is not empty) %}
                 <button type="button"
                         aria-pressed="false"
@@ -266,6 +314,11 @@
                                     <div class="flex items-center gap-2">
                                         {{ ux_icon('heroicons:users', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
                                         <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ entry.group.name }}</span>
+                                        {% if multi_programme %}
+                                            <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
+                                                {{ entry.group.programmeYear.programme.name }}
+                                            </span>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -280,12 +333,20 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}">
 
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
-                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}</p>
-                                            <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
+                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}
+                                                {% if multi_programme and manageable_student_ids[sid] is not defined %}
+                                                    <span class="inline-block align-middle text-gray-400" title="{{ 'stays.show.foreign_student_hint'|trans({}, 'stays')|e('html_attr') }}">
+                                                        {{ ux_icon('heroicons:lock-closed', {class: 'h-3 w-3'}) }}
+                                                    </span>
+                                                {% endif %}
+                                            </p>
+                                            {% if not multi_programme or manageable_student_ids[sid] is defined %}
+                                                <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
+                                            {% endif %}
                                         </div>
                                     </td>
 
@@ -475,11 +536,19 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}">
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
-                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}</p>
-                                            <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
+                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}
+                                                {% if multi_programme and manageable_student_ids[sid] is not defined %}
+                                                    <span class="inline-block align-middle text-gray-400" title="{{ 'stays.show.foreign_student_hint'|trans({}, 'stays')|e('html_attr') }}">
+                                                        {{ ux_icon('heroicons:lock-closed', {class: 'h-3 w-3'}) }}
+                                                    </span>
+                                                {% endif %}
+                                            </p>
+                                            {% if not multi_programme or manageable_student_ids[sid] is defined %}
+                                                <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td data-label="{{ 'stays.show.card.workcenter'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-64">
@@ -711,13 +780,20 @@
                                     {% if position.programmeYears is not empty %}
                                         <div class="flex flex-wrap gap-1">
                                             {% for py in position.programmeYears %}
-                                                <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700">
-                                                    {{ py.name }}
+                                                <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700"
+                                                      {% if multi_programme %}title="{{ py.programme.name|e('html_attr') }}"{% endif %}>
+                                                    {% if multi_programme %}{{ py.programme.name }} · {% endif %}{{ py.name }}
                                                 </span>
                                             {% endfor %}
                                         </div>
                                     {% else %}
                                         <span class="text-gray-300">—</span>
+                                    {% endif %}
+                                    {% if position.priorityProgramme and position.priorityUntil|date('Y-m-d') >= today_str %}
+                                        <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                            {{ ux_icon('heroicons:star', {class: 'h-3 w-3 shrink-0'}) }}
+                                            {{ 'stays.position.priority_badge'|trans({'%programme%': position.priorityProgramme.name, '%date%': position.priorityUntil|date('d/m/Y')}, 'stays') }}
+                                        </p>
                                     {% endif %}
                                 </td>
                                 <td class="px-4 py-3.5 text-sm text-gray-600">
@@ -781,6 +857,7 @@ import { getComponent } from '@symfony/ux-live-component';
 let liveEl  = null;
 let liveComp = null;
 let quickMode = false;
+let mineOnly  = false;
 
 const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
 const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
@@ -791,6 +868,14 @@ const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
 // Idiomorph re-renders, which morph elements in place but fire live:render after.
 function setupEventDelegation() {
     liveEl.addEventListener('click', function (e) {
+
+        // Filtro «solo mis estudiantes» (estancias con varias enseñanzas)
+        const mineToggle = e.target.closest('.js-mine-toggle');
+        if (mineToggle) {
+            mineOnly = !mineOnly;
+            applyMineOnly();
+            return;
+        }
 
         // Quick assignment mode toggle
         const quickToggle = e.target.closest('.js-quick-toggle');
@@ -1008,6 +1093,41 @@ function applyQuickMode() {
     }
 }
 
+// ── Filtro «solo mis estudiantes» ─────────────────────────────────────────────
+// Pura presentación en el cliente: oculta las filas de alumnado de otras enseñanzas y las
+// cabeceras de grupo que se quedan vacías. Se reaplica tras cada render.
+function applyMineOnly() {
+    liveEl.querySelectorAll('tbody').forEach(function (tbody) {
+        let header = null;
+        let visible = 0;
+        const closeHeader = function () {
+            if (header) header.classList.toggle('hidden', mineOnly && visible === 0);
+        };
+        tbody.querySelectorAll(':scope > tr').forEach(function (row) {
+            if (row.classList.contains('table-group-header')) {
+                closeHeader();
+                header = row;
+                visible = 0;
+                return;
+            }
+            const hide = mineOnly && row.dataset.mine === '0';
+            row.classList.toggle('hidden', hide);
+            if (!hide) visible++;
+        });
+        closeHeader();
+    });
+    const btn = liveEl.querySelector('.js-mine-toggle');
+    if (btn) {
+        btn.setAttribute('aria-pressed', mineOnly ? 'true' : 'false');
+        btn.classList.toggle('bg-plum-600', mineOnly);
+        btn.classList.toggle('border-plum-600', mineOnly);
+        btn.classList.toggle('text-white', mineOnly);
+        btn.classList.toggle('bg-white', !mineOnly);
+        btn.classList.toggle('border-gray-300', !mineOnly);
+        btn.classList.toggle('text-gray-700', !mineOnly);
+    }
+}
+
 // ── Toast auto-dismiss ────────────────────────────────────────────────────────
 function dismissToasts() {
     liveEl.querySelectorAll('.js-live-toast').forEach(function (toast) {
@@ -1023,6 +1143,7 @@ function dismissToasts() {
 function onRender() {
     initAllForms();
     applyQuickMode();
+    applyMineOnly();
     dismissToasts();
 }
 

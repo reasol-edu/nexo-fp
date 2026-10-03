@@ -157,7 +157,7 @@ class CompanyRepositoryTest extends RepositoryTestCase
     {
         [$centre, $stayA, $company] = $this->makeStayChain('41000015');
         $year    = $stayA->getAcademicYear();
-        $prog    = $stayA->getProgramme();
+        $prog    = $stayA->getProgrammesSorted()[0];
         $stayB   = $this->makeStay($year, $prog, 'FFEOE DAM B');
         $teacher = $this->makeTeacher('liaison.other.stay');
         $workcenter = $this->makeWorkcenter($company, 'Sede');
@@ -232,7 +232,7 @@ class CompanyRepositoryTest extends RepositoryTestCase
         return (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable('2026-03-01'))
             ->setEndDate(new \DateTimeImmutable('2026-06-30'));
     }

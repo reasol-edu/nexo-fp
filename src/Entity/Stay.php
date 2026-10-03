@@ -28,9 +28,14 @@ class Stay
     #[ORM\JoinColumn(nullable: false)]
     private AcademicYear $academicYear;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private Programme $programme;
+    /** @var Collection<int, Programme> Enseñanzas que participan en la estancia (al menos una). */
+    #[ORM\ManyToMany(targetEntity: Programme::class)]
+    #[ORM\JoinTable(
+        name: 'stay_programme',
+        // Una enseñanza que forma parte de una estancia no se puede borrar (como antes con stay.programme_id).
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'programme_id', referencedColumnName: 'id', onDelete: 'RESTRICT')],
+    )]
+    private Collection $programmes;
 
     /** @var Collection<int, Student> */
     #[ORM\ManyToMany(targetEntity: Student::class, fetch: 'EXTRA_LAZY')]
@@ -52,6 +57,7 @@ class Stay
 
     public function __construct()
     {
+        $this->programmes = new ArrayCollection();
         $this->students = new ArrayCollection();
         $this->trainingPositions = new ArrayCollection();
     }
@@ -85,16 +91,124 @@ class Stay
         return $this;
     }
 
-    public function getProgramme(): Programme
+    /**
+     * @return Collection<int, Programme>
+     */
+    public function getProgrammes(): Collection
     {
-        return $this->programme;
+        return $this->programmes;
     }
 
-    public function setProgramme(Programme $programme): static
+    public function addProgramme(Programme $programme): static
     {
-        $this->programme = $programme;
+        if (!$this->hasProgramme($programme)) {
+            $this->programmes->add($programme);
+        }
 
         return $this;
+    }
+
+    public function removeProgramme(Programme $programme): static
+    {
+        foreach ($this->programmes as $key => $existing) {
+            if (self::sameProgramme($existing, $programme)) {
+                $this->programmes->remove($key);
+            }
+        }
+
+        return $this;
+    }
+
+    public function hasProgramme(Programme $programme): bool
+    {
+        foreach ($this->programmes as $existing) {
+            if (self::sameProgramme($existing, $programme)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Misma enseñanza por identidad o, si ambas ya tienen id, por id. No exige que estén
+     * persistidas: una enseñanza recién creada aún no tiene id.
+     */
+    private static function sameProgramme(Programme $a, Programme $b): bool
+    {
+        if ($a === $b) {
+            return true;
+        }
+
+        $id = new \ReflectionProperty(Programme::class, 'id');
+        if (!$id->isInitialized($a) || !$id->isInitialized($b)) {
+            return false;
+        }
+
+        return $a->getId()->equals($b->getId());
+    }
+
+    /**
+     * Enseñanzas ordenadas por nombre, para mostrarlas siempre en el mismo orden.
+     *
+     * @return list<Programme>
+     */
+    public function getProgrammesSorted(): array
+    {
+        $list = $this->programmes->toArray();
+        usort($list, static fn (Programme $a, Programme $b): int => $a->getName() <=> $b->getName());
+
+        return $list;
+    }
+
+    /**
+     * Enseñanzas de la estancia a las que pertenece el alumno según sus grupos. Un alumno
+     * sin grupo en ninguna enseñanza de la estancia devuelve una lista vacía.
+     *
+     * @return list<Programme>
+     */
+    public function getProgrammesOfStudent(Student $student): array
+    {
+        $result = [];
+        foreach ($student->getGroups() as $group) {
+            $programme = $group->getProgrammeYear()->getProgramme();
+            if ($this->hasProgramme($programme)) {
+                $result[$programme->getId()->toRfc4122()] = $programme;
+            }
+        }
+
+        return array_values($result);
+    }
+
+    /** Nombres de las enseñanzas separados por « · » (p. ej. «DAW · DAM»). */
+    public function getProgrammeNames(): string
+    {
+        return implode(' · ', array_map(static fn (Programme $p): string => $p->getName(), $this->getProgrammesSorted()));
+    }
+
+    /**
+     * Familias profesionales distintas de las enseñanzas de la estancia, ordenadas por nombre.
+     *
+     * @return list<ProfessionalFamily>
+     */
+    public function getProfessionalFamilies(): array
+    {
+        $families = [];
+        foreach ($this->getProgrammesSorted() as $programme) {
+            $family = $programme->getProfessionalFamily();
+            $families[$family->getId()->toRfc4122()] = $family;
+        }
+
+        $list = array_values($families);
+        usort($list, static fn (ProfessionalFamily $a, ProfessionalFamily $b): int => $a->getName() <=> $b->getName());
+
+        return $list;
+    }
+
+    /** Nombres de las familias profesionales separados por « · ». */
+    public function getFamilyNames(): string
+    {
+        return implode(' · ', array_map(static fn (ProfessionalFamily $f): string => $f->getName(), $this->getProfessionalFamilies()));
     }
 
     /**

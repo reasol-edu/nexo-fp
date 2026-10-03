@@ -29,6 +29,9 @@ settings.key.email_notification_tutor_assigned.description: 'Envía un aviso al 
 settings.key.email_notification_positions_created.label: 'Email al crear puestos en una estancia'
 settings.key.email_notification_positions_created.description: 'Notifica a los docentes de enlace de la empresa cuando se crean puestos nuevos.'
 
+settings.key.email_notification_shared_position.label: 'Email por cambios en puestos compartidos'
+settings.key.email_notification_shared_position.description: 'Avisa a la coordinación de una enseñanza cuando otra coordinación asigna o elimina un puesto de una estancia que también se ofertaba a su alumnado.'
+
 settings.key.email_notification_signature_reminder.label: 'Email de recordatorio de firma'
 settings.key.email_notification_signature_reminder.description: 'Recuerda a quienes tienen responsabilidad sobre el puesto (tutor o tutora dual docente, coordinación de FP dual y jefatura de familia profesional) los puestos registrados sin firmar cuando la estancia está próxima a comenzar.'
 

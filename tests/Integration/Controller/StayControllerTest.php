@@ -96,8 +96,8 @@ class StayControllerTest extends ControllerTestCase
 
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => $token,
-            'name'         => 'Estancia DAW 2025',
-            'programme_id' => $programme->getId()->toRfc4122(),
+            'name'          => 'Estancia DAW 2025',
+            'programme_ids' => [$programme->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);
@@ -116,8 +116,8 @@ class StayControllerTest extends ControllerTestCase
 
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => 'token-invalido',
-            'name'         => 'Estancia DAW 2025',
-            'programme_id' => $programme->getId()->toRfc4122(),
+            'name'          => 'Estancia DAW 2025',
+            'programme_ids' => [$programme->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);
@@ -183,8 +183,8 @@ class StayControllerTest extends ControllerTestCase
 
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => $token,
-            'name'         => 'Estancia DAW 2025',
-            'programme_id' => $programme->getId()->toRfc4122(),
+            'name'          => 'Estancia DAW 2025',
+            'programme_ids' => [$programme->getId()->toRfc4122()],
             'start_date'   => '2025-06-30',
             'end_date'     => '2025-03-01', // antes del inicio
         ]);
@@ -308,10 +308,11 @@ class StayControllerTest extends ControllerTestCase
         $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
 
         $this->client->request('POST', '/estancias/' . $stayId . '/editar', [
-            '_token'     => $token,
-            'name'       => 'Estancia DAW Modificada',
-            'start_date' => '2025-03-01',
-            'end_date'   => '2025-06-30',
+            '_token'        => $token,
+            'name'          => 'Estancia DAW Modificada',
+            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'start_date'    => '2025-03-01',
+            'end_date'      => '2025-06-30',
         ]);
 
         self::assertResponseRedirects();
@@ -1146,7 +1147,7 @@ class StayControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
-    public function testNewCoordinatorSeesOnlyOwnProgramme(): void
+    public function testNewCoordinatorSeesEveryProgrammeToBuildSharedStays(): void
     {
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
@@ -1163,7 +1164,7 @@ class StayControllerTest extends ControllerTestCase
         $options = $crawler->filter('option[value="' . $programme->getId()->toRfc4122() . '"]');
         self::assertCount(1, $options, 'El coordinador debe ver su propia enseñanza');
         $otherOptions = $crawler->filter('option[value="' . $otherProg->getId()->toRfc4122() . '"]');
-        self::assertCount(0, $otherOptions, 'El coordinador no debe ver enseñanzas ajenas');
+        self::assertCount(1, $otherOptions, 'Una estancia puede reunir enseñanzas de otras coordinaciones');
     }
 
     public function testNewAdminSeesAllProgrammes(): void
@@ -1199,9 +1200,9 @@ class StayControllerTest extends ControllerTestCase
         $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
 
         $this->client->request('POST', '/estancias/nueva', [
-            '_token'       => $token,
-            'name'         => 'Estancia Intrusa',
-            'programme_id' => $otherProg->getId()->toRfc4122(),
+            '_token'        => $token,
+            'name'          => 'Estancia Intrusa',
+            'programme_ids' => [$otherProg->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);
@@ -1559,7 +1560,7 @@ class StayControllerTest extends ControllerTestCase
         $stay = new Stay();
         $stay->setName($name)
              ->setAcademicYear($year)
-             ->setProgramme($programme)
+             ->addProgramme($programme)
              ->setStartDate(new \DateTimeImmutable('2025-03-01'))
              ->setEndDate(new \DateTimeImmutable('2025-06-30'));
 

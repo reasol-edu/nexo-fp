@@ -161,12 +161,12 @@ class StayListComponent extends AbstractController
             ? $this->stays->createByCentreFilteredQuery($year, $this->search, $this->familyId, $this->programmeId, $periods, $viewer)
             : $this->stays->findNoneQuery();
 
-        $pagination = new Paginator($query, $this->page, (int) $this->appSettings->get('page.size'));
+        $pagination = new Paginator($query, $this->page, (int) $this->appSettings->get('page.size'), fetchJoinCollection: false);
 
         $lastPage = max(1, $pagination->getTotalPages());
         if ($this->page > $lastPage) {
             $this->page = $lastPage;
-            $pagination = new Paginator($query, $this->page, (int) $this->appSettings->get('page.size'));
+            $pagination = new Paginator($query, $this->page, (int) $this->appSettings->get('page.size'), fetchJoinCollection: false);
         }
 
         $this->paginationCache = $pagination;
@@ -225,12 +225,12 @@ class StayListComponent extends AbstractController
             )
             : $this->positions->findNoneQuery();
 
-        $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'));
+        $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'), fetchJoinCollection: false);
 
         $lastPage = max(1, $pagination->getTotalPages());
         if ($this->pendingPage > $lastPage) {
             $this->pendingPage = $lastPage;
-            $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'));
+            $pagination = new Paginator($query, $this->pendingPage, (int) $this->appSettings->get('page.size'), fetchJoinCollection: false);
         }
 
         $this->pendingPaginationCache = $pagination;

@@ -20,11 +20,15 @@ final class Paginator
 
     /**
      * @param Query<null, T> $query
+     * @param bool $fetchJoinCollection false cuando la consulta no hace fetch-join de colecciones: evita
+     *                                  la subconsulta de límite de Doctrine, que no soporta las
+     *                                  subconsultas EXISTS anidadas de los filtros por docente.
      */
     public function __construct(
         Query $query,
         private readonly int $currentPage,
         private readonly int $pageSize,
+        bool $fetchJoinCollection = true,
     ) {
         $firstResult = max(0, ($currentPage - 1) * $pageSize);
 
@@ -33,7 +37,7 @@ final class Paginator
             ->setMaxResults($pageSize);
 
         /** @var DoctrinePaginator<T> $paginator */
-        $paginator = new DoctrinePaginator($query);
+        $paginator = new DoctrinePaginator($query, $fetchJoinCollection);
         $this->paginator  = $paginator;
         $this->totalItems = count($paginator);
     }

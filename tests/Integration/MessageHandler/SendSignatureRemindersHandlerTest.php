@@ -6,9 +6,11 @@ namespace App\Tests\Integration\MessageHandler;
 
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\Group;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
@@ -38,7 +40,7 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
         $stay = (new Stay())
             ->setName('Estancia DAW')
             ->setAcademicYear($year)
-            ->setProgramme($programme)
+            ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable('+5 days'))
             ->setEndDate(new \DateTimeImmutable('+95 days'));
 
@@ -67,5 +69,50 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
         self::assertSame('tutora@test.local', $entries[0]->getRecipientEmail());
         self::assertSame('IES Test', $entries[0]->getEducationalCentre()?->getName());
         self::assertTrue($entries[0]->isSuccess());
+    }
+
+    public function testSharedStayRemindsOnlyTheCoordinatorOfTheStudentsProgramme(): void
+    {
+        $centre = (new EducationalCentre())->setCode('41000002')->setName('IES Test')->setCity('Sevilla');
+        $year   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+
+        $coordDaw = (new Teacher(new PersonName('Coord', 'Daw')))->setUsername('coord.daw.' . uniqid())->setEmail('daw@test.local');
+        $coordDam = (new Teacher(new PersonName('Coord', 'Dam')))->setUsername('coord.dam.' . uniqid())->setEmail('dam@test.local');
+        $daw = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDaw);
+        $dam = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDam);
+
+        $dawLevel = (new ProgrammeYear())->setName('2.º DAW')->setProgramme($daw);
+        $dawGroup = (new Group())->setName('DAW2A')->setProgrammeYear($dawLevel);
+        $student  = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
+        $dawGroup->addStudent($student);
+
+        $stay = (new Stay())
+            ->setName('Estancia compartida')
+            ->setAcademicYear($year)
+            ->addProgramme($daw)
+            ->addProgramme($dam)
+            ->setStartDate(new \DateTimeImmutable('+5 days'))
+            ->setEndDate(new \DateTimeImmutable('+95 days'));
+        $stay->addStudent($student);
+
+        $position = (new TrainingPosition())
+            ->setStay($stay)
+            ->setStudent($student)
+            ->setState(TrainingPositionState::DONE)
+            ->setSigned(false);
+
+        $this->persist($centre, $year, $coordDaw, $coordDam, $family, $daw, $dam, $dawLevel, $dawGroup, $student, $stay, $position);
+
+        /** @var MessageBusInterface $bus */
+        $bus = self::getContainer()->get(MessageBusInterface::class);
+        $bus->dispatch(new SendSignatureRemindersMessage());
+
+        self::assertEmailCount(1);
+        $recipients = array_values(array_unique(array_map(
+            static fn ($email): string => $email->getTo()[0]->getAddress(),
+            $this->getMailerMessages(),
+        )));
+        self::assertSame(['daw@test.local'], $recipients, 'Solo la coordinación de la enseñanza del alumno recibe el aviso');
     }
 }

@@ -72,17 +72,25 @@ final class SignatureReminderDispatcher
 
                 $staysToSeal[$stay->getId()->toRfc4122()] = $stay;
 
-                $programme = $stay->getProgramme();
+                // Con varias enseñanzas, avisa a la coordinación y la jefatura de las enseñanzas del
+                // estudiante; si no tiene grupo en ninguna, a las de toda la estancia.
+                $student    = $position->getStudent();
+                $programmes = $student !== null ? $stay->getProgrammesOfStudent($student) : [];
+                if ($programmes === []) {
+                    $programmes = $stay->getProgrammes()->toArray();
+                }
 
                 $recipients = [];
                 if (($tutor = $position->getAcademicTutor()) !== null) {
                     $recipients[] = $tutor;
                 }
-                foreach ($programme->getCoordinators() as $coordinator) {
-                    $recipients[] = $coordinator;
-                }
-                if (($head = $programme->getProfessionalFamily()->getHead()) !== null) {
-                    $recipients[] = $head;
+                foreach ($programmes as $programme) {
+                    foreach ($programme->getCoordinators() as $coordinator) {
+                        $recipients[] = $coordinator;
+                    }
+                    if (($head = $programme->getProfessionalFamily()->getHead()) !== null) {
+                        $recipients[] = $head;
+                    }
                 }
 
                 foreach ($recipients as $recipient) {

@@ -11,6 +11,7 @@ use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
+use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Repository\GroupRepository;
@@ -89,9 +90,9 @@ class GroupRepositoryTest extends RepositoryTestCase
         self::assertNull($this->repo->findByLevelAndId($pyB, $group->getId()->toRfc4122()));
     }
 
-    // ── findByProgrammeWithStudents ───────────────────────────────────────────
+    // ── findByStayWithStudents ────────────────────────────────────────────────
 
-    public function testFindByProgrammeWithStudentsReturnsGroupsWithStudentsEagerLoaded(): void
+    public function testFindByStayWithStudentsReturnsGroupsWithStudentsEagerLoaded(): void
     {
         [, , , $prog, $py] = $this->makeChain('41000005');
         $group   = $this->makeGroup($py, 'DAM2A');
@@ -102,13 +103,13 @@ class GroupRepositoryTest extends RepositoryTestCase
         $student->addGroup($group);
         $this->flush();
 
-        $results = $this->repo->findByProgrammeWithStudents($prog);
+        $results = $this->repo->findByStayWithStudents($this->stayOf($prog));
 
         self::assertCount(1, $results);
         self::assertCount(1, $results[0]->getStudents());
     }
 
-    public function testFindByProgrammeWithStudentsExcludesOtherProgrammes(): void
+    public function testFindByStayWithStudentsExcludesProgrammesOutsideTheStay(): void
     {
         [, , $fam, $progA, $pyA] = $this->makeChain('41000006');
 
@@ -123,7 +124,7 @@ class GroupRepositoryTest extends RepositoryTestCase
         $gB = $this->makeGroup($pyB, 'DAW1A');
         $this->persist($gA, $gB);
 
-        $results = $this->repo->findByProgrammeWithStudents($progA);
+        $results = $this->repo->findByStayWithStudents($this->stayOf($progA));
 
         self::assertCount(1, $results);
         self::assertSame('DAM1A', $results[0]->getName());
@@ -158,9 +159,9 @@ class GroupRepositoryTest extends RepositoryTestCase
         self::assertCount(0, $this->repo->findByActiveYearOfCentreOrderedByName($centre));
     }
 
-    // ── isTeacherInProgramme ──────────────────────────────────────────────────
+    // ── isTeacherInStayProgrammes ─────────────────────────────────────────────
 
-    public function testIsTeacherInProgrammeReturnsTrueWhenTeacherIsTutor(): void
+    public function testIsTeacherInStayProgrammesReturnsTrueWhenTeacherIsTutor(): void
     {
         [, , , $prog, $py] = $this->makeChain('41000009');
         $teacher = $this->makeTeacher('tutor.one');
@@ -169,10 +170,10 @@ class GroupRepositoryTest extends RepositoryTestCase
         $group->addTutor($teacher);
         $this->flush();
 
-        self::assertTrue($this->repo->isTeacherInProgramme($teacher, $prog));
+        self::assertTrue($this->repo->isTeacherInStayProgrammes($teacher, $this->stayOf($prog)));
     }
 
-    public function testIsTeacherInProgrammeReturnsTrueWhenTeacherIsGroupTeacher(): void
+    public function testIsTeacherInStayProgrammesReturnsTrueWhenTeacherIsGroupTeacher(): void
     {
         [, , , $prog, $py] = $this->makeChain('41000010');
         $teacher = $this->makeTeacher('teacher.one');
@@ -181,19 +182,19 @@ class GroupRepositoryTest extends RepositoryTestCase
         $group->addTeacher($teacher);
         $this->flush();
 
-        self::assertTrue($this->repo->isTeacherInProgramme($teacher, $prog));
+        self::assertTrue($this->repo->isTeacherInStayProgrammes($teacher, $this->stayOf($prog)));
     }
 
-    public function testIsTeacherInProgrammeReturnsFalseWhenTeacherHasNoRole(): void
+    public function testIsTeacherInStayProgrammesReturnsFalseWhenTeacherHasNoRole(): void
     {
         [, , , $prog] = $this->makeChain('41000011');
         $teacher = $this->makeTeacher('no.role');
         $this->persist($teacher);
 
-        self::assertFalse($this->repo->isTeacherInProgramme($teacher, $prog));
+        self::assertFalse($this->repo->isTeacherInStayProgrammes($teacher, $this->stayOf($prog)));
     }
 
-    public function testIsTeacherInProgrammeReturnsFalseForDifferentProgramme(): void
+    public function testIsTeacherInStayProgrammesReturnsFalseForDifferentProgramme(): void
     {
         [$centre, $year, $fam, $progA, $pyA] = $this->makeChain('41000012');
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
@@ -205,7 +206,7 @@ class GroupRepositoryTest extends RepositoryTestCase
         $this->flush();
 
         // Teacher is tutor in progB, not in progA
-        self::assertFalse($this->repo->isTeacherInProgramme($teacher, $progA));
+        self::assertFalse($this->repo->isTeacherInStayProgrammes($teacher, $this->stayOf($progA)));
     }
 
     // ── findCountsByAcademicYear ──────────────────────────────────────────────
@@ -303,5 +304,19 @@ class GroupRepositoryTest extends RepositoryTestCase
     private function makeTeacher(string $username): Teacher
     {
         return (new Teacher(new PersonName('Test', 'Teacher')))->setUsername($username);
+    }
+
+    /** Estancia de una sola enseñanza, para consultar por «las enseñanzas de la estancia». */
+    private function stayOf(Programme $programme): Stay
+    {
+        $stay = (new Stay())
+            ->setName('Estancia ' . $programme->getName() . ' ' . uniqid())
+            ->setAcademicYear($programme->getAcademicYear())
+            ->addProgramme($programme)
+            ->setStartDate(new \DateTimeImmutable('2025-03-01'))
+            ->setEndDate(new \DateTimeImmutable('2025-06-30'));
+        $this->persist($stay);
+
+        return $stay;
     }
 }

@@ -252,7 +252,7 @@ class SendRemindersCommandTest extends RepositoryTestCase
         $stay = (new Stay())
             ->setName('Estancia DAW ' . uniqid())
             ->setAcademicYear($this->year)
-            ->setProgramme($this->programme)
+            ->addProgramme($this->programme)
             ->setStartDate(new \DateTimeImmutable(sprintf('%+d days', $startsInDays)))
             ->setEndDate(new \DateTimeImmutable(sprintf('%+d days', $startsInDays + 90)));
 

@@ -57,6 +57,7 @@ abstract class ControllerTestCase extends WebTestCase
             ['email.notifications',                   SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.tutor_assigned',     SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.positions_created',  SettingType::Boolean, 'true', true,  true,  true,  null, null],
+            ['email.notification.shared_position',    SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.signature_reminder', SettingType::Boolean, 'true', true,  true,  true,  null, null],
         ];
 
