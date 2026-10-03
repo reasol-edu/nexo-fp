@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-10-03
+
 ### Security
 
 - La sesión se cierra sola tras un rato sin actividad (dos horas por defecto), para que un equipo compartido que se deja abierto no quede utilizable por otra persona. Se configura, o se desactiva con 0, en los ajustes globales (ajuste «Cierre de sesión por inactividad»), y la pantalla de inicio de sesión explica por qué se ha cerrado. Requiere ejecutar las migraciones al actualizar
