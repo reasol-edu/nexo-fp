@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- La sesión se cierra sola tras un rato sin actividad (dos horas por defecto), para que un equipo compartido que se deja abierto no quede utilizable por otra persona. Se configura, o se desactiva con 0, en los ajustes globales (ajuste «Cierre de sesión por inactividad»), y la pantalla de inicio de sesión explica por qué se ha cerrado. Requiere ejecutar las migraciones al actualizar
+- La sesión ya no conserva el acceso a un centro cuando se le retira al docente (o al administrador que pierde el rol): se comprueba en cada petición y, si ya no corresponde, vuelve al selector de centro en lugar de seguir viendo los datos hasta cerrar la sesión
+- El cambio de curso solo redirige a páginas de la propia aplicación (antes aceptaba rutas como `//otro.sitio`, que el navegador interpreta como otro dominio), y el enlace «Volver» de la pantalla de cursos ya no admite direcciones `javascript:`
+- La respuesta del servicio de autenticación de Séneca se procesa de forma más estricta: ya no se sustituyen entidades XML externas, lo que podría haber permitido leer ficheros del servidor ante una respuesta hostil o suplantada
+- El aviso «Tu cuenta está desactivada» solo aparece si la contraseña es correcta; con una contraseña errónea se muestra el mensaje genérico de credenciales no válidas, para que no se pueda averiguar qué usuarios existen o están desactivados
+- Una contraseña nueva ya no puede contener el propio nombre de usuario. Además, la administración puede activar con `APP_PASSWORD_BREACH_CHECK=true` (desactivado por defecto) que tampoco pueda figurar en filtraciones de datos conocidas: consulta el servicio externo «Have I Been Pwned» con k-anonimato, sin enviar nunca la contraseña, y se omite en pocos segundos si el servidor no tiene salida a Internet
+
 ### Fixed
 
+- Un identificador de centro o de curso mal formado en la sesión (una cookie de una versión anterior, una sesión truncada) provocaba un error 500; ahora se ignora y se vuelve a elegir el centro
+- Los coordinadores de enseñanza que no imparten en ningún grupo del centro no lo veían en el selector de centros; ahora sí, en coherencia con los permisos que ya tienen sobre estancias y empresas
 - Al asignar puestos formativos a varios estudiantes con la asignación rápida (o dos personas a la vez), si a un mismo estudiante le llegaban dos asignaciones seguidas se producía un error 500 y la pantalla quedaba sin actualizar aunque el primer puesto sí se había guardado. Ahora se mantiene un único puesto por estudiante y estancia, y la pantalla avisa cuando un puesto ya no está disponible, cuando el estudiante ya tiene puesto o cuando otra persona se ha adelantado
 
 ### Added

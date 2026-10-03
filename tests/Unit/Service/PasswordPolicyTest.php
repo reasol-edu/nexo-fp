@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
+use App\Service\CompromisedPasswordChecker;
 use App\Service\PasswordPolicy;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class PasswordPolicyTest extends TestCase
 {
@@ -26,6 +30,34 @@ final class PasswordPolicyTest extends TestCase
     {
         $policy = new PasswordPolicy();
         self::assertNull($policy->firstViolationKey('una-contraseña-larga-2026'));
+    }
+
+    public function testRejectsPasswordContainingTheUsernameIgnoringCase(): void
+    {
+        $policy = new PasswordPolicy();
+
+        self::assertSame('profile.error.password_contains_username', $policy->firstViolationKey('Mi-MARIA.lopez-2026', 'maria.lopez'));
+        self::assertNull($policy->firstViolationKey('Mi-MARIA.lopez-2026', 'otra.persona'));
+    }
+
+    public function testDoesNotCheckVeryShortUsernames(): void
+    {
+        // «ab» aparece por casualidad en casi cualquier contraseña.
+        self::assertNull((new PasswordPolicy())->firstViolationKey('una-contraseña-larga-2026', 'ab'));
+    }
+
+    public function testRejectsACompromisedPasswordOnlyWhenTheCheckIsWiredAndEnabled(): void
+    {
+        $password = 'una-contraseña-larga-2026';
+        $suffix   = substr(strtoupper(sha1($password)), 5);
+        $breached = new MockHttpClient(static fn (): MockResponse => new MockResponse($suffix . ":42\r\n"));
+
+        $withCheck = new PasswordPolicy(new CompromisedPasswordChecker($breached, new NullLogger(), true));
+        self::assertSame('profile.error.password_compromised', $withCheck->firstViolationKey($password));
+
+        $disabled = new PasswordPolicy(new CompromisedPasswordChecker($breached, new NullLogger(), false));
+        self::assertNull($disabled->firstViolationKey($password));
+        self::assertNull((new PasswordPolicy())->firstViolationKey($password));
     }
 
     public function testCountsMultibyteCharacters(): void

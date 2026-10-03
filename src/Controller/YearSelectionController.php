@@ -31,7 +31,8 @@ class YearSelectionController extends AbstractController
 
         $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
 
-        $returnTo = $request->query->getString('return_to', '/');
+        // También se usa como enlace «Volver»: un «javascript:…» o «//otro.sitio» no debe llegar al href.
+        $returnTo = $this->safeLocalPath($request->query->getString('return_to', '/')) ?? '/';
 
         return $this->render('year_selection/index.html.twig', [
             'centre'      => $centre,
@@ -92,12 +93,21 @@ class YearSelectionController extends AbstractController
 
     private function resolveReturnTo(Request $request): string
     {
-        $returnTo = $request->request->getString('_return_to', '');
+        return $this->safeLocalPath($request->request->getString('_return_to', ''))
+            ?? $this->generateUrl('app_dashboard');
+    }
 
-        if ($returnTo !== '' && str_starts_with($returnTo, '/')) {
-            return $returnTo;
+    /**
+     * Devuelve la ruta solo si apunta a una página de esta misma aplicación. Rechaza las rutas
+     * relativas al protocolo («//otro.sitio», «/\otro.sitio»), que el navegador interpretaría como
+     * otro dominio, y los caracteres de control (inyección de cabeceras).
+     */
+    private function safeLocalPath(string $path): ?string
+    {
+        if (preg_match('#^/(?![/\\\\])#', $path) === 1 && preg_match('/[\x00-\x1F\x7F]/', $path) !== 1) {
+            return $path;
         }
 
-        return $this->generateUrl('app_dashboard');
+        return null;
     }
 }

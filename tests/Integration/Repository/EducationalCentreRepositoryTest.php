@@ -238,6 +238,27 @@ class EducationalCentreRepositoryTest extends RepositoryTestCase
         self::assertSame($centre->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
     }
 
+    public function testFindAccessibleByTeacherReturnsCentreWhenTeacherOnlyCoordinatesAProgramme(): void
+    {
+        $centre    = $this->makeCentre('41000023');
+        $year      = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
+        $family    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
+        $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $teacher   = $this->makeTeacher('coord.only');
+        $this->persist($centre, $year, $family, $programme, $teacher);
+
+        self::assertFalse($this->repo->isAccessibleByTeacher($centre, $teacher));
+
+        $programme->addCoordinator($teacher);
+        $this->flush();
+
+        $results = $this->repo->findAccessibleByTeacher($teacher);
+
+        self::assertCount(1, $results);
+        self::assertSame($centre->getId()->toRfc4122(), $results[0]->getId()->toRfc4122());
+        self::assertTrue($this->repo->isAccessibleByTeacher($centre, $teacher));
+    }
+
     public function testFindAccessibleByTeacherReturnsCentreWhenTeacherIsGroupTutor(): void
     {
         $centre  = $this->makeCentre('41000022');

@@ -159,6 +159,34 @@ class ProfileControllerTest extends ControllerTestCase
         self::assertTrue($hasher->isPasswordValid($updated, 'new-pass-123'));
     }
 
+    public function testPostRejectsNewPasswordContainingTheUsername(): void
+    {
+        $teacher = $this->makeTeacherWithPassword('maria.lopez', 'old-pass');
+        $this->persist($teacher);
+        $this->loginAs($teacher);
+
+        $crawler = $this->client->request('GET', '/perfil');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/perfil', [
+            '_token'               => $token,
+            'first_name'           => $teacher->getName()->getFirstName(),
+            'last_name'            => $teacher->getName()->getLastName(),
+            'email'                => '',
+            'current_password'     => 'old-pass',
+            'new_password'         => 'Clave-maria.lopez-2026',
+            'new_password_confirm' => 'Clave-maria.lopez-2026',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no puede contener tu nombre de usuario', (string) $this->client->getResponse()->getContent());
+
+        $this->em->clear();
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = self::getContainer()->get(UserPasswordHasherInterface::class);
+        self::assertTrue($hasher->isPasswordValid($this->em->find(Teacher::class, $teacher->getId()), 'old-pass'));
+    }
+
     public function testPostWithWrongCurrentPasswordRendersFormAgain(): void
     {
         $teacher = $this->makeTeacherWithPassword('teacher.1', 'correct-pass');

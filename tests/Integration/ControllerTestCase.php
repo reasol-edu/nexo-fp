@@ -52,6 +52,7 @@ abstract class ControllerTestCase extends WebTestCase
         // [key, type, default, globalScope, centreScope, teacherScope, minValue, maxValue]
         $defs = [
             ['page.size',                             SettingType::Integer, '20',   false, false, true,  5,    100],
+            ['security.idle_timeout_minutes',         SettingType::Integer, '120',  true,  false, false, 0,    1440],
             ['email.notifications',                   SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.tutor_assigned',     SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.positions_created',  SettingType::Boolean, 'true', true,  true,  true,  null, null],
@@ -101,8 +102,16 @@ abstract class ControllerTestCase extends WebTestCase
      * Logs in as the given teacher. Makes one request to establish the
      * session, then optionally injects the tenant centre into that session.
      */
-    protected function loginAs(Teacher $teacher, ?EducationalCentre $centre = null): void
+    protected function loginAs(Teacher $teacher, ?EducationalCentre $centre = null, bool $ensureCentreAccess = true): void
     {
+        // El centro de la sesión se revalida en cada petición (TenantContext): un docente sin ninguna
+        // relación con el centro volvería al selector de centro. Para que los tests de «docente sin
+        // permisos» sigan comprobando que deniega el voter (y no esa redirección), se le da por defecto
+        // el acceso mínimo, sin privilegios: ser docente de un grupo del centro.
+        if ($centre !== null && $ensureCentreAccess) {
+            $this->giveUnprivilegedCentreAccess($teacher, $centre);
+        }
+
         $this->client->loginUser($teacher);
         // One request is needed to materialise the session file before we can
         // add keys to it.  /centro is always accessible to an authenticated teacher.
@@ -113,6 +122,28 @@ abstract class ControllerTestCase extends WebTestCase
             $session->set('tenant.centre_id', $centre->getId()->toRfc4122());
             $session->save();
         }
+    }
+
+    private function giveUnprivilegedCentreAccess(Teacher $teacher, EducationalCentre $centre): void
+    {
+        if ($teacher->isAdmin()) {
+            return;
+        }
+
+        /** @var \App\Repository\EducationalCentreRepository $centres */
+        $centres = self::getContainer()->get(\App\Repository\EducationalCentreRepository::class);
+        if ($centres->isAccessibleByTeacher($centre, $teacher)) {
+            return;
+        }
+
+        $year      = (new AcademicYear())->setName('Acceso mínimo')->setEducationalCentre($centre);
+        $family    = (new \App\Entity\ProfessionalFamily())->setName('Familia de acceso mínimo')->setAcademicYear($year);
+        $programme = (new \App\Entity\Programme())->setName('Enseñanza de acceso mínimo')->setProfessionalFamily($family)->setAcademicYear($year);
+        $level     = (new \App\Entity\ProgrammeYear())->setName('Nivel')->setProgramme($programme);
+        $group     = (new \App\Entity\Group())->setName('Grupo de acceso mínimo')->setProgrammeYear($level);
+        $group->addTeacher($teacher);
+
+        $this->persist($year, $family, $programme, $level, $group);
     }
 
     /**

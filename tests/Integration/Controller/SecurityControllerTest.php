@@ -11,6 +11,16 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class SecurityControllerTest extends ControllerTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // El limitador de intentos de login (por usuario+IP y por IP) guarda su estado en la caché del
+        // sistema de ficheros, que persiste entre ejecuciones: sin vaciarlo, repetir la suite agota el
+        // límite por IP y los tests de login fallan de forma intermitente.
+        self::getContainer()->get('cache.rate_limiter')->clear();
+    }
+
     // ── página de login ───────────────────────────────────────────────────────
 
     public function testLoginPageIsAccessibleAnonymously(): void
@@ -56,6 +66,29 @@ class SecurityControllerTest extends ControllerTestCase
         // Authenticated: the protected profile page renders instead of bouncing.
         $this->client->request('GET', '/perfil');
         self::assertResponseIsSuccessful();
+    }
+
+    // ── cuenta desactivada ────────────────────────────────────────────────────
+
+    public function testDeactivatedAccountIsOnlyRevealedWithTheCorrectPassword(): void
+    {
+        $hasher  = self::getContainer()->get(UserPasswordHasherInterface::class);
+        $teacher = (new Teacher(new PersonName('Baja', 'Docente')))->setUsername('login.inactive')->setActive(false);
+        $teacher->setPassword($hasher->hashPassword($teacher, 'correct-horse'));
+        $this->persist($teacher);
+
+        // Con una contraseña errónea no se debe distinguir de un usuario que no existe.
+        $this->submitLogin('login.inactive', 'wrong-password');
+        $this->client->followRedirect();
+        self::assertStringNotContainsString('desactivada', (string) $this->client->getResponse()->getContent());
+
+        // Con la contraseña correcta sí se explica por qué no puede entrar.
+        $this->submitLogin('login.inactive', 'correct-horse');
+        $this->client->followRedirect();
+        self::assertStringContainsString('desactivada', (string) $this->client->getResponse()->getContent());
+
+        $this->client->request('GET', '/perfil');
+        self::assertResponseRedirects();
     }
 
     // ── throttling de login (fuerza bruta) ────────────────────────────────────

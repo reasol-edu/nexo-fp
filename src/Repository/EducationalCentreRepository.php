@@ -6,6 +6,7 @@ use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\ProfessionalFamily;
+use App\Entity\Programme;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -111,6 +112,22 @@ class EducationalCentreRepository extends ServiceEntityRepository
         return $qb->getQuery();
     }
 
+    /** Si $teacher puede trabajar en $centre: la misma regla que findAccessibleByTeacher(). */
+    public function isAccessibleByTeacher(EducationalCentre $centre, Teacher $teacher): bool
+    {
+        if ($teacher->isAdmin()) {
+            return true;
+        }
+
+        foreach ($this->findAccessibleByTeacher($teacher) as $accessible) {
+            if ($accessible->getId()->equals($centre->getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** @return EducationalCentre[] */
     public function findAccessibleByTeacher(Teacher $teacher): array
     {
@@ -173,6 +190,19 @@ class EducationalCentreRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult() as $family) {
             $ec = $family->getAcademicYear()->getEducationalCentre();
+            $merged[$ec->getId()->toRfc4122()] = $ec;
+        }
+
+        // Centres where teacher coordinates a programme (CompanyVoter/StayVoter ya les dan acceso a la sección)
+        foreach ($this->getEntityManager()->createQueryBuilder()
+            ->select('p')
+            ->from(Programme::class, 'p')
+            ->join('p.coordinators', 'c')
+            ->where('c.id = :tid')
+            ->setParameter('tid', $tid, 'uuid')
+            ->getQuery()
+            ->getResult() as $programme) {
+            $ec = $programme->getAcademicYear()->getEducationalCentre();
             $merged[$ec->getId()->toRfc4122()] = $ec;
         }
 

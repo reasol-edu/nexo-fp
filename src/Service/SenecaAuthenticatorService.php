@@ -76,10 +76,24 @@ class SenecaAuthenticatorService
             throw new RuntimeException('External authentication service is unavailable.');
         }
 
+        return $this->parseCredentialsResponse($str);
+    }
+
+    /**
+     * Interpreta la respuesta XML del servicio: solo lee «<correcto>».
+     *
+     * No se usa LIBXML_NOENT: la sustitución de entidades es justo lo que permitiría a una respuesta
+     * hostil o suplantada (la verificación TLS puede desactivarse con APP_EXTERNAL_URL_FORCE_SECURITY)
+     * leer ficheros locales mediante entidades externas, y para leer «<correcto>» no hace falta.
+     *
+     * @throws RuntimeException si la respuesta no es un XML válido
+     */
+    public function parseCredentialsResponse(string $xml): bool
+    {
         $dom = new \DOMDocument();
         $previous = libxml_use_internal_errors(true);
 
-        if (!$dom->loadXML($str, LIBXML_NONET | LIBXML_NOENT)) {
+        if (!$dom->loadXML($xml, LIBXML_NONET)) {
             libxml_use_internal_errors($previous);
             throw new RuntimeException('External authentication service returned an invalid response.');
         }
@@ -88,8 +102,9 @@ class SenecaAuthenticatorService
 
         $xpath = new \DOMXPath($dom);
         $nav = $xpath->query('//correcto');
+        $item = $nav !== false ? $nav->item(0) : null;
 
-        return $nav !== false && $nav->length === 1 && $nav->item(0)?->textContent === 'SI';
+        return $nav !== false && $nav->length === 1 && $item instanceof \DOMNode && $item->textContent === 'SI';
     }
 
     /**

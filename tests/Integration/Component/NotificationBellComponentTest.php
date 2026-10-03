@@ -106,7 +106,7 @@ class NotificationBellComponentTest extends RepositoryTestCase
         $centres = self::getContainer()->get(EducationalCentreRepository::class);
         /** @var AcademicYearRepository $years */
         $years  = self::getContainer()->get(AcademicYearRepository::class);
-        $tenant  = new TenantContext($stack, $centres, $years, $this->em);
+        $tenant  = new TenantContext($stack, $centres, $years, $this->em, new \Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage());
 
         /** @var StayRepository $stays */
         $stays = self::getContainer()->get(StayRepository::class);
