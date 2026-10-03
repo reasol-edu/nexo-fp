@@ -60,6 +60,7 @@ final class Version20260703000000 extends AbstractMigration
         SQL);
         $this->addSql('ALTER TABLE stay ALTER COLUMN programme_id SET NOT NULL');
         $this->addSql('CREATE INDEX IDX_stay_programme ON stay (programme_id)');
+        $this->addSql('ALTER TABLE stay ADD CONSTRAINT FK_stay_programme FOREIGN KEY (programme_id) REFERENCES programme (id)');
         $this->addSql('DROP TABLE stay_programme');
     }
 }

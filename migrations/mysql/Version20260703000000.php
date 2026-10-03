@@ -36,7 +36,8 @@ final class Version20260703000000 extends AbstractMigration
 
         $this->addSql('INSERT INTO stay_programme (stay_id, programme_id) SELECT id, programme_id FROM stay');
 
-        // MySQL no permite borrar la columna mientras exista la FK implícita del índice.
+        // MySQL no permite borrar el índice mientras lo use la clave foránea: primero ésta.
+        $this->addSql('ALTER TABLE stay DROP FOREIGN KEY FK_stay_programme');
         $this->addSql('ALTER TABLE stay DROP INDEX IDX_stay_programme');
         $this->addSql('ALTER TABLE stay DROP COLUMN programme_id');
     }
@@ -61,6 +62,7 @@ final class Version20260703000000 extends AbstractMigration
         SQL);
         $this->addSql('ALTER TABLE stay MODIFY programme_id BINARY(16) NOT NULL');
         $this->addSql('CREATE INDEX IDX_stay_programme ON stay (programme_id)');
+        $this->addSql('ALTER TABLE stay ADD CONSTRAINT FK_stay_programme FOREIGN KEY (programme_id) REFERENCES programme (id)');
         $this->addSql('DROP TABLE stay_programme');
     }
 }
