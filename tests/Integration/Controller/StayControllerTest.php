@@ -1338,7 +1338,11 @@ class StayControllerTest extends ControllerTestCase
 
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/pdf');
-        self::assertStringStartsWith('%PDF', (string) $this->client->getResponse()->getContent());
+        $pdf = (string) $this->client->getInternalResponse()->getContent();
+        self::assertStringStartsWith('%PDF', $pdf);
+        // La tipografía del informe es Source Sans Pro (incrustada), no la DejaVu Sans por defecto de mPDF.
+        self::assertStringContainsString('SourceSansPro', $pdf);
+        self::assertStringNotContainsString('DejaVuSans', $pdf);
     }
 
     public function testReportDeniedToUnrelatedTeacher(): void

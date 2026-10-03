@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- La barra lateral marca la sección en la que estás con una franja de acento (y la anuncia a los lectores de pantalla), el logotipo y el nombre de la aplicación llevan al inicio, y las migas de pan de las pantallas de cada sección empiezan con un icono de inicio. Las cabeceras de las tablas indican a los lectores de pantalla que son de columna y la aplicación se puede instalar con los metadatos habituales de aplicación web en dispositivos móviles
+- Los informes en PDF usan ahora la tipografía Source Sans Pro, más estrecha y legible, y un tamaño de letra mayor (las tablas pasan de 5,5 a 7,5 puntos) sin que el informe ocupe más páginas
 - La exportación de empresas a Excel pasa a ser un libro editable y reimportable: separa el nombre y los apellidos del representante, e incluye los centros de trabajo, los empleados, la información de contacto y las observaciones en hojas propias. Ya no incluye los recuentos de centros y empleados, y el botón pasa a llamarse «Exportar Excel» (antes ponía «Exportar CSV»)
 
 ## [2.7.1] - 2026-10-03

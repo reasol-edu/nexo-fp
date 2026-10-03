@@ -70,8 +70,8 @@
                     <tr class="border-b border-gray-100 bg-gray-50">
                         {{ sort.th('students.col.nie'|trans({}, 'admin'), 'nie', this.sort, this.sortDir) }}
                         {{ sort.th('students.col.name'|trans({}, 'admin'), 'name', this.sort, this.sortDir) }}
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.groups'|trans({}, 'admin') }}</th>
-                        {% if can_write %}<th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.actions'|trans({}, 'admin') }}</th>{% endif %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.groups'|trans({}, 'admin') }}</th>
+                        {% if can_write %}<th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.actions'|trans({}, 'admin') }}</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">

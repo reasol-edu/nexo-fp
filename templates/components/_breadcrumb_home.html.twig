@@ -1,0 +1,6 @@
+{# Icono de inicio al comienzo de unas migas de pan: enlaza al panel de inicio #}
+<a href="{{ path('app_dashboard') }}" class="hover:text-plum-600 transition-colors shrink-0"
+   aria-label="{{ 'dashboard'|trans({}, 'navigation') }}">
+    {{ ux_icon('heroicons:squares-2x2', {class: 'h-4 w-4'}) }}
+</a>
+{{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}

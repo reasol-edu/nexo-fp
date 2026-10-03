@@ -9,7 +9,7 @@
     {% set active = currentSort == column %}
     {% set ariaSort = active ? (currentDir == 'desc' ? 'descending' : 'ascending') : 'none' %}
     {% set icon = active ? (currentDir == 'desc' ? 'heroicons:chevron-down' : 'heroicons:chevron-up') : 'heroicons:chevron-up-down' %}
-    <th aria-sort="{{ ariaSort }}"
+    <th scope="col" aria-sort="{{ ariaSort }}"
         class="px-6 py-3 text-{{ align }} text-xs font-semibold text-gray-500 uppercase tracking-wider">
         <button type="button"
                 data-action="live#action"

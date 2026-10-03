@@ -562,10 +562,10 @@
                                     <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                            <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
                                 {{ 'stays.pending.col.stay'|trans({}, 'stays') }}
                             </th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden lg:table-cell">
+                            <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden lg:table-cell">
                                 {{ 'stays.pending.col.group'|trans({}, 'stays') }}
                             </th>
                             <th aria-sort="{{ _self.ariaSort(pendingSort, 'workcenter', pendingSortDir) }}"
@@ -577,7 +577,7 @@
                                     <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden xl:table-cell">
+                            <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap hidden xl:table-cell">
                                 {{ 'stays.pending.col.tutor'|trans({}, 'stays') }}
                             </th>
                             <th aria-sort="{{ _self.ariaSort(pendingSort, 'startDate', pendingSortDir) }}"
@@ -589,7 +589,7 @@
                                     <span class="sr-only">{{ 'stays.pending.col.sort_hint'|trans({}, 'stays') }}</span>
                                 </button>
                             </th>
-                            <th class="px-4 py-3"></th>
+                            <th scope="col" class="px-4 py-3"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
