@@ -244,4 +244,39 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
         ->setParameter('stay', $stay->getId(), 'uuid')
         ->getResult();
     }
+
+    /**
+     * Docentes con alguna vinculación en el curso: imparten o tutorizan un grupo, coordinan una enseñanza,
+     * dirigen una familia, administran el centro, son docentes de enlace de una empresa del centro o son
+     * tutores duales docentes de un puesto de una estancia del curso.
+     *
+     * @return array<string, true> ids (RFC 4122) de los docentes vinculados
+     */
+    public function findConnectedIdsForYear(AcademicYear $year): array
+    {
+        $em     = $this->getEntityManager();
+        $centre = $year->getEducationalCentre();
+
+        $queries = [
+            // Grupos del curso (profesorado y tutoría)
+            ['SELECT DISTINCT t FROM App\Entity\Teacher t, App\Entity\Group g JOIN g.programmeYear py JOIN py.programme p
+              WHERE p.academicYear = :year AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)', 'year'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\Programme p JOIN p.coordinators c WHERE c = t AND p.academicYear = :year)', 'year'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\ProfessionalFamily f WHERE f.head = t AND f.academicYear = :year)', 'year'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\TrainingPosition tp JOIN tp.stay s WHERE tp.academicTutor = t AND s.academicYear = :year)', 'year'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\EducationalCentre c JOIN c.admins a WHERE a = t AND c = :centre)', 'centre'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\Company co JOIN co.liaisons l WHERE l = t AND co.educationalCentre = :centre)', 'centre'],
+        ];
+
+        $ids = [];
+        foreach ($queries as [$dql, $param]) {
+            $query = $em->createQuery($dql);
+            $query->setParameter($param, $param === 'year' ? $year->getId() : $centre->getId(), 'uuid');
+            foreach ($query->getResult() as $teacher) {
+                $ids[$teacher->getId()->toRfc4122()] = true;
+            }
+        }
+
+        return $ids;
+    }
 }

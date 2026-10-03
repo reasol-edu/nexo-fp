@@ -1,0 +1,244 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'centre_teachers.import.preview.title'|trans({}, 'admin') }} · {{ centre.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+{% set count_new      = plan|filter(r => r.status == 'new')|length %}
+{% set count_add      = plan|filter(r => r.status == 'add')|length %}
+{% set count_email    = plan|filter(r => r.emailOnly)|length %}
+{% set count_same     = plan|filter(r => r.unchanged)|length %}
+<div class="px-6 py-8 max-w-4xl mx-auto space-y-8">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            {% include 'components/_breadcrumb_home.html.twig' %}
+            <a href="{{ path('app_educational_centre_index') }}" class="hover:text-plum-600 transition-colors">{{ 'educational_centre'|trans({}, 'navigation') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_centre_teachers_index', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'centre_teachers.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_admin_centre_teachers_import', {centreId: centre.id}) }}" class="hover:text-plum-600 transition-colors">{{ 'centre_teachers.import.title'|trans({}, 'admin') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'centre_teachers.import.preview.title'|trans({}, 'admin') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ centre.activeAcademicYear.name }}</p>
+    </div>
+
+    <form method="post"
+          action="{{ path('app_admin_centre_teachers_import', {centreId: centre.id}) }}"
+          data-controller="form-submit"
+          id="teacher-import-form"
+          class="space-y-6">
+        <input type="hidden" name="import_confirmed" value="1">
+        <input type="hidden" name="import_id" value="{{ importId }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('import_centre_teachers_confirm') }}">
+
+        {# ── Resumen ─────────────────────────────────────────────────────── #}
+        <div class="flex flex-wrap gap-2 text-sm">
+            <span class="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-3 py-1 font-medium text-green-800">{{ 'centre_teachers.import.preview.count_new'|trans({'%count%': count_new}, 'admin') }}</span>
+            <span class="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-3 py-1 font-medium text-blue-800">{{ 'centre_teachers.import.preview.count_add'|trans({'%count%': count_add}, 'admin') }}</span>
+            {% if hasEmail %}
+                <span class="inline-flex items-center rounded-full bg-plum-50 border border-plum-200 px-3 py-1 font-medium text-plum-800">{{ 'centre_teachers.import.preview.count_email'|trans({'%count%': count_email}, 'admin') }}</span>
+            {% endif %}
+            <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-gray-600">{{ 'centre_teachers.import.preview.count_same'|trans({'%count%': count_same}, 'admin') }}</span>
+            {% if skipped > 0 %}
+                <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-gray-600">{{ 'centre_teachers.import.preview.count_skipped'|trans({'%count%': skipped}, 'admin') }}</span>
+            {% endif %}
+        </div>
+
+        {# ── Opciones ────────────────────────────────────────────────────── #}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs px-6 py-5 space-y-4">
+            <h2 class="text-base font-semibold text-gray-900">{{ 'centre_teachers.import.preview.options'|trans({}, 'admin') }}</h2>
+
+            <label class="flex items-start gap-3 {{ hasEmail ? 'cursor-pointer' : 'opacity-60' }}">
+                <input type="checkbox" name="import_email" value="1" id="opt-email"
+                       {{ hasEmail ? 'checked' : 'disabled' }}
+                       class="mt-0.5 h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500 shrink-0">
+                <span>
+                    <span class="block text-sm font-medium text-gray-800">{{ 'centre_teachers.import.preview.opt_email'|trans({}, 'admin') }}</span>
+                    <span class="block text-xs text-gray-500">{{ (hasEmail ? 'centre_teachers.import.preview.opt_email_hint' : 'centre_teachers.import.preview.opt_email_none')|trans({}, 'admin') }}</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="remove_missing" value="1" id="opt-remove"
+                       class="mt-0.5 h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500 shrink-0">
+                <span>
+                    <span class="block text-sm font-medium text-gray-800">{{ 'centre_teachers.import.preview.opt_remove'|trans({}, 'admin') }}</span>
+                    <span class="block text-xs text-gray-500">{{ 'centre_teachers.import.preview.opt_remove_hint'|trans({}, 'admin') }}</span>
+                </span>
+            </label>
+        </div>
+
+        {# ── Docentes del fichero ───────────────────────────────────────── #}
+        <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
+                <h2 class="text-base font-semibold text-gray-900 mr-auto">{{ 'centre_teachers.import.preview.teachers'|trans({}, 'admin') }}</h2>
+                <span class="text-xs text-gray-500" id="selected-count" aria-live="polite"></span>
+                <div class="flex items-center gap-3 shrink-0">
+                    <button type="button" class="js-select-all text-xs font-medium text-plum-600 hover:text-plum-800" data-target="teachers">{{ 'centre_teachers.import.preview.select_all'|trans({}, 'admin') }}</button>
+                    <button type="button" class="js-select-none text-xs font-medium text-plum-600 hover:text-plum-800" data-target="teachers">{{ 'centre_teachers.import.preview.select_none'|trans({}, 'admin') }}</button>
+                </div>
+            </div>
+
+            {% if plan is empty %}
+                <p class="px-6 py-10 text-center text-sm text-gray-500">{{ 'centre_teachers.import.preview.empty'|trans({}, 'admin') }}</p>
+            {% else %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                            <th scope="col" class="px-4 py-3 w-10"><span class="sr-only">{{ 'centre_teachers.import.preview.col_select'|trans({}, 'admin') }}</span></th>
+                            <th scope="col" class="px-4 py-3">{{ 'centre_teachers.import.preview.col_teacher'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="px-4 py-3">{{ 'centre_teachers.import.preview.col_username'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="px-4 py-3">{{ 'centre_teachers.import.preview.col_email'|trans({}, 'admin') }}</th>
+                            <th scope="col" class="px-4 py-3">{{ 'centre_teachers.import.preview.col_action'|trans({}, 'admin') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for row in plan %}
+                            <tr class="hover:bg-gray-50/60 {{ row.unchanged ? 'text-gray-400' : '' }}"
+                                data-email-only="{{ row.emailOnly ? '1' : '0' }}">
+                                <td class="px-4 py-2.5">
+                                    <input type="checkbox" name="usernames[]" value="{{ row.username }}"
+                                           id="u_{{ loop.index }}"
+                                           data-group="teachers"
+                                           {{ row.unchanged ? 'data-unchanged=1 disabled' : 'checked' }}
+                                           aria-label="{{ row.lastName }}, {{ row.firstName }}"
+                                           class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                                </td>
+                                <td class="px-4 py-2.5 font-medium {{ row.unchanged ? '' : 'text-gray-900' }}">{{ row.lastName }}, {{ row.firstName }}</td>
+                                <td class="px-4 py-2.5 font-mono text-xs">{{ row.username }}</td>
+                                <td class="px-4 py-2.5 text-xs">
+                                    {% if row.email %}
+                                        {{ row.email }}
+                                        {% if not row.fillsEmail %}<span class="ml-1 text-gray-400">({{ 'centre_teachers.import.preview.email_kept'|trans({}, 'admin') }})</span>{% endif %}
+                                    {% else %}
+                                        <span class="text-gray-300">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2.5 text-xs">
+                                    {% if row.status == 'new' %}
+                                        <span class="inline-flex rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700">{{ 'centre_teachers.import.preview.action_new'|trans({}, 'admin') }}</span>
+                                    {% elseif row.status == 'add' %}
+                                        <span class="inline-flex rounded-full bg-blue-50 px-2 py-0.5 font-medium text-blue-700">{{ 'centre_teachers.import.preview.action_add'|trans({}, 'admin') }}</span>
+                                    {% elseif row.emailOnly %}
+                                        <span class="inline-flex rounded-full bg-plum-50 px-2 py-0.5 font-medium text-plum-700">{{ 'centre_teachers.import.preview.action_email'|trans({}, 'admin') }}</span>
+                                    {% else %}
+                                        <span>{{ 'centre_teachers.import.preview.action_none'|trans({}, 'admin') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        {# ── Docentes que se retirarían del curso ───────────────────────── #}
+        <div id="remove-panel" class="hidden rounded-2xl border border-amber-200 bg-white shadow-xs overflow-hidden">
+            <div class="px-6 py-4 border-b border-amber-100 bg-amber-50/60 flex flex-wrap items-center gap-3">
+                <div class="mr-auto min-w-0 flex-1 basis-80">
+                    <h2 class="text-base font-semibold text-amber-900">{{ 'centre_teachers.import.preview.remove_title'|trans({}, 'admin') }}</h2>
+                    <p class="text-xs text-amber-800">{{ 'centre_teachers.import.preview.remove_hint'|trans({}, 'admin') }}</p>
+                </div>
+                {% if candidates is not empty %}
+                    <div class="flex items-center gap-3 shrink-0">
+                        <button type="button" class="js-select-all text-xs font-medium text-plum-600 hover:text-plum-800" data-target="remove">{{ 'centre_teachers.import.preview.select_all'|trans({}, 'admin') }}</button>
+                        <button type="button" class="js-select-none text-xs font-medium text-plum-600 hover:text-plum-800" data-target="remove">{{ 'centre_teachers.import.preview.select_none'|trans({}, 'admin') }}</button>
+                    </div>
+                {% endif %}
+            </div>
+            {% if candidates is empty %}
+                <p class="px-6 py-6 text-sm text-gray-500">{{ 'centre_teachers.import.preview.remove_none'|trans({}, 'admin') }}</p>
+            {% else %}
+                <ul class="divide-y divide-gray-100">
+                    {% for teacher in candidates %}
+                        <li class="flex items-center gap-3 px-6 py-2.5 text-sm">
+                            <input type="checkbox" name="remove_teachers[]" value="{{ teacher.id.toRfc4122 }}"
+                                   data-group="remove" checked disabled
+                                   aria-label="{{ teacher.name.lastName }}, {{ teacher.name.firstName }}"
+                                   class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                            <span class="font-medium text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
+                            <span class="font-mono text-xs text-gray-500">{{ teacher.username }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+            <a href="{{ path('app_admin_centre_teachers_import', {centreId: centre.id}) }}"
+               class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                {{ 'centre_teachers.import.preview.back'|trans({}, 'admin') }}
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                {{ ux_icon('heroicons:check', {class: 'h-4 w-4'}) }}
+                {{ 'centre_teachers.import.preview.confirm'|trans({}, 'admin') }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    const form = document.getElementById('teacher-import-form');
+    const optEmail  = document.getElementById('opt-email');
+    const optRemove = document.getElementById('opt-remove');
+    const removePanel = document.getElementById('remove-panel');
+    const counter = document.getElementById('selected-count');
+    const T_SELECTED = '{{ 'centre_teachers.import.preview.selected'|trans({}, 'admin')|e('js') }}';
+
+    const boxes = (group) => Array.from(form.querySelectorAll('input[type="checkbox"][data-group="' + group + '"]'));
+
+    function refreshCount() {
+        // Total = filas con algo que hacer (las «sin cambios» y las de solo correo con la opción apagada no cuentan).
+        const actionable = boxes('teachers').filter((b) => b.dataset.unchanged !== '1' && !(b.disabled));
+        const on = actionable.filter((b) => b.checked).length;
+        counter.textContent = T_SELECTED.replace('%selected%', on).replace('%total%', actionable.length);
+    }
+
+    // Las filas que solo cambiarían el correo se desactivan cuando no se importa el correo.
+    function refreshEmailOption() {
+        const importEmail = optEmail && optEmail.checked;
+        form.querySelectorAll('tr[data-email-only="1"]').forEach((tr) => {
+            const box = tr.querySelector('input[type="checkbox"]');
+            if (!importEmail) {
+                box.dataset.was = box.checked ? '1' : '0';
+                box.checked = false;
+                box.disabled = true;
+                tr.classList.add('text-gray-400');
+            } else {
+                box.disabled = false;
+                box.checked = box.dataset.was !== '0';
+                tr.classList.remove('text-gray-400');
+            }
+        });
+        refreshCount();
+    }
+
+    // Los candidatos a retirar solo se envían si la opción está marcada.
+    function refreshRemoveOption() {
+        const on = optRemove.checked;
+        removePanel.classList.toggle('hidden', !on);
+        boxes('remove').forEach((b) => { b.disabled = !on; });
+    }
+
+    form.addEventListener('click', (e) => {
+        const all = e.target.closest('.js-select-all');
+        const btn = all || e.target.closest('.js-select-none');
+        if (!btn) return;
+        // Solo las casillas activas: las filas sin cambios y las de solo correo (con la opción apagada) están desactivadas.
+        boxes(btn.dataset.target).filter((b) => !b.disabled).forEach((b) => { b.checked = !!all; });
+        refreshCount();
+    });
+    form.addEventListener('change', (e) => { if (e.target.matches('input[data-group="teachers"]')) refreshCount(); });
+    if (optEmail) optEmail.addEventListener('change', refreshEmailOption);
+    optRemove.addEventListener('change', refreshRemoveOption);
+
+    refreshEmailOption();
+    refreshRemoveOption();
+})();
+</script>
+{% endblock %}
