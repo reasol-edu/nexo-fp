@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-10-03
+### Added
+
+- La importación de docentes desde Séneca muestra ahora una vista previa antes de importar: lista de docentes con una casilla por cada uno (todos marcados por defecto) y botones «Seleccionar todo» y «Seleccionar nada» para elegir cuáles se importan o actualizan
+- La importación de docentes lee la columna «Cuenta Google/Microsoft» y, si contiene una dirección válida, la guarda como correo electrónico del docente cuando este no tenía ninguno (nunca sobrescribe un correo existente). Es una opción de la vista previa, marcada por defecto
+- Opción de la vista previa para retirar del curso a los docentes que no figuran en el listado y no tienen ninguna vinculación este curso (grupos, coordinación, jefatura de familia, administración del centro, enlace con empresas o tutoría de puestos), con la lista de afectados y una casilla para conservar a quien se quiera. Quienes se retiran siguen existiendo en el sistema y en otros cursos
+
 ## [2.9.3] - 2026-10-03
 
 ### Fixed

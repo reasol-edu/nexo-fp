@@ -11,6 +11,8 @@
 // tienen los tamaños de las imágenes originales para encajar en las diapositivas.
 import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 
 const BASE = process.env.BASE || 'http://127.0.0.1:8124';
 const listOnly = process.argv.includes('--list');
@@ -62,6 +64,25 @@ const drill = (...actions) => async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1200); // los contadores del árbol se cargan con un pequeño retardo
 };
+/** Sube un CSV de Séneca de ejemplo en la importación de docentes y deja abierta la vista previa. */
+const teacherImportPreview = (removeOption) => async ({ page }) => {
+  const id = await centreId(page);
+  await page.goto(`${BASE}/admin/centros/${id}/docentes-curso/importar`, { waitUntil: 'networkidle' });
+  const csv = join(tmpdir(), 'docentes-seneca-demo.csv');
+  writeFileSync(csv, [
+    '"Empleado/a","Usuario IdEA","Cuenta Google/Microsoft"',
+    '"Expósito Moreno, Rafael","rafael.exposito","rafael.exposito@iesadalovelace.example"',
+    '"Díaz Jiménez, Carmen","carmen.diaz",""',
+    '"Cabrera García, Alberto","alberto.cabrera","alberto.cabrera@iesadalovelace.example"',
+    '"Nieto Salas, Luisa","luisa.nieto","luisa.nieto@iesadalovelace.example"',
+    '"Ferrer Cano, Pedro","pedro.ferrer","pedro.ferrer@iesadalovelace.example"',
+    '"Olmo Vidal, Marta","marta.olmo","no es un correo"',
+  ].join('\n'));
+  await page.setInputFiles('#csv', csv);
+  await page.locator('form button[type="submit"]').first().click();
+  await page.waitForLoadState('networkidle');
+  if (removeOption) { await page.check('#opt-remove'); await page.waitForTimeout(300); }
+};
 const quillSample = async ({ page }) => {
   await page.waitForTimeout(800);
   await page.evaluate(() => {
@@ -105,6 +126,8 @@ const SHOTS = [
   { name: 'centro-educativo', group: 'manual', out: `${M}/centro-educativo.png`, size: [1440, 900, 1], steps: [go('/mi-centro'), wait(800)] },
   { name: 'oferta-formativa', group: 'manual', out: `${M}/oferta-formativa.png`, size: [1440, 900, 1],
     steps: [drill('selectFamily', 'selectProgramme', 'selectLevel', 'selectGroup'), wait(500)] },
+  { name: 'docentes-importar-vista-previa', group: 'manual', out: `${M}/docentes-importar-vista-previa.png`, size: [1440, 900, 1], full: true,
+    steps: [teacherImportPreview(true), wait(400)] },
   { name: 'administracion', group: 'manual', out: `${M}/administracion.png`, size: [1440, 900, 1], steps: [go('/admin'), wait(800)] },
   { name: 'login', group: 'manual', out: `${M}/login.png`, size: [1440, 900, 2], anonymous: true, steps: [go('/login'), wait(600)] },
   // (releases.png es una captura de la página de releases de GitHub: se hace a mano.)

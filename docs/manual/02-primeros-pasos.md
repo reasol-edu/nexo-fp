@@ -29,9 +29,28 @@ En Séneca, con el perfil **Dirección**:
 
 **Personal → Personal del centro → Exportar datos** (seleccionar formato **CSV**)
 
-El fichero resultante contiene el `Usuario IdEA` y el nombre del personal del centro. Si el docente
-ya existe en el sistema, se añade al curso activo sin modificar sus datos. Si no existe, se crea
-automáticamente con autenticación externa (IdEA).
+El fichero resultante contiene el `Usuario IdEA`, el nombre del personal del centro y, si está
+disponible, su `Cuenta Google/Microsoft`. Si el docente ya existe en el sistema, se añade al curso activo
+sin modificar sus datos. Si no existe, se crea automáticamente con autenticación externa (IdEA).
+
+Tras subir el fichero, la aplicación muestra una **vista previa** antes de importar nada:
+
+![Vista previa de la importación de docentes con selección, opciones de correo y de retirada del curso](img/docentes-importar-vista-previa.png)
+
+- Una **lista de los docentes del fichero** con una casilla por docente (todos marcados por defecto) y los
+  botones **Seleccionar todo** y **Seleccionar nada**. Cada fila indica qué ocurrirá: *Registrar y añadir*
+  (docente nuevo), *Añadir al curso* (ya existía pero no estaba en este curso), *Rellenar correo* o *Sin
+  cambios* (esos no se pueden marcar).
+- **Importar el correo electrónico** (marcada por defecto): si el fichero trae una dirección válida en la
+  columna «Cuenta Google/Microsoft», se guarda como correo del docente **solo si todavía no tenía ninguno**;
+  un correo ya existente nunca se sobrescribe. Se ignoran los valores que no son una dirección válida.
+- **Retirar del curso a los docentes que no figuran en el listado** (desmarcada por defecto): al activarla se
+  muestra la lista de docentes del curso que no están en el fichero y **no tienen ninguna vinculación este
+  curso** (no imparten ni tutorizan grupos, ni coordinan, ni dirigen una familia, ni administran el centro, ni
+  son docentes de enlace de empresas, ni son tutores duales docentes de puestos). Se pueden desmarcar los que
+  se quieran conservar. Solo se retiran **de este curso**: los docentes siguen existiendo en el sistema y en
+  otros cursos. Quien realiza la importación no se ofrece nunca para retirarse.
+- Solo se aplica lo que está marcado al pulsar **Importar la selección**.
 
 ## 3. Estructurar la oferta formativa del curso académico (equipo directivo)
 
