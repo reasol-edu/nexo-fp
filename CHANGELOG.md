@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- El script de actualización de Ubuntu Server (`update-ubuntu.sh`) deja ahora la carpeta de instalación con sus permisos originales (antes podía quedar con permisos 700), comprueba que el paquete descargado tiene la estructura esperada antes de tocar nada y no borra el `.env` que genera el arranque
 - Un identificador de centro o de curso mal formado en la sesión (una cookie de una versión anterior, una sesión truncada) provocaba un error 500; ahora se ignora y se vuelve a elegir el centro
 - Los coordinadores de enseñanza que no imparten en ningún grupo del centro no lo veían en el selector de centros; ahora sí, en coherencia con los permisos que ya tienen sobre estancias y empresas
 - Al asignar puestos formativos a varios estudiantes con la asignación rápida (o dos personas a la vez), si a un mismo estudiante le llegaban dos asignaciones seguidas se producía un error 500 y la pantalla quedaba sin actualizar aunque el primer puesto sí se había guardado. Ahora se mantiene un único puesto por estudiante y estancia, y la pantalla avisa cuando un puesto ya no está disponible, cuando el estudiante ya tiene puesto o cuando otra persona se ha adelantado

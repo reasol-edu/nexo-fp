@@ -130,23 +130,39 @@ STAGE_DIR="$(mktemp -d)"
 chown nexofp:nexofp "$STAGE_DIR"
 sudo -u nexofp tar xzf - -C "$STAGE_DIR" --strip-components=1 < "$TMP_FILE"
 
-# tar (y por tanto el paso anterior) solo añade y sobrescribe: un fichero
-# eliminado del código en un release (p. ej. una clase renombrada en un
-# refactor) se queda huérfano en el servidor para siempre si no se borra
-# explícitamente — Symfony falla al arrancar si encuentra uno de estos
-# huérfanos bajo app/src/. Se compara el app/ instalado con el app/ del
-# paquete nuevo y se borra lo que ya no exista en este último; var/ (caché y
-# logs en tiempo de ejecución, no parte del código fuente) se excluye.
+# El `cp -a` final copia también los permisos del directorio de preparación
+# (700, de mktemp) sobre ${INSTALL_DIR}: se igualan antes a los actuales.
+chmod --reference="$INSTALL_DIR" "$STAGE_DIR"
+
+# Si el paquete no tiene la estructura esperada (descarga truncada, un asset
+# equivocado) se aborta antes de borrar o copiar nada sobre la instalación.
+[[ -f "${STAGE_DIR}/app/bin/console" ]] \
+    || die "El paquete descargado no tiene la estructura esperada (falta app/bin/console). No se ha tocado la instalación; los servicios siguen detenidos: arráncalos con 'sudo systemctl start nexo-fp nexo-fp-worker'."
+
+# tar (y cp) solo añaden y sobrescriben: un fichero eliminado del código en una
+# versión (p. ej. una clase renombrada en un refactor o una migración retirada)
+# se quedaría huérfano en el servidor para siempre, y Symfony puede fallar al
+# arrancar si encuentra uno bajo app/src/ o app/config/. Se compara el app/
+# instalado con el del paquete nuevo y se borra lo que ya no exista en este
+# último. Se excluyen var/ (caché y logs en tiempo de ejecución) y .env, que
+# genera nexo-start.sh en cada arranque y no forma parte del código fuente.
 if [[ -d "${INSTALL_DIR}/app" ]]; then
+    REMOVED=0
     while IFS= read -r -d '' rel; do
-        [[ "$rel" == "var" || "$rel" == var/* ]] && continue
-        [[ -e "${STAGE_DIR}/app/${rel}" ]] || rm -rf -- "${INSTALL_DIR}/app/${rel}"
-    done < <(cd "${INSTALL_DIR}/app" && find . -mindepth 1 -printf '%P\0')
+        [[ "$rel" == "var" || "$rel" == var/* || "$rel" == ".env" ]] && continue
+        # Ya borrado junto con su carpeta.
+        [[ -e "${INSTALL_DIR}/app/${rel}" || -L "${INSTALL_DIR}/app/${rel}" ]] || continue
+        if [[ ! -e "${STAGE_DIR}/app/${rel}" && ! -L "${STAGE_DIR}/app/${rel}" ]]; then
+            rm -rf -- "${INSTALL_DIR}/app/${rel}"
+            REMOVED=$((REMOVED + 1))
+        fi
+    done < <(cd "${INSTALL_DIR}/app" && find . -mindepth 1 -printf '%P\0' 2>/dev/null)
+    (( REMOVED == 0 )) || ok "Eliminados ${REMOVED} ficheros o carpetas que ya no forman parte de la aplicación"
 fi
 
-# data/ (base de datos, secretos, caché) llega vacío dentro del paquete —
-# copiar sobre un directorio existente no borra su contenido, igual que hacía
-# el `tar` directo de antes.
+# data/ llega vacío dentro del paquete: copiar sobre un directorio existente no
+# borra su contenido, así que la base de datos, los secretos y .env.local (que
+# no está en el paquete) se conservan.
 sudo -u nexofp cp -a "${STAGE_DIR}/." "$INSTALL_DIR"
 ok "Nexo FP actualizado a ${REMOTE_TAG}"
 
