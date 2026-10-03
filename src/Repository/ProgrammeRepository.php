@@ -114,11 +114,17 @@ class ProgrammeRepository extends ServiceEntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('p')
+        // `IN (:lista)` con entidades convierte los ids a texto y no coincide con los ids binarios
+        // (MySQL, o SQLite creado con migraciones): se compara uno a uno con tipo 'uuid' explícito.
+        $qb = $this->createQueryBuilder('p')
             ->select('IDENTITY(p.professionalFamily) AS fid', 'COUNT(p.id) AS cnt')
-            ->where('p.professionalFamily IN (:families)')
-            ->setParameter('families', $families)
-            ->groupBy('p.professionalFamily')
+            ->groupBy('p.professionalFamily');
+        $conditions = [];
+        foreach (array_values($families) as $i => $item) {
+            $conditions[] = 'p.professionalFamily = :families_' . $i;
+            $qb->setParameter('families_' . $i, $item->getId(), 'uuid');
+        }
+        $rows = $qb->where(implode(' OR ', $conditions))
             ->getQuery()
             ->getScalarResult();
 

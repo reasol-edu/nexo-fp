@@ -32,11 +32,17 @@ class ProgrammeYearRepository extends ServiceEntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('py')
+        // `IN (:lista)` con entidades convierte los ids a texto y no coincide con los ids binarios
+        // (MySQL, o SQLite creado con migraciones): se compara uno a uno con tipo 'uuid' explícito.
+        $qb = $this->createQueryBuilder('py')
             ->select('IDENTITY(py.programme) AS pid', 'COUNT(py.id) AS cnt')
-            ->where('py.programme IN (:programmes)')
-            ->setParameter('programmes', $programmes)
-            ->groupBy('py.programme')
+            ->groupBy('py.programme');
+        $conditions = [];
+        foreach (array_values($programmes) as $i => $item) {
+            $conditions[] = 'py.programme = :programmes_' . $i;
+            $qb->setParameter('programmes_' . $i, $item->getId(), 'uuid');
+        }
+        $rows = $qb->where(implode(' OR ', $conditions))
             ->getQuery()
             ->getScalarResult();
 

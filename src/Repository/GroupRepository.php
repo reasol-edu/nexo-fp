@@ -36,11 +36,17 @@ class GroupRepository extends ServiceEntityRepository
             return [];
         }
 
-        $rows = $this->createQueryBuilder('g')
+        // `IN (:lista)` con entidades convierte los ids a texto y no coincide con los ids binarios
+        // (MySQL, o SQLite creado con migraciones): se compara uno a uno con tipo 'uuid' explícito.
+        $qb = $this->createQueryBuilder('g')
             ->select('IDENTITY(g.programmeYear) AS lid', 'COUNT(g.id) AS cnt')
-            ->where('g.programmeYear IN (:levels)')
-            ->setParameter('levels', $levels)
-            ->groupBy('g.programmeYear')
+            ->groupBy('g.programmeYear');
+        $conditions = [];
+        foreach (array_values($levels) as $i => $item) {
+            $conditions[] = 'g.programmeYear = :levels_' . $i;
+            $qb->setParameter('levels_' . $i, $item->getId(), 'uuid');
+        }
+        $rows = $qb->where(implode(' OR ', $conditions))
             ->getQuery()
             ->getScalarResult();
 
