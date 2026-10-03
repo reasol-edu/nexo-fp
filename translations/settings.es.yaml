@@ -35,6 +35,9 @@ settings.key.email_notification_signature_reminder.description: 'Recuerda a quie
 settings.key.email_notification_signature_reminder_days.label: 'Días de antelación del recordatorio de firma'
 settings.key.email_notification_signature_reminder_days.description: 'Días antes del inicio de la estancia a partir de los cuales se empieza a enviar el recordatorio diario de los puestos registrados sin firmar.'
 
+settings.key.email_log_retention_days.label: 'Conservación del registro de correos'
+settings.key.email_log_retention_days.description: 'Días que se conserva cada entrada del registro de correos enviados antes de que la limpieza semanal la elimine. 0 desactiva la limpieza. 90 por defecto.'
+
 settings.key.security_idle_timeout_minutes.label: 'Cierre de sesión por inactividad'
 settings.key.security_idle_timeout_minutes.description: 'Minutos sin actividad tras los que se cierra la sesión de un docente, para que un equipo compartido que se deja abierto no quede utilizable por otra persona. 0 lo desactiva. 120 por defecto.'
 

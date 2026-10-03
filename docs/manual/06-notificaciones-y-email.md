@@ -73,7 +73,7 @@ Notas sobre el DSN:
     Orientativos: ~500 correos/día en cuentas gratuitas y ~2000/día en Google Workspace.
     Para volúmenes mayores, usa un servicio SMTP transaccional.
 
-## Envío asíncrono
+## Envío asíncrono {#envio-asincrono}
 
 Los emails se envían **en segundo plano**: la verificación de cambio de correo y las notificaciones de
 tutoría/firma se encolan y un *worker* las procesa de forma asíncrona, sin penalizar el tiempo de
@@ -105,6 +105,32 @@ No es necesario lanzarlo a mano en los despliegues estándar:
 La gestión de los mensajes fallidos se detalla en
 [Operación y mantenimiento](10-operacion-y-mantenimiento.md). Los destinatarios sin dirección de email
 registrada se omiten de forma silenciosa.
+
+## Registro de correos enviados {#registro-de-correos-enviados}
+
+La aplicación deja constancia de **cada correo que intenta enviar**: avisos de tutoría asignada, de puestos
+creados y recordatorios de firma, además de los correos de restablecimiento de contraseña y de
+verificación de una dirección nueva. Sirve para responder a «¿por qué no me ha llegado el aviso?» sin
+tener que revisar los logs del servidor.
+
+- **Administración del centro:** en **Centro educativo** aparece la tarjeta **Registro de correos**, con los
+  correos enviados a docentes de ese centro.
+- **Administración global:** la tarjeta **Registro de correos** del panel de Administración muestra los de
+  todos los centros, incluidos los que no pertenecen a ninguno (restablecer contraseña, verificar correo).
+
+Cada entrada indica la fecha y la hora, el destinatario (nombre y dirección), el tipo de aviso, el asunto
+y el resultado. Se puede buscar por destinatario, dirección o asunto, y filtrar por tipo de aviso,
+resultado (**Enviado** / **Fallido**, con el motivo del fallo) y rango de fechas.
+
+!!! info "Qué significa «Enviado»"
+    Significa que el servidor de correo configurado **aceptó el mensaje**. Con el envío asíncrono (ver
+    [Envío asíncrono](#envio-asincrono)) el correo pasa antes por la cola y el resultado final de la
+    entrega al buzón del destinatario no se conoce desde la aplicación.
+
+El registro **no guarda el contenido** de los mensajes (los de restablecimiento y verificación llevan
+enlaces con un token), solo los datos anteriores. Las entradas se conservan **90 días** por defecto; el
+ajuste global «Conservación del registro de correos» (`email.log_retention_days`, ver
+[Ajustes](07-ajustes.md)) lo cambia, y `0` desactiva la limpieza semanal automática.
 
 ## Control por niveles
 

@@ -36,6 +36,7 @@ class StayNotifier
         #[Autowire('%app.name%')]
         private readonly string $appName,
         private readonly AppSettingsInterface $appSettings,
+        private readonly EmailNotificationRecorder $recorder,
     ) {}
 
     public function notifyTutorAssigned(TrainingPosition $position): void
@@ -57,7 +58,7 @@ class StayNotifier
                 'stay'     => $stay,
                 'position' => $position,
                 'stay_url' => $this->stayUrl($stay),
-            ]));
+            ]), 'tutor_assigned', $centre, $tutor);
     }
 
     public function notifyLiaisonsPositionsCreated(Stay $stay, Company $company, int $count, ?Teacher $skip = null): void
@@ -82,7 +83,7 @@ class StayNotifier
                     'stay'     => $stay,
                     'count'    => $count,
                     'stay_url' => $this->stayUrl($stay),
-                ]));
+                ]), 'positions_created', $centre, $liaison);
         }
     }
 
@@ -115,7 +116,7 @@ class StayNotifier
                 'recipient' => $recipient,
                 'groups'    => $groups,
                 'stay_urls' => $stayUrls,
-            ]));
+            ]), 'signature_reminder', $centre, $recipient);
 
         return true;
     }
@@ -129,18 +130,30 @@ class StayNotifier
         return $prefix === '' ? $text : $prefix . ' ' . $text;
     }
 
-    private function send(TemplatedEmail $email): void
+    private function send(TemplatedEmail $email, string $eventKey, EducationalCentre $centre, Teacher $recipient): void
     {
         $email->from(new Address($this->fromAddress, $this->appName));
 
+        $error = null;
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
+            $error = $e->getMessage();
             $this->logger->error('Could not send email "{subject}": {error}', [
                 'subject' => $email->getSubject(),
-                'error'   => $e->getMessage(),
+                'error'   => $error,
             ]);
         }
+
+        $this->recorder->record(
+            $centre,
+            $recipient,
+            $this->fullName($recipient),
+            (string) $recipient->getEmail(),
+            $eventKey,
+            (string) $email->getSubject(),
+            $error,
+        );
     }
 
     private function hasEmail(Teacher $teacher, string $kind): bool

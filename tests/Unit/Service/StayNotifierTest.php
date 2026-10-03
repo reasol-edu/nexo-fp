@@ -12,6 +12,7 @@ use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Service\AppSettingsInterface;
+use App\Service\EmailNotificationRecorder;
 use App\Service\StayNotifier;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -48,6 +49,45 @@ class StayNotifierTest extends TestCase
             }));
 
         $this->makeNotifier($mailer)->notifyTutorAssigned($position);
+    }
+
+    public function testASuccessfulSendIsRecordedInTheEmailLog(): void
+    {
+        $position = $this->makePosition();
+        $tutor    = $this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local');
+        $position->setAcademicTutor($tutor);
+        $centre = $position->getStay()->getAcademicYear()->getEducationalCentre();
+
+        $recorder = $this->createMock(EmailNotificationRecorder::class);
+        $recorder->expects(self::once())
+            ->method('record')
+            ->with($centre, $tutor, 'Luisa Gomez', 'luisa@test.local', 'tutor_assigned', 'emails.tutor_assigned.subject', null);
+
+        $this->makeNotifier($this->createStub(MailerInterface::class), recorder: $recorder)->notifyTutorAssigned($position);
+    }
+
+    public function testAFailedSendIsRecordedWithItsError(): void
+    {
+        $position = $this->makePosition();
+        $position->setAcademicTutor($this->makeTeacher('Luisa', 'Gomez', 'luisa@test.local'));
+
+        $mailer = $this->createStub(MailerInterface::class);
+        $mailer->method('send')->willThrowException(new TransportException('Conexión rechazada'));
+
+        $recorder = $this->createMock(EmailNotificationRecorder::class);
+        $recorder->expects(self::once())
+            ->method('record')
+            ->with(self::anything(), self::anything(), 'Luisa Gomez', 'luisa@test.local', 'tutor_assigned', self::anything(), 'Conexión rechazada');
+
+        $this->makeNotifier($mailer, recorder: $recorder)->notifyTutorAssigned($position);
+    }
+
+    public function testNothingIsRecordedWhenNoEmailIsSent(): void
+    {
+        $recorder = $this->createMock(EmailNotificationRecorder::class);
+        $recorder->expects(self::never())->method('record');
+
+        $this->makeNotifier($this->createStub(MailerInterface::class), recorder: $recorder)->notifyTutorAssigned($this->makePosition());
     }
 
     public function testNotifyTutorAssignedDoesNothingWithoutTutor(): void
@@ -258,6 +298,7 @@ class StayNotifierTest extends TestCase
         MailerInterface $mailer,
         ?LoggerInterface $logger = null,
         ?AppSettingsInterface $settings = null,
+        ?EmailNotificationRecorder $recorder = null,
     ): StayNotifier {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn('http://localhost/estancias/test');
@@ -275,6 +316,7 @@ class StayNotifierTest extends TestCase
             'no-responder@test.local',
             'Nexo FP',
             $settings,
+            $recorder ?? $this->createStub(EmailNotificationRecorder::class),
         );
     }
 

@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Message\PurgeActivityLogMessage;
+use App\Message\PurgeEmailNotificationLogMessage;
 use App\Message\SendSignatureRemindersMessage;
 use Symfony\Component\Scheduler\Attribute\AsSchedule;
 use Symfony\Component\Scheduler\RecurringMessage;
@@ -26,6 +27,9 @@ class Schedule implements ScheduleProviderInterface
             )
             ->add(
                 RecurringMessage::cron('0 3 * * 0', new PurgeActivityLogMessage()),
+            )
+            ->add(
+                RecurringMessage::cron('30 3 * * 0', new PurgeEmailNotificationLogMessage()),
             )
             ->stateful($this->cache) // recupera disparos perdidos si el worker estuvo apagado
             ->processOnlyLastMissedRun(true) // tras una parada larga, ejecuta solo el último disparo

@@ -68,7 +68,7 @@ final class IdleSessionSubscriber implements EventSubscriberInterface
 
     private function timeoutMinutes(): int
     {
-        $minutes = $this->settings->get(self::SETTING);
+        $minutes = $this->settings->getGlobal(self::SETTING);
 
         return \is_int($minutes) && $minutes >= 0 ? $minutes : self::DEFAULT_MINUTES;
     }

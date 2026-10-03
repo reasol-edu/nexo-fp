@@ -53,6 +53,7 @@ abstract class ControllerTestCase extends WebTestCase
         $defs = [
             ['page.size',                             SettingType::Integer, '20',   false, false, true,  5,    100],
             ['security.idle_timeout_minutes',         SettingType::Integer, '120',  true,  false, false, 0,    1440],
+            ['email.log_retention_days',              SettingType::Integer, '90',   true,  false, false, 0,    3650],
             ['email.notifications',                   SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.tutor_assigned',     SettingType::Boolean, 'true', true,  true,  true,  null, null],
             ['email.notification.positions_created',  SettingType::Boolean, 'true', true,  true,  true,  null, null],

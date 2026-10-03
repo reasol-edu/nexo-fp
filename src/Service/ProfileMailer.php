@@ -29,6 +29,7 @@ class ProfileMailer
         private readonly string $fromAddress,
         #[Autowire('%app.name%')]
         private readonly string $appName,
+        private readonly EmailNotificationRecorder $recorder,
     ) {}
 
     public function sendPasswordReset(Teacher $teacher, string $token): void
@@ -48,7 +49,7 @@ class ProfileMailer
             ->context([
                 'teacher'   => $teacher,
                 'reset_url' => $resetUrl,
-            ]));
+            ]), 'password_reset', $teacher);
     }
 
     public function sendEmailVerification(Teacher $teacher, string $pendingEmail, string $token): void
@@ -68,21 +69,41 @@ class ProfileMailer
             ->context([
                 'teacher'    => $teacher,
                 'verify_url' => $verifyUrl,
-            ]));
+            ]), 'email_verification', $teacher);
     }
 
-    private function send(TemplatedEmail $email): void
+    private function send(TemplatedEmail $email, string $eventKey, Teacher $teacher): void
     {
         $email->from(new Address($this->fromAddress, $this->appName));
 
+        $error = null;
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
+            $error = $e->getMessage();
             $this->logger->error('No se pudo enviar el email "{subject}": {error}', [
                 'subject' => $email->getSubject(),
-                'error'   => $e->getMessage(),
+                'error'   => $error,
             ]);
         }
+
+        $this->record($email, $eventKey, $teacher, $error);
+    }
+
+    /** Deja constancia en el registro de correos. Estos avisos no pertenecen a ningún centro. */
+    private function record(TemplatedEmail $email, string $eventKey, Teacher $teacher, ?string $error): void
+    {
+        $to = $email->getTo()[0] ?? null;
+
+        $this->recorder->record(
+            null,
+            $teacher,
+            $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),
+            $to?->getAddress() ?? '',
+            $eventKey,
+            (string) $email->getSubject(),
+            $error,
+        );
     }
 
     /**
@@ -91,18 +112,22 @@ class ProfileMailer
      * el reset de contraseña: el token caduca en 1 h y el fallo debe poder
      * reportarse en la misma petición.
      */
-    private function sendSync(TemplatedEmail $email): void
+    private function sendSync(TemplatedEmail $email, string $eventKey, Teacher $teacher): void
     {
         $email->from(new Address($this->fromAddress, $this->appName));
 
+        $error = null;
         try {
             $this->bodyRenderer->render($email);
             $this->transport->send($email);
         } catch (TransportExceptionInterface $e) {
+            $error = $e->getMessage();
             $this->logger->error('No se pudo enviar el email "{subject}": {error}', [
                 'subject' => $email->getSubject(),
-                'error'   => $e->getMessage(),
+                'error'   => $error,
             ]);
         }
+
+        $this->record($email, $eventKey, $teacher, $error);
     }
 }

@@ -63,6 +63,32 @@ class AppSettingsTest extends TestCase
         self::assertSame(50, $service->get('page.size'));
     }
 
+    public function testGetGlobalIgnoresCentreAndTeacherValues(): void
+    {
+        $def = $this->makeDef('page.size', SettingType::Integer, '20');
+
+        $service = $this->makeService(
+            defs:     ['page.size' => $def],
+            globals:  ['page.size' => $this->makeGlobalValue('50')],
+            centres:  ['page.size' => $this->makeCentreValue('30')],
+            teachers: ['page.size' => $this->makeTeacherValue('10')],
+        );
+
+        self::assertSame(50, $service->getGlobal('page.size'));
+    }
+
+    public function testGetGlobalFallsBackToTheDefaultAndCastsTheType(): void
+    {
+        $service = $this->makeService(defs: [
+            'a.number' => $this->makeDef('a.number', SettingType::Integer, '7'),
+            'a.flag'   => $this->makeDef('a.flag', SettingType::Boolean, 'true'),
+        ]);
+
+        self::assertSame(7, $service->getGlobal('a.number'));
+        self::assertTrue($service->getGlobal('a.flag'));
+        self::assertNull($service->getGlobal('no.existe'));
+    }
+
     public function testFallsBackToDefaultWhenNoValueStored(): void
     {
         $def = $this->makeDef('page.size', SettingType::Integer, '20');

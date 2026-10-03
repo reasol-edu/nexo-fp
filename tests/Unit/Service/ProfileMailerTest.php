@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\PersonName;
 use App\Entity\Teacher;
+use App\Service\EmailNotificationRecorder;
 use App\Service\ProfileMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -169,6 +170,37 @@ class ProfileMailerTest extends TestCase
             ->sendPasswordReset($teacher, self::TOKEN);
     }
 
+    // ── registro de correos ───────────────────────────────────────────────────
+
+    public function testVerificationEmailIsRecordedWithoutCentreAndToThePendingAddress(): void
+    {
+        $teacher = $this->makeTeacher('luisa@actual.local');
+
+        $recorder = $this->createMock(EmailNotificationRecorder::class);
+        $recorder->expects(self::once())
+            ->method('record')
+            ->with(null, $teacher, 'Luisa Gómez', 'nuevo@ejemplo.local', 'email_verification', 'emails.email_verification.subject', null);
+
+        $this->makeProfileMailer(self::createStub(MailerInterface::class), recorder: $recorder)
+            ->sendEmailVerification($teacher, 'nuevo@ejemplo.local', self::TOKEN);
+    }
+
+    public function testPasswordResetFailureIsRecordedWithItsError(): void
+    {
+        $teacher = $this->makeTeacher('luisa@ejemplo.local');
+
+        $transport = self::createStub(TransportInterface::class);
+        $transport->method('send')->willThrowException(new TransportException('SMTP caído'));
+
+        $recorder = $this->createMock(EmailNotificationRecorder::class);
+        $recorder->expects(self::once())
+            ->method('record')
+            ->with(null, $teacher, 'Luisa Gómez', 'luisa@ejemplo.local', 'password_reset', self::anything(), 'SMTP caído');
+
+        $this->makeProfileMailer(self::createStub(MailerInterface::class), transport: $transport, recorder: $recorder)
+            ->sendPasswordReset($teacher, self::TOKEN);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function makeProfileMailer(
@@ -176,6 +208,7 @@ class ProfileMailerTest extends TestCase
         ?LoggerInterface $logger = null,
         ?TransportInterface $transport = null,
         ?BodyRendererInterface $bodyRenderer = null,
+        ?EmailNotificationRecorder $recorder = null,
     ): ProfileMailer {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn(self::VERIFY_URL);
@@ -192,6 +225,7 @@ class ProfileMailerTest extends TestCase
             $logger ?? new NullLogger(),
             'no-responder@test.local',
             'Nexo FP',
+            $recorder ?? self::createStub(EmailNotificationRecorder::class),
         );
     }
 

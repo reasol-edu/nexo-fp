@@ -241,6 +241,8 @@ Gestión interna del centro. Reúne en un único espacio:
   grupos, con asignación de tutor y docentes a cada grupo). Incluye **exportación e importación en JSON**
   para copiar la estructura entre cursos o centros (ver más abajo).
 - **Cursos académicos:** crear y activar cursos del centro.
+- **Registro de correos:** qué avisos por email se han enviado a los docentes del centro y si el servidor de
+  correo los aceptó (ver [Notificaciones por email](06-notificaciones-y-email.md#registro-de-correos-enviados)).
 
 ### Estructurar la oferta formativa
 
@@ -282,7 +284,8 @@ Sección exclusiva para administradores globales. Permite:
   administrador, tipo de autenticación).
 - Gestionar **centros educativos**: crearlos, asignarles el equipo directivo y gestionar sus cursos
   académicos.
-- Consultar el **registro de actividad** (ver sección siguiente).
+- Consultar el **registro de actividad** (ver sección siguiente) y el **registro de correos enviados**
+  (ver [Notificaciones por email](06-notificaciones-y-email.md#registro-de-correos-enviados)).
 - Configurar los **ajustes globales** de la plataforma (notificaciones, tamaño de página…).
 
 ### Registro de actividad

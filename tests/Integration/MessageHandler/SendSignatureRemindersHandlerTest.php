@@ -58,5 +58,14 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
 
         self::assertEmailCount(1);
         self::assertNotNull($stay->getLastSignatureReminderSentAt());
+
+        // El envío queda anotado en el registro de correos (el worker no tiene sesión ni centro seleccionado).
+        $this->em->clear();
+        $entries = $this->em->getRepository(\App\Entity\EmailNotificationLog::class)->findAll();
+        self::assertCount(1, $entries);
+        self::assertSame('signature_reminder', $entries[0]->getEventKey());
+        self::assertSame('tutora@test.local', $entries[0]->getRecipientEmail());
+        self::assertSame('IES Test', $entries[0]->getEducationalCentre()?->getName());
+        self::assertTrue($entries[0]->isSuccess());
     }
 }

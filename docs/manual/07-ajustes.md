@@ -29,4 +29,5 @@ restablecerse al valor por defecto.
 | `email.notification.positions_created` | Booleano | Global, centro, personal | Aviso al crear puestos formativos |
 | `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
 | `email.notification.signature_reminder.days` | Entero (1–365) | Global, centro | Días de antelación con los que se empieza a avisar de la firma pendiente (por defecto 7) |
+| `email.log_retention_days` | Entero (0–3650) | Global | Días que se conserva cada entrada del [registro de correos enviados](06-notificaciones-y-email.md#registro-de-correos-enviados) antes de que la limpieza semanal la elimine. `0` desactiva la limpieza (por defecto 90) |
 | `security.idle_timeout_minutes` | Entero (0–1440) | Global | Minutos sin actividad tras los que se cierra la sesión de un docente, para que un equipo compartido que se deja abierto no quede utilizable por otra persona. `0` lo desactiva (por defecto 120). La pantalla de inicio de sesión explica por qué se ha cerrado |

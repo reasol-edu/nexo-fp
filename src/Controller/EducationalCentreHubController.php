@@ -45,4 +45,19 @@ class EducationalCentreHubController extends AbstractController
             'centre' => $centre,
         ]);
     }
+
+    #[Route('/mi-centro/registro-correos', name: 'app_educational_centre_email_log')]
+    public function emailLog(): Response
+    {
+        $centre = $this->tenantContext->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $this->denyAccessUnlessGranted(EducationalCentreVoter::SECTION, $centre);
+
+        return $this->render('educational_centre/email_log.html.twig', [
+            'centre' => $centre,
+        ]);
+    }
 }

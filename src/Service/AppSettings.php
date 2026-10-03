@@ -40,6 +40,26 @@ final class AppSettings implements AppSettingsInterface
         return $this->resolved[$key] ?? null;
     }
 
+    public function getGlobal(string $key): mixed
+    {
+        $this->ensureBaseLoaded();
+
+        $definition = $this->allDefinitions[$key] ?? null;
+        if ($definition === null) {
+            return null;
+        }
+
+        $raw = isset($this->globalMap[$key])
+            ? $this->globalMap[$key]->getValue()
+            : $definition->getDefaultValue();
+
+        return match ($definition->getType()) {
+            SettingType::Boolean => $raw === 'true',
+            SettingType::Integer => (int) $raw,
+            SettingType::String  => $raw,
+        };
+    }
+
     public function getForTeacher(string $key, Teacher $teacher): mixed
     {
         $this->ensureBaseLoaded();
