@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.1] - 2026-10-03
+
+### Fixed
+
+- La actualización a la 2.9.0 fallaba en instalaciones con MySQL o MariaDB al convertir la enseñanza de cada estancia en una lista de enseñanzas («Cannot drop index … needed in a foreign key constraint»). La migración ya elimina primero la clave foránea. Quien hubiera intentado actualizar a la 2.9.0 con MySQL/MariaDB debe volver a ejecutar las migraciones con esta versión; con PostgreSQL y SQLite la 2.9.0 funcionaba correctamente
+
+### Changed
+
+- Las capturas del manual y de la presentación se regeneran ahora con un único comando (`scripts/screenshots/run.sh` o `make screenshots`) en un entorno aislado, y se han refrescado casi todas con la interfaz actual. Las migraciones se pueden probar en PostgreSQL, MySQL y MariaDB reales con `scripts/check-migrations.sh` (`make check-migrations`)
+
 ## [2.9.0] - 2026-10-03
 ### Added
 
