@@ -265,3 +265,18 @@ Alumnos de 2ºDAW-T:
 ### Información de contacto en empresas
 
 Aproximadamente la mitad de las empresas tienen el campo **Información de contacto** cumplimentado con nombre del responsable, correo electrónico y teléfono, para mostrar el editor de texto enriquecido.
+
+### Estancia compartida entre enseñanzas — `FFEOE DAW + SMR 2026 (compartida)`
+
+Estancia del IES Ada Lovelace que reúne **DAW** (coordina `diego.romero`) y **SMR** (coordina `maria.garcia`):
+
+| Elemento | Detalle |
+|---|---|
+| Alumnado | 6 de 2ºDAW-M y 6 de 2ºSMR-A matriculados |
+| Puestos compartidos libres | 2, ofertados a 2.º DAW y 2.º SMR |
+| Puesto con preferencia | 1 compartido, preferente para SMR hasta el 31/03/2026; después se abre a DAW |
+| Puestos exclusivos | 1 solo de 2.º SMR y 1 solo de 2.º DAW |
+| Puestos ya asignados | 1 alumno de DAW y 1 de SMR, en estado «Pendiente de Séneca», con tutor/a dual docente |
+
+Sirve para probar el reparto por coordinación: entrando como `diego.romero` solo se puede asignar a alumnado de DAW
+(el de SMR se ve con candado y sin NIE), y viceversa con `maria.garcia`.

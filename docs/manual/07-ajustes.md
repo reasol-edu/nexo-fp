@@ -27,6 +27,7 @@ restablecerse al valor por defecto.
 | `email.notifications` | Booleano | Global, centro, personal | Interruptor maestro de notificaciones |
 | `email.notification.tutor_assigned` | Booleano | Global, centro, personal | Aviso al asignar una tutoría |
 | `email.notification.positions_created` | Booleano | Global, centro, personal | Aviso al crear puestos formativos |
+| `email.notification.shared_position` | Booleano | Global, centro, personal | Aviso a la coordinación cuando otra asigna o elimina un puesto compartido de la estancia |
 | `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
 | `email.notification.signature_reminder.days` | Entero (1–365) | Global, centro | Días de antelación con los que se empieza a avisar de la firma pendiente (por defecto 7) |
 | `email.log_retention_days` | Entero (0–3650) | Global | Días que se conserva cada entrada del [registro de correos enviados](06-notificaciones-y-email.md#registro-de-correos-enviados) antes de que la limpieza semanal la elimine. `0` desactiva la limpieza (por defecto 90) |

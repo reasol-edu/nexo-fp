@@ -48,7 +48,16 @@ estancias. No tiene acceso a la sección de administración global.
 Docente asignado como coordinador/a de una o varias enseñanzas. Tiene acceso a la sección **Empresas**
 (ver y editar todas las empresas del centro) y puede crear, modificar y eliminar estancias de las
 enseñanzas que coordina, así como gestionar sus puestos formativos y las asignaciones de estudiantes y
-tutores. Al crear una nueva estancia, solo puede seleccionar enseñanzas de las que es coordinador/a.
+tutores. Una estancia puede reunir **varias enseñanzas**: al crearla, el coordinador/a debe poder crearla
+para al menos una de las que elige, pero puede añadir otras para compartir puestos con sus compañeros.
+
+En una estancia con varias enseñanzas, cada coordinación **gestiona solo a su alumnado** (matricularlo,
+asignarle puesto, designar sus tutores), mientras que **ve** todo el alumnado de la estancia y todas las
+asignaciones, aunque no sean suyas. El NIE del alumnado ajeno no se muestra. Los puestos **libres** son
+compartidos: cualquier coordinación de la estancia puede crearlos, editarlos o eliminarlos (se avisa por
+correo a las demás coordinaciones a las que se ofertaban); un puesto **asignado** solo lo gestiona la
+coordinación del estudiante. Por último, una estancia solo se puede **eliminar** quien gestiona todas sus
+enseñanzas.
 
 ### Jefe/a de departamento de familia profesional
 
@@ -109,11 +118,13 @@ Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es
 |--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
 | Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 | Ver puestos sin asignar | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
-| Crear estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Editar / eliminar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Crear estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁵ | ❌ | ❌ | ❌ |
+| Editar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Eliminar estancia | ✅ | ✅ | Su familia prof.⁶ | Sus enseñanzas⁶ | ❌ | ❌ | ❌ |
 | Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
-| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³⁴ | ❌ | ❌ |
-| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
+| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁷ | Sus empresas³⁴ | ❌ | ❌ |
+| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁷ | ❌ | ❌ | ❌ |
+| Asignar un puesto a un estudiante | ✅ | ✅ | Su familia prof.⁷ | Sus estudiantes⁷ | Sus empresas³⁴ | ❌ | ❌ |
 | Descargar informe PDF / exportar a Excel | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
 
 ### Empresas
@@ -149,3 +160,7 @@ Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es
 ³ Solo estancias/puestos donde intervienen sus empresas asignadas.
 ⁴ Solo puestos sin estudiante asignado. Los puestos con estudiante asignado no pueden ser modificados ni
 eliminados por el docente de enlace.
+⁵ Puede incluir además enseñanzas de otras coordinaciones, siempre que al menos una sea suya.
+⁶ En una estancia con varias enseñanzas, solo si gestiona **todas** ellas.
+⁷ En una estancia con varias enseñanzas, solo respecto al alumnado de las enseñanzas que gestiona; los
+puestos libres, al ser compartidos, los puede gestionar cualquier coordinación de la estancia.

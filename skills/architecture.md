@@ -17,10 +17,15 @@ Core entities in `src/Entity/`:
 - **`Company`** → **`Workcenter`** → **`Worker`** — a company, its work centres (physical
   locations), and the workers who can supervise students there. `CompanyAudit` tracks changes to
   company data.
-- **`Stay`** ("estancia") — a placement period tied to a `ProgrammeYear` (e.g. "FFEOE DAW 2026
-  (2nd term)"), with a date range.
+- **`Stay`** ("estancia") — a placement period tied to **one or more `Programme`s** (ManyToMany,
+  table `stay_programme`; e.g. "FFEOE DAW + DAM 2026"), with a date range. Each programme's
+  coordinators manage only *their* students; everyone with access sees all of them (see Security).
 - **`TrainingPosition`** ("puesto formativo") — a single student's assignment within a `Stay` to a
-  `Workcenter`/`Worker`, with a lifecycle state (see Workflow below). **Overlapping stays/positions
+  `Workcenter`/`Worker`, with a lifecycle state (see Workflow below). Its `programmeYears` may span
+  several of the stay's programmes (a *shared position*). One student max (`student` is single, plus
+  `uq_stay_student` and optimistic `version`), so an assigned position is unavailable to everyone
+  else. Optional `priorityProgramme` + `priorityUntil` reserve it to one programme until a date
+  (inclusive). `acceptsStudent()` / `isReservedAgainst()` hold the compatibility rules. **Overlapping stays/positions
   in time are legitimate by design** — a teaching can run several overlapping stays because not
   every stay includes every student in a group. Never propose overlap validation.
 - **`Comment`** — free-text notes attached to domain objects.
@@ -47,6 +52,12 @@ methods (e.g. `findByCentreOrderedByName`) for the pattern.
 - `access_control` highlights: `/admin/*` requires `ROLE_ADMIN` except a few sub-paths under
   `/admin/centros/{id}/(estudiantes|docentes-curso|familias)` which only need `ROLE_TEACHER`;
   everything else under `/` requires at least `ROLE_TEACHER`.
+- **Multi-programme stays**: `src/Security/StayScope.php` decides which students a teacher manages
+  (coordinator or family head of the student's programme within the stay; centre/global admins
+  manage all; cached per request). `StayVoter` uses it: `VIEW` = any programme; `MANAGE` = manage any
+  programme; `DELETE` = manage *all* programmes; `MANAGE_POSITION` = free position → any
+  coordinator, assigned → coordinator of its student; `ASSIGN` (subject `PositionAssignment`) =
+  manage the student. The student's NIE is hidden from other programmes' coordinators.
 - Fine-grained authorization is done with **Voters** (`src/Security/Voter/`):
   `CompanyVoter`, `EducationalCentreVoter`, `StayVoter`. Use these (via
   `#[IsGranted]`/`isGranted()`) rather than ad-hoc role checks for anything centre- or

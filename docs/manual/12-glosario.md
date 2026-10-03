@@ -38,7 +38,9 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 
 | Término | Significado |
 |---------|-------------|
-| **Estancia** | Conjunto de puestos formativos de una misma enseñanza dentro de un periodo (p. ej. «DAW 2.º, marzo-mayo 2027»). |
+| **Estancia** | Conjunto de puestos formativos de una o varias enseñanzas dentro de un periodo (p. ej. «DAW y DAM 2.º, marzo-mayo 2027»). |
+| **Puesto compartido** | Puesto libre ofertado a niveles de más de una enseñanza de la estancia. Cuando se asigna a un estudiante deja de estar disponible para los demás. |
+| **Preferencia de enseñanza** | Reserva de un puesto compartido para una enseñanza hasta una fecha (inclusive); después se abre a todas. |
 | **Puesto formativo** | Una plaza dentro de una estancia: un estudiante + un tutor/a docente + un tutor/a de empresa + un estado. |
 | **Tutor/a dual docente** | Profesor/a responsable del seguimiento académico de un puesto. |
 | **Estado del puesto** | Fase del ciclo de vida: **Borrador → Pendiente de Séneca → Registrado en Séneca**. |
@@ -51,7 +53,7 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 |---------|-------------|
 | **Administrador/a global** | Acceso completo a todos los centros y a la sección de Administración. |
 | **Administrador/a de centro** | Responsable de un centro concreto (normalmente el equipo directivo). |
-| **Coordinador/a de FP dual** | Gestiona las estancias y puestos de las enseñanzas que coordina. |
+| **Coordinador/a de FP dual** | Gestiona las estancias y puestos de las enseñanzas que coordina y, en una estancia con varias enseñanzas, asigna puestos solo a su propio alumnado. |
 | **Jefe/a de departamento de familia profesional** | Gestiona las estancias de las enseñanzas de su familia. |
 | **Docente de enlace** | Docente asignado a una o varias empresas; prepara puestos sin estudiante asignado. |
 | **Tutor/a de grupo / Docente de grupo** | Consulta las estancias de su enseñanza y los puestos de su alumnado. |

@@ -6,6 +6,10 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
   cambia el existente), el tutor/a recibe un email con el enlace a la estancia.
 - **Nuevos puestos formativos:** al crear puestos en una estancia, los docentes de enlace de la empresa
   reciben un aviso (excepto quien los creó).
+- **Puestos compartidos:** en una estancia con varias enseñanzas, cuando una coordinación **asigna** un puesto
+  que también se ofertaba a otras enseñanzas, o **elimina** un puesto libre compartido, las coordinaciones
+  de esas otras enseñanzas reciben un correo para que no sigan ofreciéndolo. Se puede desactivar con el
+  ajuste `email.notification.shared_position`.
 - **Recordatorios de firma:** aviso **diario** por cada puesto formativo en estado «Registrado en Séneca»
   que aún no esté firmado y cuya estancia **comience** dentro de los próximos *X* días (configurable, 7 por
   defecto). Se envía a todas las personas con responsabilidad sobre el puesto —el **tutor/a dual docente**,

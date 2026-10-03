@@ -91,7 +91,7 @@ El panel de inicio resume el curso de un vistazo: alumnado, estancias, plazas y 
 `Empresa` → `Centro de trabajo` → `Trabajadores` (tutores duales de empresa)
 
 **El nexo entre ambos**
-`Estancia` (período + enseñanza) → `Puestos formativos`
+`Estancia` (período + una o varias enseñanzas) → `Puestos formativos`
   cada puesto = **un estudiante + un tutor docente + un tutor de empresa + un estado**
 
 </div>
@@ -232,9 +232,9 @@ En **Empresas**:
 
 ![bg right:54%](img/09_estancia_nueva.png)
 
-Una **estancia** agrupa los puestos de una enseñanza en un período:
+Una **estancia** agrupa los puestos de una o varias enseñanzas en un período:
 
-- Se elige la **enseñanza** y las **fechas** (inicio y fin).
+- Se eligen las **enseñanzas** (una o varias) y las **fechas** (inicio y fin).
 - Una misma enseñanza puede tener **varias estancias** que se solapen
   (no todos los grupos hacen la FFEOE a la vez).
 
@@ -268,6 +268,21 @@ Cada fila es un **puesto formativo**:
 
 Se asignan estudiantes y tutores con un modo de **asignación rápida** (selectores en
 todas las filas) y se exporta el **informe PDF** y los puestos a **Excel**.
+
+---
+
+## Estancias compartidas entre enseñanzas
+
+<!-- _class: tight -->
+
+![bg right:52%](img/18_estancia_compartida.png)
+
+Una empresa puede ofrecer puestos de **varias enseñanzas** (p. ej. DAW y DAM):
+
+- Cada coordinación **asigna solo a su alumnado**, pero **ve** todo el de la estancia.
+- Un puesto compartido, una vez asignado, **deja de estar disponible** para cualquier otro estudiante.
+- **Preferencia temporal** de una enseñanza sobre un puesto, hasta una fecha.
+- **Panel de reparto** por enseñanza y aviso por correo a las demás coordinaciones.
 
 ---
 
