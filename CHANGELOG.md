@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.1] - 2026-10-04
+
+### Fixed
+
+- La tarjeta «Registro de correos» de Centro educativo no mostraba su icono (un sobre), y las cabeceras «Enseñanzas» y «Niveles» de la oferta formativa tampoco, en las instalaciones desplegadas: los iconos no se habían incluido en los locales de la aplicación. Un test comprueba ahora que todo icono usado en las plantillas está incluido
+
 ## [2.10.0] - 2026-10-03
 ### Added
 
