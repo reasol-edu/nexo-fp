@@ -1,0 +1,112 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'stays.copy.title'|trans({}, 'stays') }} · {{ stay.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-2xl mx-auto">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            {% include 'components/_breadcrumb_home.html.twig' %}
+            <a href="{{ path('app_stays_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'stays.title'|trans({}, 'stays') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}" class="hover:text-plum-600 transition-colors truncate max-w-48">
+                {{ stay.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4 shrink-0'}) }}
+            <span class="text-gray-700" aria-current="page">{{ 'stays.copy.title'|trans({}, 'stays') }}</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'stays.copy.title'|trans({}, 'stays') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ 'stays.copy.intro'|trans({}, 'stays') }}</p>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
+
+        {# ── Paso 1: estancia de origen ─────────────────────────────────────── #}
+        <form method="get" class="px-6 py-5 border-b border-gray-100 flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-48">
+                <label for="origen" class="block text-sm font-medium text-gray-700 mb-1">{{ 'stays.copy.source'|trans({}, 'stays') }}</label>
+                <select id="origen" name="origen"
+                        class="block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20">
+                    <option value="">{{ 'stays.copy.source_placeholder'|trans({}, 'stays') }}</option>
+                    {% for other in sources %}
+                        <option value="{{ other.id.toRfc4122 }}" {{ source and source.id == other.id ? 'selected' : '' }}>
+                            {{ other.name }} ({{ other.startDate|date('d/m/Y') }} → {{ other.endDate|date('d/m/Y') }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit"
+                    class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                {{ 'stays.copy.show'|trans({}, 'stays') }}
+            </button>
+        </form>
+
+        {% if sources is empty %}
+            <p class="px-6 py-10 text-center text-sm text-gray-500">{{ 'stays.copy.no_sources'|trans({}, 'stays') }}</p>
+        {% elseif source is null %}
+            <p class="px-6 py-10 text-center text-sm text-gray-500">{{ 'stays.copy.pick_source'|trans({}, 'stays') }}</p>
+        {% elseif rows is empty %}
+            <p class="px-6 py-10 text-center text-sm text-gray-500">{{ 'stays.copy.no_positions'|trans({}, 'stays') }}</p>
+        {% else %}
+            {# ── Paso 2: puestos a copiar ──────────────────────────────────── #}
+            <form method="post" data-controller="form-submit">
+                <input type="hidden" name="_token" value="{{ csrf_token('copy_positions_' ~ stay.id.toRfc4122) }}">
+                <input type="hidden" name="source" value="{{ source.id.toRfc4122 }}">
+
+                <div class="px-6 py-3 flex items-center justify-between gap-3 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-700">{{ 'stays.copy.positions'|trans({'%count%': rows|length}, 'stays') }}</h2>
+                    <div class="flex items-center gap-3">
+                        <button type="button" id="copy-all" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'stays.copy.select_all'|trans({}, 'stays') }}</button>
+                        <button type="button" id="copy-none" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'stays.copy.select_none'|trans({}, 'stays') }}</button>
+                    </div>
+                </div>
+
+                <ul class="divide-y divide-gray-100 max-h-[28rem] overflow-y-auto">
+                    {% for row in rows %}
+                        {% set position = row.position %}
+                        <li class="flex items-start gap-3 px-6 py-3 hover:bg-gray-50">
+                            <input type="checkbox" name="positions[]" value="{{ position.id.toRfc4122 }}" checked
+                                   id="copy_{{ position.id.toRfc4122 }}"
+                                   class="js-copy-box mt-1 h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                            <label for="copy_{{ position.id.toRfc4122 }}" class="min-w-0 flex-1 cursor-pointer text-sm">
+                                <span class="block font-medium text-gray-900">{{ position.workcenter.company.name }} — {{ position.workcenter.name }}</span>
+                                <span class="block text-xs text-gray-500">
+                                    {% for py in row.years %}{{ py.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                </span>
+                                {% if position.details %}
+                                    <span class="block truncate text-xs text-gray-400">{{ position.details }}</span>
+                                {% endif %}
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="px-6 py-4 flex items-center justify-between border-t border-gray-100">
+                    <a href="{{ path('app_stays_show', {id: stay.id.toRfc4122}) }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                        {{ 'ui.cancel'|trans }}
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                        {{ ux_icon('heroicons:document-duplicate', {class: 'h-4 w-4'}) }}
+                        {{ 'stays.copy.submit'|trans({}, 'stays') }}
+                    </button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function () {
+    const boxes = Array.from(document.querySelectorAll('.js-copy-box'));
+    const all = document.getElementById('copy-all');
+    const none = document.getElementById('copy-none');
+    if (!all || !none) return;
+    all.addEventListener('click', function () { boxes.forEach((b) => { b.checked = true; }); });
+    none.addEventListener('click', function () { boxes.forEach((b) => { b.checked = false; }); });
+})();
+</script>
+{% endblock %}

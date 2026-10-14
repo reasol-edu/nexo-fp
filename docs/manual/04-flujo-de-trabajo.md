@@ -38,7 +38,10 @@ concreto (por ejemplo, «DAW y DAM - 2.º curso, marzo-mayo 2027»).
 3. Cada coordinación inscribe a sus **estudiantes** en la estancia para que puedan asignarse a los puestos.
 
 Para ofertar varios puestos iguales, el botón **Duplicar puesto** de cada fila pregunta cuántas copias crear
-(hasta 20); también se puede indicar la cantidad al crear un puesto nuevo.
+(hasta 20); también se puede indicar la cantidad al crear un puesto nuevo. Para reutilizar los puestos de
+otra estancia del mismo curso, **Copiar de otra estancia** (junto a *Nuevo puesto*) muestra sus puestos con una
+casilla cada uno y crea copias libres con el mismo centro de trabajo, niveles y observaciones (nunca estudiante,
+tutores ni preferencia).
 
 ### Estancias con varias enseñanzas
 

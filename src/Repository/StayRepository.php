@@ -109,6 +109,24 @@ class StayRepository extends ServiceEntityRepository
             ->getQuery();
     }
 
+    /**
+     * Otras estancias del mismo curso (origen posible para copiar puestos), más recientes primero.
+     *
+     * @return list<Stay>
+     */
+    public function findOthersByYear(AcademicYear $year, Stay $except): array
+    {
+        return $this->createQueryBuilder('s')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.id != :except')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('except', $except->getId(), 'uuid')
+            ->orderBy('s.startDate', 'DESC')
+            ->addOrderBy('s.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function existsByNameAndYear(string $name, AcademicYear $year, ?Stay $exclude = null): bool
     {
         $qb = $this->createQueryBuilder('s')

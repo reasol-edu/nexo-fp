@@ -777,6 +777,130 @@ class StayController extends AbstractController
         ]);
     }
 
+    /**
+     * Copia puestos libres de otra estancia del mismo curso: mismo centro de trabajo y observaciones, y
+     * los niveles que la estancia de destino también oferta. No se copian estudiante, tutores ni preferencia.
+     */
+    #[Route('/{id}/copiar-puestos', name: 'app_stays_copy_positions')]
+    public function copyPositions(string $id, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $this->tenant->getViewYear($centre);
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(StayVoter::ADD_POSITION, $stay);
+
+        /** @var Teacher $currentUser */
+        $currentUser = $this->getUser();
+
+        // Quien no gestiona la estancia solo puede ofertar puestos en las empresas de las que es enlace.
+        $allowedWorkcenterIds = null;
+        if (!$this->isGranted(StayVoter::MANAGE, $stay)) {
+            $allowedWorkcenterIds = [];
+            foreach ($this->workcenters->findByCentreAndLiaisonOrdered($centre, $currentUser) as $wc) {
+                $allowedWorkcenterIds[$wc->getId()->toRfc4122()] = true;
+            }
+        }
+
+        $sources = array_values(array_filter(
+            $this->stays->findOthersByYear($year, $stay),
+            fn (Stay $other): bool => $this->isGranted(StayVoter::VIEW, $other),
+        ));
+
+        $sourceId = $request->isMethod('POST') ? $request->request->getString('source') : $request->query->getString('origen');
+        $source   = null;
+        foreach ($sources as $candidate) {
+            if ($candidate->getId()->toRfc4122() === $sourceId) {
+                $source = $candidate;
+                break;
+            }
+        }
+
+        $targetYearIds = [];
+        foreach ($this->programmeYears->findByStayOrderedByName($stay) as $py) {
+            $targetYearIds[$py->getId()->toRfc4122()] = $py;
+        }
+
+        // Puestos del origen que se pueden copiar y los niveles con los que quedarían en esta estancia.
+        $rows = [];
+        if ($source !== null) {
+            foreach ($this->positions->findByStayOrdered($source) as $position) {
+                $workcenter = $position->getWorkcenter();
+                if ($workcenter === null
+                    || ($allowedWorkcenterIds !== null && !isset($allowedWorkcenterIds[$workcenter->getId()->toRfc4122()]))
+                ) {
+                    continue;
+                }
+
+                $years = [];
+                foreach ($position->getProgrammeYears() as $py) {
+                    if (isset($targetYearIds[$py->getId()->toRfc4122()])) {
+                        $years[] = $py;
+                    }
+                }
+                // Sin ningún nivel que esta estancia oferte, el puesto no tendría a quién ir dirigido.
+                if ($years === []) {
+                    continue;
+                }
+
+                $rows[$position->getId()->toRfc4122()] = ['position' => $position, 'years' => $years];
+            }
+        }
+
+        if ($request->isMethod('POST') && $source !== null) {
+            if (!$this->isCsrfTokenValid('copy_positions_' . $id, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $count = 0;
+            foreach (array_unique(array_map('strval', $request->request->all('positions'))) as $positionId) {
+                if (!isset($rows[$positionId])) {
+                    continue;
+                }
+                $original = $rows[$positionId]['position'];
+                $copy     = (new TrainingPosition())
+                    ->setStay($stay)
+                    ->setWorkcenter($original->getWorkcenter())
+                    ->setDetails($original->getDetails());
+                foreach ($rows[$positionId]['years'] as $py) {
+                    $copy->addProgrammeYear($py);
+                }
+                $this->em->persist($copy);
+                ++$count;
+            }
+
+            if ($count === 0) {
+                $this->addFlash('error', $this->t('stays.copy.none_selected'));
+
+                return $this->redirectToRoute('app_stays_copy_positions', ['id' => $id, 'origen' => $sourceId]);
+            }
+
+            $this->em->flush();
+            $this->realtime->publishStayChanged($stay);
+            $this->addFlash('success', $this->translator->trans('stays.flash.positions_copied', ['%count%' => $count, '%stay%' => $source->getName()], 'stays'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+        }
+
+        return $this->render('stays/copy_positions.html.twig', [
+            'centre'  => $centre,
+            'stay'    => $stay,
+            'sources' => $sources,
+            'source'  => $source,
+            'rows'    => array_values($rows),
+        ]);
+    }
+
     #[Route('/{id}/puesto/{positionId}/eliminar', name: 'app_stays_delete_position', methods: ['POST'])]
     public function deletePosition(string $id, string $positionId, Request $request): Response
     {

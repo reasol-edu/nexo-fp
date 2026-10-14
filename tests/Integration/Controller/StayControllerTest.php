@@ -674,6 +674,60 @@ class StayControllerTest extends ControllerTestCase
         self::assertCount(21, $this->em->getRepository(TrainingPosition::class)->findAll());
     }
 
+    public function testCopyPositionsFromAnotherStayOfTheSameYear(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $source     = $this->makeStay('Estancia DAW marzo', $year, $programme);
+        $target     = $this->makeStay('Estancia DAW mayo', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $level      = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $position   = $this->makePosition($source, $workcenter);
+        $position->setDetails('Desarrollo web')->addProgrammeYear($level);
+        $this->persist($admin, $centre, $year, $family, $programme, $source, $target, $company, $workcenter, $level, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $targetId = $target->getId()->toRfc4122();
+        $sourceId = $source->getId()->toRfc4122();
+
+        $crawler = $this->client->request('GET', '/estancias/' . $targetId . '/copiar-puestos?origen=' . $sourceId);
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('input[name="positions[]"]'));
+        $token = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $targetId . '/copiar-puestos', [
+            '_token'    => $token,
+            'source'    => $sourceId,
+            'positions' => [$position->getId()->toRfc4122()],
+        ]);
+
+        self::assertResponseRedirects('/estancias/' . $targetId);
+        $this->em->clear();
+        $copies = $this->em->getRepository(TrainingPosition::class)->findBy(['stay' => $target->getId()]);
+        self::assertCount(1, $copies);
+        self::assertSame('Desarrollo web', $copies[0]->getDetails());
+        self::assertCount(1, $copies[0]->getProgrammeYears());
+        self::assertNull($copies[0]->getStudent());
+    }
+
+    public function testCopyPositionsWithNothingSelectedExplainsIt(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $source     = $this->makeStay('Estancia DAW marzo', $year, $programme);
+        $target     = $this->makeStay('Estancia DAW mayo', $year, $programme);
+        $this->persist($admin, $centre, $year, $family, $programme, $source, $target);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $crawler = $this->client->request('GET', '/estancias/' . $target->getId()->toRfc4122() . '/copiar-puestos');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Elige la estancia de origen');
+        self::assertCount(0, $crawler->filter('input[name="positions[]"]'));
+    }
+
     public function testDuplicatePositionWithInvalidCsrfIsDenied(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
