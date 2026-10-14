@@ -51,6 +51,14 @@ class SearchController extends AbstractController
         }
 
         $q = trim($request->query->getString('q'));
+
+        // Sin texto (al abrir la paleta): acciones rápidas según los permisos de la persona.
+        if ($q === '') {
+            $actions = $this->quickActions($centre);
+
+            return $this->json(['groups' => $actions === [] ? [] : ['actions' => $actions]]);
+        }
+
         if (mb_strlen($q) < 2 || mb_strlen($q) > 100) {
             return $this->json(['groups' => []]);
         }
@@ -116,6 +124,40 @@ class SearchController extends AbstractController
         }
 
         return $this->json(['groups' => $groups]);
+    }
+
+    /**
+     * Acciones frecuentes que se ofrecen al abrir la paleta, con los mismos permisos que los botones de
+     * cada pantalla. En un curso que no es el activo no se ofrece ninguna que escriba datos.
+     *
+     * @return list<array{label: string, sublabel: null, url: string}>
+     */
+    private function quickActions(EducationalCentre $centre): array
+    {
+        if ($this->tenantContext->isViewingNonActiveYear($centre)) {
+            return [];
+        }
+
+        $centreId = $centre->getId()->toRfc4122();
+        $actions  = [];
+
+        if ($this->isGranted('stay.create', $centre)) {
+            $actions[] = ['key' => 'new_stay', 'url' => $this->generateUrl('app_stays_new')];
+        }
+        if ($this->isGranted('company.section', $centre)) {
+            $actions[] = ['key' => 'new_company', 'url' => $this->generateUrl('app_companies_new')];
+            $actions[] = ['key' => 'import_companies', 'url' => $this->generateUrl('app_companies_import')];
+        }
+        if ($this->isGranted('educational_centre.section', $centre)) {
+            $actions[] = ['key' => 'import_teachers', 'url' => $this->generateUrl('app_admin_centre_teachers_import', ['centreId' => $centreId])];
+            $actions[] = ['key' => 'import_students', 'url' => $this->generateUrl('app_admin_students_import', ['centreId' => $centreId])];
+        }
+
+        return array_map(fn (array $action) => [
+            'label'    => $this->translator->trans('actions.' . $action['key'], [], 'search'),
+            'sublabel' => null,
+            'url'      => $action['url'],
+        ], $actions);
     }
 
     /**

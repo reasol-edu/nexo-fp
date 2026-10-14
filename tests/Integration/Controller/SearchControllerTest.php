@@ -39,6 +39,35 @@ class SearchControllerTest extends ControllerTestCase
         self::assertSame(['groups' => []], $data);
     }
 
+    public function testEmptyQueryOffersQuickActionsAccordingToPermissions(): void
+    {
+        [$centre, $admin] = $this->makeChain('41000071', 'search.admin.71');
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/buscar?q=');
+
+        self::assertResponseIsSuccessful();
+        $data   = json_decode((string) $this->client->getResponse()->getContent(), true);
+        $labels = array_column($data['groups']['actions'], 'label');
+        self::assertContains('Nueva estancia', $labels);
+        self::assertContains('Nueva empresa', $labels);
+        self::assertContains('Importar docentes desde Séneca', $labels);
+    }
+
+    public function testEmptyQueryOffersNothingToATeacherWithoutPermissions(): void
+    {
+        [$centre] = $this->makeChain('41000072', 'search.admin.72');
+        $teacher = (new Teacher(new PersonName('Sin', 'Permisos')))->setUsername('sinpermisos.72');
+        $this->persist($teacher);
+        $this->loginAs($teacher, $centre);
+
+        $this->client->request('GET', '/buscar?q=');
+
+        self::assertResponseIsSuccessful();
+        $data = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertSame(['groups' => []], $data);
+    }
+
     public function testSearchReturnsMatchingNavigationPage(): void
     {
         [$centre, $admin] = $this->makeChain('41000079', 'search.admin.79');

@@ -7,3 +7,11 @@ groups:
     companies: 'Empresas'
     students: 'Estudiantes'
     teachers: 'Docentes'
+    actions: 'Acciones rápidas'
+    recent: 'Recientes'
+actions:
+    new_stay: 'Nueva estancia'
+    new_company: 'Nueva empresa'
+    import_companies: 'Importar empresas desde Excel'
+    import_teachers: 'Importar docentes desde Séneca'
+    import_students: 'Importar estudiantes desde CSV'

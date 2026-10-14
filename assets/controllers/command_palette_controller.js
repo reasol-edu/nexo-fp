@@ -26,6 +26,14 @@ export default class extends Controller {
         this.resultsTarget.innerHTML = '';
         this.#selected = -1;
         this.inputTarget.focus();
+        // Sin texto se ofrecen los elementos recientes y las acciones rápidas.
+        this.#fetchResults();
+    }
+
+    // Guarda en el navegador el elemento elegido para ofrecerlo como «reciente» (hasta 5).
+    remember(event) {
+        const link = event.target.closest('a[data-item]');
+        if (link) this.#saveRecent(link);
     }
 
     close() {
@@ -52,6 +60,7 @@ export default class extends Controller {
             this.#highlightItem(items);
         } else if (event.key === 'Enter' && this.#selected >= 0 && items[this.#selected]) {
             event.preventDefault();
+            this.#saveRecent(items[this.#selected]);
             window.location.href = items[this.#selected].href;
         } else if (event.key === 'Escape') {
             this.close();
@@ -73,7 +82,7 @@ export default class extends Controller {
 
     async #fetchResults() {
         const q = this.inputTarget.value.trim();
-        if (q.length < 2) {
+        if (q.length === 1) {
             this.resultsTarget.innerHTML = '';
             return;
         }
@@ -88,16 +97,50 @@ export default class extends Controller {
             );
             if (!res.ok) return;
             const data = await res.json();
-            this.#renderResults(data.groups ?? {});
+            const groups = data.groups ?? {};
+            if (q === '') {
+                const recent = this.#loadRecent();
+                this.#renderResults(recent.length > 0 ? { recent, ...groups } : groups, true);
+            } else {
+                this.#renderResults(groups);
+            }
         } catch (err) {
             if (err.name !== 'AbortError') console.error(err);
         }
     }
 
-    #renderResults(groups) {
+    #loadRecent() {
+        try {
+            const list = JSON.parse(window.localStorage.getItem('nexo.palette.recent') ?? '[]');
+            return Array.isArray(list) ? list.filter((i) => i && typeof i.url === 'string' && typeof i.label === 'string') : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    #saveRecent(link) {
+        const item = {
+            label: link.querySelector('[data-slot="label"]')?.textContent ?? '',
+            sublabel: link.querySelector('[data-slot="sublabel"]')?.textContent ?? '',
+            url: link.getAttribute('href') ?? '',
+        };
+        if (item.label === '' || item.url === '') return;
+        try {
+            const list = this.#loadRecent().filter((i) => i.url !== item.url);
+            window.localStorage.setItem('nexo.palette.recent', JSON.stringify([item, ...list].slice(0, 5)));
+        } catch (e) {
+            // Sin almacenamiento disponible: no se recuerdan elementos recientes.
+        }
+    }
+
+    #renderResults(groups, emptyQuery = false) {
         this.resultsTarget.innerHTML = '';
         this.#selected = -1;
         const keys = Object.keys(groups);
+
+        if (keys.length === 0 && emptyQuery) {
+            return;
+        }
 
         if (keys.length === 0) {
             const empty = document.createElement('p');

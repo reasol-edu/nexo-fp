@@ -41,7 +41,9 @@ empresa, y estudiantes sin puesto asignado.
 
 La **búsqueda global** (⌘K / Ctrl+K) permite localizar estancias, empresas, estudiantes y docentes desde
 cualquier página, aplicando los mismos permisos que la barra lateral. Los resultados aparecen en tiempo
-real con navegación por teclado (↑ ↓ Enter) y cierre con Esc.
+real con navegación por teclado (↑ ↓ Enter) y cierre con Esc. Al abrirla sin escribir nada ofrece los
+cinco últimos resultados elegidos en ese navegador (**Recientes**) y unas **acciones rápidas** según los
+permisos de cada persona (nueva estancia, nueva empresa, importar empresas, docentes o estudiantes).
 
 ### Cambio de curso académico (administradores)
 
