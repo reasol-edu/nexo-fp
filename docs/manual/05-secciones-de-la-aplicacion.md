@@ -56,7 +56,8 @@ en el que se desea consultar.
 Mientras se visualiza un curso histórico:
 
 - Un **banner ámbar** aparece en la parte superior de cada página recordando qué curso se está viendo y
-  ofreciendo un botón de vuelta al curso activo.
+  ofreciendo un botón de vuelta al curso activo. Indica además que las estancias y los puestos
+  formativos son de solo lectura.
 - El nombre del curso en la barra lateral se muestra en **color ámbar** para mayor visibilidad.
 - El **listado de estancias**, el **panel de inicio** y el **calendario** muestran los datos del curso
   seleccionado, incluyendo sus estancias y puestos formativos.

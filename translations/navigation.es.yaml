@@ -12,7 +12,7 @@ impersonating: 'Suplantando a %username%'
 switch_back: 'Volver al usuario original'
 switch_centre: 'Cambiar de centro'
 switch_year: 'Cambiar de curso académico'
-viewing_past_year: 'Estás viendo el curso %year% (histórico)'
+viewing_past_year: 'Estás viendo el curso %year% (histórico): las estancias y los puestos formativos son de solo lectura.'
 return_to_active_year: 'Volver al curso activo'
 menu: 'Abrir menú de navegación'
 year_selection:
