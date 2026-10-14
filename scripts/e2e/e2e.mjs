@@ -80,7 +80,7 @@ const TESTS = [
       const undo = page.locator('[data-live-action-param="restoreBulk"]');
       if (await undo.count()) {
         await undo.first().click();
-        await page.waitForSelector('text=/devueltos a su situación anterior/i', { timeout: 8000 });
+        await page.waitForSelector('text=/devueltos? a su situación anterior/i', { timeout: 8000 });
       }
     },
   },

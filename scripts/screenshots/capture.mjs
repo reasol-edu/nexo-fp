@@ -143,6 +143,7 @@ const SHOTS = [
   { name: 'empresa-historial', group: 'manual', out: `${M}/empresa-historial.png`, size: [1440, 900, 1],
     steps: [async ({ page }) => { const h = await firstCompany(page); await page.goto(`${BASE}${h}/historial`, { waitUntil: 'networkidle' }); }, wait(500)] },
   { name: 'centro-educativo', group: 'manual', out: `${M}/centro-educativo.png`, size: [1440, 900, 1], steps: [go('/mi-centro'), wait(800)] },
+  { name: 'revision-datos', group: 'manual', out: `${M}/revision-datos.png`, size: [1440, 900, 1], steps: [go('/mi-centro/revision-datos'), wait(800)] },
   { name: 'oferta-formativa', group: 'manual', out: `${M}/oferta-formativa.png`, size: [1440, 900, 1],
     steps: [drill('selectFamily', 'selectProgramme', 'selectLevel', 'selectGroup'), wait(500)] },
   { name: 'docentes-importar-vista-previa', group: 'manual', out: `${M}/docentes-importar-vista-previa.png`, size: [1440, 900, 1], full: true,
@@ -194,6 +195,34 @@ const SHOTS = [
   { name: 'slide-ajustes', group: 'slides', out: `${S}/17_ajustes.png`, size: [1184, 900, 1], steps: [go('/perfil/ajustes'), wait(600)] },
   { name: 'slide-estancia-compartida', group: 'slides', out: `${S}/18_estancia_compartida.png`, size: [1184, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)] },
+
+  // ── Capturas que MODIFICAN los datos de las fixtures: van al final para no alterar las anteriores ──
+  // Asigna un tutor a varios puestos y deja a la vista el aviso con «Deshacer».
+  { name: 'estancia-deshacer', group: 'manual', out: `${M}/estancia-deshacer.png`, size: [1440, 900, 1], user: 'diego.romero',
+    steps: [openStay(SHARED_STAY), wait(1200), async ({ page }) => {
+      const boxes = page.locator('[data-bulk-select-target="row"]');
+      for (let i = 0; i < Math.min(2, await boxes.count()); i++) await boxes.nth(i).check();
+      const select = page.locator('select[data-bulk-select-target="teacher"]');
+      await select.selectOption({ index: 1 });
+      await page.locator('[data-action="bulk-select#run"][data-op="tutor"]').click();
+      await page.waitForSelector('[data-live-action-param="restoreBulk"]', { timeout: 8000 });
+      await page.waitForTimeout(400);
+    }] },
+  // Pasa al curso siguiente (queda activo) y abre la confirmación para eliminar el curso anterior, que tiene datos.
+  { name: 'eliminar-curso', group: 'manual', out: `${M}/eliminar-curso.png`, size: [1440, 900, 1],
+    steps: [async ({ page }) => {
+      const id = await centreId(page);
+      await page.goto(`${BASE}/admin/centros/${id}/siguiente-curso`, { waitUntil: 'networkidle' });
+      await page.locator('input[name="activate"]').check();   // el curso nuevo pasa a ser el activo
+      await page.locator('form[data-controller="form-submit"] button[type="submit"]').click();
+      await page.waitForLoadState('networkidle');
+      await page.goto(`${BASE}/admin/centros/${id}`, { waitUntil: 'networkidle' });
+      // Solo el curso antiguo (2025-2026, con estancias) deja de ser el activo y se puede eliminar.
+      const action = await page.locator('form[action*="/cursos/"][action$="/eliminar"]').first().getAttribute('action');
+      await page.goto(`${BASE}${action.replace(/\/eliminar$/, '/eliminar-con-datos')}`, { waitUntil: 'networkidle' });
+      if (!(await page.locator('#confirm_name').count())) throw new Error(`no se abrió la confirmación (${page.url()}): ${(await page.locator('h1').first().innerText())}`);
+      await page.fill('#confirm_name', '2025-2026');
+    }, wait(400)] },
 ];
 
 // ── Ejecución ───────────────────────────────────────────────────────────────

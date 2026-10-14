@@ -255,6 +255,8 @@ Gestión interna del centro. Reúne en un único espacio:
   (no se les puede asignar tutor de empresa) y estancias en marcha, o que empiezan en dos semanas, con
   alumnado cuyo puesto sigue en borrador. Cada elemento enlaza con la pantalla donde corregirlo.
 
+  ![Revisión de datos del centro con la lista de docentes sin correo electrónico](img/revision-datos.png)
+
 ### Estructurar la oferta formativa
 
 ![Oferta formativa: navegación en columnas (familias, enseñanzas, niveles y grupos) con edición en el mismo panel](img/oferta-formativa.png)
@@ -291,7 +293,10 @@ Un curso que no es el activo se puede eliminar desde la misma lista. Si no tiene
 estancias se elimina directamente. Si **tiene datos**, la aplicación muestra una pantalla de confirmación con
 lo que se perdería (familias, enseñanzas, niveles, grupos, estancias y puestos con sus asignaciones y firmas)
 y pide **escribir el nombre del curso** para continuar. Es irreversible; los docentes, el alumnado y las
-empresas no se borran, solo dejan de estar asociados al curso. El curso activo no se puede eliminar.
+empresas no se borran, solo dejan de estar asociados al curso. El curso activo no se puede eliminar (su
+botón no aparece). La eliminación queda registrada en el registro de actividad.
+
+![Confirmación para eliminar un curso con datos: recuento de lo que se perdería y campo para escribir el nombre del curso](img/eliminar-curso.png)
 
 ### Preparar el curso siguiente
 

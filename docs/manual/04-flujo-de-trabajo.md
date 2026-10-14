@@ -117,6 +117,8 @@ de Estancias permite también marcar varios como firmados de una vez. El aviso d
 Al eliminar un puesto libre, la estancia ofrece durante unos minutos un aviso con **Deshacer** para
 volver a crearlo con sus datos.
 
+![Aviso tras una acción masiva con el botón Deshacer](img/estancia-deshacer.png)
+
 La cabecera de la estancia muestra el **avance** del proceso (alumnado con puesto, con ambos tutores,
 registrado en Séneca y firmado) y el **siguiente paso recomendado**, con un enlace para ver las filas
 afectadas.
