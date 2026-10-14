@@ -11,6 +11,7 @@ use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use App\Service\AcademicYearEraser;
 use App\Service\AcademicYearRollover;
+use App\Service\ActivityLogService;
 use App\Service\ImportOptions;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,6 +37,7 @@ class EducationalCentreController extends AbstractController
         private readonly ClockInterface $clock,
         private readonly AcademicYearRollover $rollover,
         private readonly AcademicYearEraser $eraser,
+        private readonly ActivityLogService $activityLog,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
@@ -382,8 +384,10 @@ class EducationalCentreController extends AbstractController
             return $this->redirectToRoute('app_admin_centres_year_delete_confirm', ['centreId' => $centreId, 'yearId' => $yearId]);
         } else {
             try {
+                $name = $year->getName();
                 $this->em->remove($year);
                 $this->em->flush();
+                $this->logYearDeletion($centre, $name, $content);
                 $this->addFlash('success', $this->t('year.flash.deleted'));
             } catch (ForeignKeyConstraintViolationException) {
                 // Algún dato no previsto referencia el curso: no se elimina, en lugar de fallar con un 500.
@@ -422,9 +426,11 @@ class EducationalCentreController extends AbstractController
             if (trim($request->request->getString('confirm_name')) !== $year->getName()) {
                 $errors['confirm_name'] = $this->t('year.delete_confirm_page.name_mismatch');
             } else {
-                $name = $year->getName();
+                $name    = $year->getName();
+                $content = $this->years->countContent($year);
                 try {
                     $this->eraser->erase($year);
+                    $this->logYearDeletion($centre, $name, $content);
                     $this->addFlash('success', $this->translator->trans('year.flash.deleted_with_data', ['%year%' => $name], 'admin'));
                 } catch (ForeignKeyConstraintViolationException) {
                     $this->addFlash('error', $this->t('year.flash.delete_related_error'));
@@ -439,6 +445,20 @@ class EducationalCentreController extends AbstractController
             'year'    => $year,
             'content' => $this->years->countContent($year),
             'errors'  => $errors,
+        ]);
+    }
+
+    /**
+     * Deja constancia en el registro de actividad de la eliminación de un curso (acción irreversible).
+     *
+     * @param array<string, int> $content
+     */
+    private function logYearDeletion(EducationalCentre $centre, string $yearName, array $content): void
+    {
+        $this->activityLog->log('year.deleted', [
+            'centre'  => $centre->getName(),
+            'year'    => $yearName,
+            'deleted' => $content,
         ]);
     }
 

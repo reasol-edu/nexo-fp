@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Eliminar un curso académico queda registrado en el registro de actividad (`year.deleted`), con el centro, el curso y el número de elementos eliminados (familias, enseñanzas, niveles, grupos, estancias y puestos).
+
 ### Fixed
 
 - Eliminar un curso académico no activo que tiene datos (familias profesionales, enseñanzas, estancias…) provocaba un error 500. Ahora lleva a una pantalla de confirmación que indica qué se perdería (oferta formativa, estancias y puestos) y exige escribir el nombre del curso; al confirmar se elimina el curso con todos sus datos, conservando docentes, alumnado y empresas. Un curso sin oferta ni estancias (aunque tenga docentes asignados) se elimina directamente, como antes

@@ -390,6 +390,35 @@ class EducationalCentreControllerTest extends ControllerTestCase
         self::assertNotNull($this->em->find(AcademicYear::class, $active->getId()));
     }
 
+    public function testDeletingAYearLeavesATraceInTheActivityLog(): void
+    {
+        $_ENV['APP_LOG'] = $_SERVER['APP_LOG'] = 'true';
+        try {
+            $admin  = $this->makeAdmin('admin.1');
+            $centre = $this->makeCentre('41000001');
+            $active = $this->makeYear($centre, '2024-2025');
+            $old    = $this->makeYear($centre, '2023-2024');
+            $this->persist($admin, $centre, $active, $old);
+            $centre->setActiveAcademicYear($active);
+            $this->flush();
+            $this->loginAs($admin);
+
+            $centreId = $centre->getId()->toRfc4122();
+            $yearId   = $old->getId()->toRfc4122();
+            $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId);
+            $token    = $crawler->filter('form[action*="/cursos/' . $yearId . '/eliminar"] [name="_token"]')->first()->attr('value');
+            $this->client->request('POST', '/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar', ['_token' => $token]);
+
+            $this->em->clear();
+            $entries = $this->em->getRepository(\App\Entity\ActivityLog::class)->findBy(['actionType' => 'year.deleted']);
+            self::assertCount(1, $entries);
+            self::assertSame('2023-2024', $entries[0]->getData()['year']);
+            self::assertSame($centre->getName(), $entries[0]->getData()['centre']);
+        } finally {
+            $_ENV['APP_LOG'] = $_SERVER['APP_LOG'] = 'false';
+        }
+    }
+
     public function testDeleteConfirmationIsNotAvailableForTheActiveYear(): void
     {
         $admin  = $this->makeAdmin('admin.1');
