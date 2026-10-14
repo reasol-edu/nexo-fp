@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.1] - 2026-10-15
+
+### Added
+
+- La auditoría de navegador (`make e2e`) revisa también las pantallas en móvil (390 px): axe con WCAG 2.2 AA (tamaño de los objetivos táctiles), desbordamiento horizontal y un informe de usabilidad táctil (objetivos pequeños, campos que provocan zoom en iOS).
+
+### Fixed
+
+- Móvil: la página de inicio tenía scroll horizontal por las tablas ocultas de las gráficas, y la cabecera de los docentes del centro desbordaba la pantalla.
+- Móvil: los botones de la barra superior y del menú lateral (cambiar de centro y de curso, perfil, cerrar sesión, búsqueda, notificaciones), los botones y enlaces de acción, las migas de pan y los enlaces de las tarjetas miden al menos 44 px de alto, para pulsarlos sin errores.
+- Móvil: los campos de formulario miden 16 px para que iOS Safari no amplíe la página al enfocarlos.
+- Móvil: en el detalle de la estancia, los estudiantes sin puesto ya no muestran tutores y estado vacíos, lo que alargaba la lista decenas de pantallas.
+- Accesibilidad: nombre accesible en el usuario del perfil, en los ajustes personales, en los docentes de enlace de la empresa y en el desplegable de estilos del editor de texto.
+
 ## [2.12.0] - 2026-10-15
 
 ### Added
