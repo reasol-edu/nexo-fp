@@ -75,6 +75,7 @@ config/packages/*.yaml Symfony bundle configuration
 | `make migrate` | Run Doctrine migrations |
 | `make setup` | Run `app:setup` (initial app setup) |
 | `make check-migrations` | Prueba las migraciones en PostgreSQL, MySQL y MariaDB reales (Docker) |
+| `make e2e` | Browser tests (Playwright) of the JavaScript plus an axe accessibility audit, in an isolated environment (`ARGS=--only=<text>`) |
 | `make screenshots` | Regenera las capturas del manual y la presentación (`ARGS=manual\|slides\|<nombre>`) |
 | `make dev` / `make dev-stop` | Start/stop local dev environment (DB + Mercure hub + `symfony serve`) |
 | `make docs` / `docs-pdf` / `docs-web` / `docs-serve` | Build the user manual (PDF / MkDocs web) |

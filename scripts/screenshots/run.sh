@@ -65,5 +65,11 @@ if [ ! -d "$STATE/node_modules/playwright" ]; then
 fi
 (cd "$STATE" && npx playwright install chromium >/dev/null 2>&1) || true
 
-echo "▸ Capturando"
-BASE="http://127.0.0.1:$PORT" PW_DIR="$(pwd)/$STATE" node scripts/screenshots/capture.mjs "$@"
+# HARNESS_SCRIPT permite reutilizar este entorno aislado con otro guion de Playwright (ver scripts/e2e/).
+SCRIPT="${HARNESS_SCRIPT:-scripts/screenshots/capture.mjs}"
+if [ "$SCRIPT" != "scripts/screenshots/capture.mjs" ] && [ ! -d "$STATE/node_modules/axe-core" ]; then
+  (cd "$STATE" && npm install axe-core@4.10.2 >/dev/null 2>&1) || true
+fi
+
+echo "▸ Ejecutando $SCRIPT"
+BASE="http://127.0.0.1:$PORT" PW_DIR="$(pwd)/$STATE" node "$SCRIPT" "$@"

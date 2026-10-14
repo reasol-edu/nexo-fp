@@ -61,4 +61,17 @@ script also loads the demo fixtures and checks the offering counters (`countByFa
 `countByLevel`): they once used `IN (:entities)`, which matched nothing on MySQL and migrated SQLite because
 ids are stored as binary there — the in-memory tests did not catch it, so **never pass arrays of entities to
 `IN (:param)`; compare one by one with an explicit `'uuid'` type**. The seed data and assertions in that script are specific to the stay/programme migration of 2.9.0: when a future
-migration needs checking, adapt the seed and the checks.
+migration needs checking, adapt the seed and the checks. It also deletes an academic year with data through
+`AcademicYearEraser` on every engine (SQLite is lenient with foreign keys, so a delete that works in the unit
+tests can still fail on PostgreSQL/MySQL).
+
+## Browser tests and accessibility audit
+
+PHPUnit cannot exercise the Stimulus controllers or the inline scripts of the Live Components. `make e2e`
+(`scripts/e2e/run.sh`) reuses the isolated screenshot environment (SQLite + fixtures + local server) and runs
+`scripts/e2e/e2e.mjs` with Playwright: bulk selection, quick filters, remembered preferences, the copies dialog,
+the ⌘K palette, and an axe-core audit (WCAG 2.0/2.1 A and AA) of the key pages. Serious or critical axe findings fail
+the run. Add a test or a page to the `TESTS` / `A11Y_PAGES` arrays in that file. Pitfalls found so far:
+`opacity-*` on a container lowers the text contrast (dim with a background colour instead), fade-in animations
+falsify contrast measurements (the audit waits for them), and a TomSelect `<select>` needs its own `aria-label`
+because TomSelect moves the `<label for>` to its generated control.
