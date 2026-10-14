@@ -67,6 +67,70 @@
         </div>
     {% endif %}
 
+    {# ── Pendientes (lo primero que hay que ver: qué requiere atención) ────── #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+        <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100">
+            {{ ux_icon('heroicons:bell-alert', {class: 'h-4 w-4 text-amber-500'}) }}
+            <h2 class="text-sm font-semibold text-gray-700">
+                {{ 'pending_title'|trans({}, 'dashboard') }}
+            </h2>
+        </div>
+
+        {% if alerts is empty %}
+            <div class="flex items-center justify-center gap-2 py-8 px-6 text-center">
+                {{ ux_icon('heroicons:check-circle', {class: 'h-5 w-5 text-emerald-500'}) }}
+                <p class="text-sm text-gray-500">{{ 'pending_all_clear'|trans({}, 'dashboard') }}</p>
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-50">
+            {% for alert in alerts %}
+                {% set stay_url = path('app_stays_show', {id: alert.stay.id}) %}
+                <li class="relative flex flex-col gap-2 px-6 py-3.5 hover:bg-gray-50 transition-colors group sm:flex-row sm:items-center sm:gap-4">
+                    <div class="min-w-0 sm:flex-1">
+                        <a href="{{ stay_url }}" class="block truncate text-sm font-medium text-gray-900 group-hover:text-plum-700 transition-colors after:absolute after:inset-0">
+                            {{ alert.stay.name }}
+                        </a>
+                        <p class="truncate text-xs text-gray-400 mt-0.5">
+                            {{ alert.stay.programmeNames }}
+                            {% if alert.stay.endDate %}
+                                <span class="mx-1">·</span>
+                                {{ alert.stay.endDate|date('d/m/Y') }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="relative z-10 flex flex-wrap gap-1.5 shrink-0">
+                        {% if alert.students_without_position > 0 %}
+                            <a href="{{ stay_url }}?filtro=sin-puesto" class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100">
+                                {{ 'pending_students_without_position'|trans({'%count%': alert.students_without_position}, 'dashboard') }}
+                            </a>
+                        {% endif %}
+                        {% if alert.free > 0 %}
+                            <a href="{{ stay_url }}?filtro=libres" class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
+                                {{ 'pending_free'|trans({'%count%': alert.free}, 'dashboard') }}
+                            </a>
+                        {% endif %}
+                        {% if alert.missing_tutor > 0 %}
+                            <a href="{{ stay_url }}?filtro=sin-tutor" class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100">
+                                {{ 'pending_missing_tutor'|trans({'%count%': alert.missing_tutor}, 'dashboard') }}
+                            </a>
+                        {% endif %}
+                        {% if alert.missing_mentor > 0 %}
+                            <a href="{{ stay_url }}?filtro=sin-empresa" class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
+                                {{ 'pending_missing_mentor'|trans({'%count%': alert.missing_mentor}, 'dashboard') }}
+                            </a>
+                        {% endif %}
+                        {% if alert.done_unsigned > 0 %}
+                            <a href="{{ stay_url }}?filtro=sin-firmar" class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                                {{ 'pending_done_unsigned'|trans({'%count%': alert.done_unsigned}, 'dashboard') }}
+                            </a>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
     {# ── Tarjetas de métricas ──────────────────────────────────────────────── #}
     <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
 
@@ -422,70 +486,6 @@
 
     </div>
     {% endif %}
-
-    {# ── Pendientes ────────────────────────────────────────────────────────── #}
-    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
-        <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100">
-            {{ ux_icon('heroicons:bell-alert', {class: 'h-4 w-4 text-amber-500'}) }}
-            <h2 class="text-sm font-semibold text-gray-700">
-                {{ 'pending_title'|trans({}, 'dashboard') }}
-            </h2>
-        </div>
-
-        {% if alerts is empty %}
-            <div class="flex items-center justify-center gap-2 py-8 px-6 text-center">
-                {{ ux_icon('heroicons:check-circle', {class: 'h-5 w-5 text-emerald-500'}) }}
-                <p class="text-sm text-gray-500">{{ 'pending_all_clear'|trans({}, 'dashboard') }}</p>
-            </div>
-        {% else %}
-            <ul class="divide-y divide-gray-50">
-            {% for alert in alerts %}
-                {% set stay_url = path('app_stays_show', {id: alert.stay.id}) %}
-                <li class="relative flex flex-col gap-2 px-6 py-3.5 hover:bg-gray-50 transition-colors group sm:flex-row sm:items-center sm:gap-4">
-                    <div class="min-w-0 sm:flex-1">
-                        <a href="{{ stay_url }}" class="block truncate text-sm font-medium text-gray-900 group-hover:text-plum-700 transition-colors after:absolute after:inset-0">
-                            {{ alert.stay.name }}
-                        </a>
-                        <p class="truncate text-xs text-gray-400 mt-0.5">
-                            {{ alert.stay.programmeNames }}
-                            {% if alert.stay.endDate %}
-                                <span class="mx-1">·</span>
-                                {{ alert.stay.endDate|date('d/m/Y') }}
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="relative z-10 flex flex-wrap gap-1.5 shrink-0">
-                        {% if alert.students_without_position > 0 %}
-                            <a href="{{ stay_url }}?filtro=sin-puesto" class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100">
-                                {{ 'pending_students_without_position'|trans({'%count%': alert.students_without_position}, 'dashboard') }}
-                            </a>
-                        {% endif %}
-                        {% if alert.free > 0 %}
-                            <a href="{{ stay_url }}?filtro=libres" class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
-                                {{ 'pending_free'|trans({'%count%': alert.free}, 'dashboard') }}
-                            </a>
-                        {% endif %}
-                        {% if alert.missing_tutor > 0 %}
-                            <a href="{{ stay_url }}?filtro=sin-tutor" class="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100">
-                                {{ 'pending_missing_tutor'|trans({'%count%': alert.missing_tutor}, 'dashboard') }}
-                            </a>
-                        {% endif %}
-                        {% if alert.missing_mentor > 0 %}
-                            <a href="{{ stay_url }}?filtro=sin-empresa" class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
-                                {{ 'pending_missing_mentor'|trans({'%count%': alert.missing_mentor}, 'dashboard') }}
-                            </a>
-                        {% endif %}
-                        {% if alert.done_unsigned > 0 %}
-                            <a href="{{ stay_url }}?filtro=sin-firmar" class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100">
-                                {{ 'pending_done_unsigned'|trans({'%count%': alert.done_unsigned}, 'dashboard') }}
-                            </a>
-                        {% endif %}
-                    </div>
-                </li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
 
     {% else %}
     {# Sin curso académico activo #}

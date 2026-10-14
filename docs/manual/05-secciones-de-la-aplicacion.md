@@ -31,9 +31,10 @@ con el total de puestos, los ocupados y los firmados. El resto de docentes no ve
 
 ![Gráficas por familia profesional: estudiantes por estado y puestos totales, ocupados y firmados](img/inicio-familias.png)
 
-Al final del panel, el bloque **Pendientes** lista las estancias activas que requieren atención:
-estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa, y puestos
-finalizados sin firmar. Cada estancia enlaza directamente con su página de detalle.
+Justo debajo de los accesos rápidos, el bloque **Pendientes** lista las estancias activas que requieren
+atención: estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa, y
+puestos finalizados sin firmar. Cada estancia enlaza con su página de detalle y cada etiqueta de color la abre
+con el **filtro rápido** correspondiente ya aplicado.
 
 La cabecera incluye una **campana de notificaciones** que muestra en tiempo real las tareas pendientes
 del docente: firmas próximas a vencer, puestos sin estudiante, sin tutor académico o sin tutor de

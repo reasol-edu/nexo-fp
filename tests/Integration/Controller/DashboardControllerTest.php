@@ -58,6 +58,21 @@ class DashboardControllerTest extends ControllerTestCase
         self::assertStringContainsString($stay->getName(), $crawler->html());
     }
 
+    public function testPendingTasksComeBeforeTheMetricsAndLinkToTheFilteredStay(): void
+    {
+        [$centre, $admin, $stay] = $this->makeCentreWithStay('41000004', 'ana.admin.4');
+        $this->persist((new TrainingPosition())->setStay($stay));
+        $this->loginAs($admin, $centre);
+
+        $html = $this->client->request('GET', '/')->html();
+
+        $pending = strpos($html, '?filtro=libres');
+        $chart   = strpos($html, 'Estado de los puestos');
+        self::assertNotFalse($pending);
+        self::assertNotFalse($chart);
+        self::assertLessThan($chart, $pending, 'Lo pendiente va antes que las gráficas');
+    }
+
     public function testDashboardShowsAllClearWhenNoAlerts(): void
     {
         [$centre, $admin] = $this->makeCentreWithStay('41000003', 'ana.admin.3');
