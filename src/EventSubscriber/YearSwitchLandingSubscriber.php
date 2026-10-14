@@ -7,6 +7,7 @@ namespace App\EventSubscriber;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -76,8 +77,9 @@ final class YearSwitchLandingSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if ($request->hasSession()) {
-            $request->getSession()->getFlashBag()->add('error', $this->translator->trans('year.switch.unavailable', [], 'messages'));
+        $session = $request->hasSession() ? $request->getSession() : null;
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add('error', $this->translator->trans('year.switch.unavailable', [], 'messages'));
         }
 
         $event->setResponse(new RedirectResponse($this->urlGenerator->generate('app_dashboard')));
