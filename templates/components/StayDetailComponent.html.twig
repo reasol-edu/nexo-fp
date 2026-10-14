@@ -643,8 +643,11 @@
                                                   action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                   class="js-confirm-form"
                                                   data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
-                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}">
+                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}"
+                                                  data-confirm-copies="20"
+                                                  data-confirm-copies-label="{{ 'stays.position.duplicate.copies'|trans({}, 'stays')|e('html_attr') }}">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                                                <input type="hidden" name="copies" value="1">
                                                 <button type="button"
                                                         class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
                                                                text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
@@ -834,8 +837,11 @@
                                                   action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                   class="js-confirm-form"
                                                   data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
-                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}">
+                                                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}"
+                                                  data-confirm-copies="20"
+                                                  data-confirm-copies-label="{{ 'stays.position.duplicate.copies'|trans({}, 'stays')|e('html_attr') }}">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                                                <input type="hidden" name="copies" value="1">
                                                 <button type="button"
                                                         class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
                                                                text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
@@ -1081,6 +1087,22 @@ function setupEventDelegation() {
                 '  <button type="button" class="js-confirm-go rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + (form.dataset.confirmLabel || LABEL_CONFIRM) + '</button>' +
                 '</div>';
             dialog.querySelector('p').textContent = form.dataset.confirm ?? '';
+
+            // Diálogos que piden además un número (p. ej. cuántas copias de un puesto crear)
+            let copiesInput = null;
+            if (form.dataset.confirmCopies) {
+                const label = document.createElement('label');
+                label.className = 'mb-4 flex items-center gap-2 text-sm text-gray-700';
+                label.textContent = form.dataset.confirmCopiesLabel ?? '';
+                copiesInput = document.createElement('input');
+                copiesInput.type = 'number';
+                copiesInput.min = '1';
+                copiesInput.max = form.dataset.confirmCopies;
+                copiesInput.value = '1';
+                copiesInput.className = 'w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm focus:border-plum-500 focus:outline-none focus:ring-1 focus:ring-plum-500';
+                label.appendChild(copiesInput);
+                dialog.insertBefore(label, dialog.querySelector('.flex.items-center.justify-end'));
+            }
             overlay.appendChild(dialog);
             document.body.appendChild(overlay);
 
@@ -1104,6 +1126,10 @@ function setupEventDelegation() {
             cancelBtn.addEventListener('click', closeDialog);
             overlay.addEventListener('mousedown', function (ev) { if (ev.target === overlay) closeDialog(); });
             goBtn.addEventListener('click', function () {
+                if (copiesInput) {
+                    const hidden = form.querySelector('input[name="copies"]');
+                    if (hidden) hidden.value = String(Math.max(1, Math.min(parseInt(form.dataset.confirmCopies, 10), parseInt(copiesInput.value, 10) || 1)));
+                }
                 closeDialog();
                 if (isLive) {
                     if (liveComp) liveComp.action(form.dataset.liveAction, JSON.parse(form.dataset.liveParams || '{}'));

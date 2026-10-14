@@ -855,22 +855,34 @@ class StayController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $copy = new TrainingPosition();
-        $copy->setStay($stay)
-             ->setWorkcenter($original->getWorkcenter())
-             ->setPriority($original->getPriorityProgramme(), $original->getPriorityUntil())
-             ->setDetails($original->getDetails());
-        foreach ($original->getProgrammeYears() as $py) {
-            $copy->addProgrammeYear($py);
+        $copies = max(1, min(20, $request->request->getInt('copies', 1)));
+
+        $created = [];
+        for ($i = 0; $i < $copies; $i++) {
+            $copy = new TrainingPosition();
+            $copy->setStay($stay)
+                 ->setWorkcenter($original->getWorkcenter())
+                 ->setPriority($original->getPriorityProgramme(), $original->getPriorityUntil())
+                 ->setDetails($original->getDetails());
+            foreach ($original->getProgrammeYears() as $py) {
+                $copy->addProgrammeYear($py);
+            }
+            $this->em->persist($copy);
+            $created[] = $copy;
         }
 
-        $this->em->persist($copy);
         $this->em->flush();
         $this->realtime->publishStayChanged($stay);
 
+        if ($copies > 1) {
+            $this->addFlash('success', $this->translator->trans('stays.flash.positions_duplicated', ['%count%' => $copies], 'stays'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+        }
+
         $this->addFlash('success', $this->t('stays.flash.position_duplicated'));
 
-        return $this->redirectToRoute('app_stays_edit_position', ['id' => $id, 'positionId' => $copy->getId()->toRfc4122()]);
+        return $this->redirectToRoute('app_stays_edit_position', ['id' => $id, 'positionId' => $created[0]->getId()->toRfc4122()]);
     }
 
     #[Route('/{id}/puesto/{positionId}/editar', name: 'app_stays_edit_position')]

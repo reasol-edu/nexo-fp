@@ -37,6 +37,9 @@ concreto (por ejemplo, «DAW y DAM - 2.º curso, marzo-mayo 2027»).
    estancia (así una empresa puede ofrecer un mismo puesto a alumnado de DAW y de DAM).
 3. Cada coordinación inscribe a sus **estudiantes** en la estancia para que puedan asignarse a los puestos.
 
+Para ofertar varios puestos iguales, el botón **Duplicar puesto** de cada fila pregunta cuántas copias crear
+(hasta 20); también se puede indicar la cantidad al crear un puesto nuevo.
+
 ### Estancias con varias enseñanzas
 
 ![Estancia compartida entre DAW y SMR con el reparto por enseñanza y el filtro «Mis estudiantes»](img/estancia-compartida.png)

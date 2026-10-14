@@ -648,6 +648,32 @@ class StayControllerTest extends ControllerTestCase
         self::assertSame(TrainingPositionState::DRAFT, $copy->getState());
     }
 
+    public function testDuplicatePositionSeveralTimesCreatesEveryCopyAndReturnsToTheStay(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId);
+        $token   = $crawler->filter('form[action*="/puesto/' . $positionId . '/duplicar"] [name="_token"]')->first()->attr('value');
+
+        // Más de 20 copias se recortan a 20.
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/duplicar', ['_token' => $token, 'copies' => '99']);
+
+        self::assertResponseRedirects('/estancias/' . $stayId);
+        $this->em->clear();
+        self::assertCount(21, $this->em->getRepository(TrainingPosition::class)->findAll());
+    }
+
     public function testDuplicatePositionWithInvalidCsrfIsDenied(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
