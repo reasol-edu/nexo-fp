@@ -495,7 +495,9 @@ class StayDetailComponent extends AbstractController
             throw new AccessDeniedException();
         }
 
-        $student = $position->getStudent();
+        $student        = $position->getStudent();
+        $previousTutor  = $position->getAcademicTutor()?->getId()->toRfc4122() ?? '';
+        $previousMentor = $position->getWorkplaceMentor()?->getId()->toRfc4122() ?? '';
         $position->setStudent(null);
         $position->setAcademicTutor(null);
         $position->setWorkplaceMentor(null);
@@ -503,9 +505,60 @@ class StayDetailComponent extends AbstractController
             return $conflict;
         }
 
-        $this->toast('stays.toast.position_unassigned', [
-            '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
-        ]);
+        $this->toast(
+            'stays.toast.position_unassigned',
+            ['%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName()],
+            ['action' => 'restoreAssignment', 'args' => [
+                'positionId' => $positionId,
+                'studentId'  => $student->getId()->toRfc4122(),
+                'tutorId'    => $previousTutor,
+                'mentorId'   => $previousMentor,
+            ]],
+        );
+
+        return null;
+    }
+
+    /**
+     * Deshace una liberación de puesto: vuelve a asignar el estudiante con las mismas comprobaciones que
+     * una asignación normal (puesto libre, nivel, preferencia, alumno sin otro puesto) y le devuelve
+     * las tutorías que tenía, si siguen existiendo.
+     */
+    #[LiveAction]
+    public function restoreAssignment(
+        #[LiveArg] string $positionId,
+        #[LiveArg] string $studentId,
+        #[LiveArg] string $tutorId = '',
+        #[LiveArg] string $mentorId = '',
+    ): ?Response {
+        if (($response = $this->assignPosition($studentId, $positionId)) !== null) {
+            return $response;
+        }
+
+        $stay = $this->stays->findById($this->stayId);
+        $position = $stay !== null ? $this->positions->findByIdAndStay($positionId, $stay) : null;
+        if ($stay === null || $position === null || $position->getStudent()?->getId()->toRfc4122() !== $studentId) {
+            return null;
+        }
+
+        $changed = false;
+        if ($tutorId !== '' && ($tutor = $this->teachers->findById($tutorId)) !== null) {
+            $position->setAcademicTutor($tutor);
+            $changed = true;
+        }
+        if ($mentorId !== '' && $position->getWorkcenter() !== null) {
+            foreach ($position->getWorkcenter()->getCompany()->getWorkers() as $worker) {
+                if ($worker->getId()->toRfc4122() === $mentorId) {
+                    $position->setWorkplaceMentor($worker);
+                    $changed = true;
+                    break;
+                }
+            }
+        }
+
+        if ($changed && ($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
 
         return null;
     }

@@ -620,18 +620,16 @@
                                     <td class="px-3 py-3 text-right w-24">
                                         <div class="inline-flex items-center gap-1">
                                             {% if position.state.value == 'DRAFT' %}
-                                                <div class="js-confirm-form"
-                                                     data-confirm="{{ 'stays.position.unassign.confirm'|trans({}, 'stays')|e('html_attr') }}"
-                                                     data-confirm-label="{{ 'stays.position.unassign.confirm_btn'|trans({}, 'stays')|e('html_attr') }}"
-                                                     data-live-action="unassignPosition"
-                                                     data-live-params="{{ {positionId: position.id.toRfc4122}|json_encode|e('html_attr') }}">
-                                                    <button type="button"
-                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-amber-200 p-1.5
-                                                                   text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                                                            title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
-                                                        {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
-                                                    </button>
-                                                </div>
+                                                {# Sin diálogo de confirmación: el aviso del cambio ofrece «Deshacer». #}
+                                                <button type="button"
+                                                        data-action="live#action"
+                                                        data-live-action-param="unassignPosition"
+                                                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                                                        class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                               text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                        title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                </button>
                                             {% endif %}
                                             <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
@@ -814,18 +812,16 @@
                                     <td class="px-3 py-3 text-right w-24">
                                         <div class="inline-flex items-center gap-1">
                                             {% if position.state.value == 'DRAFT' %}
-                                                <div class="js-confirm-form"
-                                                     data-confirm="{{ 'stays.position.unassign.confirm'|trans({}, 'stays')|e('html_attr') }}"
-                                                     data-confirm-label="{{ 'stays.position.unassign.confirm_btn'|trans({}, 'stays')|e('html_attr') }}"
-                                                     data-live-action="unassignPosition"
-                                                     data-live-params="{{ {positionId: position.id.toRfc4122}|json_encode|e('html_attr') }}">
-                                                    <button type="button"
-                                                            class="js-confirm-trigger inline-flex items-center rounded-lg border border-amber-200 p-1.5
-                                                                   text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
-                                                            title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
-                                                        {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
-                                                    </button>
-                                                </div>
+                                                {# Sin diálogo de confirmación: el aviso del cambio ofrece «Deshacer». #}
+                                                <button type="button"
+                                                        data-action="live#action"
+                                                        data-live-action-param="unassignPosition"
+                                                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                                                        class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                                                               text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                                                        title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                                                    {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                                                </button>
                                             {% endif %}
                                             <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
                                                class="inline-flex items-center rounded-lg border border-gray-200 p-1.5

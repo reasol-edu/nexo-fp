@@ -579,6 +579,52 @@ class StayDetailComponentTest extends ControllerTestCase
         }
     }
 
+    public function testUnassigningOffersUndoThatRestoresTheStudentAndTheirTutor(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $tutor = (new Teacher(new PersonName('Luisa', 'Gomez')))->setUsername('tutor.deshacer');
+        $this->persist($tutor);
+        $position->setStudent($student)->setAcademicTutor($tutor);
+        $this->flush();
+        $positionId = $position->getId()->toRfc4122();
+        $studentId  = $student->getId()->toRfc4122();
+        $tutorId    = $tutor->getId()->toRfc4122();
+
+        $component = $this->detail($admin, $stay);
+        $component->call('unassignPosition', ['positionId' => $positionId]);
+
+        $html = (string) $component->render();
+        self::assertStringContainsString('Deshacer', $html);
+        self::assertStringContainsString('data-live-action-param="restoreAssignment"', $html);
+        $this->em->clear();
+        self::assertNull($this->em->find(TrainingPosition::class, $position->getId())->getStudent());
+
+        $component->call('restoreAssignment', [
+            'positionId' => $positionId, 'studentId' => $studentId, 'tutorId' => $tutorId, 'mentorId' => '',
+        ]);
+
+        $this->em->clear();
+        $restored = $this->em->find(TrainingPosition::class, $position->getId());
+        self::assertSame($studentId, $restored->getStudent()?->getId()->toRfc4122());
+        self::assertSame($tutorId, $restored->getAcademicTutor()?->getId()->toRfc4122());
+    }
+
+    public function testUndoDoesNothingIfTheStudentAlreadyHasAnotherPosition(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $other = (new TrainingPosition())->setStay($stay)->setWorkcenter($position->getWorkcenter());
+        $this->persist($other);
+        $other->setStudent($student);
+        $this->flush();
+
+        $this->detail($admin, $stay)->call('restoreAssignment', [
+            'positionId' => $position->getId()->toRfc4122(), 'studentId' => $student->getId()->toRfc4122(),
+        ]);
+
+        $this->em->clear();
+        self::assertNull($this->em->find(TrainingPosition::class, $position->getId())->getStudent());
+    }
+
     public function testProgressSuggestsTheNextStepAsTheStayAdvances(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();

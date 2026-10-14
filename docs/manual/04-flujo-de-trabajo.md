@@ -101,7 +101,9 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 
 Desde el detalle de la estancia, cada fila ofrece los pasos disponibles (**Pasar a Séneca**,
 **Registrar en Séneca**, **Marcar firmado**, **Volver a borrador**) sin abrir la ficha del puesto. Si falta
-algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos.
+algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos; lo
+mismo ocurre al **liberar el puesto** de un estudiante, que no pide confirmación: si se deshace, vuelve el
+estudiante con sus tutorías (siempre que el puesto siga libre y el estudiante no tenga otro).
 
 Para varios puestos a la vez, marque las casillas junto a cada estudiante (o la de la cabecera para
 seleccionarlos todos): aparece una barra con las acciones masivas. Los puestos que no se pueden cambiar
