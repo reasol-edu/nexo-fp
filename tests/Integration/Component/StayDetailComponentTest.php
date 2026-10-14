@@ -625,6 +625,36 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertNull($this->em->find(TrainingPosition::class, $position->getId())->getStudent());
     }
 
+    public function testNothingCanBeChangedInAStayOfAPastYear(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $centre  = $stay->getAcademicYear()->getEducationalCentre();
+        $current = (new AcademicYear())->setName('2025-2026')->setEducationalCentre($centre);
+        $this->persist($current);
+        $centre->setActiveAcademicYear($current);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringNotContainsString('class="js-quick-toggle', $html);
+        self::assertStringNotContainsString('data-bulk-select-target="row"', $html);
+
+        $component = $this->detail($admin, $stay);
+        foreach ([
+            ['assignPosition', ['studentId' => $student->getId()->toRfc4122(), 'positionId' => $position->getId()->toRfc4122()]],
+            ['changeState', ['positionId' => $position->getId()->toRfc4122(), 'state' => 'PENDING']],
+        ] as [$action, $args]) {
+            try {
+                $component->call($action, $args);
+                self::fail($action . ' debería denegarse en un curso histórico');
+            } catch (\Symfony\Component\Security\Core\Exception\AccessDeniedException) {
+                // esperado
+            }
+        }
+
+        $this->em->clear();
+        self::assertNull($this->em->find(TrainingPosition::class, $position->getId())->getStudent());
+    }
+
     public function testAStayWithoutPositionsGuidesTowardsCreatingOrCopyingThem(): void
     {
         [$admin, $stay, , $position] = $this->makeScenario();

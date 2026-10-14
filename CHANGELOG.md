@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Las estancias de un curso académico histórico ya son de solo lectura, también para la administración: no se pueden editar ni eliminar, ni crear, copiar, duplicar, asignar o cambiar de estado sus puestos, ni gestionar su alumnado (antes solo se impedía crear estancias nuevas, y el resto de acciones seguían disponibles al abrir un curso anterior). Los botones desaparecen y las acciones directas dan acceso denegado; la consulta, los informes y las exportaciones siguen funcionando
 - Al editar tu propio docente en Administración (nombre, correo, contraseña…) el formulario daba dos errores y no guardaba: las casillas «Administrador global» y «Cuenta activa» salen desactivadas en la propia cuenta, el navegador no las envía y se interpretaba como un intento de quitarlas. Ahora se conservan sus valores actuales y se guarda; seguir sin poder desactivarse ni quitarse el permiso a uno mismo
 
 ## [2.11.0] - 2026-10-14

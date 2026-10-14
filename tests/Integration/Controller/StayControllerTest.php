@@ -648,6 +648,44 @@ class StayControllerTest extends ControllerTestCase
         self::assertSame(TrainingPositionState::DRAFT, $copy->getState());
     }
 
+    public function testStaysOfAPastYearAreReadOnlyEvenForAdmins(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $oldYear = (new AcademicYear())->setName('2023-2024')->setEducationalCentre($centre);
+        $stay    = $this->makeStay('Estancia antigua', $oldYear, $programme);
+        $company = $this->makeCompany($centre);
+        $wc      = $this->makeWorkcenter($company);
+        $pos     = $this->makePosition($stay, $wc);
+        $this->persist($admin, $centre, $year, $oldYear, $family, $programme, $stay, $company, $wc, $pos);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        // Se abre el curso histórico desde el selector de curso.
+        $crawler = $this->client->request('GET', '/curso/año');
+        $token   = $crawler->filter('form[action*="' . $oldYear->getId()->toRfc4122() . '"] input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/curso/año/' . $oldYear->getId()->toRfc4122(), ['_token' => $token]);
+
+        $stayId = $stay->getId()->toRfc4122();
+        $posId  = $pos->getId()->toRfc4122();
+
+        // Se puede consultar, sin botones de edición.
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId);
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('a[href$="/editar"]'));
+        self::assertCount(0, $crawler->filter('a[href$="/nuevo-puesto"]'));
+
+        // Pero ninguna acción que escriba.
+        foreach (['/editar', '/nuevo-puesto', '/copiar-puestos', '/estudiantes', '/puesto/' . $posId . '/editar'] as $suffix) {
+            $this->client->request('GET', '/estancias/' . $stayId . $suffix);
+            self::assertResponseStatusCodeSame(403, 'GET ' . $suffix);
+        }
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $posId . '/duplicar', ['_token' => 'x']);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', '/estancias/' . $stayId . '/eliminar', ['_token' => 'x']);
+        self::assertResponseStatusCodeSame(403);
+    }
+
     public function testDuplicatePositionSeveralTimesCreatesEveryCopyAndReturnsToTheStay(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();

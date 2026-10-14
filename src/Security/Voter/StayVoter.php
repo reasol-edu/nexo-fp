@@ -74,6 +74,12 @@ final class StayVoter extends Voter
             return false;
         }
 
+        // Las estancias de un curso que ya no es el activo del centro son de solo lectura para todo el
+        // mundo, administración global incluida: no se editan, ni se borran, ni se tocan sus puestos.
+        if (self::isWriteAttribute($attribute) && $this->isInInactiveYear($subject)) {
+            return false;
+        }
+
         if ($user->isAdmin()) {
             return true;
         }
@@ -89,6 +95,30 @@ final class StayVoter extends Voter
             self::CREATE          => $this->canCreate($user, $subject),
             default => false,
         };
+    }
+
+    private static function isWriteAttribute(string $attribute): bool
+    {
+        return \in_array($attribute, [self::MANAGE, self::DELETE, self::ADD_POSITION, self::MANAGE_POSITION, self::ASSIGN], true);
+    }
+
+    /** ¿La estancia (o la del puesto) pertenece a un curso distinto del activo de su centro? */
+    private function isInInactiveYear(mixed $subject): bool
+    {
+        $stay = match (true) {
+            $subject instanceof Stay               => $subject,
+            $subject instanceof TrainingPosition   => $subject->getStay(),
+            $subject instanceof PositionAssignment => $subject->position->getStay(),
+            default                                => null,
+        };
+        if ($stay === null) {
+            return false;
+        }
+
+        $year   = $stay->getAcademicYear();
+        $active = $year->getEducationalCentre()->getActiveAcademicYear();
+
+        return $active !== null && $active->getId()->toRfc4122() !== $year->getId()->toRfc4122();
     }
 
     private function canView(Teacher $user, Stay $stay): bool
