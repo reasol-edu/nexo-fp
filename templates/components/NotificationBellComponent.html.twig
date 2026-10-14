@@ -34,7 +34,8 @@
             <ul class="max-h-96 divide-y divide-gray-50 overflow-y-auto">
                 {% for item in this.visibleItems %}
                     <li>
-                        <a href="{{ path('app_stays_show', {id: item.stay.id.toRfc4122}) }}"
+                        {% set filtro = {signature_due: 'sin-firmar', free_positions: 'libres', missing_tutor: 'sin-tutor', missing_mentor: 'sin-empresa', students_without_position: 'sin-puesto'}[item.type] ?? null %}
+                        <a href="{{ path('app_stays_show', {id: item.stay.id.toRfc4122, filtro: filtro}) }}"
                            class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
                             {% set icon = {
                                 signature_due:             'heroicons:pencil-square',

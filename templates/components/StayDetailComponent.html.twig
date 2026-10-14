@@ -14,6 +14,16 @@
     {% endif %}
 {% endmacro %}
 
+{% macro row_flags(position) -%}
+    {%- if position is null -%}
+        sin-puesto
+    {%- else -%}
+        {%- if position.academicTutor is null %}sin-tutor {% endif -%}
+        {%- if position.workplaceMentor is null %}sin-empresa {% endif -%}
+        {%- if position.state.value == 'DONE' and not position.signed %}sin-firmar{% endif -%}
+    {%- endif -%}
+{%- endmacro %}
+
 {% macro state_cell(position, can_edit, stay_id) %}
     {% set st = position.state.value %}
     {% set missing_academic = position.academicTutor is null %}
@@ -360,6 +370,20 @@
             {% endif %}
         </div>
 
+        {% if by_group is not empty or ungrouped_students is not empty %}
+        <div class="px-6 py-2.5 border-b border-gray-100 flex flex-wrap items-center gap-1.5">
+            <span class="text-xs text-gray-400 mr-1">{{ 'stays.quickfilter.title'|trans({}, 'stays') }}</span>
+            {% for key in ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres'] %}
+                <button type="button" data-filter="{{ key }}" aria-pressed="false"
+                        class="js-filter-chip hidden inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                    {{ ('stays.quickfilter.' ~ key)|trans({}, 'stays') }}
+                    <span class="js-chip-count tabular-nums text-gray-400"></span>
+                </button>
+            {% endfor %}
+            <button type="button" class="js-filter-clear hidden text-xs text-plum-600 hover:text-plum-800 ml-1">{{ 'stays.quickfilter.clear'|trans({}, 'stays') }}</button>
+        </div>
+        {% endif %}
+
         {% if by_group is empty and ungrouped_students is empty %}
             <div class="px-6 py-14 text-center">
                 {{ ux_icon('heroicons:user-group', {class: 'mx-auto h-10 w-10 text-gray-300 mb-3'}) }}
@@ -427,7 +451,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position) }}">
 
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
@@ -622,7 +646,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position) }}">
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
                                             <p class="font-medium text-gray-900 leading-snug">{% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}<input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
@@ -845,7 +869,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         {% for position in unassigned_positions %}
-                            <tr class="hover:bg-gray-50/50 transition-colors" data-sync-key="position-{{ position.id.toRfc4122 }}">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-sync-key="position-{{ position.id.toRfc4122 }}" data-flags="libres">
                                 <td class="px-5 py-3.5">
                                     {% if position.workcenter %}
                                         <p class="font-medium text-gray-900 leading-snug">{{ position.workcenter.company.name }}</p>
@@ -936,6 +960,9 @@ let liveEl  = null;
 let liveComp = null;
 let quickMode = false;
 let mineOnly  = false;
+const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres'];
+let activeFilter = new URLSearchParams(window.location.search).get('filtro');
+if (!FILTERS.includes(activeFilter)) activeFilter = null;
 
 const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
 const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
@@ -951,6 +978,19 @@ function setupEventDelegation() {
         const mineToggle = e.target.closest('.js-mine-toggle');
         if (mineToggle) {
             mineOnly = !mineOnly;
+            applyMineOnly();
+            return;
+        }
+
+        // Filtros rápidos («Sin tutor», «Sin firmar»…)
+        const chip = e.target.closest('.js-filter-chip');
+        if (chip) {
+            activeFilter = activeFilter === chip.dataset.filter ? null : chip.dataset.filter;
+            applyMineOnly();
+            return;
+        }
+        if (e.target.closest('.js-filter-clear')) {
+            activeFilter = null;
             applyMineOnly();
             return;
         }
@@ -1179,7 +1219,7 @@ function applyMineOnly() {
         let header = null;
         let visible = 0;
         const closeHeader = function () {
-            if (header) header.classList.toggle('hidden', mineOnly && visible === 0);
+            if (header) header.classList.toggle('hidden', (mineOnly || activeFilter !== null) && visible === 0);
         };
         tbody.querySelectorAll(':scope > tr').forEach(function (row) {
             if (row.classList.contains('table-group-header')) {
@@ -1188,12 +1228,30 @@ function applyMineOnly() {
                 visible = 0;
                 return;
             }
-            const hide = mineOnly && row.dataset.mine === '0';
+            const hide = (mineOnly && row.dataset.mine === '0')
+                || (activeFilter !== null && row.dataset.flags !== undefined && !row.dataset.flags.split(' ').includes(activeFilter));
             row.classList.toggle('hidden', hide);
             if (!hide) visible++;
         });
         closeHeader();
     });
+    // Contadores y estado de los filtros rápidos
+    liveEl.querySelectorAll('.js-filter-chip').forEach(function (chip) {
+        const key = chip.dataset.filter;
+        const n = liveEl.querySelectorAll('[data-flags]').length === 0 ? 0
+            : Array.from(liveEl.querySelectorAll('tbody > tr[data-flags]')).filter(function (r) { return r.dataset.flags.split(' ').includes(key); }).length;
+        chip.querySelector('.js-chip-count').textContent = String(n);
+        const on = activeFilter === key;
+        chip.classList.toggle('hidden', n === 0 && !on);
+        chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+        chip.classList.toggle('bg-plum-600', on);
+        chip.classList.toggle('border-plum-600', on);
+        chip.classList.toggle('text-white', on);
+        chip.classList.toggle('bg-white', !on);
+        chip.classList.toggle('text-gray-600', !on);
+    });
+    const clear = liveEl.querySelector('.js-filter-clear');
+    if (clear) clear.classList.toggle('hidden', activeFilter === null);
     const btn = liveEl.querySelector('.js-mine-toggle');
     if (btn) {
         btn.setAttribute('aria-pressed', mineOnly ? 'true' : 'false');

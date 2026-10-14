@@ -579,6 +579,22 @@ class StayDetailComponentTest extends ControllerTestCase
         }
     }
 
+    public function testRowsCarryTheFlagsUsedByTheQuickFilters(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $other = (new Student(new PersonName('Luis', 'Perez')))->setStudentId('2024-099');
+        $stay->addStudent($other);
+        $this->persist($other);
+        $position->setStudent($student);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+
+        self::assertStringContainsString('data-flags="sin-puesto"', $html);
+        self::assertStringContainsString('data-flags="sin-tutor sin-empresa "', $html);
+        self::assertStringContainsString('data-filter="sin-firmar"', $html);
+    }
+
     public function testPendingSignaturesTabCanSignSeveralPositionsAtOnce(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();
