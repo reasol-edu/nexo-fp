@@ -205,6 +205,8 @@ class StayDetailComponent extends AbstractController
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
 
+        $progress = $this->buildProgress(\count($enrolledStudents), \count($allPositions), array_values($studentPositionMap), $canManage, $canViewUnassigned);
+
         $this->cache = [
             'stay'                             => $stay,
             'can_manage'                       => $canManage,
@@ -224,11 +226,72 @@ class StayDetailComponent extends AbstractController
             'programme_teachers'               => $programmeTeachers,
             'workers_by_company_id'            => $workersByCompanyId,
             'stats'                            => $stats,
+            'progress'                         => $progress,
         ];
 
         return $this->cache;
     }
 
+    /**
+     * Avance de la estancia (alumnado con puesto, con ambos tutores, registrado y firmado) y el
+     * siguiente paso recomendado. Solo cuenta los puestos con estudiante, de modo que quien no
+     * puede ver los puestos libres no deduce cuántos hay.
+     *
+     * @param list<TrainingPosition> $assigned puestos con estudiante
+     * @return array{
+     *     steps: list<array{key: string, done: int, total: int}>,
+     *     next: array{key: string, filter: string|null, count: int}
+     * }
+     */
+    private function buildProgress(int $students, int $positionsTotal, array $assigned, bool $canManage, bool $canViewUnassigned): array
+    {
+        $withTutors      = 0;
+        $missingAcademic = 0;
+        $registered      = 0;
+        $signed          = 0;
+        $readyToSend     = 0;
+        $awaitingSeneca  = 0;
+        foreach ($assigned as $position) {
+            $tutors = $position->getAcademicTutor() !== null && $position->getWorkplaceMentor() !== null;
+            if ($tutors) {
+                ++$withTutors;
+            }
+            if ($position->getAcademicTutor() === null) {
+                ++$missingAcademic;
+            }
+            if ($position->getState() === TrainingPositionState::DONE) {
+                ++$registered;
+                if ($position->isSigned()) {
+                    ++$signed;
+                }
+            } elseif ($position->getState() === TrainingPositionState::PENDING) {
+                ++$awaitingSeneca;
+            } elseif ($tutors) {
+                ++$readyToSend;
+            }
+        }
+        $withPosition = \count($assigned);
+
+        $steps = [
+            ['key' => 'with_position', 'done' => $withPosition, 'total' => $students],
+            ['key' => 'with_tutors', 'done' => $withTutors, 'total' => $withPosition],
+            ['key' => 'registered', 'done' => $registered, 'total' => $withPosition],
+            ['key' => 'signed', 'done' => $signed, 'total' => $withPosition],
+        ];
+
+        $next = match (true) {
+            $students === 0                      => ['key' => 'enrol', 'filter' => null, 'count' => 0],
+            $positionsTotal === 0 && $canViewUnassigned && $canManage => ['key' => 'create_positions', 'filter' => null, 'count' => 0],
+            $withPosition < $students            => ['key' => 'assign', 'filter' => 'sin-puesto', 'count' => $students - $withPosition],
+            $withTutors < $withPosition          => ['key' => 'tutors', 'filter' => $missingAcademic > 0 ? 'sin-tutor' : 'sin-empresa', 'count' => $withPosition - $withTutors],
+            $readyToSend > 0                     => ['key' => 'send', 'filter' => null, 'count' => $readyToSend],
+            $awaitingSeneca > 0                  => ['key' => 'register', 'filter' => null, 'count' => $awaitingSeneca],
+            $signed < $withPosition              => ['key' => 'sign', 'filter' => 'sin-firmar', 'count' => $withPosition - $signed],
+            default                              => ['key' => 'complete', 'filter' => null, 'count' => 0],
+        };
+
+        return ['steps' => $steps, 'next' => $next];
+    }
 
 
     /**

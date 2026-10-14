@@ -279,6 +279,42 @@
                 <p class="text-xs text-gray-400 mt-0.5">{{ pct_free }}%</p>
             </div>
         </div>
+
+        {# ── Avance y siguiente paso ───────────────────────────────────────── #}
+        {% set progress = d.progress %}
+        <div class="border-t border-gray-100 px-6 py-4 space-y-3">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                {% for step in progress.steps %}
+                    {% set pct = step.total > 0 ? ((step.done / step.total) * 100)|round : 0 %}
+                    <div>
+                        <div class="flex items-baseline justify-between gap-2 text-xs">
+                            <span class="text-gray-500">{{ ('stays.progress.step.' ~ step.key)|trans({}, 'stays') }}</span>
+                            <span class="tabular-nums font-medium text-gray-700">{{ step.done }}/{{ step.total }}</span>
+                        </div>
+                        <div class="mt-1 h-1.5 rounded-full bg-gray-100" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}"
+                             aria-label="{{ ('stays.progress.step.' ~ step.key)|trans({}, 'stays')|e('html_attr') }}">
+                            <div class="h-1.5 rounded-full {{ pct >= 100 ? 'bg-green-500' : 'bg-plum-500' }}" style="width: {{ pct }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% set next = progress.next %}
+            <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm {{ next.key == 'complete' ? 'text-green-700' : 'text-gray-700' }}">
+                {{ ux_icon(next.key == 'complete' ? 'heroicons:check-circle' : 'heroicons:arrow-right-circle', {class: 'h-4 w-4 shrink-0 ' ~ (next.key == 'complete' ? 'text-green-500' : 'text-plum-500')}) }}
+                <span class="font-medium">{{ 'stays.progress.next'|trans({}, 'stays') }}</span>
+                <span>{{ ('stays.progress.next_step.' ~ next.key)|trans({'%count%': next.count}, 'stays') }}</span>
+                {% if next.filter %}
+                    <button type="button" data-filter="{{ next.filter }}"
+                            class="js-next-filter text-xs font-medium text-plum-600 hover:text-plum-800 underline">
+                        {{ 'stays.progress.show'|trans({}, 'stays') }}
+                    </button>
+                {% elseif next.key == 'enrol' and can_manage %}
+                    <a href="{{ path('app_stays_manage_students', {id: stay.id.toRfc4122}) }}" class="text-xs font-medium text-plum-600 hover:text-plum-800 underline">{{ 'stays.students.manage_btn'|trans({}, 'stays') }}</a>
+                {% elseif next.key == 'create_positions' %}
+                    <a href="{{ path('app_stays_new_position', {id: stay.id.toRfc4122}) }}" class="text-xs font-medium text-plum-600 hover:text-plum-800 underline">{{ 'stays.position.new_btn'|trans({}, 'stays') }}</a>
+                {% endif %}
+            </p>
+        </div>
     </div>
 
     {# ── Reparto por enseñanza (estancias con varias enseñanzas) ─────────── #}
@@ -987,6 +1023,13 @@ function setupEventDelegation() {
         if (chip) {
             activeFilter = activeFilter === chip.dataset.filter ? null : chip.dataset.filter;
             applyMineOnly();
+            return;
+        }
+        const nextFilter = e.target.closest('.js-next-filter');
+        if (nextFilter) {
+            activeFilter = nextFilter.dataset.filter;
+            applyMineOnly();
+            liveEl.querySelector('.js-filter-chip')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
         if (e.target.closest('.js-filter-clear')) {

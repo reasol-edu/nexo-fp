@@ -101,6 +101,10 @@ seleccionarlos todos): aparece una barra con las acciones masivas. Los puestos q
 (de otra coordinación o sin tutores) se omiten y el aviso indica cuántos. La pestaña **Firmas pendientes**
 de Estancias permite también marcar varios como firmados de una vez.
 
+La cabecera de la estancia muestra el **avance** del proceso (alumnado con puesto, con ambos tutores,
+registrado en Séneca y firmado) y el **siguiente paso recomendado**, con un enlace para ver las filas
+afectadas.
+
 Sobre la lista de estudiantes hay **filtros rápidos** (*Sin puesto*, *Sin tutor/a docente*, *Sin tutor/a de
 empresa*, *Sin firmar* y *Puestos libres*) con el número de filas de cada uno. La campana de notificaciones
 y el bloque **Pendientes** del inicio abren la estancia con el filtro ya aplicado.

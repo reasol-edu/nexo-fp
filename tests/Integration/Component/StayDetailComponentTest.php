@@ -579,6 +579,36 @@ class StayDetailComponentTest extends ControllerTestCase
         }
     }
 
+    public function testProgressSuggestsTheNextStepAsTheStayAdvances(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+
+        self::assertStringContainsString('asignar puesto a 1 estudiante sin puesto', $this->renderHtml($admin, $stay));
+
+        $positionId = $position->getId();
+        $position->setStudent($student);
+        $this->flush();
+        $html = $this->renderHtml($admin, $stay);
+        self::assertStringContainsString('asignar tutor a 1 puesto', $html);
+        self::assertStringContainsString('data-filter="sin-tutor"', $html);
+
+        // Tras cada render el gestor de entidades queda limpio: se vuelve a cargar el puesto.
+        $position = $this->em->find(TrainingPosition::class, $positionId);
+        $tutor    = (new Teacher(new PersonName('Luisa', 'Gomez')))->setUsername('tutor.progreso');
+        $mentor   = (new Worker(new PersonName('Carlos', 'Tutor')))->setNationalIdNumber('12345678Z');
+        $this->em->persist($mentor);
+        $position->getWorkcenter()->getCompany()->addWorker($mentor);
+        $this->persist($tutor);
+        $position->setAcademicTutor($tutor)->setWorkplaceMentor($mentor);
+        $this->flush();
+        self::assertStringContainsString('pasar a Séneca 1 puesto ya completo', $this->renderHtml($admin, $stay));
+
+        $position = $this->em->find(TrainingPosition::class, $positionId);
+        $position->setState(TrainingPositionState::DONE)->setSigned(true);
+        $this->flush();
+        self::assertStringContainsString('todo el alumnado tiene su puesto registrado y firmado', $this->renderHtml($admin, $stay));
+    }
+
     public function testRowsCarryTheFlagsUsedByTheQuickFilters(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();

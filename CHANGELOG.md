@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Acciones masivas sobre puestos: en el detalle de la estancia se pueden marcar varios puestos (o todos) y, desde una barra de acciones, pasarlos a Séneca, registrarlos, marcarlos como firmados, devolverlos a borrador o asignarles el mismo tutor/a dual docente. En la pestaña «Firmas pendientes» se pueden marcar como firmados varios a la vez. Los puestos que no se pueden cambiar (de otra coordinación, sin tutores…) se omiten y el aviso dice cuántos
 - Filtros rápidos en el detalle de la estancia («Sin puesto», «Sin tutor/a docente», «Sin tutor/a de empresa», «Sin firmar» y «Puestos libres»), con el número de filas de cada uno. La campana de notificaciones y el bloque «Pendientes» del inicio enlazan ahora al detalle con el filtro correspondiente ya aplicado
 - Resumen semanal por correo (los lunes a las 8:00) con las tareas pendientes de cada docente en el curso activo, con un enlace por tarea al detalle de la estancia con el filtro aplicado. No se envía si no hay nada pendiente. Nuevo ajuste `email.notification.weekly_digest` (global, de centro y personal) y comando `app:send-weekly-digest` para lanzarlo a mano
+- El detalle de la estancia muestra en la cabecera el avance del proceso (alumnado con puesto, con ambos tutores, registrado en Séneca y firmado) y el siguiente paso recomendado, con un enlace que aplica el filtro rápido correspondiente
 
 ## [2.10.1] - 2026-10-04
 
