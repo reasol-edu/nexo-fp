@@ -75,7 +75,8 @@ Una vez creados los puestos, se completa cada uno con su asignación:
 4. Se ajustan las fechas del puesto si difieren de las de la estancia.
 
 Mientras el puesto está en estado **Borrador**, todos los campos son editables. El modo de **asignación
-rápida** muestra los selectores en todas las filas a la vez para agilizar el reparto.
+rápida** muestra los selectores en todas las filas a la vez para agilizar el reparto; el navegador recuerda
+si lo tenía activado (y el filtro **Mis estudiantes**) al abrir otra estancia.
 
 ## 5 — Estados del puesto y tramitación en Séneca
 

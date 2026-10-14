@@ -994,8 +994,16 @@ import { getComponent } from '@symfony/ux-live-component';
 
 let liveEl  = null;
 let liveComp = null;
-let quickMode = false;
-let mineOnly  = false;
+// Preferencias del navegador (recordadas entre estancias): puede no haber almacenamiento disponible.
+function readPref(key) {
+    try { return window.localStorage.getItem('nexo.stay.' + key) === '1'; } catch (e) { return false; }
+}
+function writePref(key, value) {
+    try { window.localStorage.setItem('nexo.stay.' + key, value ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
+}
+
+let quickMode = readPref('quickMode');
+let mineOnly  = readPref('mineOnly');
 const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres'];
 let activeFilter = new URLSearchParams(window.location.search).get('filtro');
 if (!FILTERS.includes(activeFilter)) activeFilter = null;
@@ -1014,6 +1022,7 @@ function setupEventDelegation() {
         const mineToggle = e.target.closest('.js-mine-toggle');
         if (mineToggle) {
             mineOnly = !mineOnly;
+            writePref('mineOnly', mineOnly);
             applyMineOnly();
             return;
         }
@@ -1042,6 +1051,7 @@ function setupEventDelegation() {
         const quickToggle = e.target.closest('.js-quick-toggle');
         if (quickToggle) {
             quickMode = !quickMode;
+            writePref('quickMode', quickMode);
             applyQuickMode();
             return;
         }

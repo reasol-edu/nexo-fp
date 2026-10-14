@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resumen semanal por correo (los lunes a las 8:00) con las tareas pendientes de cada docente en el curso activo, con un enlace por tarea al detalle de la estancia con el filtro aplicado. No se envía si no hay nada pendiente. Nuevo ajuste `email.notification.weekly_digest` (global, de centro y personal) y comando `app:send-weekly-digest` para lanzarlo a mano
 - El detalle de la estancia muestra en la cabecera el avance del proceso (alumnado con puesto, con ambos tutores, registrado en Séneca y firmado) y el siguiente paso recomendado, con un enlace que aplica el filtro rápido correspondiente
 - Las importaciones de estudiantes (CSV) y de empresas (Excel) tienen ahora una vista previa con una casilla por estudiante o por empresa (todas marcadas) y botones «Seleccionar todo» y «Seleccionar nada», igual que la de docentes. Una empresa desmarcada se deja fuera con sus centros de trabajo y empleados
+- El detalle de la estancia recuerda en el navegador el modo de asignación rápida y el filtro «Mis estudiantes», para no tener que activarlos en cada estancia
 
 ## [2.10.1] - 2026-10-04
 
