@@ -70,6 +70,52 @@ class YearSelectionControllerTest extends ControllerTestCase
     }
 
     /** @return array{0: EducationalCentre, 1: AcademicYear} */
+    public function testSwitchingYearFromAPageThatDoesNotExistThereGoesToTheDashboardWithANotice(): void
+    {
+        [$centre, $pastYear] = $this->setUpAdminViewingCentre();
+        $active    = $centre->getActiveAcademicYear();
+        $family    = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($active);
+        $programme = (new \App\Entity\Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($active);
+        $stay      = (new \App\Entity\Stay())->setName('Estancia actual')->setAcademicYear($active)->addProgramme($programme)
+            ->setStartDate(new \DateTimeImmutable('2026-03-01'))->setEndDate(new \DateTimeImmutable('2026-06-30'));
+        $this->persist($family, $programme, $stay);
+        $stayPath = '/estancias/' . $stay->getId()->toRfc4122();
+
+        $crawler = $this->client->request('GET', '/curso/año');
+        $token   = $crawler->filter('form[action*="' . $pastYear->getId()->toRfc4122() . '"] input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/curso/año/' . $pastYear->getId()->toRfc4122(), ['_token' => $token, '_return_to' => $stayPath]);
+        self::assertResponseRedirects($stayPath);
+
+        // En el curso anterior esa estancia no existe (404): se sale al inicio con un aviso, sin mostrar el error.
+        $this->client->followRedirect();
+        self::assertResponseRedirects('/');
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Esa página no está disponible en el curso académico seleccionado', $crawler->text());
+
+        // El aviso vale solo para esa primera petición: un 404 posterior se muestra como siempre.
+        $this->client->request('GET', $stayPath);
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testSwitchingYearToAForbiddenPageAlsoGoesToTheDashboard(): void
+    {
+        [$centre, $pastYear] = $this->setUpAdminViewingCentre();
+        $director = (new Teacher(new PersonName('Dir', 'Centro')))->setUsername('director.years');
+        $this->persist($director);
+        $centre->addAdmin($director);
+        $this->flush();
+        $this->loginAs($director, $centre);
+
+        $crawler = $this->client->request('GET', '/curso/año');
+        $token   = $crawler->filter('form[action*="' . $pastYear->getId()->toRfc4122() . '"] input[name="_token"]')->attr('value');
+        // /admin solo es para administradores globales: 403 para la dirección del centro.
+        $this->client->request('POST', '/curso/año/' . $pastYear->getId()->toRfc4122(), ['_token' => $token, '_return_to' => '/admin']);
+        $this->client->followRedirect();
+
+        self::assertResponseRedirects('/');
+    }
+
     private function setUpAdminViewingCentre(): array
     {
         $admin      = (new Teacher(new PersonName('Admin', 'Cursos')))->setUsername('admin.years')->setAdmin(true);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\EventSubscriber\YearSwitchLandingSubscriber;
 use App\Repository\AcademicYearRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\TenantContext;
@@ -71,6 +72,8 @@ class YearSelectionController extends AbstractController
             $this->tenantContext->selectYear($year);
         }
 
+        YearSwitchLandingSubscriber::markSwitched($request);
+
         return $this->redirect($this->resolveReturnTo($request));
     }
 
@@ -87,6 +90,8 @@ class YearSelectionController extends AbstractController
         }
 
         $this->tenantContext->clearYear();
+
+        YearSwitchLandingSubscriber::markSwitched($request);
 
         return $this->redirect($this->resolveReturnTo($request));
     }

@@ -7,6 +7,7 @@ ui.close: 'Cerrar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
 ui.export_started: 'Generando el archivo Excel…'
+year.switch.unavailable: 'Esa página no está disponible en el curso académico seleccionado. Te hemos llevado al inicio.'
 
 # Perfil del usuario
 profile.title: 'Mi perfil'
