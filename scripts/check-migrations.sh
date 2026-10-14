@@ -72,6 +72,7 @@ run_engine() {
   [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 2 ] && ok "stay_programme recreada con los datos" || fail "stay_programme incorrecta tras volver a subir"
 
   check_counts
+  check_erase
 
   echo "▸ diferencias esquema migrado ↔ mapeo del ORM (relativas a esta versión):"
   php -d memory_limit=1G bin/console doctrine:schema:update --dump-sql 2>&1 | grep -iE "stay_programme|priority|training_position|shared" | sed 's/^/    /' || true
@@ -108,6 +109,60 @@ PHP
   fi
 }
 
+# Con las fixtures cargadas: elimina el curso con más estancias con AcademicYearEraser y comprueba que
+# se borra todo lo suyo (estancias, puestos, oferta formativa) y se conserva el alumnado. Las claves
+# foráneas de SQLite son más permisivas, por eso conviene probarlo en los motores reales.
+check_erase() {
+  echo "▸ eliminación de un curso con datos (AcademicYearEraser)"
+  local snippet; snippet="$(mktemp)"
+  cat >"$snippet" <<'PHP'
+<?php
+require getcwd().'/vendor/autoload.php';
+(new Symfony\Component\Dotenv\Dotenv())->bootEnv(getcwd().'/.env');
+$k = new App\Kernel('dev', true); $k->boot();
+$em = $k->getContainer()->get('doctrine')->getManager();
+$stays = $em->getRepository(App\Entity\Stay::class);
+$best = null; $bestCount = 0;
+foreach ($em->getRepository(App\Entity\AcademicYear::class)->findAll() as $y) {
+    $n = count($stays->findByYear($y));
+    if ($n > $bestCount) { $best = $y; $bestCount = $n; }
+}
+if ($best === null) { echo "sin curso con estancias\n"; exit; }
+$students = (int) $em->createQuery('SELECT COUNT(s.id) FROM App\Entity\Student s')->getSingleScalarResult();
+$id = $best->getId();
+// Un curso activo no se puede eliminar: se activa antes otro curso nuevo (como hace el cambio de curso).
+$centre = $best->getEducationalCentre();
+if ($centre->getActiveAcademicYear() === $best) {
+    $next = (new App\Entity\AcademicYear())->setName('curso-siguiente')->setEducationalCentre($centre);
+    $em->persist($next);
+    $centre->setActiveAcademicYear($next);
+    $em->flush();
+}
+$eraser = new App\Service\AcademicYearEraser(
+    $em, $stays,
+    $em->getRepository(App\Entity\ProfessionalFamily::class),
+    $em->getRepository(App\Entity\Programme::class),
+    $em->getRepository(App\Entity\ProgrammeYear::class),
+    $em->getRepository(App\Entity\Group::class),
+);
+try {
+    $eraser->erase($best);
+    $em->clear();
+    $left = (int) $em->createQuery('SELECT COUNT(s.id) FROM App\Entity\Stay s WHERE s.academicYear = :y')->setParameter('y', $id, 'uuid')->getSingleScalarResult();
+    $gone = $em->getRepository(App\Entity\AcademicYear::class)->find($id) === null;
+    $studentsAfter = (int) $em->createQuery('SELECT COUNT(s.id) FROM App\Entity\Student s')->getSingleScalarResult();
+    echo ($gone && $left === 0 && $studentsAfter === $students) ? "OK $bestCount $students\n" : "FALLO gone=$gone left=$left students=$students/$studentsAfter\n";
+} catch (Throwable $e) {
+    echo 'ERROR ', get_class($e), ': ', substr($e->getMessage(), 0, 160), "\n";
+}
+PHP
+  local out; out="$(php -d memory_limit=1G "$snippet" 2>&1 | tail -1)"; rm -f "$snippet"
+  case "$out" in
+    OK*) ok "curso eliminado con sus estancias y alumnado intacto (${out#OK })" ;;
+    *)   fail "la eliminación del curso falla: «${out}»" ;;
+  esac
+}
+
 # q <pg|my> "<sql>": ejecuta SQL y devuelve el valor (sin cabeceras ni espacios)
 q() {
   case "$1" in
@@ -125,6 +180,7 @@ run_sqlite() {
   export MIGRATIONS_PATH=migrations/sqlite DATABASE_URL="sqlite:///$db"
   echo "▸ migrando"; mig
   check_counts
+  check_erase
   rm -f "$db"
 }
 
