@@ -46,6 +46,7 @@
             <div class="flex items-center gap-2 mb-10 lg:hidden">
                 <img src="{{ asset('static/logo.svg') }}" alt="{{ app_name }}" class="w-14 h-14 shrink-0">
                 <span class="text-plum-900 text-lg font-semibold">{{ app_name }}</span>
+                {% if app_version %}<span class="text-gray-400 text-xs font-medium tracking-tight">v{{ app_version }}</span>{% endif %}
             </div>
 
             {# Encabezado #}
