@@ -171,6 +171,7 @@ centre_teachers.manage: 'Gestionar docentes'
 centre_teachers.no_active_year: 'Sin curso activo.'
 centre_teachers.search: 'Buscar docente…'
 centre_teachers.empty: 'No hay docentes asignados a este curso.'
+centre_teachers.empty_hint: 'Importa el listado de personal que exporta Séneca o añade a los docentes uno a uno.'
 centre_teachers.search_empty: 'No se encontraron docentes con ese criterio.'
 centre_teachers.remove_confirm: '¿Quitar este docente del curso activo?'
 
@@ -290,6 +291,7 @@ students.no_active_year: 'Este centro no tiene un curso académico activo. Estab
 students.search: 'Buscar por NIE, nombre o apellidos…'
 students.filter.all_groups: 'Todos los grupos'
 students.empty: 'No hay estudiantes matriculados en este curso.'
+students.empty_hint: 'Importa el CSV de alumnado que exporta Séneca o añádelos uno a uno con el botón «Nuevo estudiante».'
 students.search_empty: 'No se encontraron estudiantes con ese criterio.'
 students.delete_confirm: '¿Eliminar este estudiante? Esta acción no se puede deshacer.'
 

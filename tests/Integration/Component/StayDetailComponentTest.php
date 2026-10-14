@@ -625,6 +625,19 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertNull($this->em->find(TrainingPosition::class, $position->getId())->getStudent());
     }
 
+    public function testAStayWithoutPositionsGuidesTowardsCreatingOrCopyingThem(): void
+    {
+        [$admin, $stay, , $position] = $this->makeScenario();
+        $this->em->remove($position);
+        $this->flush();
+
+        $html = $this->renderHtml($admin, $stay);
+
+        self::assertStringContainsString('aún no tiene puestos formativos', $html);
+        self::assertStringContainsString('/copiar-puestos', $html);
+        self::assertStringNotContainsString('Todos los puestos tienen un estudiante asignado', $html);
+    }
+
     public function testProgressSuggestsTheNextStepAsTheStayAdvances(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();
