@@ -164,6 +164,12 @@ const A11Y_PAGES = [
   ['revision-datos', '/mi-centro/revision-datos'],
   ['calendario', '/calendario'],
   ['detalle-estancia', async (page) => openStay(page, DAW_STAY)],
+  ['perfil', '/perfil'],
+  ['ajustes', '/perfil/ajustes'],
+  ['empresa', async (page) => {
+    await page.goto(`${BASE}/empresas`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE}${await page.locator('a[href^="/empresas/0"]').first().getAttribute('href')}`, { waitUntil: 'networkidle' });
+  }],
   ['administracion', '/admin'],
   ['administracion-centros', '/admin/centros'],
   ['registro-actividad', '/admin/registro-actividad'],
@@ -180,17 +186,19 @@ async function centreId(page) {
   return href.match(/centros\/([0-9a-f-]{36})/)[1];
 }
 
-async function auditA11y(page, name, target) {
+async function auditA11y(page, name, target, mobile = false) {
   if (typeof target === 'function') await target(page);
   else await page.goto(`${BASE}${target}`, { waitUntil: 'networkidle' });
   // Las animaciones de entrada (fundidos) mezclan los colores con el fondo y falsean el contraste.
   await page.waitForTimeout(1500);
   await page.addScriptTag({ content: AXE });
-  const result = await page.evaluate(async () => {
+  // En móvil se añade WCAG 2.2 AA (tamaño mínimo de los objetivos táctiles, 24 px).
+  const tags = mobile ? ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] : ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+  const result = await page.evaluate(async (tags) => {
     // La barra de depuración de Symfony (solo en desarrollo) no es parte de la aplicación.
     document.querySelectorAll('.sf-toolbar, .sf-toolbarreset, #sfMiniToolbar, [id^="sfwdt"]').forEach((e) => e.remove());
     const r = await window.axe.run(document, {
-      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      runOnly: { type: 'tag', values: tags },
     });
     return r.violations.map((v) => {
       // Para el contraste se resumen los pares de colores distintos (texto sobre fondo) y cuántas veces salen.
@@ -206,7 +214,7 @@ async function auditA11y(page, name, target) {
       }
       return { id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 3).map((n) => n.target.join(' ')), count: v.nodes.length, pairs };
     });
-  });
+  }, tags);
   const serious = result.filter((v) => v.impact === 'serious' || v.impact === 'critical');
   for (const v of result) {
     const mark = serious.includes(v) ? '❌' : '⚠️ ';
@@ -247,6 +255,52 @@ async function check(label, fn) {
 
 for (const t of TESTS) await check(t.name, () => t.run(page));
 for (const [name, target] of A11Y_PAGES) await check(`a11y: ${name}`, () => auditA11y(page, name, target));
+
+// Móvil (iPhone 12/13): mismas pantallas, más desbordamiento horizontal y tamaño de los objetivos táctiles.
+await page.setViewportSize({ width: 390, height: 844 });
+for (const [name, target] of A11Y_PAGES) {
+  await check(`a11y móvil: ${name}`, async () => {
+    await auditA11y(page, name, target, true);
+    const overflow = await page.evaluate(() => {
+      const scrollers = [document.documentElement, ...document.querySelectorAll('main, body > div')];
+      const width = Math.max(...scrollers.map((e) => e.scrollWidth - e.clientWidth));
+      // Elementos visibles que sobresalen por la derecha (salvo dentro de un contenedor con scroll propio).
+      const inScroller = (e) => { for (let p = e.parentElement; p; p = p.parentElement) { if (/(auto|scroll)/.test(getComputedStyle(p).overflowX) && p !== document.documentElement && p !== document.body) return true; } return false; };
+      const culprits = [...document.querySelectorAll('main *')]
+        .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > window.innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !inScroller(e); })
+        .slice(0, 3).map((e) => `${e.tagName.toLowerCase()}.${String(e.className).split(' ').slice(0, 4).join('.')}`);
+      return { width, culprits };
+    });
+    assert(overflow.width <= 1, `la página desborda horizontalmente ${overflow.width}px: ${overflow.culprits.join(' | ')}`);
+  });
+}
+
+// Usabilidad móvil (solo informa, no falla): objetivos táctiles pequeños y campos que provocan zoom en iOS.
+if (!only || 'ux móvil'.includes(only) || only === 'ux') {
+  for (const [name, target] of A11Y_PAGES) {
+    if (typeof target === 'function') await target(page); else await page.goto(`${BASE}${target}`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(800);
+    const found = await page.evaluate(() => {
+      const visible = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && !e.closest('.sr-only, [hidden], .hidden'); };
+      const label = (e) => `${e.tagName.toLowerCase()} «${(e.getAttribute('aria-label') || e.textContent || e.getAttribute('name') || '').trim().replace(/\s+/g, ' ').slice(0, 30)}»`;
+      const small = [...document.querySelectorAll('main a[href], main button, main [role="button"], main summary, main input[type="checkbox"], main input[type="radio"], aside a, header a, header button')]
+        .filter(visible).filter((e) => { const r = e.getBoundingClientRect(); return r.height < 36 || r.width < 36; })
+        .map((e) => { const r = e.getBoundingClientRect(); return `${label(e)} ${Math.round(r.width)}×${Math.round(r.height)}`; });
+      const zoom = [...document.querySelectorAll('main input:not([type=checkbox]):not([type=radio]):not([type=hidden]), main select, main textarea')]
+        .filter(visible).filter((e) => parseFloat(getComputedStyle(e).fontSize) < 16)
+        .map((e) => label(e) + ' ' + getComputedStyle(e).fontSize);
+      const tiny = [...document.querySelectorAll('main *')].filter((e) => e.children.length === 0 && e.textContent.trim() && visible(e) && parseFloat(getComputedStyle(e).fontSize) < 11)
+        .map((e) => label(e) + ' ' + getComputedStyle(e).fontSize);
+      return { small, zoom, tiny };
+    });
+    const parts = [];
+    if (found.small.length) parts.push(`${found.small.length} objetivos <36px: ${[...new Set(found.small)].slice(0, 6).join(', ')}`);
+    if (found.zoom.length) parts.push(`${found.zoom.length} campos <16px (zoom iOS): ${[...new Set(found.zoom)].slice(0, 4).join(', ')}`);
+    if (found.tiny.length) parts.push(`${found.tiny.length} textos <11px: ${[...new Set(found.tiny)].slice(0, 4).join(', ')}`);
+    console.log(parts.length ? `📱 ${name}: ${parts.join(' | ')}` : `📱 ${name}: sin hallazgos`);
+  }
+}
+await page.setViewportSize({ width: 1440, height: 900 });
 await check('sin errores de JavaScript en las páginas visitadas', async () => {
   assert(jsErrors.length === 0, `errores de JavaScript: ${jsErrors.slice(0, 3).join(' | ')}`);
 });

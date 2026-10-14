@@ -196,6 +196,11 @@ const SHOTS = [
   { name: 'slide-estancia-compartida', group: 'slides', out: `${S}/18_estancia_compartida.png`, size: [1184, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)] },
 
+  // ── Revisión visual en móvil (390×844): se guardan en var/screenshots/mobile/, fuera de git. Grupo `mobile`. ──
+  ...[['inicio', go('/')], ['estancias', go('/estancias')], ['detalle', openStay(DAW_STAY)], ['empresas', go('/empresas')],
+      ['calendario', go('/calendario')], ['centro', go('/mi-centro')]].map(([n, step]) => (
+    { name: `movil-${n}`, group: 'mobile', out: `var/screenshots/mobile/${n}.png`, size: [390, 844, 2], full: true, steps: [step, wait(1500)] })),
+
   // ── Capturas que MODIFICAN los datos de las fixtures: van al final para no alterar las anteriores ──
   // Asigna un tutor a varios puestos y deja a la vista el aviso con «Deshacer».
   { name: 'estancia-deshacer', group: 'manual', out: `${M}/estancia-deshacer.png`, size: [1440, 900, 1], user: 'diego.romero',
