@@ -185,7 +185,7 @@ class CompanyRepository extends ServiceEntityRepository
      */
     public function findWithPositionsInYearWithoutWorkers(EducationalCentre $centre, AcademicYear $year): array
     {
-        return array_values($this->createQueryBuilder('c')
+        return $this->createQueryBuilder('c')
             ->distinct()
             ->join(Workcenter::class, 'w', 'WITH', 'w.company = c')
             ->join(TrainingPosition::class, 'tp', 'WITH', 'tp.workcenter = w')
@@ -197,6 +197,6 @@ class CompanyRepository extends ServiceEntityRepository
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->setParameter('year', $year->getId(), 'uuid')
             ->getQuery()
-            ->getResult());
+            ->getResult();
     }
 }
