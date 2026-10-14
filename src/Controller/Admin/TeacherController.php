@@ -135,24 +135,13 @@ class TeacherController extends AbstractController
                 'external' => $request->request->getString('auth_method') === 'external',
             ];
 
+            // Las casillas «administrador» y «activo» se muestran desactivadas en la propia cuenta, y el
+            // navegador no envía los campos desactivados: no significa que se quiera quitar el permiso o
+            // desactivar la cuenta. Se ignora lo recibido y se conserva el valor actual (un envío
+            // manipulado tampoco puede quitarse el permiso ni desactivarse a sí mismo).
             if ($isCurrentUser) {
-                $selfProtectionErrors = [];
-
-                if (!$flags['admin']) {
-                    $selfProtectionErrors[] = $this->t('teacher.flash.demote_self_error');
-                }
-
-                if (!$flags['active']) {
-                    $selfProtectionErrors[] = $this->t('teacher.flash.deactivate_self_error');
-                }
-
-                if ($selfProtectionErrors !== []) {
-                    foreach ($selfProtectionErrors as $message) {
-                        $this->addFlash('error', $message);
-                    }
-
-                    return $this->redirectToRoute('app_admin_teachers_edit', ['id' => $id]);
-                }
+                $flags['admin']  = $teacher->isAdmin();
+                $flags['active'] = $teacher->isActive();
             }
 
             $errors = $this->validateTeacher($values, false);

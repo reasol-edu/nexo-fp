@@ -224,6 +224,41 @@ class TeacherControllerTest extends ControllerTestCase
         self::assertTrue($unchanged->isAdmin());
     }
 
+    public function testAdminCanEditOwnDataWhenTheDisabledCheckboxesAreNotSubmitted(): void
+    {
+        $admin = $this->makeAdmin('admin.1');
+        $this->persist($admin);
+        $this->loginAs($admin);
+
+        $adminId = $admin->getId()->toRfc4122();
+        $crawler = $this->client->request('GET', '/admin/docentes/' . $adminId);
+        // En la propia cuenta las casillas salen desactivadas y el navegador no las envía.
+        self::assertCount(2, $crawler->filter('input[type="checkbox"][disabled]'));
+        $token = $crawler->filter('form')->first()->filter('[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/admin/docentes/' . $adminId, [
+            '_token'      => $token,
+            'first_name'  => 'Administradora',
+            'last_name'   => 'User',
+            'username'    => 'admin.1',
+            'email'       => 'admin@test.local',
+            'password'    => '',
+            'auth_method' => 'local',
+        ]);
+
+        self::assertResponseRedirects('/admin/docentes/' . $adminId);
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('guardado', mb_strtolower($crawler->text()));
+        self::assertStringNotContainsString('No puedes desactivar tu propia cuenta.', $crawler->text());
+        self::assertStringNotContainsString('No puedes quitarte los permisos', $crawler->text());
+
+        $this->em->clear();
+        $saved = $this->em->find(Teacher::class, $admin->getId());
+        self::assertSame('Administradora', $saved->getName()->getFirstName());
+        self::assertTrue($saved->isAdmin());
+        self::assertTrue($saved->isActive());
+    }
+
     public function testAdminCannotDeactivateSelf(): void
     {
         $admin = $this->makeAdmin('admin.1');

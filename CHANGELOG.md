@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Al editar tu propio docente en Administración (nombre, correo, contraseña…) el formulario daba dos errores y no guardaba: las casillas «Administrador global» y «Cuenta activa» salen desactivadas en la propia cuenta, el navegador no las envía y se interpretaba como un intento de quitarlas. Ahora se conservan sus valores actuales y se guarda; seguir sin poder desactivarse ni quitarse el permiso a uno mismo
+
 ## [2.11.0] - 2026-10-14
 
 ### Added

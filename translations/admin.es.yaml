@@ -71,8 +71,6 @@ teacher.flash.created: 'Docente creado correctamente.'
 teacher.flash.saved: 'Docente guardado correctamente.'
 teacher.flash.deleted: 'Docente eliminado correctamente.'
 teacher.flash.delete_self_error: 'No puedes eliminar tu propia cuenta.'
-teacher.flash.deactivate_self_error: 'No puedes desactivar tu propia cuenta.'
-teacher.flash.demote_self_error: 'No puedes quitarte los permisos de administrador.'
 teacher.flash.delete_error: 'No se puede eliminar este docente porque tiene datos asociados.'
 
 # Lista de centros
