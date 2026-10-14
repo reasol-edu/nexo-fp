@@ -143,6 +143,17 @@ summary:focus-visible {
     --color-plum-800: #453a54;
     --color-plum-900: #362d42;
     --color-plum-950: #1f192a;
+
+    /* Grises de texto más oscuros que los de Tailwind para llegar al contraste AA (4,5:1) sobre blanco y
+       sobre los fondos gray-50/100 y plum-50 (comprobado con axe en `make e2e`). */
+    --color-gray-400: #656d7c;
+    --color-gray-500: #5f6776;
+}
+
+/* Texto en gray-300 (guiones de «sin dato», contadores…): no llega al contraste AA, así que se pinta
+   como gray-400. No afecta a iconos (svg) ni a elementos con variante hover, que son decorativos. */
+.text-gray-300:not(svg):not([class*="hover:text-"]) {
+    color: var(--color-gray-400);
 }
 
 /* TomSelect (Symfony UX Autocomplete): adapta el look al tema plum.

@@ -32,7 +32,7 @@
     <div class="space-y-1">
         {{ _self.state_badge(position.state) }}
         {% if position.signed %}
-            <span class="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+            <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700">
                 {{ ux_icon('heroicons:check-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                 {{ 'stays.show.signed'|trans({}, 'stays') }}
             </span>
@@ -43,7 +43,7 @@
             <div class="flex flex-wrap gap-1 pt-0.5">
                 {% if st == 'DRAFT' %}
                     {% if blocked %}
-                        <span class="inline-flex items-center gap-1 text-xs text-amber-600"
+                        <span class="inline-flex items-center gap-1 text-xs text-amber-700"
                               title="{{ 'stays.state_action.missing_tutors'|trans({}, 'stays')|e('html_attr') }}">
                             {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                             {{ (missing_academic and missing_mentor ? 'stays.state_action.missing_tutors' : (missing_academic ? 'stays.state_action.missing_academic' : 'stays.state_action.missing_mentor'))|trans({}, 'stays') }}
@@ -513,7 +513,7 @@
                                             {% if manageable_compatible is not empty %}
                                                 <form class="js-assign-form" data-student-id="{{ sid }}">
                                                     <button type="button"
-                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
                                                         {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
@@ -535,7 +535,7 @@
                                                     </div>
                                                 </form>
                                             {% else %}
-                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
+                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
                                                     {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                     {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                 </span>
@@ -707,7 +707,7 @@
                                             {% if manageable_compatible is not empty %}
                                                 <form class="js-assign-form" data-student-id="{{ sid }}">
                                                     <button type="button"
-                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
                                                         {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                         {{ 'stays.show.position_none'|trans({}, 'stays') }}
@@ -729,7 +729,7 @@
                                                     </div>
                                                 </form>
                                             {% else %}
-                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-500">
+                                                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
                                                     {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                                     {{ 'stays.show.position_none'|trans({}, 'stays') }}
                                                 </span>

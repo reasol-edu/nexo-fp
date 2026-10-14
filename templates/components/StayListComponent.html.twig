@@ -63,6 +63,7 @@
                 {# Familia profesional #}
                 <div class="w-full sm:flex-1 sm:min-w-36 [&_.ts-wrapper]:w-full">
                 <select data-model="norender|familyId"
+                        aria-label="{{ 'stays.filter.family_label'|trans({}, 'stays')|e('html_attr') }}"
                         data-action="change->live#action"
                         data-live-action-param="changeFamilyFilter"
                         data-controller="symfony--ux-autocomplete--autocomplete"
@@ -83,6 +84,7 @@
                 {# Enseñanza #}
                 <div class="w-full sm:flex-1 sm:min-w-36 [&_.ts-wrapper]:w-full">
                 <select data-model="norender|programmeId"
+                        aria-label="{{ 'stays.filter.programme_label'|trans({}, 'stays')|e('html_attr') }}"
                         data-action="change->live#action"
                         data-live-action-param="resetPage"
                         data-controller="symfony--ux-autocomplete--autocomplete"
@@ -264,11 +266,12 @@
                     {% set is_future  = start_str > today_str and not is_past %}
                     {% set is_current = not is_past and not is_future %}
 
-                    <article class="relative rounded-2xl border bg-white shadow-xs overflow-hidden flex flex-col
+                    {# Las estancias finalizadas se atenúan con un fondo gris (no con opacity, que bajaría el contraste del texto). #}
+                    <article class="relative rounded-2xl border shadow-xs overflow-hidden flex flex-col
                                     transition-all group
                                     {{ is_past
-                                        ? 'border-gray-200 opacity-60 hover:opacity-100 hover:border-gray-300'
-                                        : 'border-gray-200 hover:border-plum-200 hover:shadow-sm' }}">
+                                        ? 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                                        : 'border-gray-200 bg-white hover:border-plum-200 hover:shadow-sm' }}">
 
                         {# ── Cabecera ──────────────────────────────────────────── #}
                         <div class="px-5 pt-6 pb-4 border-b border-gray-100">
@@ -390,7 +393,7 @@
                                 <div class="flex items-center justify-between gap-1 min-w-0">
                                     <span class="text-gray-400 truncate min-w-0" title="{{ 'stays.card.students_with_position'|trans({}, 'stays') }}">{{ 'stays.card.students_with_position'|trans({}, 'stays') }}</span>
                                     <span class="font-semibold tabular-nums shrink-0
-                                                 {{ pct_students >= 100 ? 'text-green-600' : (pct_students >= 50 ? 'text-amber-600' : 'text-gray-700') }}">
+                                                 {{ pct_students >= 100 ? 'text-green-700' : (pct_students >= 50 ? 'text-amber-700' : 'text-gray-700') }}">
                                         {{ _sw }}/{{ _st }}&nbsp;<span class="font-normal text-gray-400">({{ pct_students }}%)</span>
                                     </span>
                                 </div>
@@ -674,7 +677,7 @@
                                 <td data-label="{{ 'stays.pending.col.start_date'|trans({}, 'stays')|e('html_attr') }}"
                                     class="px-4 py-3 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1 text-xs font-medium
-                                                 {{ is_urgent_p ? 'text-red-600 font-semibold' : (is_soon_p ? 'text-amber-600' : (is_past_p ? 'text-red-400' : 'text-gray-600')) }}">
+                                                 {{ is_urgent_p ? 'text-red-600 font-semibold' : (is_soon_p ? 'text-amber-700' : (is_past_p ? 'text-red-600' : 'text-gray-600')) }}">
                                         {% if is_urgent_p or is_past_p %}
                                             {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                                         {% endif %}

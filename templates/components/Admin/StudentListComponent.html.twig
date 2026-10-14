@@ -36,6 +36,7 @@
             {% set activeGroupIds = availableGroups|map(g => g.id.toRfc4122) %}
             {% if availableGroups is not empty %}
                 <select data-model="norender|groupId"
+                        aria-label="{{ 'students.filter.group_label'|trans({}, 'admin')|e('html_attr') }}"
                         data-action="change->live#action"
                         data-live-action-param="resetPage"
                         class="rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700

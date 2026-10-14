@@ -13,16 +13,16 @@
         {# Fila 1: rango temporal + accesos rápidos #}
         <div class="flex flex-wrap items-end gap-3">
             <div class="flex flex-col gap-1 min-w-44">
-                <label class="text-xs font-medium text-gray-500">Desde</label>
-                <input type="datetime-local"
+                <label for="activity-date-from" class="text-xs font-medium text-gray-500">Desde</label>
+                <input type="datetime-local" id="activity-date-from"
                        data-model="dateFrom"
                        value="{{ dateFrom }}"
                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
                               focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors">
             </div>
             <div class="flex flex-col gap-1 min-w-44">
-                <label class="text-xs font-medium text-gray-500">Hasta</label>
-                <input type="datetime-local"
+                <label for="activity-date-to" class="text-xs font-medium text-gray-500">Hasta</label>
+                <input type="datetime-local" id="activity-date-to"
                        data-model="dateTo"
                        value="{{ dateTo }}"
                        class="rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm text-gray-900
@@ -57,9 +57,9 @@
 
             {# Usuario (autocomplete) #}
             <div class="flex flex-col gap-1 min-w-56 flex-1">
-                <label class="text-xs font-medium text-gray-500">Usuario</label>
+                <label for="activity-user" class="text-xs font-medium text-gray-500">Usuario</label>
                 {% set selectedUser = this.selectedUser %}
-                <select data-model="userId"
+                <select id="activity-user" aria-label="Usuario" data-model="userId"
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_admin'}) }}"
                         data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
@@ -79,8 +79,8 @@
 
             {# Centro #}
             <div class="flex flex-col gap-1 min-w-44">
-                <label class="text-xs font-medium text-gray-500">Centro</label>
-                <select data-model="centreId"
+                <label for="activity-centre" class="text-xs font-medium text-gray-500">Centro</label>
+                <select id="activity-centre" aria-label="Centro" data-model="centreId"
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
@@ -99,8 +99,8 @@
             {# Curso (dependiente del centro) #}
             {% set years = this.yearsForSelectedCentre %}
             <div class="flex flex-col gap-1 min-w-36">
-                <label class="text-xs font-medium text-gray-500">Curso</label>
-                <select data-model="yearId"
+                <label for="activity-year" class="text-xs font-medium text-gray-500">Curso</label>
+                <select id="activity-year" aria-label="Curso" data-model="yearId"
                         {{ centreId is empty or years is empty ? 'disabled' }}
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
@@ -120,8 +120,8 @@
 
             {# Tipo de acción #}
             <div class="flex flex-col gap-1 min-w-44">
-                <label class="text-xs font-medium text-gray-500">Tipo de acción</label>
-                <select data-model="actionType"
+                <label for="activity-action-type" class="text-xs font-medium text-gray-500">Tipo de acción</label>
+                <select id="activity-action-type" aria-label="Tipo de acción" data-model="actionType"
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-placeholder-value="Todos"
                         data-symfony--ux-autocomplete--autocomplete-no-results-found-text-value="Sin resultados"
