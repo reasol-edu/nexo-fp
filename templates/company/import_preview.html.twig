@@ -46,6 +46,41 @@
                     {% endfor %}
                 </ul>
 
+                {% if result.companies|length > 0 %}
+                <input type="hidden" name="companies_listed" value="1">
+                <div>
+                    <div class="flex items-center justify-between mb-2 gap-3">
+                        <h3 class="text-sm font-semibold text-gray-700">{{ 'companies.import.preview.pick.title'|trans({}, 'companies') }}</h3>
+                        <div class="flex items-center gap-3">
+                            <span id="company-count" class="text-xs text-gray-500 tabular-nums" data-template="{{ 'companies.import.preview.pick.selected'|trans({}, 'companies')|e('html_attr') }}"></span>
+                            <button type="button" id="companies-all" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'companies.import.preview.pick.select_all'|trans({}, 'companies') }}</button>
+                            <button type="button" id="companies-none" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'companies.import.preview.pick.select_none'|trans({}, 'companies') }}</button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">{{ 'companies.import.preview.pick.hint'|trans({}, 'companies') }}</p>
+                    <div class="max-h-96 overflow-y-auto rounded-xl border border-gray-200">
+                        <table class="min-w-full text-sm">
+                            <tbody class="divide-y divide-gray-100">
+                                {% for company in result.companies %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="w-10 px-4 py-2">
+                                        <input type="checkbox" name="companies[]" value="{{ company.key }}" checked
+                                               aria-label="{{ company.name|e('html_attr') }}"
+                                               class="js-company-box h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                                    </td>
+                                    <td class="px-2 py-2 text-gray-800">{{ company.name }}<span class="block text-xs text-gray-400">{{ company.vat }} · {{ company.city }}</span></td>
+                                    <td class="px-2 py-2 text-xs text-right
+                                        {{ company.status == 'new' ? 'text-green-700' : (company.status == 'update' ? 'text-blue-700' : 'text-gray-500') }}">
+                                        {{ ('companies.import.preview.pick.status.' ~ company.status)|trans({}, 'companies') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="flex items-center justify-between pt-2">
                     <a href="{{ path('app_companies_import') }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
                         {{ 'companies.import.preview.back'|trans({}, 'companies') }}
@@ -61,4 +96,22 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    const boxes = Array.from(document.querySelectorAll('.js-company-box'));
+    const counter = document.getElementById('company-count');
+    if (boxes.length === 0 || !counter) return;
+
+    function refresh() {
+        const on = boxes.filter((b) => b.checked).length;
+        counter.textContent = counter.dataset.template.replace('%selected%', on).replace('%total%', boxes.length);
+    }
+
+    document.getElementById('companies-all').addEventListener('click', function () { boxes.forEach((b) => { b.checked = true; }); refresh(); });
+    document.getElementById('companies-none').addEventListener('click', function () { boxes.forEach((b) => { b.checked = false; }); refresh(); });
+    boxes.forEach((b) => b.addEventListener('change', refresh));
+    refresh();
+})();
+</script>
 {% endblock %}

@@ -155,5 +155,8 @@ Notas sobre el comportamiento:
   final se muestra la lista de unidades no reconocidas. Por eso es importante que los grupos se llamen
   **exactamente** igual que en Séneca (ver el paso 3).
 - El fichero puede estar codificado en UTF-8 o Windows-1252 (se detecta automáticamente).
+- Antes de importar se muestra una **vista previa** con los grupos y la **lista de estudiantes**, cada uno con
+  su casilla (todos marcados) y los botones **Seleccionar todo** y **Seleccionar nada**. Marcar o desmarcar
+  un grupo marca o desmarca a todo su alumnado; solo se importa lo que queda marcado.
 
 Con el curso configurado, el centro está listo para registrar empresas y crear estancias.

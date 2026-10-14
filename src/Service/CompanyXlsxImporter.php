@@ -68,16 +68,18 @@ final class CompanyXlsxImporter
     ) {}
 
     /**
-     * @param bool $apply false = simulación (no escribe nada)
+     * @param bool         $apply        false = simulación (no escribe nada)
+     * @param list<string> $excludedKeys claves de CIF (CompanyWorkbook::vatKey) de las empresas que se dejan fuera,
+     *                                   con sus centros de trabajo y empleados
      */
-    public function import(string $path, EducationalCentre $centre, bool $apply): CompanyImportResult
+    public function import(string $path, EducationalCentre $centre, bool $apply, array $excludedKeys = []): CompanyImportResult
     {
         $this->result     = new CompanyImportResult();
         $this->operations = [];
 
         $sheets = $this->readWorkbook($path);
         if (!$this->result->hasErrors()) {
-            $this->process($sheets, $centre);
+            $this->process($this->withoutExcluded($sheets, $excludedKeys), $centre);
         }
 
         if ($apply && !$this->result->hasErrors() && $this->operations !== []) {
@@ -90,6 +92,38 @@ final class CompanyXlsxImporter
         }
 
         return $this->result;
+    }
+
+    /**
+     * Quita las filas de las empresas excluidas en las tres hojas.
+     *
+     * @param array<string, list<array{row: int, values: array<string, string>}>> $sheets
+     * @param list<string>                                                         $excludedKeys
+     * @return array<string, list<array{row: int, values: array<string, string>}>>
+     */
+    private function withoutExcluded(array $sheets, array $excludedKeys): array
+    {
+        if ($excludedKeys === []) {
+            return $sheets;
+        }
+
+        $excluded = array_flip($excludedKeys);
+        $columns  = [
+            CompanyWorkbook::SHEET_COMPANIES   => 'vat_number',
+            CompanyWorkbook::SHEET_WORKCENTERS => 'company_vat_number',
+            CompanyWorkbook::SHEET_WORKERS     => 'company_vat_number',
+        ];
+        foreach ($columns as $sheetKey => $column) {
+            if (!isset($sheets[$sheetKey])) {
+                continue;
+            }
+            $sheets[$sheetKey] = array_values(array_filter(
+                $sheets[$sheetKey],
+                static fn (array $row): bool => !isset($excluded[CompanyWorkbook::vatKey($row['values'][$column] ?? '')]),
+            ));
+        }
+
+        return $sheets;
     }
 
     // ── Lectura del fichero ───────────────────────────────────────────────────
@@ -298,6 +332,7 @@ final class CompanyXlsxImporter
                     $this->em->persist($company);
                 };
                 ++$this->result->companiesCreated;
+                $this->result->companies[$key] = ['key' => $key, 'vat' => $fields['vat_number'], 'name' => $fields['name'], 'city' => $fields['city'], 'status' => 'new'];
 
                 continue;
             }
@@ -307,9 +342,12 @@ final class CompanyXlsxImporter
                     $this->fillCompany($current, $fields);
                 };
                 ++$this->result->companiesUpdated;
+                $status = 'update';
             } else {
                 ++$this->result->companiesUnchanged;
+                $status = 'same';
             }
+            $this->result->companies[$key] = ['key' => $key, 'vat' => $fields['vat_number'], 'name' => $fields['name'], 'city' => $fields['city'], 'status' => $status];
             $targets[$key] = ['company' => $current, 'city' => $fields['city'], 'entity' => $current, 'editable' => true];
         }
     }

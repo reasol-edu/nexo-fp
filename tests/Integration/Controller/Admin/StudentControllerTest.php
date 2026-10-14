@@ -318,6 +318,51 @@ class StudentControllerTest extends ControllerTestCase
         self::assertSame('Ana', $created->getName()->getFirstName());
     }
 
+    public function testImportPreviewListsEachStudentAndOnlyTheCheckedOnesAreImported(): void
+    {
+        [$admin, $centre, $year] = $this->makeCentreWithYear();
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId . '/estudiantes/importar');
+        $token    = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $csv = implode("\n", [
+            '"Estado Matrícula","Nº Id. Escolar","Primer apellido","Segundo apellido","Nombre","Unidad"',
+            '"","2024-101","Martinez","Lopez","Ana","DAW1A"',
+            '"","2024-102","Perez","Ruiz","Luis","DAW1A"',
+        ]);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'nexo_test_');
+        file_put_contents($tmpFile, $csv);
+        $file = new UploadedFile($tmpFile, 'students.csv', 'text/csv', null, true);
+
+        $previewCrawler = $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            '_token' => $token,
+        ], ['csv' => $file]);
+        @unlink($tmpFile);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $previewCrawler->filter('input[name="students[]"][checked]'));
+        $importId     = $previewCrawler->filter('[name="import_id"]')->first()->attr('value');
+        $confirmToken = $previewCrawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/estudiantes/importar', [
+            'import_confirmed' => '1',
+            'import_id'        => $importId,
+            '_token'           => $confirmToken,
+            'students_listed'  => '1',
+            'students'         => ['2024-101'],
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertNotNull($this->em->getRepository(Student::class)->findOneBy(['studentId' => '2024-101']));
+        self::assertNull($this->em->getRepository(Student::class)->findOneBy(['studentId' => '2024-102']));
+    }
+
     public function testImportStep2WithExpiredSessionRedirectsWithError(): void
     {
         [$admin, $centre, $year] = $this->makeCentreWithYear();

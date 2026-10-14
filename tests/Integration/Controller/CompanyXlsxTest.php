@@ -317,6 +317,44 @@ class CompanyXlsxTest extends ControllerTestCase
         self::assertSame('Ajena', $this->em->getRepository(Company::class)->findOneBy(['vatNumber' => 'B22222222'])->getName());
     }
 
+    public function testPreviewListsCompaniesAndUncheckedOnesAreLeftOutWithTheirCentres(): void
+    {
+        [$centre, $admin] = $this->setUpCentreWithAdmin();
+        $this->loginAs($admin, $centre);
+
+        $path = $this->makeWorkbook([
+            'Empresas' => [
+                self::COMPANY_HEADERS,
+                ['Alfa', 'B11111111', 'Sevilla'],
+                ['Beta', 'B22222222', 'Cádiz'],
+            ],
+            'Centros de trabajo' => [
+                self::WORKCENTER_HEADERS,
+                ['B22222222', 'Sede de Beta', 'Cádiz'],
+            ],
+        ]);
+
+        $crawler = $this->upload($path);
+        $boxes   = $crawler->filter('input[name="companies[]"]');
+        self::assertCount(2, $boxes);
+        $form = $crawler->filter('form[action$="/empresas/importar"]')->form();
+
+        // Solo se deja marcada la primera empresa.
+        $this->client->request('POST', '/empresas/importar', [
+            'import_confirmed' => '1',
+            'import_id'        => $form['import_id']->getValue(),
+            '_token'           => $form['_token']->getValue(),
+            'companies_listed' => '1',
+            'companies'        => [$boxes->first()->attr('value')],
+        ]);
+
+        self::assertResponseRedirects('/empresas');
+        $this->em->clear();
+        self::assertNotNull($this->em->getRepository(Company::class)->findOneBy(['vatNumber' => 'B11111111']));
+        self::assertNull($this->em->getRepository(Company::class)->findOneBy(['vatNumber' => 'B22222222']));
+        self::assertCount(0, $this->em->getRepository(Workcenter::class)->findBy(['name' => 'Sede de Beta']));
+    }
+
     public function testImportDoesNotTouchCompaniesOfOtherCentres(): void
     {
         [$centre, $admin] = $this->setUpCentreWithAdmin();

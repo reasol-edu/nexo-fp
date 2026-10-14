@@ -226,8 +226,18 @@ class StudentController extends AbstractController
             $request->getSession()->remove('student_import_id');
 
             $allowedGroupIds = $request->request->all('groups');
+            // Si la vista previa envió la lista de estudiantes, solo se importan los marcados.
+            $allowedStudentIds = $request->request->has('students_listed')
+                ? array_map('strval', $request->request->all('students'))
+                : null;
             $groupsByName    = $this->buildGroupsByName($centre);
-            $result          = $this->processCsvImport($content, $groupsByName, dryRun: false, allowedGroupIds: $allowedGroupIds);
+            $result          = $this->processCsvImport(
+                $content,
+                $groupsByName,
+                dryRun: false,
+                allowedGroupIds: $allowedGroupIds,
+                allowedStudentIds: $allowedStudentIds,
+            );
             $this->em->flush();
             $this->buildImportFlash($result);
 
@@ -291,6 +301,7 @@ class StudentController extends AbstractController
             'skipped'       => $result['skipped'],
             'unknownGroups' => $result['unknownGroups'],
             'groupStats'    => $result['groupStats'],
+            'rows'          => $result['rows'],
         ]);
     }
 
@@ -302,15 +313,17 @@ class StudentController extends AbstractController
     /**
      * @param array<string, Group> $groupsByName
      * @param list<string>|null    $allowedGroupIds RFC4122 UUIDs; null = all (dry-run); [] = sin-grupo only
+     * @param list<string>|null    $allowedStudentIds NIE marcados en la vista previa; null = todos
      * @return array{
      *   created: int,
      *   updated: int,
      *   skipped: int,
      *   unknownGroups: array<string, true>,
-     *   groupStats: array<string, array{group: Group, name: string, created: int, updated: int}>
+     *   groupStats: array<string, array{group: Group, name: string, created: int, updated: int}>,
+     *   rows: list<array{studentId: string, name: string, group: string, isNew: bool}>
      * }
      */
-    private function processCsvImport(string $content, array $groupsByName, bool $dryRun, ?array $allowedGroupIds = null): array
+    private function processCsvImport(string $content, array $groupsByName, bool $dryRun, ?array $allowedGroupIds = null, ?array $allowedStudentIds = null): array
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $content);
@@ -324,6 +337,7 @@ class StudentController extends AbstractController
         $skipped       = 0;
         $unknownGroups = [];
         $groupStats    = [];
+        $rows          = [];
 
         while (($row = fgetcsv($stream, escape: '')) !== false) {
             if (count(array_filter($row, static fn($v) => trim((string) $v) !== '')) === 0) {
@@ -360,8 +374,18 @@ class StudentController extends AbstractController
                 continue;
             }
 
+            // En modo real, omitir los estudiantes que se desmarcaron en la vista previa
+            if (!$dryRun && $allowedStudentIds !== null && !in_array($studentId, $allowedStudentIds, true)) {
+                $skipped++;
+                continue;
+            }
+
             $existing = $this->students->findByStudentId($studentId);
             $isNew    = $existing === null;
+
+            if ($dryRun) {
+                $rows[] = ['studentId' => $studentId, 'name' => $lastName . ', ' . $firstName, 'group' => $group?->getName() ?? '', 'isNew' => $isNew];
+            }
 
             if (!$dryRun) {
                 if ($isNew) {
@@ -410,6 +434,7 @@ class StudentController extends AbstractController
             'skipped'       => $skipped,
             'unknownGroups' => $unknownGroups,
             'groupStats'    => $groupStats,
+            'rows'          => $rows,
         ];
     }
 

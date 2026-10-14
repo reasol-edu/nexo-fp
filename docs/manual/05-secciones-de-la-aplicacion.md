@@ -214,6 +214,9 @@ botón **«Descargar plantilla»** de la pantalla de importación entrega el lib
   otras, la importación se detiene indicándolo.
 - Antes de guardar, la aplicación muestra un **resumen** de lo que se creará y actualizará. Si alguna fila
   tiene errores, **no se importa nada** y se indica la hoja y la fila de cada uno.
+- La vista previa lista las empresas de la hoja «Empresas» con una casilla cada una (todas marcadas, con
+  **Seleccionar todo** y **Seleccionar nada**): las que se desmarquen se dejan fuera con sus centros de
+  trabajo y empleados.
 - Exportar un libro y volver a importarlo sin cambios no modifica nada.
 
 ### Historial de cambios

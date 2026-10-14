@@ -67,6 +67,42 @@
                 </div>
                 {% endif %}
 
+                {# ── Selección de estudiantes ────────────────────────────── #}
+                {% if rows|length > 0 %}
+                <input type="hidden" name="students_listed" value="1">
+                <div>
+                    <div class="flex items-center justify-between mb-2 gap-3">
+                        <h3 class="text-sm font-semibold text-gray-700">{{ 'students.import.preview.students.title'|trans({}, 'admin') }}</h3>
+                        <div class="flex items-center gap-3">
+                            <span id="student-count" class="text-xs text-gray-500 tabular-nums" data-template="{{ 'students.import.preview.students.selected'|trans({}, 'admin')|e('html_attr') }}"></span>
+                            <button type="button" id="students-all" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'students.import.preview.students.select_all'|trans({}, 'admin') }}</button>
+                            <button type="button" id="students-none" class="text-xs font-medium text-plum-600 hover:text-plum-800">{{ 'students.import.preview.students.select_none'|trans({}, 'admin') }}</button>
+                        </div>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto rounded-xl border border-gray-200">
+                        <table class="min-w-full text-sm">
+                            <tbody class="divide-y divide-gray-100">
+                                {% for row in rows %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="w-10 px-4 py-2">
+                                        <input type="checkbox" name="students[]" value="{{ row.studentId }}" checked
+                                               data-group-name="{{ row.group }}"
+                                               aria-label="{{ row.name|e('html_attr') }}"
+                                               class="js-student-box h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                                    </td>
+                                    <td class="px-2 py-2 text-gray-800">{{ row.name }}</td>
+                                    <td class="px-2 py-2 text-xs text-gray-500">{{ row.group != '' ? row.group : ('students.import.preview.students.no_group'|trans({}, 'admin')) }}</td>
+                                    <td class="px-2 py-2 text-xs text-right {{ row.isNew ? 'text-green-700' : 'text-blue-700' }}">
+                                        {{ (row.isNew ? 'students.import.preview.students.new' : 'students.import.preview.students.update')|trans({}, 'admin') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
                 {# ── Resumen total ───────────────────────────────────────── #}
                 <div>
                     {% if groupStats|length > 0 %}
@@ -122,4 +158,38 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    const boxes = Array.from(document.querySelectorAll('.js-student-box'));
+    const counter = document.getElementById('student-count');
+    if (boxes.length === 0 || !counter) return;
+
+    function refresh() {
+        const on = boxes.filter((b) => b.checked).length;
+        counter.textContent = counter.dataset.template.replace('%selected%', on).replace('%total%', boxes.length);
+    }
+
+    document.getElementById('students-all').addEventListener('click', function () { boxes.forEach((b) => { b.checked = true; }); syncGroups(); refresh(); });
+    document.getElementById('students-none').addEventListener('click', function () { boxes.forEach((b) => { b.checked = false; }); syncGroups(); refresh(); });
+    boxes.forEach((b) => b.addEventListener('change', function () { syncGroups(); refresh(); }));
+
+    // La casilla de cada grupo marca o desmarca a todo su alumnado, y se queda marcada si queda alguien.
+    const groupBoxes = Array.from(document.querySelectorAll('input[name="groups[]"]'));
+    function groupName(box) {
+        return box.closest('li').querySelector('label span').textContent.trim();
+    }
+    groupBoxes.forEach((gb) => gb.addEventListener('change', function () {
+        boxes.filter((b) => b.dataset.groupName === groupName(gb)).forEach((b) => { b.checked = gb.checked; });
+        refresh();
+    }));
+    function syncGroups() {
+        groupBoxes.forEach((gb) => {
+            gb.checked = boxes.some((b) => b.dataset.groupName === groupName(gb) && b.checked);
+        });
+    }
+
+    refresh();
+})();
+</script>
 {% endblock %}

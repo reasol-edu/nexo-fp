@@ -216,7 +216,17 @@ class CompanyController extends AbstractController
             }
 
             $session->remove('company_import_id');
-            $result = $this->companyImporter->import($path, $centre, apply: true);
+
+            // Si la vista previa listó las empresas, se dejan fuera las que se desmarcaron. La lista
+            // se vuelve a calcular en el servidor: solo cuentan las empresas realmente presentes.
+            $excluded = [];
+            if ($request->request->has('companies_listed')) {
+                $checked  = array_map('strval', $request->request->all('companies'));
+                $listed   = array_keys($this->companyImporter->import($path, $centre, apply: false)->companies);
+                $excluded = array_values(array_diff($listed, $checked));
+            }
+
+            $result = $this->companyImporter->import($path, $centre, apply: true, excludedKeys: $excluded);
             @unlink($path);
 
             if ($result->hasErrors()) {
