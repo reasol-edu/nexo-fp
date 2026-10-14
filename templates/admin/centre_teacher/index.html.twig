@@ -19,7 +19,7 @@
             {% endif %}
         </div>
         {% if centre.activeAcademicYear and not is_viewing_past_year() %}
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ path('app_admin_centre_teachers_import', {centreId: centre.id}) }}"
                    class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700
                           hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-xs">

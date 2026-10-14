@@ -41,7 +41,7 @@
                         <li class="flex items-center justify-between gap-3 px-6 py-3 text-sm">
                             <span class="text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
                             <a href="{{ path('app_admin_centre_teachers_index', {centreId: centre.id}) }}"
-                               class="text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.teachers.fix'|trans({}, 'admin') }}</a>
+                               class="inline-flex min-h-11 items-center text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.teachers.fix'|trans({}, 'admin') }}</a>
                         </li>
                     {% endfor %}
                     {% if teachers_without_email|length > 10 %}
@@ -65,7 +65,7 @@
                         <li class="flex items-center justify-between gap-3 px-6 py-3 text-sm">
                             <span class="text-gray-900">{{ company.name }} <span class="text-gray-400">· {{ company.city }}</span></span>
                             <a href="{{ path('app_companies_edit', {id: company.id}) }}"
-                               class="text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.companies.fix'|trans({}, 'admin') }}</a>
+                               class="inline-flex min-h-11 items-center text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.companies.fix'|trans({}, 'admin') }}</a>
                         </li>
                     {% endfor %}
                     {% if companies_without_workers|length > 10 %}
@@ -92,7 +92,7 @@
                                 <span class="text-gray-400">· {{ 'data_review.drafts.count'|trans({'%count%': row.drafts}, 'admin') }}</span>
                             </span>
                             <a href="{{ path('app_stays_show', {id: row.stay.id}) }}"
-                               class="text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.drafts.fix'|trans({}, 'admin') }}</a>
+                               class="inline-flex min-h-11 items-center text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.drafts.fix'|trans({}, 'admin') }}</a>
                         </li>
                     {% endfor %}
                 </ul>

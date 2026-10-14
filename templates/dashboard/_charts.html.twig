@@ -18,7 +18,7 @@
         {%- set n = stats|length -%}
         {%- set svgH = n * 32 + 16 -%}
         {# El gráfico es decorativo para lectores de pantalla: sus cifras están en la tabla siguiente. #}
-        <table class="sr-only">
+        <div class="sr-only"><table>
             <caption>{{ 'positions_by_family'|trans({}, 'dashboard') }}</caption>
             <thead>
                 <tr>
@@ -38,7 +38,7 @@
                     </tr>
                 {%- endfor -%}
             </tbody>
-        </table>
+        </table></div>
         <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
              class="w-full" aria-hidden="true" focusable="false">
             {%- for stat in stats -%}
@@ -109,7 +109,7 @@
         {%- set n = stats|length -%}
         {%- set svgH = n * 32 + 16 -%}
         {# El gráfico es decorativo para lectores de pantalla: sus cifras están en la tabla siguiente. #}
-        <table class="sr-only">
+        <div class="sr-only"><table>
             <caption>{{ 'students_by_family'|trans({}, 'dashboard') }}</caption>
             <thead>
                 <tr>
@@ -129,7 +129,7 @@
                     </tr>
                 {%- endfor -%}
             </tbody>
-        </table>
+        </table></div>
         <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
              class="w-full" aria-hidden="true" focusable="false">
             {%- for stat in stats -%}

@@ -52,6 +52,7 @@
 
                     {% if def.type.value == 'boolean' %}
                         <select
+                            aria-label="{{ ('settings.key.' ~ keySlug ~ '.label')|trans({}, 'settings')|e('html_attr') }}"
                             class="rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-3 pr-8 text-sm text-gray-900
                                    focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20
                                    transition-colors cursor-pointer
@@ -80,6 +81,7 @@
                         {% endif %}
 
                         <input
+                            aria-label="{{ ('settings.key.' ~ keySlug ~ '.label')|trans({}, 'settings')|e('html_attr') }}"
                             type="number"
                             {% if def.minValue is not null %}min="{{ def.minValue }}"{% endif %}
                             {% if def.maxValue is not null %}max="{{ def.maxValue }}"{% endif %}
@@ -98,6 +100,7 @@
 
                     {% else %}
                         <input
+                            aria-label="{{ ('settings.key.' ~ keySlug ~ '.label')|trans({}, 'settings')|e('html_attr') }}"
                             type="text"
                             {% if def.minValue is not null %}minlength="{{ def.minValue }}"{% endif %}
                             {% if def.maxValue is not null %}maxlength="{{ def.maxValue }}"{% endif %}

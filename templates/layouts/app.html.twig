@@ -65,7 +65,7 @@
                     <a href="{{ path('app_select_centre') }}"
                        title="{{ 'switch_centre'|trans({}, 'navigation') }}"
                        aria-label="{{ 'switch_centre'|trans({}, 'navigation') }}"
-                       class="shrink-0 rounded-md p-1 text-plum-500 hover:bg-plum-800 hover:text-white transition-colors">
+                       class="shrink-0 rounded-md p-3 lg:p-1 text-plum-500 hover:bg-plum-800 hover:text-white transition-colors">
                         {{ ux_icon('heroicons:arrows-right-left', {class: 'h-3.5 w-3.5'}) }}
                     </a>
                 {% endif %}
@@ -73,7 +73,7 @@
                     <a href="{{ path('app_select_year_page', {'return_to': app.request.pathInfo}) }}"
                        title="{{ 'switch_year'|trans({}, 'navigation') }}"
                        aria-label="{{ 'switch_year'|trans({}, 'navigation') }}"
-                       class="shrink-0 rounded-md p-1 {{ viewing_past ? 'text-amber-400 hover:bg-amber-500/20 hover:text-amber-300' : 'text-plum-500 hover:bg-plum-800 hover:text-white' }} transition-colors">
+                       class="shrink-0 rounded-md p-3 lg:p-1 {{ viewing_past ? 'text-amber-400 hover:bg-amber-500/20 hover:text-amber-300' : 'text-plum-500 hover:bg-plum-800 hover:text-white' }} transition-colors">
                         {{ ux_icon('heroicons:calendar-days', {class: 'h-3.5 w-3.5'}) }}
                     </a>
                 {% endif %}
@@ -206,13 +206,13 @@
             <div class="space-y-0.5">
                 <a href="{{ path('app_profile') }}"
                    {{ current_route starts with 'app_profile' ? 'aria-current="page"' : '' }}
-                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors
+                   class="group flex items-center gap-2.5 rounded-md px-2 py-3 lg:py-1.5 text-xs font-medium transition-colors
                           {{ current_route starts with 'app_profile' ? 'bg-plum-800 text-white' : 'text-plum-300 hover:bg-plum-900 hover:text-white' }}">
                     {{ ux_icon('heroicons:user', {class: 'h-4 w-4 shrink-0'}) }}
                     {{ 'profile'|trans({}, 'navigation') }}
                 </a>
                 <a href="{{ path('app_logout', {'_csrf_token': csrf_token('logout')}) }}"
-                   class="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-xs font-medium
+                   class="group flex items-center gap-2.5 rounded-md px-2 py-3 lg:py-1.5 text-xs font-medium
                           text-plum-300 hover:bg-red-500/15 hover:text-red-300 transition-colors">
                     {{ ux_icon('heroicons:arrow-right-on-rectangle', {class: 'h-4 w-4 shrink-0'}) }}
                     {{ 'logout'|trans({}, 'navigation') }}
@@ -230,10 +230,10 @@
             <button type="button"
                     data-action="sidebar#toggle"
                     aria-label="{{ 'menu'|trans({}, 'navigation') }}"
-                    class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors lg:hidden">
+                    class="rounded-lg p-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors lg:hidden -ml-3">
                 {{ ux_icon('heroicons:bars-3', {class: 'h-5 w-5'}) }}
             </button>
-            <a href="{{ path('app_dashboard') }}" class="text-sm font-semibold text-plum-900 lg:hidden">{{ app_name }}</a>
+            <a href="{{ path('app_dashboard') }}" class="py-3 text-sm font-semibold text-plum-900 lg:hidden">{{ app_name }}</a>
 
             <div class="ml-auto flex items-center gap-2">
                 {% if active_centre %}
@@ -247,7 +247,7 @@
                     </button>
                     <button type="button"
                             data-action="command-palette#open"
-                            class="sm:hidden rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
+                            class="sm:hidden rounded-lg p-3 text-gray-500 hover:bg-gray-100"
                             aria-label="{{ 'open'|trans({}, 'search') }}">
                         {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4'}) }}
                     </button>

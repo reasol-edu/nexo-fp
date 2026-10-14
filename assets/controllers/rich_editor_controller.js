@@ -24,6 +24,11 @@ export default class extends Controller {
             },
         });
 
+        // El desplegable de títulos de Quill no trae nombre accesible.
+        this.element.querySelectorAll('.ql-header .ql-picker-label').forEach((label) => {
+            label.setAttribute('aria-label', 'Estilo de párrafo');
+        });
+
         const stored = this.inputTarget.value.trim();
         if (stored) {
             this.quill.clipboard.dangerouslyPasteHTML(stored);

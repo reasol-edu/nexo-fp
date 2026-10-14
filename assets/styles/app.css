@@ -38,6 +38,45 @@ summary:focus-visible {
     outline-offset: 2px;
 }
 
+/* En móvil los campos de formulario miden al menos 16 px: con menos, iOS Safari amplía la página al enfocarlos. */
+@media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* Objetivos táctiles en móvil fuera de las tablas: botones y enlaces con aspecto de botón (inline-flex),
+   encabezados ordenables y migas de pan miden al menos 44 px de alto. El texto en línea no se toca. */
+@media (max-width: 639px) {
+    main button:not(.js-confirm-trigger),
+    main a.inline-flex,
+    main a.flex:not(.group) {
+        min-height: 2.75rem;
+    }
+
+    /* Detalle de la estancia: un estudiante sin puesto solo muestra su nombre y «Sin puesto asignado»;
+       los tutores y el estado vacíos alargaban la lista decenas de pantallas. */
+    table.table-cards tr.js-student-row[data-flags~="sin-puesto"] td[data-label]:nth-child(n+3) {
+        display: none;
+    }
+
+    /* Enlaces de texto de las tarjetas (nombre de la empresa, del estudiante…): zona de pulsación mayor. */
+    table.table-cards tbody td a:not(.inline-flex):not(.flex) {
+        display: inline-block;
+        padding-block: 0.6rem;
+    }
+
+    /* Migas de pan: enlaces dentro de la fila gris pequeña sobre el título. */
+    main div.flex.text-sm.text-gray-500 > a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        padding-inline: 0.25rem;
+    }
+}
+
 /* Tabla adaptable a tarjetas: en móvil (<640px) cada fila se apila como tarjeta
    y cada celda muestra su etiqueta (atributo data-label), evitando el scroll
    horizontal. En escritorio se comporta como una tabla normal. Las celdas sin

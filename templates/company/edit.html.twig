@@ -164,7 +164,7 @@
                     {{ 'company.liaisons.label'|trans({}, 'companies') }}
                 </label>
                 <p class="text-xs text-gray-400 mb-2">{{ 'company.liaisons.help'|trans({}, 'companies') }}</p>
-                <select name="liaisons[]" multiple
+                <select name="liaisons[]" multiple aria-label="{{ 'company.liaisons.label'|trans({}, 'companies')|e('html_attr') }}"
                         data-controller="symfony--ux-autocomplete--autocomplete"
                         data-symfony--ux-autocomplete--autocomplete-url-value="{{ path('ux_entity_autocomplete', {alias: 'teacher_liaison'}) }}"
                         data-symfony--ux-autocomplete--autocomplete-min-characters-value="2"
