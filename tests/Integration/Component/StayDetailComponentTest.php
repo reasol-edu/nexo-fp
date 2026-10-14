@@ -569,7 +569,7 @@ class StayDetailComponentTest extends ControllerTestCase
 
         // Falta el tutor de empresa: ninguno puede pasar a Séneca y se cuentan como omitidos.
         $component->call('bulk', ['op' => 'pending', 'positionIds' => $ids]);
-        self::assertStringContainsString('0 puestos actualizados y 2 omitidos', (string) $component->render());
+        self::assertStringContainsString('Ningún puesto actualizado y 2 omitidos', (string) $component->render());
 
         $this->em->clear();
         foreach ($ids as $id) {
@@ -757,7 +757,7 @@ class StayDetailComponentTest extends ControllerTestCase
         $list->call('bulk', ['op' => 'sign', 'positionIds' => [$id->toRfc4122(), 'no-es-un-uuid']]);
 
         $html = (string) $list->render();
-        self::assertStringContainsString('1 puestos actualizados', $html);
+        self::assertStringContainsString('1 puesto actualizado', $html);
         self::assertMatchesRegularExpression('/data-controller="[^"]*bulk-select[^"]*"/', $html);
         self::assertMatchesRegularExpression('/data-controller="[^"]*filter-persist[^"]*"/', $html);
         $this->em->clear();

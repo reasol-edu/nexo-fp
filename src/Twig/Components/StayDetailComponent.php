@@ -730,7 +730,7 @@ class StayDetailComponent extends AbstractController
             : null;
 
         $this->toast($skipped > 0 ? 'stays.toast.bulk_partial' : 'stays.toast.bulk_done', [
-            '%done%'    => (string) $done,
+            '%count%'   => $done,
             '%skipped%' => (string) $skipped,
         ], $undo);
 
@@ -791,7 +791,7 @@ class StayDetailComponent extends AbstractController
             return $conflict;
         }
 
-        $this->toast('stays.toast.bulk_undone', ['%done%' => (string) $restored]);
+        $this->toast('stays.toast.bulk_undone', ['%count%' => $restored]);
 
         return null;
     }
@@ -928,7 +928,7 @@ class StayDetailComponent extends AbstractController
     }
 
     /**
-     * @param array<string, string>                                     $params
+     * @param array<string, string|int>                                 $params
      * @param array{action: string, args: array<string, scalar>}|null   $undo   acción en vivo que revierte el cambio
      */
     private function toast(string $key, array $params, ?array $undo = null): void

@@ -332,7 +332,7 @@ class StayListComponent extends AbstractController
 
         $this->addFlash('live_toast', $this->translator->trans(
             $skipped > 0 ? 'stays.toast.bulk_partial' : 'stays.toast.bulk_done',
-            ['%done%' => (string) $done, '%skipped%' => (string) $skipped],
+            ['%count%' => $done, '%skipped%' => (string) $skipped],
             'stays',
         ));
     }

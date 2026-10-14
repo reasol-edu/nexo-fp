@@ -260,7 +260,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
         $teacher = $s['coordDaw'];
         $component->call('bulk', ['op' => 'tutor', 'positionIds' => [$id->toRfc4122()], 'teacherId' => $teacher->getId()->toRfc4122()]);
 
-        self::assertStringContainsString('0 puestos actualizados y 1 omitidos', (string) $component->render());
+        self::assertStringContainsString('Ningún puesto actualizado y 1 omitidos', (string) $component->render());
         $this->em->clear();
         self::assertNull($this->em->find(TrainingPosition::class, $id)->getAcademicTutor());
     }

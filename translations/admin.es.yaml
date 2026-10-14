@@ -541,6 +541,7 @@ data_review.subtitle: 'Datos de %centre% (curso %year%) que conviene completar p
 data_review.all_good: 'No hay nada que revisar: los docentes tienen correo, las empresas con puestos tienen trabajadores y no hay puestos en borrador con la estancia en marcha.'
 data_review.hub.help: 'Docentes sin correo, empresas sin trabajadores y puestos en borrador con la estancia ya en marcha.'
 data_review.hub.action: 'Revisar datos'
+data_review.more: '{1} … y 1 más|]1,Inf[ … y %count% más'
 data_review.teachers.title: '{1} 1 docente activo sin correo electrónico|]1,Inf[ %count% docentes activos sin correo electrónico'
 data_review.teachers.help: 'No reciben avisos de asignación ni el resumen semanal.'
 data_review.teachers.fix: 'Ir a docentes'

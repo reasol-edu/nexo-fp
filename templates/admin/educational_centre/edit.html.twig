@@ -195,7 +195,8 @@
                                 {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
                                 {{ 'years.action.edit'|trans({}, 'admin') }}
                             </a>
-                            {# Eliminar #}
+                            {# Eliminar: el curso activo no se puede eliminar #}
+                            {% if not centre.activeAcademicYear or centre.activeAcademicYear.id != year.id %}
                             <form method="post"
                                   action="{{ path('app_admin_centres_year_delete', {centreId: centre.id, yearId: year.id}) }}"
                                   class="js-confirm-form"
@@ -209,6 +210,7 @@
                                     {{ 'years.action.delete'|trans({}, 'admin') }}
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </li>
                 {% endfor %}

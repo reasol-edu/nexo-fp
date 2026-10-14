@@ -37,13 +37,16 @@
                     <p class="mt-0.5 text-sm text-amber-800">{{ 'data_review.teachers.help'|trans({}, 'admin') }}</p>
                 </div>
                 <ul class="divide-y divide-gray-100">
-                    {% for teacher in teachers_without_email %}
+                    {% for teacher in teachers_without_email|slice(0, 10) %}
                         <li class="flex items-center justify-between gap-3 px-6 py-3 text-sm">
                             <span class="text-gray-900">{{ teacher.name.lastName }}, {{ teacher.name.firstName }}</span>
                             <a href="{{ path('app_admin_centre_teachers_index', {centreId: centre.id}) }}"
                                class="text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.teachers.fix'|trans({}, 'admin') }}</a>
                         </li>
                     {% endfor %}
+                    {% if teachers_without_email|length > 10 %}
+                        <li class="px-6 py-3 text-sm text-gray-500">{{ 'data_review.more'|trans({'%count%': teachers_without_email|length - 10}, 'admin') }}</li>
+                    {% endif %}
                 </ul>
             </section>
         {% endif %}
@@ -58,13 +61,16 @@
                     <p class="mt-0.5 text-sm text-amber-800">{{ 'data_review.companies.help'|trans({}, 'admin') }}</p>
                 </div>
                 <ul class="divide-y divide-gray-100">
-                    {% for company in companies_without_workers %}
+                    {% for company in companies_without_workers|slice(0, 10) %}
                         <li class="flex items-center justify-between gap-3 px-6 py-3 text-sm">
                             <span class="text-gray-900">{{ company.name }} <span class="text-gray-400">· {{ company.city }}</span></span>
                             <a href="{{ path('app_companies_edit', {id: company.id}) }}"
                                class="text-plum-600 hover:text-plum-800 font-medium">{{ 'data_review.companies.fix'|trans({}, 'admin') }}</a>
                         </li>
                     {% endfor %}
+                    {% if companies_without_workers|length > 10 %}
+                        <li class="px-6 py-3 text-sm text-gray-500">{{ 'data_review.more'|trans({'%count%': companies_without_workers|length - 10}, 'admin') }}</li>
+                    {% endif %}
                 </ul>
             </section>
         {% endif %}
