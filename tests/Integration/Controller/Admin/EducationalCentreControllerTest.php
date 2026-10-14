@@ -325,6 +325,59 @@ class EducationalCentreControllerTest extends ControllerTestCase
         self::assertNull($this->em->find(AcademicYear::class, $extra->getId()));
     }
 
+    public function testDeleteYearWithDataIsRefusedInsteadOfFailing(): void
+    {
+        $admin  = $this->makeAdmin('admin.1');
+        $centre = $this->makeCentre('41000001');
+        $active = $this->makeYear($centre, '2024-2025');
+        $old    = $this->makeYear($centre, '2023-2024');
+        $family = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($old);
+        $this->persist($admin, $centre, $active, $old, $family);
+        $centre->setActiveAcademicYear($active);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $yearId   = $old->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId);
+        $token    = $crawler->filter('form[action*="/cursos/' . $yearId . '/eliminar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar', ['_token' => $token]);
+
+        self::assertResponseRedirects('/admin/centros/' . $centreId);
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('No se puede eliminar un curso que tiene datos (1 familia(s)', $crawler->text());
+
+        $this->em->clear();
+        self::assertNotNull($this->em->find(AcademicYear::class, $old->getId()));
+    }
+
+    public function testDeleteYearThatOnlyHasTeacherMembershipsRemovesThem(): void
+    {
+        $admin   = $this->makeAdmin('admin.1');
+        $centre  = $this->makeCentre('41000001');
+        $active  = $this->makeYear($centre, '2024-2025');
+        $extra   = $this->makeYear($centre, '2025-2026');
+        $teacher = $this->makeTeacher('docente.1');
+        $teacher->addAcademicYear($extra);
+        $this->persist($admin, $centre, $active, $extra, $teacher);
+        $centre->setActiveAcademicYear($active);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $yearId   = $extra->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId);
+        $token    = $crawler->filter('form[action*="/cursos/' . $yearId . '/eliminar"] [name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar', ['_token' => $token]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertNull($this->em->find(AcademicYear::class, $extra->getId()));
+        self::assertNotNull($this->em->find(Teacher::class, $teacher->getId()));
+    }
+
     public function testActivateYearSetsActiveYear(): void
     {
         $admin  = $this->makeAdmin('admin.1');

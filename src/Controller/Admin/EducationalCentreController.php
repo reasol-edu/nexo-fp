@@ -11,6 +11,7 @@ use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
 use App\Service\AcademicYearRollover;
 use App\Service\ImportOptions;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
@@ -370,12 +371,28 @@ class EducationalCentreController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $content = $this->years->countContent($year);
+
         if ($centre->getActiveAcademicYear() === $year) {
             $this->addFlash('error', $this->t('year.flash.delete_active_error'));
+        } elseif ($content['families'] > 0 || $content['stays'] > 0) {
+            // Un curso con oferta formativa o estancias no se elimina: borraría el historial.
+            $this->addFlash('error', $this->translator->trans('year.flash.delete_with_data_error', [
+                '%families%' => $content['families'],
+                '%stays%'    => $content['stays'],
+            ], 'admin'));
         } else {
-            $this->em->remove($year);
-            $this->em->flush();
-            $this->addFlash('success', $this->t('year.flash.deleted'));
+            try {
+                $this->em->remove($year);
+                $this->em->flush();
+                $this->addFlash('success', $this->t('year.flash.deleted'));
+            } catch (ForeignKeyConstraintViolationException) {
+                // Algún otro dato referencia el curso: no se elimina, en lugar de fallar con un 500.
+                $this->addFlash('error', $this->translator->trans('year.flash.delete_with_data_error', [
+                    '%families%' => 0,
+                    '%stays%'    => 0,
+                ], 'admin'));
+            }
         }
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);

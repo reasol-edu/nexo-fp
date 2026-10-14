@@ -37,6 +37,24 @@ class AcademicYearRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Datos que cuelgan de un curso y le impiden eliminarse: familias profesionales (con sus enseñanzas,
+     * niveles y grupos) y estancias. La pertenencia de docentes al curso no cuenta: se retira con él.
+     *
+     * @return array{families: int, stays: int}
+     */
+    public function countContent(AcademicYear $year): array
+    {
+        $em = $this->getEntityManager();
+
+        return [
+            'families' => (int) $em->createQuery('SELECT COUNT(f.id) FROM App\Entity\ProfessionalFamily f WHERE f.academicYear = :year')
+                ->setParameter('year', $year->getId(), 'uuid')->getSingleScalarResult(),
+            'stays'    => (int) $em->createQuery('SELECT COUNT(s.id) FROM App\Entity\Stay s WHERE s.academicYear = :year')
+                ->setParameter('year', $year->getId(), 'uuid')->getSingleScalarResult(),
+        ];
+    }
+
     public function existsByCentreAndName(EducationalCentre $centre, string $name): bool
     {
         return $this->createQueryBuilder('ay')
