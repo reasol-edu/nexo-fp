@@ -38,6 +38,9 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 #[AsLiveComponent]
 class StayDetailComponent extends AbstractController
 {
+    /** Máximo de puestos de una acción masiva que se pueden deshacer (el estado previo viaja en el botón). */
+    private const MAX_UNDO_BULK = 60;
+
     use DefaultActionTrait;
 
     #[LiveProp]
@@ -679,12 +682,20 @@ class StayDetailComponent extends AbstractController
         $done = 0;
         $skipped = 0;
         $notify = [];
+        $snapshot = [];
         foreach (array_slice(array_unique(array_filter($positionIds, 'is_string')), 0, 500) as $positionId) {
             $position = $this->positions->findByIdAndStay($positionId, $stay);
             if ($position === null || !$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
                 ++$skipped;
                 continue;
             }
+
+            $before = [
+                'id'     => $positionId,
+                'state'  => $position->getState()->value,
+                'signed' => $position->isSigned(),
+                'tutor'  => $position->getAcademicTutor()?->getId()->toRfc4122() ?? '',
+            ];
 
             $changed = match ($op) {
                 'pending' => $this->stateChanger->transition($position, TrainingPositionState::PENDING),
@@ -697,6 +708,7 @@ class StayDetailComponent extends AbstractController
 
             if ($changed) {
                 ++$done;
+                $snapshot[] = $before;
                 if ($op === 'tutor') {
                     $notify[] = $position;
                 }
@@ -712,10 +724,74 @@ class StayDetailComponent extends AbstractController
             $this->notifier->notifyTutorAssigned($position);
         }
 
+        // El estado anterior viaja en el propio botón «Deshacer»; con demasiados puestos no se ofrece.
+        $undo = $done > 0 && $done <= self::MAX_UNDO_BULK
+            ? ['action' => 'restoreBulk', 'args' => ['snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR)]]
+            : null;
+
         $this->toast($skipped > 0 ? 'stays.toast.bulk_partial' : 'stays.toast.bulk_done', [
             '%done%'    => (string) $done,
             '%skipped%' => (string) $skipped,
-        ]);
+        ], $undo);
+
+        return null;
+    }
+
+    /**
+     * Deshace una acción masiva: devuelve cada puesto a su estado, firma y tutor/a docente anteriores
+     * (`snapshot` es la lista JSON que generó `bulk`). Respeta los permisos y la máquina de estados.
+     */
+    #[LiveAction]
+    public function restoreBulk(#[LiveArg] string $snapshot): ?Response
+    {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null) {
+            throw new AccessDeniedException();
+        }
+
+        $entries = json_decode($snapshot, true);
+        if (!\is_array($entries)) {
+            return null;
+        }
+
+        $restored = 0;
+        foreach (array_slice($entries, 0, self::MAX_UNDO_BULK) as $entry) {
+            if (!\is_array($entry) || !\is_string($entry['id'] ?? null)) {
+                continue;
+            }
+
+            $position = $this->positions->findByIdAndStay($entry['id'], $stay);
+            $target   = TrainingPositionState::tryFrom((string) ($entry['state'] ?? ''));
+            if ($position === null || $target === null || !$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+                continue;
+            }
+
+            $changed = false;
+            if ($position->getState() !== $target) {
+                $changed = $this->stateChanger->transition($position, $target, (bool) ($entry['signed'] ?? false));
+            } elseif ($position->isSigned() !== (bool) ($entry['signed'] ?? false)) {
+                $changed = $this->stateChanger->sign($position, (bool) $entry['signed']);
+            }
+
+            $tutorId = (string) ($entry['tutor'] ?? '');
+            if (($position->getAcademicTutor()?->getId()->toRfc4122() ?? '') !== $tutorId) {
+                $tutor = $tutorId !== '' ? $this->teachers->findById($tutorId) : null;
+                if ($tutorId === '' || $tutor !== null) {
+                    $position->setAcademicTutor($tutor);
+                    $changed = true;
+                }
+            }
+
+            if ($changed) {
+                ++$restored;
+            }
+        }
+
+        if ($restored > 0 && ($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+
+        $this->toast('stays.toast.bulk_undone', ['%done%' => (string) $restored]);
 
         return null;
     }

@@ -579,6 +579,33 @@ class StayDetailComponentTest extends ControllerTestCase
         }
     }
 
+    public function testBulkActionOffersUndoThatRestoresThePreviousTutors(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $previous = (new Teacher(new PersonName('Ana', 'Ruiz')))->setUsername('tutor.previo');
+        $newTutor = (new Teacher(new PersonName('Luisa', 'Gomez')))->setUsername('tutor.nuevo');
+        $this->persist($previous, $newTutor);
+        $position->setStudent($student)->setAcademicTutor($previous);
+        $this->flush();
+        $positionId = $position->getId()->toRfc4122();
+
+        $component = $this->detail($admin, $stay);
+        $component->call('bulk', ['op' => 'tutor', 'positionIds' => [$positionId], 'teacherId' => $newTutor->getId()->toRfc4122()]);
+
+        $html = (string) $component->render();
+        self::assertStringContainsString('data-live-action-param="restoreBulk"', $html);
+        $this->em->clear();
+        self::assertSame($newTutor->getId()->toRfc4122(), $this->em->find(TrainingPosition::class, $position->getId())->getAcademicTutor()?->getId()->toRfc4122());
+
+        $snapshot = json_encode([[
+            'id' => $positionId, 'state' => 'DRAFT', 'signed' => false, 'tutor' => $previous->getId()->toRfc4122(),
+        ]]);
+        $component->call('restoreBulk', ['snapshot' => $snapshot]);
+
+        $this->em->clear();
+        self::assertSame($previous->getId()->toRfc4122(), $this->em->find(TrainingPosition::class, $position->getId())->getAcademicTutor()?->getId()->toRfc4122());
+    }
+
     public function testUnassigningOffersUndoThatRestoresTheStudentAndTheirTutor(): void
     {
         [$admin, $stay, $student, $position] = $this->makeScenario();
