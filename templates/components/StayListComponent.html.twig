@@ -23,7 +23,15 @@
 <div {{ attributes.defaults(stimulus_controller('filter-persist', {
     centreId: centre.id.toRfc4122,
     active: this.hasActiveFilters,
-})) }}>
+})|stimulus_controller('bulk-select')) }}>
+    <div class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none" role="status" aria-live="polite" aria-atomic="true">
+        {% for message in app.flashes('live_toast') %}
+            <div class="pointer-events-auto flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm text-white shadow-lg">
+                {{ ux_icon('heroicons:check-circle', {class: 'h-4 w-4 text-green-400 shrink-0'}) }}
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
     {% if centre.activeAcademicYear is null %}
         <div class="px-6 py-16 text-center">
             {{ ux_icon('heroicons:exclamation-circle', {class: 'mx-auto h-10 w-10 text-amber-300 mb-3'}) }}
@@ -548,6 +556,14 @@
                 </a>
             </div>
 
+            {# Barra de acciones masivas (bulk_select_controller.js) #}
+            <div data-bulk-select-target="bar" data-live-ignore
+                 class="hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 flex items-center gap-2 rounded-2xl bg-gray-900 px-4 py-3 text-sm text-white shadow-xl">
+                <span data-bulk-select-target="count" data-template="{{ 'stays.bulk.selected'|trans({}, 'stays')|e('html_attr') }}" class="font-semibold"></span>
+                <button type="button" data-action="bulk-select#run" data-op="sign" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.state_action.sign'|trans({}, 'stays') }}</button>
+                <button type="button" data-action="bulk-select#clear" class="rounded-lg px-2 py-1 text-xs text-white/70 hover:text-white transition-colors">{{ 'stays.bulk.clear'|trans({}, 'stays') }}</button>
+            </div>
+
             {# ── Tabla — pantallas medianas y grandes ─────────────────────────── #}
             <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
                 <table class="table-cards min-w-full divide-y divide-gray-200 text-sm">
@@ -555,6 +571,9 @@
                         <tr>
                             <th aria-sort="{{ _self.ariaSort(pendingSort, 'student', pendingSortDir) }}"
                                 class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                                <input type="checkbox" data-bulk-select-target="all" data-action="change->bulk-select#toggleAll"
+                                       class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                                       aria-label="{{ 'stays.bulk.select_all'|trans({}, 'stays')|e('html_attr') }}">
                                 <button data-action="live#action" data-live-action-param="setPendingSort" data-live-sort-param="student"
                                         class="inline-flex items-center hover:text-gray-700 transition-colors">
                                     {{ 'stays.pending.col.student'|trans({}, 'stays') }}
@@ -609,6 +628,11 @@
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td data-label="{{ 'stays.pending.col.student'|trans({}, 'stays')|e('html_attr') }}"
                                     class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    {% if is_granted('stay.manage_position', position) %}
+                                        <input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
+                                               class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                                               aria-label="{{ 'stays.bulk.select_row'|trans({'%student%': student ? student.name.full() : ''}, 'stays')|e('html_attr') }}">
+                                    {% endif %}
                                     {% if student %}
                                         {{ student.name.firstName }} {{ student.name.lastName }}
                                     {% else %}

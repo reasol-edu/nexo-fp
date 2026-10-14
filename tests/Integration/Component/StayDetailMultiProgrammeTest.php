@@ -249,6 +249,22 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
         self::assertNotNull($this->em->find(TrainingPosition::class, $positionId)->getStudent());
     }
 
+    public function testBulkActionSkipsPositionsOfAnotherProgrammesStudents(): void
+    {
+        $s = $this->makeScenario();
+        $s['shared']->setStudent($s['damStudent']);
+        $this->flush();
+        $id = $s['shared']->getId();
+
+        $component = $this->component($s['stay'], $s['coordDaw']);
+        $teacher = $s['coordDaw'];
+        $component->call('bulk', ['op' => 'tutor', 'positionIds' => [$id->toRfc4122()], 'teacherId' => $teacher->getId()->toRfc4122()]);
+
+        self::assertStringContainsString('0 puestos actualizados y 1 omitidos', (string) $component->render());
+        $this->em->clear();
+        self::assertNull($this->em->find(TrainingPosition::class, $id)->getAcademicTutor());
+    }
+
     public function testStayDeleteButtonOnlyForWhoManagesEveryProgramme(): void
     {
         $s = $this->makeScenario();

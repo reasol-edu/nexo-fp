@@ -151,6 +151,36 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * Puestos por identificador (como mucho 500). Se compara de uno en uno con tipo «uuid»
+     * porque `IN (:ids)` convierte los ids a texto y falla con ids binarios (MySQL, SQLite).
+     *
+     * @param list<string> $ids
+     * @return list<TrainingPosition>
+     */
+    public function findByIds(array $ids): array
+    {
+        $ids = \array_slice(\array_values(\array_unique($ids)), 0, 500);
+        if ($ids === []) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('tp')->addSelect('s')->join('tp.stay', 's');
+        $or = $qb->expr()->orX();
+        foreach ($ids as $i => $id) {
+            if (!\Symfony\Component\Uid\Uuid::isValid($id)) {
+                continue;
+            }
+            $or->add('tp.id = :id' . $i);
+            $qb->setParameter('id' . $i, $id, 'uuid');
+        }
+        if ($or->count() === 0) {
+            return [];
+        }
+
+        return array_values($qb->where($or)->getQuery()->getResult());
+    }
+
     public function findByStayAndStudent(Stay $stay, Student $student): ?TrainingPosition
     {
         return $this->createQueryBuilder('tp')

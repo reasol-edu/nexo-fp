@@ -548,6 +548,60 @@ class StayDetailComponentTest extends ControllerTestCase
         self::assertFalse($this->em->find(TrainingPosition::class, $position->getId())->isSigned());
     }
 
+    public function testBulkActionsApplyToEverySelectedPositionAndSkipTheRest(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $second = (new TrainingPosition())->setStay($stay)->setWorkcenter($position->getWorkcenter());
+        $this->persist($second);
+        $tutor = (new Teacher(new PersonName('Luisa', 'Gomez')))->setUsername('tutor.masivo');
+        $this->persist($tutor);
+        $other = (new Student(new PersonName('Luis', 'Perez')))->setStudentId('2024-077');
+        $stay->addStudent($other);
+        $this->persist($other);
+        $position->setStudent($student);
+        $second->setStudent($other);
+        $this->flush();
+        $ids = [$position->getId()->toRfc4122(), $second->getId()->toRfc4122()];
+
+        $component = $this->detail($admin, $stay);
+        $component->call('bulk', ['op' => 'tutor', 'positionIds' => $ids, 'teacherId' => $tutor->getId()->toRfc4122()]);
+        self::assertStringContainsString('2 puestos actualizados.', (string) $component->render());
+
+        // Falta el tutor de empresa: ninguno puede pasar a Séneca y se cuentan como omitidos.
+        $component->call('bulk', ['op' => 'pending', 'positionIds' => $ids]);
+        self::assertStringContainsString('0 puestos actualizados y 2 omitidos', (string) $component->render());
+
+        $this->em->clear();
+        foreach ($ids as $id) {
+            $reloaded = $this->em->find(TrainingPosition::class, $id);
+            self::assertSame($tutor->getId()->toRfc4122(), $reloaded->getAcademicTutor()?->getId()->toRfc4122());
+            self::assertSame(TrainingPositionState::DRAFT, $reloaded->getState());
+        }
+    }
+
+    public function testPendingSignaturesTabCanSignSeveralPositionsAtOnce(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $position->setState(TrainingPositionState::DONE);
+        $this->flush();
+        $id = $position->getId();
+
+        $list = $this->createLiveComponent(
+            'StayListComponent',
+            ['centre' => $stay->getAcademicYear()->getEducationalCentre(), 'tab' => 'pending'],
+            $this->client,
+        )->actingAs($admin);
+        $list->call('bulk', ['op' => 'sign', 'positionIds' => [$id->toRfc4122(), 'no-es-un-uuid']]);
+
+        $html = (string) $list->render();
+        self::assertStringContainsString('1 puestos actualizados', $html);
+        self::assertMatchesRegularExpression('/data-controller="[^"]*bulk-select[^"]*"/', $html);
+        self::assertMatchesRegularExpression('/data-controller="[^"]*filter-persist[^"]*"/', $html);
+        $this->em->clear();
+        self::assertTrue($this->em->find(TrainingPosition::class, $id)->isSigned());
+    }
+
     private function detail(Teacher $user, Stay $stay): \Symfony\UX\LiveComponent\Test\TestLiveComponent
     {
         return $this->createLiveComponent(

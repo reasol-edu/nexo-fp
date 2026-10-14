@@ -352,7 +352,13 @@ class StayListComponentTest extends ControllerTestCase
         /** @var TenantContext $tenantContext */
         $tenantContext = self::getContainer()->get(TenantContext::class);
 
-        $component = new class($stays, $families, $programmes, $appSettings, $positions, $tenantContext, $user) extends StayListComponent {
+        $component = new class(
+            $stays, $families, $programmes, $appSettings, $positions, $tenantContext, $user,
+            self::getContainer()->get(\App\Service\PositionStateChanger::class),
+            self::getContainer()->get(\App\Service\StayRealtimeNotifier::class),
+            $this->em,
+            self::getContainer()->get(\Symfony\Contracts\Translation\TranslatorInterface::class),
+        ) extends StayListComponent {
             public function __construct(
                 StayRepository $stays,
                 ProfessionalFamilyRepository $families,
@@ -361,8 +367,15 @@ class StayListComponentTest extends ControllerTestCase
                 TrainingPositionRepository $positions,
                 TenantContext $tenantContext,
                 private readonly ?UserInterface $stubUser,
+                \App\Service\PositionStateChanger $stateChanger,
+                \App\Service\StayRealtimeNotifier $realtime,
+                \Doctrine\ORM\EntityManagerInterface $em,
+                \Symfony\Contracts\Translation\TranslatorInterface $translator,
             ) {
-                parent::__construct($stays, $families, $programmes, $appSettings, $positions, $tenantContext);
+                parent::__construct(
+                    $stays, $families, $programmes, $appSettings, $positions, $tenantContext,
+                    $stateChanger, $realtime, $em, $translator,
+                );
             }
 
             protected function getUser(): ?UserInterface

@@ -96,6 +96,11 @@ Desde el detalle de la estancia, cada fila ofrece los pasos disponibles (**Pasar
 **Registrar en Séneca**, **Marcar firmado**, **Volver a borrador**) sin abrir la ficha del puesto. Si falta
 algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos.
 
+Para varios puestos a la vez, marque las casillas junto a cada estudiante (o la de la cabecera para
+seleccionarlos todos): aparece una barra con las acciones masivas. Los puestos que no se pueden cambiar
+(de otra coordinación o sin tutores) se omiten y el aviso indica cuántos. La pestaña **Firmas pendientes**
+de Estancias permite también marcar varios como firmados de una vez.
+
 !!! tip "Ten en cuenta"
     La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.
 

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - El detalle de la estancia permite cambiar el estado de cada puesto (Borrador → Pendiente de Séneca → Registrado en Séneca) y marcar o quitar la firma del convenio sin abrir la ficha del puesto. Si faltan tutores, la fila indica cuál falta en lugar de ofrecer un botón que falla. Los avisos de estos cambios incluyen un botón «Deshacer»
+- Acciones masivas sobre puestos: en el detalle de la estancia se pueden marcar varios puestos (o todos) y, desde una barra de acciones, pasarlos a Séneca, registrarlos, marcarlos como firmados, devolverlos a borrador o asignarles el mismo tutor/a dual docente. En la pestaña «Firmas pendientes» se pueden marcar como firmados varios a la vez. Los puestos que no se pueden cambiar (de otra coordinación, sin tutores…) se omiten y el aviso dice cuántos
 
 ## [2.10.1] - 2026-10-04
 

@@ -102,7 +102,7 @@
 {% set pct_occupied = stats.total_positions > 0 ? ((stats.occupied / stats.total_positions) * 100)|round : 0 %}
 {% set pct_free     = stats.total_positions > 0 ? ((stats.free / stats.total_positions) * 100)|round : 0 %}
 
-<div {{ attributes }} class="px-6 py-8 max-w-6xl mx-auto space-y-5 js-stay-detail">
+<div {{ attributes.defaults(stimulus_controller('bulk-select')) }} class="px-6 py-8 max-w-6xl mx-auto space-y-5 js-stay-detail">
 
     {# ── Toasts de acciones en vivo ───────────────────────────────────────── #}
     <div class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"
@@ -127,6 +127,29 @@
             </div>
         {% endfor %}
     </div>
+
+    {# ── Barra de acciones masivas (se muestra al marcar puestos; ver bulk_select_controller.js) ─── #}
+    {% if manageable_position_ids is not empty %}
+    <div data-bulk-select-target="bar" data-live-ignore
+         class="hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 max-w-[95vw] flex flex-wrap items-center gap-2 rounded-2xl bg-gray-900 px-4 py-3 text-sm text-white shadow-xl">
+        <span data-bulk-select-target="count" data-template="{{ 'stays.bulk.selected'|trans({}, 'stays')|e('html_attr') }}" class="font-semibold"></span>
+        <button type="button" data-action="bulk-select#run" data-op="pending" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.state_action.to_pending'|trans({}, 'stays') }}</button>
+        <button type="button" data-action="bulk-select#run" data-op="done" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.state_action.to_done'|trans({}, 'stays') }}</button>
+        <button type="button" data-action="bulk-select#run" data-op="sign" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.state_action.sign'|trans({}, 'stays') }}</button>
+        <button type="button" data-action="bulk-select#run" data-op="draft" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.state_action.to_draft'|trans({}, 'stays') }}</button>
+        <span class="inline-flex items-center gap-1">
+            <select data-bulk-select-target="teacher" aria-label="{{ 'stays.bulk.tutor_placeholder'|trans({}, 'stays')|e('html_attr') }}"
+                    class="rounded-lg border-0 bg-white/10 py-1 pl-2 pr-6 text-xs text-white focus:ring-1 focus:ring-white/50">
+                <option value="" class="text-gray-900">{{ 'stays.bulk.tutor_placeholder'|trans({}, 'stays') }}</option>
+                {% for teacher in programme_teachers %}
+                    <option value="{{ teacher.id.toRfc4122 }}" class="text-gray-900">{{ teacher.name.lastName }} {{ teacher.name.firstName }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" data-action="bulk-select#run" data-op="tutor" class="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium hover:bg-white/20 transition-colors">{{ 'stays.bulk.assign_tutor'|trans({}, 'stays') }}</button>
+        </span>
+        <button type="button" data-action="bulk-select#clear" class="rounded-lg px-2 py-1 text-xs text-white/70 hover:text-white transition-colors">{{ 'stays.bulk.clear'|trans({}, 'stays') }}</button>
+    </div>
+    {% endif %}
 
     {# ── Cabecera ─────────────────────────────────────────────────────────── #}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
@@ -357,6 +380,9 @@
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-44">
+                                {% if manageable_position_ids is not empty %}<input type="checkbox" data-bulk-select-target="all" data-action="change->bulk-select#toggleAll"
+                                       class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                                       aria-label="{{ 'stays.bulk.select_all'|trans({}, 'stays')|e('html_attr') }}">{% endif %}
                                 {{ 'stays.show.col.student'|trans({}, 'stays') }}
                             </th>
                             <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-64">
@@ -405,7 +431,9 @@
 
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
-                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}
+                                            <p class="font-medium text-gray-900 leading-snug">{% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}<input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
+                                                       class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                                                       aria-label="{{ 'stays.bulk.select_row'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">{% endif %}{{ student.name.full() }}
                                                 {% if multi_programme and manageable_student_ids[sid] is not defined %}
                                                     <span class="inline-block align-middle text-gray-400" title="{{ 'stays.show.foreign_student_hint'|trans({}, 'stays')|e('html_attr') }}">
                                                         {{ ux_icon('heroicons:lock-closed', {class: 'h-3 w-3'}) }}
@@ -597,7 +625,9 @@
                                 <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}">
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
-                                            <p class="font-medium text-gray-900 leading-snug">{{ student.name.full() }}
+                                            <p class="font-medium text-gray-900 leading-snug">{% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}<input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
+                                                       class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                                                       aria-label="{{ 'stays.bulk.select_row'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">{% endif %}{{ student.name.full() }}
                                                 {% if multi_programme and manageable_student_ids[sid] is not defined %}
                                                     <span class="inline-block align-middle text-gray-400" title="{{ 'stays.show.foreign_student_hint'|trans({}, 'stays')|e('html_attr') }}">
                                                         {{ ux_icon('heroicons:lock-closed', {class: 'h-3 w-3'}) }}

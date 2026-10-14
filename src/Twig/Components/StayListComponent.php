@@ -14,10 +14,15 @@ use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Security\Voter\EducationalCentreVoter;
+use App\Security\Voter\StayVoter;
 use App\Service\AppSettings;
+use App\Service\PositionStateChanger;
+use App\Service\StayRealtimeNotifier;
 use App\Service\TenantContext;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -132,6 +137,10 @@ class StayListComponent extends AbstractController
         private readonly AppSettings $appSettings,
         private readonly TrainingPositionRepository $positions,
         private readonly TenantContext $tenantContext,
+        private readonly PositionStateChanger $stateChanger,
+        private readonly StayRealtimeNotifier $realtime,
+        private readonly EntityManagerInterface $em,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     /** @return Paginator<Stay> */
@@ -287,6 +296,45 @@ class StayListComponent extends AbstractController
         }
 
         return $this->programmes->findByAcademicYearVisibleToTeacher($year, $user, $this->familyId);
+    }
+
+    /**
+     * Acción masiva de «Firmas pendientes»: marca como firmados los puestos seleccionados que el
+     * docente puede gestionar. Los demás se omiten.
+     *
+     * @param list<string> $positionIds
+     */
+    #[LiveAction]
+    public function bulk(#[LiveArg] string $op, #[LiveArg] array $positionIds): void
+    {
+        if ($op !== 'sign') {
+            return;
+        }
+
+        $done = 0;
+        $skipped = 0;
+        $stays = [];
+        foreach ($this->positions->findByIds(array_values(array_filter($positionIds, 'is_string'))) as $position) {
+            if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position) || !$this->stateChanger->sign($position, true)) {
+                ++$skipped;
+                continue;
+            }
+            ++$done;
+            $stays[$position->getStay()->getId()->toRfc4122()] = $position->getStay();
+        }
+
+        if ($done > 0) {
+            $this->em->flush();
+            foreach ($stays as $stay) {
+                $this->realtime->publishStayChanged($stay);
+            }
+        }
+
+        $this->addFlash('live_toast', $this->translator->trans(
+            $skipped > 0 ? 'stays.toast.bulk_partial' : 'stays.toast.bulk_done',
+            ['%done%' => (string) $done, '%skipped%' => (string) $skipped],
+            'stays',
+        ));
     }
 
     #[LiveAction]

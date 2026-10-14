@@ -16,6 +16,7 @@ use App\Repository\WorkerRepository;
 use App\Security\StayScope;
 use App\Security\Voter\PositionAssignment;
 use App\Security\Voter\StayVoter;
+use App\Service\PositionStateChanger;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -25,10 +26,8 @@ use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
-use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -59,8 +58,7 @@ class StayDetailComponent extends AbstractController
         private readonly StayRealtimeNotifier $realtime,
         private readonly StayScope $scope,
         private readonly ClockInterface $clock,
-        #[Target('training_position')]
-        private readonly WorkflowInterface $trainingPositionWorkflow,
+        private readonly PositionStateChanger $stateChanger,
     ) {}
 
     /** @return array<string, mixed> */
@@ -480,16 +478,12 @@ class StayDetailComponent extends AbstractController
             return null;
         }
 
-        $transition = 'to_' . strtolower($target->value);
-        if (!$this->trainingPositionWorkflow->can($position, $transition)) {
+        $previousSigned = $position->isSigned();
+        if (!$this->stateChanger->transition($position, $target, $signed)) {
             $this->toast('stays.toast.state_requires_tutors', []);
 
             return null;
         }
-
-        $previousSigned = $position->isSigned();
-        $this->trainingPositionWorkflow->apply($position, $transition);
-        $position->setSigned($target === TrainingPositionState::DONE && $signed);
         if (($conflict = $this->flushWithRealtime($stay)) !== null) {
             return $conflict;
         }
@@ -521,11 +515,10 @@ class StayDetailComponent extends AbstractController
             throw new AccessDeniedException();
         }
 
-        if ($position->getState() !== TrainingPositionState::DONE || $position->isSigned() === $signed) {
+        if (!$this->stateChanger->sign($position, $signed)) {
             return null;
         }
 
-        $position->setSigned($signed);
         if (($conflict = $this->flushWithRealtime($stay)) !== null) {
             return $conflict;
         }
@@ -537,6 +530,88 @@ class StayDetailComponent extends AbstractController
         );
 
         return null;
+    }
+
+    /**
+     * Acción masiva sobre los puestos marcados: `pending`, `done` o `draft` (estado), `sign` o
+     * `unsign` (firma) y `tutor` (tutor dual docente). Los puestos que no se pueden cambiar
+     * (otra coordinación, faltan tutores, estado incompatible) se omiten y se cuentan en el aviso.
+     *
+     * @param list<string> $positionIds
+     */
+    #[LiveAction]
+    public function bulk(
+        #[LiveArg] string $op,
+        #[LiveArg] array $positionIds,
+        #[LiveArg] string $teacherId = '',
+    ): ?Response {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null) {
+            throw new AccessDeniedException();
+        }
+
+        $teacher = null;
+        if ($op === 'tutor') {
+            $teacher = $teacherId !== '' ? $this->teachers->findById($teacherId) : null;
+            if ($teacher === null) {
+                return null;
+            }
+        } elseif (!\in_array($op, ['pending', 'done', 'draft', 'sign', 'unsign'], true)) {
+            return null;
+        }
+
+        $done = 0;
+        $skipped = 0;
+        $notify = [];
+        foreach (array_slice(array_unique(array_filter($positionIds, 'is_string')), 0, 500) as $positionId) {
+            $position = $this->positions->findByIdAndStay($positionId, $stay);
+            if ($position === null || !$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+                ++$skipped;
+                continue;
+            }
+
+            $changed = match ($op) {
+                'pending' => $this->stateChanger->transition($position, TrainingPositionState::PENDING),
+                'done'    => $this->stateChanger->transition($position, TrainingPositionState::DONE),
+                'draft'   => $this->stateChanger->transition($position, TrainingPositionState::DRAFT),
+                'sign'    => $this->stateChanger->sign($position, true),
+                'unsign'  => $this->stateChanger->sign($position, false),
+                'tutor'   => $this->assignTutor($position, $teacher),
+            };
+
+            if ($changed) {
+                ++$done;
+                if ($op === 'tutor') {
+                    $notify[] = $position;
+                }
+            } else {
+                ++$skipped;
+            }
+        }
+
+        if ($done > 0 && ($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+        foreach ($notify as $position) {
+            $this->notifier->notifyTutorAssigned($position);
+        }
+
+        $this->toast($skipped > 0 ? 'stays.toast.bulk_partial' : 'stays.toast.bulk_done', [
+            '%done%'    => (string) $done,
+            '%skipped%' => (string) $skipped,
+        ]);
+
+        return null;
+    }
+
+    private function assignTutor(TrainingPosition $position, ?Teacher $teacher): bool
+    {
+        if ($teacher === null || $position->getStudent() === null || $position->getAcademicTutor() === $teacher) {
+            return false;
+        }
+        $position->setAcademicTutor($teacher);
+
+        return true;
     }
 
     private function studentLabel(TrainingPosition $position): string
