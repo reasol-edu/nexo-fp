@@ -112,7 +112,10 @@ estudiante con sus tutorías (siempre que el puesto siga libre y el estudiante n
 Para varios puestos a la vez, marque las casillas junto a cada estudiante (o la de la cabecera para
 seleccionarlos todos): aparece una barra con las acciones masivas. Los puestos que no se pueden cambiar
 (de otra coordinación o sin tutores) se omiten y el aviso indica cuántos. La pestaña **Firmas pendientes**
-de Estancias permite también marcar varios como firmados de una vez.
+de Estancias permite también marcar varios como firmados de una vez. El aviso de la acción incluye
+**Deshacer** (hasta 60 puestos), que devuelve cada puesto a su estado, firma y tutor/a anteriores.
+Al eliminar un puesto libre, la estancia ofrece durante unos minutos un aviso con **Deshacer** para
+volver a crearlo con sus datos.
 
 La cabecera de la estancia muestra el **avance** del proceso (alumnado con puesto, con ambos tutores,
 registrado en Séneca y firmado) y el **siguiente paso recomendado**, con un enlace para ver las filas

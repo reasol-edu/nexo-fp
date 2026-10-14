@@ -24,6 +24,7 @@ use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkcenterRepository;
 use App\Service\XlsxExporter;
 use App\Service\PdfService;
+use App\Service\PositionSnapshot;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
 use App\Service\TenantContext;
@@ -45,6 +46,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_TEACHER')]
 class StayController extends AbstractController
 {
+    /** Clave de sesión con el último puesto eliminado, para poder deshacerlo, y segundos durante los que se ofrece. */
+    private const UNDO_POSITION_SESSION_KEY = 'undo_deleted_position';
+    private const UNDO_POSITION_SECONDS = 300;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly TenantContext $tenant,
@@ -66,6 +71,7 @@ class StayController extends AbstractController
         private readonly ClockInterface $clock,
         #[Target('training_position')]
         private readonly WorkflowInterface $trainingPositionWorkflow,
+        private readonly PositionSnapshot $snapshots,
     ) {}
 
     #[Route('', name: 'app_stays_index')]
@@ -396,6 +402,8 @@ class StayController extends AbstractController
             'stay'                => $stay,
             'mercure_public_url'  => $this->realtime->publicUrl(),
             'mercure_topic'       => $topic,
+            'can_restore_position' => $this->isUndoAvailable($request->getSession()->get(self::UNDO_POSITION_SESSION_KEY), $id)
+                && $this->isGranted(StayVoter::ADD_POSITION, $stay),
         ]);
 
         // Cookie de autorización Mercure: solo concede suscripción al topic de
@@ -933,6 +941,13 @@ class StayController extends AbstractController
         $actor = $this->getUser();
         $wasFree = $position->getStudent() === null;
 
+        // Se guarda en la sesión lo necesario para «Deshacer» (la estancia lo ofrece en la página siguiente).
+        $request->getSession()->set(self::UNDO_POSITION_SESSION_KEY, [
+            'stay'     => $id,
+            'at'       => $this->clock->now()->getTimestamp(),
+            'snapshot' => $this->snapshots->capture($position),
+        ]);
+
         $this->em->remove($position);
         $this->em->flush();
         $this->realtime->publishStayChanged($stay);
@@ -947,6 +962,60 @@ class StayController extends AbstractController
         }
 
         $this->addFlash('success', $this->t('stays.flash.position_deleted'));
+
+        return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+    }
+
+    /** ¿Hay una eliminación de puesto de esta estancia reciente que se pueda deshacer? */
+    private function isUndoAvailable(mixed $undo, string $stayId): bool
+    {
+        return \is_array($undo)
+            && ($undo['stay'] ?? null) === $stayId
+            && \is_array($undo['snapshot'] ?? null)
+            && \is_int($undo['at'] ?? null)
+            && $this->clock->now()->getTimestamp() - $undo['at'] <= self::UNDO_POSITION_SECONDS;
+    }
+
+    /** Deshace la última eliminación de un puesto, volviendo a crearlo con los datos guardados en la sesión. */
+    #[Route('/{id}/puesto/restaurar', name: 'app_stays_restore_position', methods: ['POST'])]
+    public function restorePosition(string $id, Request $request): Response
+    {
+        $centre = $this->tenant->getSelectedCentre();
+        if ($centre === null) {
+            return $this->redirectToRoute('app_select_centre');
+        }
+
+        $stay = $this->stays->findById($id);
+        $year = $this->tenant->getViewYear($centre);
+
+        if ($stay === null || $year === null
+            || $stay->getAcademicYear()->getId()->toRfc4122() !== $year->getId()->toRfc4122()
+        ) {
+            throw $this->createNotFoundException();
+        }
+
+        $this->denyAccessUnlessGranted(StayVoter::ADD_POSITION, $stay);
+
+        if (!$this->isCsrfTokenValid('restore_position_' . $id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $session = $request->getSession();
+        $undo    = $session->get(self::UNDO_POSITION_SESSION_KEY);
+        $session->remove(self::UNDO_POSITION_SESSION_KEY);
+        if (!$this->isUndoAvailable($undo, $id)) {
+            $this->addFlash('error', $this->t('stays.flash.position_restore_unavailable'));
+
+            return $this->redirectToRoute('app_stays_show', ['id' => $id]);
+        }
+
+        /** @var array{snapshot: array<string, mixed>} $undo */
+        $position = $this->snapshots->restore($stay, $undo['snapshot']);
+        $this->em->persist($position);
+        $this->em->flush();
+        $this->realtime->publishStayChanged($stay);
+
+        $this->addFlash('success', $this->t('stays.flash.position_restored'));
 
         return $this->redirectToRoute('app_stays_show', ['id' => $id]);
     }

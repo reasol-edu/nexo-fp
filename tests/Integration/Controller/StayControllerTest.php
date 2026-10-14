@@ -587,6 +587,49 @@ class StayControllerTest extends ControllerTestCase
         self::assertNull($this->em->find(TrainingPosition::class, $position->getId()));
     }
 
+    public function testDeletedPositionCanBeRestoredWithItsWorkcenterAndLevels(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        [$level, $group, $student] = $this->makeGroupWithStudent($programme);
+        $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $stay->addStudent($student);
+        $company    = $this->makeCompany($centre);
+        $workcenter = $this->makeWorkcenter($company);
+        $position   = $this->makePosition($stay, $workcenter);
+        $position->addProgrammeYear($level)->setDetails('Horario de mañana');
+        $this->persist($admin, $centre, $year, $family, $programme, $level, $group, $student, $stay, $company, $workcenter, $position);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $stayId     = $stay->getId()->toRfc4122();
+        $positionId = $position->getId()->toRfc4122();
+
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId);
+        self::assertSelectorNotExists('form[action$="/puesto/restaurar"]');
+        $token = $crawler->filter('form[action*="/puesto/' . $positionId . '/eliminar"] [name="_token"]')->first()->attr('value');
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/eliminar', ['_token' => $token]);
+
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorExists('form[action$="/puesto/restaurar"]');
+        $restoreToken = $crawler->filter('form[action$="/puesto/restaurar"] [name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/restaurar', ['_token' => $restoreToken]);
+        self::assertResponseRedirects('/estancias/' . $stayId);
+
+        $this->em->clear();
+        $positions = $this->em->getRepository(TrainingPosition::class)->findBy(['stay' => $stay->getId()]);
+        self::assertCount(1, $positions);
+        self::assertSame($workcenter->getId()->toRfc4122(), $positions[0]->getWorkcenter()?->getId()->toRfc4122());
+        self::assertSame('Horario de mañana', $positions[0]->getDetails());
+        self::assertCount(1, $positions[0]->getProgrammeYears());
+
+        // Solo se puede deshacer una vez.
+        $this->client->request('POST', '/estancias/' . $stayId . '/puesto/restaurar', ['_token' => $restoreToken]);
+        $this->em->clear();
+        self::assertCount(1, $this->em->getRepository(TrainingPosition::class)->findBy(['stay' => $stay->getId()]));
+    }
+
     public function testDeletePositionWithInvalidCsrfIsDenied(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();

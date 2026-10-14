@@ -3,6 +3,20 @@
 {% block title %}{{ stay.name }} · {{ centre.name }} · {{ app_name }}{% endblock %}
 
 {% block content %}
+    {% if can_restore_position|default(false) %}
+        <div class="px-6 pt-4">
+            <form method="post" action="{{ path('app_stays_restore_position', {id: stay.id.toRfc4122}) }}"
+                  class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-xs">
+                <input type="hidden" name="_token" value="{{ csrf_token('restore_position_' ~ stay.id.toRfc4122) }}">
+                {{ ux_icon('heroicons:arrow-uturn-left', {class: 'h-4 w-4 shrink-0 text-gray-400'}) }}
+                <span class="flex-1 text-gray-700">{{ 'stays.position.restore.hint'|trans({}, 'stays') }}</span>
+                <button type="submit"
+                        class="rounded-md bg-plum-50 px-2.5 py-1 text-xs font-medium text-plum-700 hover:bg-plum-100 transition-colors">
+                    {{ 'stays.toast.undo'|trans({}, 'stays') }}
+                </button>
+            </form>
+        </div>
+    {% endif %}
     {% if mercure_public_url is not empty %}
         <div data-controller="mercure-sync"
              data-mercure-sync-url-value="{{ mercure_public_url }}"
