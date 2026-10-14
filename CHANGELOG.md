@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- El detalle de la estancia permite cambiar el estado de cada puesto (Borrador → Pendiente de Séneca → Registrado en Séneca) y marcar o quitar la firma del convenio sin abrir la ficha del puesto. Si faltan tutores, la fila indica cuál falta en lugar de ofrecer un botón que falla. Los avisos de estos cambios incluyen un botón «Deshacer»
+
 ## [2.10.1] - 2026-10-04
 
 ### Fixed

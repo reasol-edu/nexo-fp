@@ -25,8 +25,10 @@ use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -57,6 +59,8 @@ class StayDetailComponent extends AbstractController
         private readonly StayRealtimeNotifier $realtime,
         private readonly StayScope $scope,
         private readonly ClockInterface $clock,
+        #[Target('training_position')]
+        private readonly WorkflowInterface $trainingPositionWorkflow,
     ) {}
 
     /** @return array<string, mixed> */
@@ -445,6 +449,105 @@ class StayDetailComponent extends AbstractController
         return null;
     }
 
+    /**
+     * Cambia el estado de un puesto (borrador → pendiente → registrado) sin salir del detalle.
+     * Al salir de «Registrado» se retira la firma; `signed` solo cuenta al volver a «Registrado»
+     * (lo usa «Deshacer» para restaurar la firma que había).
+     */
+    #[LiveAction]
+    public function changeState(
+        #[LiveArg] string $positionId,
+        #[LiveArg] string $state,
+        #[LiveArg] bool $signed = false,
+    ): ?Response {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null) {
+            throw new AccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null) {
+            return null;
+        }
+
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
+        }
+
+        $target = TrainingPositionState::tryFrom($state);
+        $previous = $position->getState();
+        if ($target === null || $target === $previous) {
+            return null;
+        }
+
+        $transition = 'to_' . strtolower($target->value);
+        if (!$this->trainingPositionWorkflow->can($position, $transition)) {
+            $this->toast('stays.toast.state_requires_tutors', []);
+
+            return null;
+        }
+
+        $previousSigned = $position->isSigned();
+        $this->trainingPositionWorkflow->apply($position, $transition);
+        $position->setSigned($target === TrainingPositionState::DONE && $signed);
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+
+        $this->toast(
+            'stays.toast.state_changed',
+            ['%student%' => $this->studentLabel($position), '%state%' => $this->translator->trans('stays.state.' . strtolower($target->value), [], 'stays')],
+            ['action' => 'changeState', 'args' => ['positionId' => $positionId, 'state' => $previous->value, 'signed' => $previousSigned]],
+        );
+
+        return null;
+    }
+
+    /** Marca o quita la firma del convenio de un puesto registrado en Séneca. */
+    #[LiveAction]
+    public function setSigned(#[LiveArg] string $positionId, #[LiveArg] bool $signed): ?Response
+    {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null) {
+            throw new AccessDeniedException();
+        }
+
+        $position = $this->positions->findByIdAndStay($positionId, $stay);
+        if ($position === null) {
+            return null;
+        }
+
+        if (!$this->isGranted(StayVoter::MANAGE_POSITION, $position)) {
+            throw new AccessDeniedException();
+        }
+
+        if ($position->getState() !== TrainingPositionState::DONE || $position->isSigned() === $signed) {
+            return null;
+        }
+
+        $position->setSigned($signed);
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+
+        $this->toast(
+            $signed ? 'stays.toast.signed' : 'stays.toast.unsigned',
+            ['%student%' => $this->studentLabel($position)],
+            ['action' => 'setSigned', 'args' => ['positionId' => $positionId, 'signed' => !$signed]],
+        );
+
+        return null;
+    }
+
+    private function studentLabel(TrainingPosition $position): string
+    {
+        $student = $position->getStudent();
+
+        return $student !== null
+            ? $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName()
+            : '—';
+    }
+
     #[LiveAction]
     public function setAcademicTutor(#[LiveArg] string $positionId, #[LiveArg] string $teacherId): ?Response
     {
@@ -557,9 +660,13 @@ class StayDetailComponent extends AbstractController
         }
     }
 
-    /** @param array<string, string> $params */
-    private function toast(string $key, array $params): void
+    /**
+     * @param array<string, string>                                     $params
+     * @param array{action: string, args: array<string, scalar>}|null   $undo   acción en vivo que revierte el cambio
+     */
+    private function toast(string $key, array $params, ?array $undo = null): void
     {
-        $this->addFlash('live_toast', $this->translator->trans($key, $params, 'stays'));
+        $message = $this->translator->trans($key, $params, 'stays');
+        $this->addFlash('live_toast', $undo === null ? $message : ['message' => $message, 'undo' => $undo]);
     }
 }

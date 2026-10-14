@@ -16,6 +16,7 @@ use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
 use App\Entity\Worker;
 use App\Tests\Integration\ControllerTestCase;
@@ -482,6 +483,79 @@ class StayDetailComponentTest extends ControllerTestCase
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    public function testChangeStateWithoutTutorsIsRefusedAndExplainsWhat(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $this->flush();
+
+        $component = $this->detail($admin, $stay);
+        self::assertStringContainsString('Falta el tutor dual docente o el de empresa', (string) $component->render());
+
+        $component->call('changeState', ['positionId' => $position->getId()->toRfc4122(), 'state' => 'PENDING']);
+
+        self::assertStringContainsString('hay que asignar el tutor dual docente y el de empresa', (string) $component->render());
+        $this->em->clear();
+        self::assertSame(TrainingPositionState::DRAFT, $this->em->find(TrainingPosition::class, $position->getId())->getState());
+    }
+
+    public function testStateAndSignatureCanBeChangedInlineAndUndone(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $tutor  = (new Teacher(new PersonName('Luisa', 'Gomez')))->setUsername('tutor.estado');
+        $mentor = (new Worker(new PersonName('Carlos', 'Tutor')))->setNationalIdNumber('12345678Z');
+        $this->em->persist($mentor);
+        $position->getWorkcenter()->getCompany()->addWorker($mentor);
+        $this->persist($tutor);
+        $position->setAcademicTutor($tutor)->setWorkplaceMentor($mentor);
+        $this->flush();
+        $id = $position->getId();
+
+        $component = $this->detail($admin, $stay);
+        $component->call('changeState', ['positionId' => $id->toRfc4122(), 'state' => 'PENDING']);
+        $component->call('changeState', ['positionId' => $id->toRfc4122(), 'state' => 'DONE']);
+        $component->call('setSigned', ['positionId' => $id->toRfc4122(), 'signed' => true]);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $id);
+        self::assertSame(TrainingPositionState::DONE, $reloaded->getState());
+        self::assertTrue($reloaded->isSigned());
+        self::assertStringContainsString('Deshacer', (string) $component->render());
+
+        // Al volver a borrador se retira la firma; «Deshacer» la restaura.
+        $component->call('changeState', ['positionId' => $id->toRfc4122(), 'state' => 'DRAFT']);
+        $this->em->clear();
+        $reloaded = $this->em->find(TrainingPosition::class, $id);
+        self::assertSame(TrainingPositionState::DRAFT, $reloaded->getState());
+        self::assertFalse($reloaded->isSigned());
+
+        $component->call('changeState', ['positionId' => $id->toRfc4122(), 'state' => 'DONE', 'signed' => true]);
+        $this->em->clear();
+        self::assertTrue($this->em->find(TrainingPosition::class, $id)->isSigned());
+    }
+
+    public function testSetSignedIgnoredUnlessRegistered(): void
+    {
+        [$admin, $stay, $student, $position] = $this->makeScenario();
+        $position->setStudent($student);
+        $this->flush();
+
+        $this->detail($admin, $stay)->call('setSigned', ['positionId' => $position->getId()->toRfc4122(), 'signed' => true]);
+
+        $this->em->clear();
+        self::assertFalse($this->em->find(TrainingPosition::class, $position->getId())->isSigned());
+    }
+
+    private function detail(Teacher $user, Stay $stay): \Symfony\UX\LiveComponent\Test\TestLiveComponent
+    {
+        return $this->createLiveComponent(
+            'StayDetailComponent',
+            ['stayId' => $stay->getId()->toRfc4122()],
+            $this->client,
+        )->actingAs($user);
+    }
 
     private function renderHtml(Teacher $admin, Stay $stay): string
     {

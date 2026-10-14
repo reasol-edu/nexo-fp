@@ -92,6 +92,10 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 4. Los puestos en estado **Registrado** quedan bloqueados para evitar modificaciones accidentales; se
    puede volver a *Borrador* para corregir datos.
 
+Desde el detalle de la estancia, cada fila ofrece los pasos disponibles (**Pasar a Séneca**,
+**Registrar en Séneca**, **Marcar firmado**, **Volver a borrador**) sin abrir la ficha del puesto. Si falta
+algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos.
+
 !!! tip "Ten en cuenta"
     La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.
 
