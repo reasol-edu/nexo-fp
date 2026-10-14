@@ -117,6 +117,25 @@ const SHOTS = [
   { name: 'puesto-preferencia', group: 'manual', out: `${M}/puesto-preferencia.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [async (ctx) => { const href = await openStay(SHARED_STAY)(ctx); await ctx.page.goto(`${BASE}${href}/nuevo-puesto`, { waitUntil: 'networkidle' });
       await ctx.page.selectOption('#priority_programme_id', { index: 1 }); await ctx.page.fill('#priority_until', '2026-03-31'); }] },
+  { name: 'estancia-acciones-masivas', group: 'manual', out: `${M}/estancia-acciones-masivas.png`, size: [1440, 900, 1], user: 'diego.romero',
+    steps: [openStay(SHARED_STAY), wait(1200), async ({ page }) => {
+      const boxes = page.locator('[data-bulk-select-target="row"]');
+      for (let i = 0; i < Math.min(2, await boxes.count()); i++) await boxes.nth(i).check();
+      await page.waitForTimeout(400);
+    }] },
+  { name: 'copiar-puestos', group: 'manual', out: `${M}/copiar-puestos.png`, size: [1440, 900, 1], user: 'diego.romero',
+    steps: [async (ctx) => {
+      const href = await openStay(SHARED_STAY)(ctx);
+      await ctx.page.goto(`${BASE}${href}/copiar-puestos`, { waitUntil: 'networkidle' });
+      const options = ctx.page.locator('#origen option');
+      if (await options.count() > 1) {
+        await ctx.page.selectOption('#origen', { index: 1 });
+        await ctx.page.locator('form[method="get"] button[type="submit"]').click();
+        await ctx.page.waitForLoadState('networkidle');
+      }
+    }, wait(400)] },
+  { name: 'curso-siguiente', group: 'manual', out: `${M}/curso-siguiente.png`, size: [1440, 900, 1],
+    steps: [async ({ page }) => { const id = await centreId(page); await page.goto(`${BASE}/admin/centros/${id}/siguiente-curso`, { waitUntil: 'networkidle' }); }, wait(400)] },
   { name: 'calendario', group: 'manual', out: `${M}/calendario.png`, size: [1440, 900, 1], steps: [go('/calendario'), wait(1200)] },
   { name: 'empresas', group: 'manual', out: `${M}/empresas.png`, size: [1440, 900, 1], steps: [go('/empresas'), wait(800)] },
   { name: 'empresa-editar', group: 'manual', out: `${M}/empresa-editar.png`, size: [1440, 900, 1],

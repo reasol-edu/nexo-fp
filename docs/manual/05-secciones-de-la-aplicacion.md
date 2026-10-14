@@ -282,6 +282,8 @@ activa el nuevo curso académico e importa el fichero.
 
 ### Preparar el curso siguiente
 
+![Asistente para preparar el curso siguiente](img/curso-siguiente.png)
+
 Para no hacerlo a mano, la administración global dispone del botón **Preparar curso siguiente** en
 **Administración → Centros educativos → (centro) → Cursos académicos**. El asistente propone el nombre del
 nuevo curso (por ejemplo, «2025-2026» → «2026-2027») y crea de una vez:

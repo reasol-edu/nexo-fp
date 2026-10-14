@@ -39,9 +39,11 @@ concreto (por ejemplo, «DAW y DAM - 2.º curso, marzo-mayo 2027»).
 
 Para ofertar varios puestos iguales, el botón **Duplicar puesto** de cada fila pregunta cuántas copias crear
 (hasta 20); también se puede indicar la cantidad al crear un puesto nuevo. Para reutilizar los puestos de
-otra estancia del mismo curso, **Copiar de otra estancia** (junto a *Nuevo puesto*) muestra sus puestos con una
+otra estancia del mismo curso (pantalla de la imagen), **Copiar de otra estancia** (junto a *Nuevo puesto*) muestra sus puestos con una
 casilla cada uno y crea copias libres con el mismo centro de trabajo, niveles y observaciones (nunca estudiante,
 tutores ni preferencia).
+
+![Pantalla para copiar puestos de otra estancia del mismo curso](img/copiar-puestos.png)
 
 ### Estancias con varias enseñanzas
 
@@ -104,6 +106,8 @@ Desde el detalle de la estancia, cada fila ofrece los pasos disponibles (**Pasar
 algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos; lo
 mismo ocurre al **liberar el puesto** de un estudiante, que no pide confirmación: si se deshace, vuelve el
 estudiante con sus tutorías (siempre que el puesto siga libre y el estudiante no tenga otro).
+
+![Detalle de la estancia con el avance del proceso, los filtros rápidos y la barra de acciones masivas](img/estancia-acciones-masivas.png)
 
 Para varios puestos a la vez, marque las casillas junto a cada estudiante (o la de la cabecera para
 seleccionarlos todos): aparece una barra con las acciones masivas. Los puestos que no se pueden cambiar
