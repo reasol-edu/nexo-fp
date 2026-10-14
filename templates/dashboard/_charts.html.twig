@@ -17,8 +17,30 @@
     {%- else -%}
         {%- set n = stats|length -%}
         {%- set svgH = n * 32 + 16 -%}
+        {# El gráfico es decorativo para lectores de pantalla: sus cifras están en la tabla siguiente. #}
+        <table class="sr-only">
+            <caption>{{ 'positions_by_family'|trans({}, 'dashboard') }}</caption>
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'positions_by_family'|trans({}, 'dashboard') }}</th>
+                    <th scope="col">{{ 'chart_legend_total'|trans({}, 'dashboard') }}</th>
+                    <th scope="col">{{ 'chart_legend_occupied'|trans({}, 'dashboard') }}</th>
+                    <th scope="col">{{ 'chart_legend_signed'|trans({}, 'dashboard') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- for stat in stats -%}
+                    <tr>
+                        <th scope="row">{{ stat.family_name }}</th>
+                        <td>{{ stat.total }}</td>
+                        <td>{{ stat.occupied }}</td>
+                        <td>{{ stat.signed }}</td>
+                    </tr>
+                {%- endfor -%}
+            </tbody>
+        </table>
         <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
-             class="w-full" role="img" aria-label="{{ 'positions_by_family'|trans({}, 'dashboard') }}">
+             class="w-full" aria-hidden="true" focusable="false">
             {%- for stat in stats -%}
                 {%- set ry = loop.index0 * 32 + 8 -%}
                 {%- set wTotal    = stat.total    / maxTotal * 320 -%}
@@ -44,19 +66,19 @@
                 {# Labels inside each visible segment #}
                 {%- if wSigned > 14 -%}
                 <text x="{{ 148 + wSigned - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
-                      text-anchor="end" font-size="9" font-weight="bold" fill="white">
+                      text-anchor="end" font-size="9" font-weight="bold" fill="#064e3b">
                     {{- stat.signed -}}
                 </text>
                 {%- endif -%}
                 {%- if wOccupied - wSigned > 14 -%}
                 <text x="{{ 148 + wOccupied - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
-                      text-anchor="end" font-size="9" font-weight="bold" fill="white">
+                      text-anchor="end" font-size="9" font-weight="bold" fill="#451a03">
                     {{- stat.occupied -}}
                 </text>
                 {%- endif -%}
                 {%- if wTotal - wOccupied > 14 -%}
                 <text x="{{ 148 + wTotal - 4 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
-                      text-anchor="end" font-size="9" font-weight="bold" fill="#9ca3af">
+                      text-anchor="end" font-size="9" font-weight="bold" fill="#4b5563">
                     {{- stat.total -}}
                 </text>
                 {%- endif -%}
@@ -67,11 +89,11 @@
 
 {%- macro student_state_bars(stats) -%}
     {%- set segments = [
-        {'key': 'unassigned', 'color': '#9ca3af', 'tooltip': 'chart_tooltip_unassigned'},
-        {'key': 'draft',      'color': '#f59e0b', 'tooltip': 'chart_tooltip_draft'},
-        {'key': 'pending',    'color': '#3b82f6', 'tooltip': 'chart_tooltip_pending'},
-        {'key': 'registered', 'color': '#10b981', 'tooltip': 'chart_tooltip_registered'},
-        {'key': 'signed',     'color': '#876baf', 'tooltip': 'chart_tooltip_signed_student'},
+        {'key': 'unassigned', 'color': '#9ca3af', 'text': '#1f2937', 'label': 'chart_legend_unassigned', 'tooltip': 'chart_tooltip_unassigned'},
+        {'key': 'draft',      'color': '#f59e0b', 'text': '#451a03', 'label': 'state_draft',            'tooltip': 'chart_tooltip_draft'},
+        {'key': 'pending',    'color': '#3b82f6', 'text': '#0f172a', 'label': 'state_pending',          'tooltip': 'chart_tooltip_pending'},
+        {'key': 'registered', 'color': '#10b981', 'text': '#052e16', 'label': 'state_done',             'tooltip': 'chart_tooltip_registered'},
+        {'key': 'signed',     'color': '#876baf', 'text': '#ffffff', 'label': 'state_signed',           'tooltip': 'chart_tooltip_signed_student'},
     ] -%}
     {%- set maxTotal = 0 -%}
     {%- for stat in stats -%}
@@ -86,8 +108,30 @@
     {%- else -%}
         {%- set n = stats|length -%}
         {%- set svgH = n * 32 + 16 -%}
+        {# El gráfico es decorativo para lectores de pantalla: sus cifras están en la tabla siguiente. #}
+        <table class="sr-only">
+            <caption>{{ 'students_by_family'|trans({}, 'dashboard') }}</caption>
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'students_by_family'|trans({}, 'dashboard') }}</th>
+                    {%- for seg in segments -%}
+                        <th scope="col">{{ seg.label|trans({}, 'dashboard') }}</th>
+                    {%- endfor -%}
+                </tr>
+            </thead>
+            <tbody>
+                {%- for stat in stats -%}
+                    <tr>
+                        <th scope="row">{{ stat.family_name }}</th>
+                        {%- for seg in segments -%}
+                            <td>{{ attribute(stat, seg.key) }}</td>
+                        {%- endfor -%}
+                    </tr>
+                {%- endfor -%}
+            </tbody>
+        </table>
         <svg viewBox="0 0 480 {{ svgH }}" xmlns="http://www.w3.org/2000/svg"
-             class="w-full" role="img" aria-label="{{ 'students_by_family'|trans({}, 'dashboard') }}">
+             class="w-full" aria-hidden="true" focusable="false">
             {%- for stat in stats -%}
                 {%- set ry = loop.index0 * 32 + 8 -%}
                 {%- set rowTotal = stat.unassigned + stat.draft + stat.pending + stat.registered + stat.signed -%}
@@ -109,7 +153,7 @@
                             {%- if w > 14 -%}
                             <text x="{{ cursor + w / 2 }}" y="{{ ry + 8 }}" dominant-baseline="middle"
                                   text-anchor="middle" font-size="9" font-weight="bold"
-                                  fill="{{ seg.key == 'unassigned' ? '#374151' : 'white' }}">
+                                  fill="{{ seg.text }}">
                                 {{- value -}}
                             </text>
                             {%- endif -%}

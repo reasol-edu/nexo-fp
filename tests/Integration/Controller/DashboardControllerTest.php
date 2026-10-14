@@ -73,6 +73,18 @@ class DashboardControllerTest extends ControllerTestCase
         self::assertLessThan($chart, $pending, 'Lo pendiente va antes que las gráficas');
     }
 
+    public function testFamilyChartsHaveATextAlternativeForScreenReaders(): void
+    {
+        [$centre, $admin, $stay] = $this->makeCentreWithStay('41000005', 'ana.admin.5');
+        $this->persist((new TrainingPosition())->setStay($stay));
+        $this->loginAs($admin, $centre);
+
+        $html = $this->client->request('GET', '/')->html();
+
+        self::assertStringContainsString('<caption>Puestos por familia profesional</caption>', $html);
+        self::assertStringNotContainsString('role="img" aria-label="Puestos por familia', $html);
+    }
+
     public function testDashboardShowsAllClearWhenNoAlerts(): void
     {
         [$centre, $admin] = $this->makeCentreWithStay('41000003', 'ana.admin.3');
