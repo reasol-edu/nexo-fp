@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Eliminar un curso académico queda registrado en el registro de actividad (`year.deleted`), con el centro, el curso y el número de elementos eliminados (familias, enseñanzas, niveles, grupos, estancias y puestos).
 
 - Las acciones masivas sobre puestos (estado, firma y tutor/a docente) ofrecen «Deshacer» en el aviso, que devuelve cada puesto a su estado, firma y tutor/a anteriores (hasta 60 puestos por acción).
+- Nueva pantalla «Revisión de datos» en Centro educativo, con los datos que conviene completar: docentes activos sin correo, empresas con puestos sin ningún trabajador y estancias en marcha (o a menos de dos semanas) con alumnado cuyo puesto sigue en borrador, cada uno con un enlace para corregirlo.
 - Al eliminar un puesto formativo, la estancia ofrece durante unos minutos «Deshacer», que lo vuelve a crear con su centro de trabajo, niveles, preferencia, fechas y observaciones.
 
 ### Changed

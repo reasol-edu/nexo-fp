@@ -805,4 +805,36 @@ class StayRepository extends ServiceEntityRepository
             'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
         ))->setParameter('vViewer', $viewer->getId(), 'uuid');
     }
+
+    /**
+     * Estancias del curso que ya han empezado (o empiezan en los próximos días) y todavía tienen
+     * estudiantes con el puesto en borrador, con el número de puestos así.
+     *
+     * @return list<array{stay: Stay, drafts: int}>
+     */
+    public function findWithDraftPositionsStartingBefore(AcademicYear $year, \DateTimeImmutable $limit): array
+    {
+        $today = $this->clock->now()->setTime(0, 0, 0);
+
+        /** @var list<array{0: Stay, drafts: string|int}> $rows */
+        $rows = $this->createQueryBuilder('s')
+            ->select('s')
+            ->addSelect('COUNT(tp.id) AS drafts')
+            ->join('s.trainingPositions', 'tp')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.startDate <= :limit')
+            ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
+            ->andWhere('tp.state = :draft')
+            ->andWhere('tp.student IS NOT NULL')
+            ->groupBy('s.id')
+            ->orderBy('s.startDate', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('limit', $limit)
+            ->setParameter('today', $today)
+            ->setParameter('draft', TrainingPositionState::DRAFT->value)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $row): array => ['stay' => $row[0], 'drafts' => (int) $row['drafts']], $rows);
+    }
 }

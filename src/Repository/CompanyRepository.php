@@ -2,10 +2,12 @@
 
 namespace App\Repository;
 
+use App\Entity\AcademicYear;
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\Stay;
 use App\Entity\Teacher;
+use App\Entity\TrainingPosition;
 use App\Entity\Workcenter;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -173,5 +175,28 @@ class CompanyRepository extends ServiceEntityRepository
             ->getResult();
 
         return $result;
+    }
+
+    /**
+     * Empresas del centro con algún puesto en el curso que no tienen ningún trabajador registrado,
+     * de modo que no se les puede asignar tutor de empresa.
+     *
+     * @return list<Company>
+     */
+    public function findWithPositionsInYearWithoutWorkers(EducationalCentre $centre, AcademicYear $year): array
+    {
+        return array_values($this->createQueryBuilder('c')
+            ->distinct()
+            ->join(Workcenter::class, 'w', 'WITH', 'w.company = c')
+            ->join(TrainingPosition::class, 'tp', 'WITH', 'tp.workcenter = w')
+            ->join('tp.stay', 's')
+            ->where('c.educationalCentre = :centre')
+            ->andWhere('s.academicYear = :year')
+            ->andWhere('c.workers IS EMPTY')
+            ->orderBy('c.name', 'ASC')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->getQuery()
+            ->getResult());
     }
 }

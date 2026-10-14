@@ -250,6 +250,10 @@ Gestión interna del centro. Reúne en un único espacio:
 - **Cursos académicos:** crear y activar cursos del centro.
 - **Registro de correos:** qué avisos por email se han enviado a los docentes del centro y si el servidor de
   correo los aceptó (ver [Notificaciones por email](06-notificaciones-y-email.md#registro-de-correos-enviados)).
+- **Revisión de datos:** lista lo que conviene completar para que todo funcione: docentes activos sin correo
+  (no reciben avisos ni el resumen semanal), empresas con puestos en el curso pero sin ningún trabajador
+  (no se les puede asignar tutor de empresa) y estancias en marcha, o que empiezan en dos semanas, con
+  alumnado cuyo puesto sigue en borrador. Cada elemento enlaza con la pantalla donde corregirlo.
 
 ### Estructurar la oferta formativa
 
@@ -334,6 +338,7 @@ Para acceder, pulsa la tarjeta **Registro de actividad** en el panel de Administ
 | **Sesión** | Inicio de sesión, cierre de sesión, inicio/fin de suplantación de usuario |
 | **Escrituras** | Cualquier formulario enviado: crear una estancia, editar un estudiante, importar docentes… |
 | **Exportaciones** | Descarga de datos a Excel o JSON |
+| **Eliminación de cursos** | `year.deleted`: centro, curso y número de elementos eliminados (familias, enseñanzas, niveles, grupos, estancias y puestos) |
 
 Cada entrada almacena la **fecha y hora exacta**, la **dirección IP** del usuario, el **usuario que
 realizó la acción** y, si hay suplantación activa, el **usuario que la ejecutó realmente**. También

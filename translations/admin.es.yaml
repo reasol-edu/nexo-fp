@@ -534,6 +534,23 @@ offer.detail.staff.family: 'Editar responsable'
 offer.detail.staff.programme: 'Editar coordinadores'
 offer.detail.staff.group: 'Editar tutores y docentes'
 
+# Revisión de datos del centro
+data_review.title: 'Revisión de datos'
+data_review.subtitle: 'Datos de %centre% (curso %year%) que conviene completar para que los avisos y los tutores de empresa funcionen.'
+data_review.all_good: 'No hay nada que revisar: los docentes tienen correo, las empresas con puestos tienen trabajadores y no hay puestos en borrador con la estancia en marcha.'
+data_review.hub.help: 'Docentes sin correo, empresas sin trabajadores y puestos en borrador con la estancia ya en marcha.'
+data_review.hub.action: 'Revisar datos'
+data_review.teachers.title: '{1} 1 docente activo sin correo electrónico|]1,Inf[ %count% docentes activos sin correo electrónico'
+data_review.teachers.help: 'No reciben avisos de asignación ni el resumen semanal.'
+data_review.teachers.fix: 'Ir a docentes'
+data_review.companies.title: '{1} 1 empresa con puestos sin ningún trabajador|]1,Inf[ %count% empresas con puestos sin ningún trabajador'
+data_review.companies.help: 'Sin trabajadores registrados no se les puede asignar tutor de empresa.'
+data_review.companies.fix: 'Editar empresa'
+data_review.drafts.title: 'Estancias en marcha con puestos en borrador'
+data_review.drafts.help: 'Estancias que ya han empezado, o empiezan en dos semanas, con alumnado asignado cuyo puesto sigue en borrador.'
+data_review.drafts.count: '{1} 1 puesto|]1,Inf[ %count% puestos'
+data_review.drafts.fix: 'Ver estancia'
+
 # Registro de correos enviados
 email_log.title: 'Registro de correos'
 email_log.subtitle_global: 'Correos enviados por la aplicación a todos los centros, incluidos los que no pertenecen a ninguno (restablecimiento de contraseña, verificación del correo).'

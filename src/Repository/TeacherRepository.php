@@ -297,4 +297,22 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
 
         return $ids;
     }
+
+    /**
+     * Docentes activos del curso sin correo electrónico: no reciben avisos ni el resumen semanal.
+     *
+     * @return list<Teacher>
+     */
+    public function findActiveWithoutEmailByAcademicYear(AcademicYear $year): array
+    {
+        return $this->getEntityManager()->createQuery('
+            SELECT t
+            FROM App\Entity\Teacher t
+            JOIN t.academicYears ay
+            WHERE ay.id = :year AND t.active = true AND (t.email IS NULL OR t.email = \'\')
+            ORDER BY t.name.lastName ASC, t.name.firstName ASC
+        ')
+        ->setParameter('year', $year->getId(), 'uuid')
+        ->getResult();
+    }
 }

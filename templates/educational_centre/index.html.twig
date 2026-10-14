@@ -124,6 +124,28 @@
                 </div>
             </a>
 
+            {# ── Revisión de datos ── #}
+            <a href="{{ path('app_educational_centre_data_review') }}"
+               class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
+                      hover:border-plum-200 hover:shadow-sm transition-all">
+                <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600
+                                group-hover:bg-plum-600 group-hover:text-white transition-colors">
+                        {{ ux_icon('heroicons:clipboard-document-check', {class: 'h-5 w-5'}) }}
+                    </div>
+                    <h2 class="text-base font-semibold text-gray-900">{{ 'data_review.title'|trans({}, 'admin') }}</h2>
+                </div>
+                <div class="px-6 py-4 flex-1">
+                    <p class="text-sm text-gray-500">{{ 'data_review.hub.help'|trans({}, 'admin') }}</p>
+                </div>
+                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+                    <span class="inline-flex items-center gap-1.5 text-sm font-medium text-plum-600 group-hover:text-plum-800 transition-colors">
+                        {{ 'data_review.hub.action'|trans({}, 'admin') }}
+                        {{ ux_icon('heroicons:arrow-right', {class: 'h-4 w-4'}) }}
+                    </span>
+                </div>
+            </a>
+
             {# ── Registro de correos enviados ── #}
             <a href="{{ path('app_educational_centre_email_log') }}"
                class="group rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden flex flex-col
