@@ -97,6 +97,21 @@ summary:focus-visible {
         padding-top: 0.5rem !important;
     }
 
+    /* Objetivos táctiles de al menos 44 × 44 px: botones y enlaces de la columna de acciones, y
+       botones, desplegables y casillas de las demás celdas. El texto en línea no se toca. */
+    table.table-cards tbody td:not([data-label]) a,
+    table.table-cards tbody td:not([data-label]) button,
+    table.table-cards tbody td button,
+    table.table-cards tbody td select {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        justify-content: center;
+    }
+    table.table-cards tbody td input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
     /* Filas separadoras de grupo (dentro de tablas-tarjetas): sin borde ni
        redondeado, para diferenciarse visualmente de las filas de datos. */
     table.table-cards tbody tr.table-group-header {
