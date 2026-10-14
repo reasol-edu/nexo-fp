@@ -61,9 +61,9 @@ run_engine() {
   echo "▸ una enseñanza en uso no se puede borrar (RESTRICT)"
   if q "$kind" "DELETE FROM programme WHERE id = $(U $P1)" >/dev/null 2>&1; then fail "se borró una enseñanza en uso"; else ok "el borrado se rechaza"; fi
 
-  echo "▸ añadiendo una 2.ª enseñanza a E1 y bajando 3 migraciones"
+  echo "▸ añadiendo una 2.ª enseñanza a E1 y bajando hasta la versión anterior a las estancias multi-enseñanza"
   q "$kind" "INSERT INTO stay_programme (stay_id, programme_id) VALUES ($(U $S1), $(U $P2))" >/dev/null
-  for _ in 1 2 3; do mig prev; done
+  mig 'DoctrineMigrations\Version20260702000000'
   [ "$(q "$kind" "SELECT COUNT(*) FROM stay WHERE programme_id IS NOT NULL")" = 2 ] && ok "programme_id restaurada en las 2 estancias" || fail "programme_id no restaurada"
   [ "$(q "$kind" "SELECT p.name FROM stay s JOIN programme p ON p.id = s.programme_id WHERE s.id = $(U $S1)")" = DAM ] && ok "E1 conserva una enseñanza (la 1.ª por nombre: DAM)" || fail "E1 no conserva la enseñanza esperada"
   colcount "$kind" training_position priority_until | grep -qx 0 && ok "columnas de preferencia eliminadas" || fail "siguen las columnas de preferencia"

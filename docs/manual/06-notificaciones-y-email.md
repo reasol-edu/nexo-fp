@@ -19,6 +19,12 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
   su área de responsabilidad. Se sigue avisando cada día hasta que el puesto se firma, incluso si la
   estancia ya ha comenzado. El envío es **automático** (sin cron externo); también puede lanzarse a mano con
   [`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders).
+- **Resumen semanal de pendientes:** cada **lunes** (automático, sin cron externo) cada docente con correo
+  recibe un único email con lo que tiene pendiente en el curso activo de cada centro —los mismos avisos que
+  la campana de la aplicación: estudiantes sin puesto, puestos sin tutor/a, puestos libres y firmas
+  próximas—, con un enlace por tarea que abre la estancia con el filtro rápido ya aplicado. No se envía a
+  quien no tiene nada pendiente. Se puede desactivar con el ajuste `email.notification.weekly_digest` y
+  lanzar a mano con [`app:send-weekly-digest`](08-comandos-de-consola.md#appsend-weekly-digest).
 - **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de correo,
   recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El cambio no tiene
   efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.

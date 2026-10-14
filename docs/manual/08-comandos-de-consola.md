@@ -105,3 +105,14 @@ pública de la aplicación para que los enlaces de los emails funcionen.
     El recordatorio se programa con Symfony Scheduler y lo dispara el *worker* de Messenger una vez al
     día (consulta [Notificaciones por email](06-notificaciones-y-email.md)). El comando queda como
     complemento para ejecución manual o puntual.
+
+## app:send-weekly-digest
+
+Envía a cada docente con correo el resumen de sus tareas pendientes en el curso activo de cada centro
+(estudiantes sin puesto, puestos sin tutor/a, puestos libres y firmas próximas). Es el mismo trabajo que se
+ejecuta automáticamente cada lunes a las 8:00; este comando permite lanzarlo a mano. No envía nada a quien
+no tiene pendientes ni a quien ha desactivado el ajuste `email.notification.weekly_digest`.
+
+```bash
+php bin/console app:send-weekly-digest
+```

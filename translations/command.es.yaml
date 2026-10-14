@@ -17,6 +17,8 @@ create_centre.success: 'Centro educativo "%name%" (%code%) creado con el curso a
 send_reminders.description: 'Envía el recordatorio de puestos registrados sin firmar en estancias próximas a comenzar'
 send_reminders.option.days: 'Días de antelación (sobre-escribe el ajuste por centro)'
 send_reminders.error.days_invalid: 'El número de días debe ser un entero mayor o igual que 1.'
+send_weekly_digest.description: 'Envía a cada docente el resumen semanal de sus tareas pendientes'
+send_weekly_digest.success: '{0} Ningún resumen que enviar.|{1} Resumen enviado a 1 destinatario/a.|]1,Inf[ Resúmenes enviados a %count% destinatarios/as.'
 send_reminders.success: '{0} Ningún recordatorio que enviar.|{1} Recordatorio enviado a 1 destinatario/a.|]1,Inf[ Recordatorios enviados a %count% destinatarios/as.'
 
 setup.description: 'Inicializa la aplicación con datos por defecto si la base de datos está vacía.'

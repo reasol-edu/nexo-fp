@@ -5,6 +5,7 @@ namespace App;
 use App\Message\PurgeActivityLogMessage;
 use App\Message\PurgeEmailNotificationLogMessage;
 use App\Message\SendSignatureRemindersMessage;
+use App\Message\SendWeeklyDigestMessage;
 use Symfony\Component\Scheduler\Attribute\AsSchedule;
 use Symfony\Component\Scheduler\RecurringMessage;
 use Symfony\Component\Scheduler\Schedule as SymfonySchedule;
@@ -24,6 +25,9 @@ class Schedule implements ScheduleProviderInterface
         return (new SymfonySchedule())
             ->add(
                 RecurringMessage::cron('0 8 * * *', new SendSignatureRemindersMessage()),
+            )
+            ->add(
+                RecurringMessage::cron('0 8 * * 1', new SendWeeklyDigestMessage()),
             )
             ->add(
                 RecurringMessage::cron('0 3 * * 0', new PurgeActivityLogMessage()),

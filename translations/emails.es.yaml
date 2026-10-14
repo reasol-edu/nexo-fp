@@ -25,6 +25,12 @@ emails.signature_reminder.col.workcenter: 'Empresa / Centro de trabajo'
 emails.signature_reminder.col.tutors: 'Tutores'
 emails.signature_reminder.no_tutors: 'Sin asignar'
 
+emails.weekly_digest.subject: 'Resumen semanal: tareas pendientes'
+emails.weekly_digest.intro: 'Esto es lo que tienes pendiente este curso en %centre%. Pulsa en cada tarea para abrir la estancia con el filtro ya aplicado.'
+emails.weekly_digest.col.stay: 'Estancia'
+emails.weekly_digest.col.pending: 'Pendiente'
+emails.weekly_digest.outro: 'Recibes este resumen una vez por semana, solo si tienes tareas pendientes. Puedes desactivarlo en tus ajustes de notificaciones.'
+
 emails.password_reset.subject: 'Restablece tu contraseña'
 emails.password_reset.intro: 'Hemos recibido una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el botón para establecer una nueva. El enlace es válido durante 1 hora.'
 emails.password_reset.cta: 'Restablecer contraseña'

@@ -227,6 +227,24 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
     }
 
     /**
+     * Docentes activos del curso que tienen correo electrónico (destinatarios del resumen semanal).
+     *
+     * @return list<Teacher>
+     */
+    public function findWithEmailByAcademicYear(AcademicYear $year): array
+    {
+        return $this->getEntityManager()->createQuery('
+            SELECT t
+            FROM App\Entity\Teacher t
+            JOIN t.academicYears ay
+            WHERE ay.id = :year AND t.active = true AND t.email IS NOT NULL AND t.email <> \'\'
+            ORDER BY t.name.lastName ASC, t.name.firstName ASC
+        ')
+        ->setParameter('year', $year->getId(), 'uuid')
+        ->getResult();
+    }
+
+    /**
      * Docentes (profesorado y tutores de grupo) de todas las enseñanzas de la estancia.
      *
      * @return Teacher[]

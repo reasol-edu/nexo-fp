@@ -195,6 +195,44 @@ class StayNotifier
         return true;
     }
 
+    /**
+     * Resumen semanal de tareas pendientes de un docente en un centro. Cada tarea enlaza con la
+     * estancia y el filtro rápido correspondiente. Devuelve true si se ha enviado.
+     *
+     * @param list<array{type: string, stay: Stay, count: int}> $items
+     */
+    public function sendWeeklyDigest(Teacher $recipient, EducationalCentre $centre, array $items): bool
+    {
+        if ($items === [] || !$this->hasEmail($recipient, 'weekly_digest')) {
+            return false;
+        }
+
+        $filters = [
+            'signature_due'             => 'sin-firmar',
+            'free_positions'            => 'libres',
+            'missing_tutor'             => 'sin-tutor',
+            'missing_mentor'            => 'sin-empresa',
+            'students_without_position' => 'sin-puesto',
+        ];
+
+        $rows = [];
+        foreach ($items as $item) {
+            $rows[] = $item + ['url' => $this->stayUrl($item['stay'], $filters[$item['type']] ?? null)];
+        }
+
+        $this->send((new TemplatedEmail())
+            ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
+            ->subject($this->subject('emails.weekly_digest.subject', $centre))
+            ->htmlTemplate('email/weekly_digest.html.twig')
+            ->context([
+                'recipient' => $recipient,
+                'centre'    => $centre,
+                'items'     => $rows,
+            ]), 'weekly_digest', $centre, $recipient);
+
+        return true;
+    }
+
     /** Antepone el prefijo de asunto configurado (global o de centro) al texto traducido, si lo hay. */
     private function subject(string $translationKey, EducationalCentre $centre): string
     {
@@ -257,11 +295,11 @@ class StayNotifier
         return $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName();
     }
 
-    private function stayUrl(Stay $stay): string
+    private function stayUrl(Stay $stay, ?string $filter = null): string
     {
         return $this->urlGenerator->generate(
             'app_stays_show',
-            ['id' => $stay->getId()->toRfc4122()],
+            ['id' => $stay->getId()->toRfc4122(), 'filtro' => $filter],
             UrlGeneratorInterface::ABSOLUTE_URL,
         );
     }

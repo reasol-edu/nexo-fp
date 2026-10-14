@@ -32,6 +32,9 @@ settings.key.email_notification_positions_created.description: 'Notifica a los d
 settings.key.email_notification_shared_position.label: 'Email por cambios en puestos compartidos'
 settings.key.email_notification_shared_position.description: 'Avisa a la coordinación de una enseñanza cuando otra coordinación asigna o elimina un puesto de una estancia que también se ofertaba a su alumnado.'
 
+settings.key.email_notification_weekly_digest.label: 'Email con el resumen semanal de pendientes'
+settings.key.email_notification_weekly_digest.description: 'Cada lunes envía un correo con las tareas pendientes de la persona (estudiantes sin puesto, puestos sin tutor, firmas pendientes…), con enlaces a cada estancia. No se envía si no hay nada pendiente.'
+
 settings.key.email_notification_signature_reminder.label: 'Email de recordatorio de firma'
 settings.key.email_notification_signature_reminder.description: 'Recuerda a quienes tienen responsabilidad sobre el puesto (tutor o tutora dual docente, coordinación de FP dual y jefatura de familia profesional) los puestos registrados sin firmar cuando la estancia está próxima a comenzar.'
 
