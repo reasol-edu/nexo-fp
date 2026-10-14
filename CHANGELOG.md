@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2026-10-14
+
 ### Added
 
 - El detalle de la estancia permite cambiar el estado de cada puesto (Borrador → Pendiente de Séneca → Registrado en Séneca) y marcar o quitar la firma del convenio sin abrir la ficha del puesto. Si faltan tutores, la fila indica cuál falta en lugar de ofrecer un botón que falla. Los avisos de estos cambios incluyen un botón «Deshacer»
@@ -26,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nueva pantalla «Copiar de otra estancia» (junto a «Nuevo puesto»): crea puestos libres con el mismo centro de trabajo, niveles y observaciones que los de otra estancia del mismo curso, a elegir con casillas. No se copian estudiantes, tutores ni preferencias, y quien solo es docente de enlace copia únicamente los puestos de sus empresas
 - «Duplicar puesto» pregunta ahora cuántas copias crear (hasta 20) para ofertar varios puestos iguales de una vez
 - El detalle de la estancia recuerda en el navegador el modo de asignación rápida y el filtro «Mis estudiantes», para no tener que activarlos en cada estancia
+
+### Changed
+
+- La pantalla de inicio de sesión muestra la versión de la aplicación junto al nombre también cuando el viewport es pequeño
 
 ## [2.10.1] - 2026-10-04
 
