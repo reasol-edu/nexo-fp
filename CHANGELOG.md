@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- En la lista de cursos de un centro, el botón «Eliminar» ya no aparece en el curso activo (que no se puede eliminar). Los avisos de las acciones masivas concuerdan en número («1 puesto actualizado»), y la pantalla «Revisión de datos» muestra los diez primeros elementos de cada lista y cuántos quedan.
 - Accesibilidad: los grises de texto (`gray-400` y `gray-500`) y varios colores de estado (verde, ámbar y rojo) son más oscuros para llegar al contraste mínimo AA; las estancias finalizadas del listado se atenúan con un fondo gris en lugar de con transparencia; y los filtros de familia, enseñanza, grupo, registro de actividad y equipo directivo tienen nombre accesible para lectores de pantalla.
 - El aviso que se muestra al ver un curso histórico indica ahora que las estancias y los puestos formativos son de solo lectura, para que se entienda por qué no aparecen los botones de edición.
 
