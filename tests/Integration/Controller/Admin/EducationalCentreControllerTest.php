@@ -325,14 +325,29 @@ class EducationalCentreControllerTest extends ControllerTestCase
         self::assertNull($this->em->find(AcademicYear::class, $extra->getId()));
     }
 
-    public function testDeleteYearWithDataIsRefusedInsteadOfFailing(): void
+    public function testDeleteYearWithDataNeedsExplicitConfirmationAndThenRemovesEverything(): void
     {
-        $admin  = $this->makeAdmin('admin.1');
-        $centre = $this->makeCentre('41000001');
-        $active = $this->makeYear($centre, '2024-2025');
-        $old    = $this->makeYear($centre, '2023-2024');
-        $family = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($old);
-        $this->persist($admin, $centre, $active, $old, $family);
+        $admin   = $this->makeAdmin('admin.1');
+        $centre  = $this->makeCentre('41000001');
+        $active  = $this->makeYear($centre, '2024-2025');
+        $old     = $this->makeYear($centre, '2023-2024');
+        $teacher = $this->makeTeacher('docente.1');
+        $teacher->addAcademicYear($old);
+
+        $family    = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($old);
+        $programme = (new \App\Entity\Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($old)->addCoordinator($teacher);
+        $level     = (new \App\Entity\ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $group     = (new \App\Entity\Group())->setName('DAW1A')->setProgrammeYear($level)->addTutor($teacher);
+        $student   = (new \App\Entity\Student(new PersonName('Ana', 'Martinez')))->setStudentId('2023-001');
+        $group->addStudent($student);
+        $stay      = (new \App\Entity\Stay())->setName('Estancia antigua')->setAcademicYear($old)->addProgramme($programme)
+            ->setStartDate(new \DateTimeImmutable('2024-03-01'))->setEndDate(new \DateTimeImmutable('2024-06-30'));
+        $stay->addStudent($student);
+        $company = (new \App\Entity\Company())->setName('Empresa S.L.')->setVatNumber('B12345678')->setCity('Sevilla')->setEducationalCentre($centre);
+        $wc      = (new \App\Entity\Workcenter())->setName('Sede')->setCity('Sevilla')->setCompany($company);
+        $pos     = (new \App\Entity\TrainingPosition())->setStay($stay)->setWorkcenter($wc)->setStudent($student);
+        $pos->addProgrammeYear($level);
+        $this->persist($admin, $centre, $active, $old, $teacher, $family, $programme, $level, $group, $student, $stay, $company, $wc, $pos);
         $centre->setActiveAcademicYear($active);
         $this->flush();
         $this->loginAs($admin);
@@ -342,14 +357,52 @@ class EducationalCentreControllerTest extends ControllerTestCase
         $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId);
         $token    = $crawler->filter('form[action*="/cursos/' . $yearId . '/eliminar"] [name="_token"]')->first()->attr('value');
 
+        // El borrado normal no elimina nada: lleva a la pantalla de confirmación.
         $this->client->request('POST', '/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar', ['_token' => $token]);
-
-        self::assertResponseRedirects('/admin/centros/' . $centreId);
+        self::assertResponseRedirects('/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar-con-datos');
         $crawler = $this->client->followRedirect();
-        self::assertStringContainsString('No se puede eliminar un curso que tiene datos (1 familia(s)', $crawler->text());
+        self::assertStringContainsString('1 familia(s) profesional(es), 1 enseñanza(s), 1 nivel(es) y 1 grupo(s)', $crawler->text());
+        self::assertStringContainsString('1 estancia(s) con 1 puesto(s) formativo(s)', $crawler->text());
+        $confirmToken = $crawler->filter('[name="_token"]')->attr('value');
+        $url          = '/admin/centros/' . $centreId . '/cursos/' . $yearId . '/eliminar-con-datos';
 
+        // Con un nombre distinto no se borra nada.
+        $crawler = $this->client->request('POST', $url, ['_token' => $confirmToken, 'confirm_name' => 'otro']);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('El nombre no coincide', $crawler->text());
         $this->em->clear();
         self::assertNotNull($this->em->find(AcademicYear::class, $old->getId()));
+
+        // Escribiendo el nombre del curso se elimina con todo lo suyo.
+        $this->client->request('POST', $url, ['_token' => $confirmToken, 'confirm_name' => '2023-2024']);
+        self::assertResponseRedirects('/admin/centros/' . $centreId);
+
+        $this->em->clear();
+        self::assertNull($this->em->find(AcademicYear::class, $old->getId()));
+        self::assertNull($this->em->find(\App\Entity\Stay::class, $stay->getId()));
+        self::assertNull($this->em->find(\App\Entity\TrainingPosition::class, $pos->getId()));
+        self::assertNull($this->em->find(\App\Entity\Group::class, $group->getId()));
+        self::assertNull($this->em->find(\App\Entity\ProfessionalFamily::class, $family->getId()));
+        // Docentes, alumnado y empresas se conservan; el curso activo sigue intacto.
+        self::assertNotNull($this->em->find(Teacher::class, $teacher->getId()));
+        self::assertNotNull($this->em->find(\App\Entity\Student::class, $student->getId()));
+        self::assertNotNull($this->em->find(\App\Entity\Company::class, $company->getId()));
+        self::assertNotNull($this->em->find(AcademicYear::class, $active->getId()));
+    }
+
+    public function testDeleteConfirmationIsNotAvailableForTheActiveYear(): void
+    {
+        $admin  = $this->makeAdmin('admin.1');
+        $centre = $this->makeCentre('41000001');
+        $active = $this->makeYear($centre, '2024-2025');
+        $this->persist($admin, $centre, $active);
+        $centre->setActiveAcademicYear($active);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/cursos/' . $active->getId()->toRfc4122() . '/eliminar-con-datos');
+
+        self::assertResponseRedirects('/admin/centros/' . $centre->getId()->toRfc4122());
     }
 
     public function testDeleteYearThatOnlyHasTeacherMembershipsRemovesThem(): void

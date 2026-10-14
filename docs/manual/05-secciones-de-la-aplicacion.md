@@ -280,6 +280,14 @@ Desde la página principal de **Oferta formativa** están disponibles dos accion
 El caso de uso habitual es **copiar la oferta de un curso al siguiente**: exporta el curso actual,
 activa el nuevo curso académico e importa el fichero.
 
+### Eliminar un curso
+
+Un curso que no es el activo se puede eliminar desde la misma lista. Si no tiene oferta formativa ni
+estancias se elimina directamente. Si **tiene datos**, la aplicación muestra una pantalla de confirmación con
+lo que se perdería (familias, enseñanzas, niveles, grupos, estancias y puestos con sus asignaciones y firmas)
+y pide **escribir el nombre del curso** para continuar. Es irreversible; los docentes, el alumnado y las
+empresas no se borran, solo dejan de estar asociados al curso. El curso activo no se puede eliminar.
+
 ### Preparar el curso siguiente
 
 ![Asistente para preparar el curso siguiente](img/curso-siguiente.png)

@@ -9,6 +9,7 @@ use App\Pagination\Paginator;
 use App\Repository\AcademicYearRepository;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
+use App\Service\AcademicYearEraser;
 use App\Service\AcademicYearRollover;
 use App\Service\ImportOptions;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -34,6 +35,7 @@ class EducationalCentreController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly ClockInterface $clock,
         private readonly AcademicYearRollover $rollover,
+        private readonly AcademicYearEraser $eraser,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
@@ -375,27 +377,69 @@ class EducationalCentreController extends AbstractController
 
         if ($centre->getActiveAcademicYear() === $year) {
             $this->addFlash('error', $this->t('year.flash.delete_active_error'));
-        } elseif ($content['families'] > 0 || $content['stays'] > 0) {
-            // Un curso con oferta formativa o estancias no se elimina: borraría el historial.
-            $this->addFlash('error', $this->translator->trans('year.flash.delete_with_data_error', [
-                '%families%' => $content['families'],
-                '%stays%'    => $content['stays'],
-            ], 'admin'));
+        } elseif (array_sum($content) > 0) {
+            // Con oferta formativa o estancias se pide una confirmación explícita: se perdería ese historial.
+            return $this->redirectToRoute('app_admin_centres_year_delete_confirm', ['centreId' => $centreId, 'yearId' => $yearId]);
         } else {
             try {
                 $this->em->remove($year);
                 $this->em->flush();
                 $this->addFlash('success', $this->t('year.flash.deleted'));
             } catch (ForeignKeyConstraintViolationException) {
-                // Algún otro dato referencia el curso: no se elimina, en lugar de fallar con un 500.
-                $this->addFlash('error', $this->translator->trans('year.flash.delete_with_data_error', [
-                    '%families%' => 0,
-                    '%stays%'    => 0,
-                ], 'admin'));
+                // Algún dato no previsto referencia el curso: no se elimina, en lugar de fallar con un 500.
+                $this->addFlash('error', $this->t('year.flash.delete_related_error'));
             }
         }
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
+    }
+
+    /**
+     * Confirmación explícita para eliminar un curso con datos: muestra lo que se perdería y exige escribir
+     * el nombre del curso.
+     */
+    #[Route('/{centreId}/cursos/{yearId}/eliminar-con-datos', name: 'app_admin_centres_year_delete_confirm')]
+    public function confirmDeleteYear(string $centreId, string $yearId, Request $request): Response
+    {
+        $centre = $this->centres->findByIdWithActiveYear($centreId);
+        $year   = $centre !== null ? $this->years->findByCentreAndId($centre, $yearId) : null;
+        if ($centre === null || $year === null) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($centre->getActiveAcademicYear() === $year) {
+            $this->addFlash('error', $this->t('year.flash.delete_active_error'));
+
+            return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
+        }
+
+        $errors = [];
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('delete_year_data_' . $yearId, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            if (trim($request->request->getString('confirm_name')) !== $year->getName()) {
+                $errors['confirm_name'] = $this->t('year.delete_confirm_page.name_mismatch');
+            } else {
+                $name = $year->getName();
+                try {
+                    $this->eraser->erase($year);
+                    $this->addFlash('success', $this->translator->trans('year.flash.deleted_with_data', ['%year%' => $name], 'admin'));
+                } catch (ForeignKeyConstraintViolationException) {
+                    $this->addFlash('error', $this->t('year.flash.delete_related_error'));
+                }
+
+                return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
+            }
+        }
+
+        return $this->render('admin/educational_centre/delete_year.html.twig', [
+            'centre'  => $centre,
+            'year'    => $year,
+            'content' => $this->years->countContent($year),
+            'errors'  => $errors,
+        ]);
     }
 
     #[Route('/{centreId}/cursos/{yearId}/activar', name: 'app_admin_centres_year_activate', methods: ['POST'])]

@@ -1,0 +1,71 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'year.delete_confirm_page.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-lg mx-auto">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            {% include 'components/_breadcrumb_home.html.twig' %}
+            <a href="{{ path('app_admin_centres_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'centres.title'|trans({}, 'admin') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}" class="hover:text-plum-600 transition-colors">
+                {{ centre.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'year.delete_confirm_page.title'|trans({}, 'admin') }}</h1>
+    </div>
+
+    <div class="rounded-2xl border border-red-200 bg-white shadow-xs">
+        <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_year_data_' ~ year.id) }}">
+
+            <div class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 shrink-0 text-red-500'}) }}
+                <div class="space-y-1.5">
+                    <p class="font-medium">{{ 'year.delete_confirm_page.warning'|trans({'%year%': year.name}, 'admin') }}</p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        {% if content.families > 0 %}
+                            <li>{{ 'year.delete_confirm_page.count_offer'|trans({'%families%': content.families, '%programmes%': content.programmes, '%levels%': content.levels, '%groups%': content.groups}, 'admin') }}</li>
+                        {% endif %}
+                        {% if content.stays > 0 %}
+                            <li>{{ 'year.delete_confirm_page.count_stays'|trans({'%stays%': content.stays, '%positions%': content.positions}, 'admin') }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-600">{{ 'year.delete_confirm_page.keeps'|trans({}, 'admin') }}</p>
+
+            <div>
+                <label for="confirm_name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    {{ 'year.delete_confirm_page.type_name'|trans({'%year%': year.name}, 'admin') }}
+                </label>
+                <input id="confirm_name" type="text" name="confirm_name" autocomplete="off" autofocus
+                       class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900 transition-colors focus:outline-none focus:ring-3
+                              {{ errors.confirm_name is defined
+                                  ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                  : 'border-gray-200 bg-gray-50 focus:border-red-400 focus:bg-white focus:ring-red-400/20' }}">
+                {% if errors.confirm_name is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.confirm_name }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}"
+                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    {{ 'year.delete_confirm_page.cancel'|trans({}, 'admin') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-xs">
+                    {{ 'year.delete_confirm_page.submit'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
