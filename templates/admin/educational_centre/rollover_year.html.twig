@@ -1,0 +1,116 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'years.rollover.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-lg mx-auto">
+
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1 flex-wrap">
+            {% include 'components/_breadcrumb_home.html.twig' %}
+            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'dashboard.title'|trans({}, 'admin') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_index') }}" class="hover:text-plum-600 transition-colors">
+                {{ 'centres.title'|trans({}, 'admin') }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+            <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}" class="hover:text-plum-600 transition-colors">
+                {{ centre.name }}
+            </a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'years.rollover.title'|trans({}, 'admin') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ 'years.rollover.intro'|trans({'%source%': source.name}, 'admin') }}</p>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs">
+        <form method="post" class="px-6 py-6 space-y-5" data-controller="form-submit">
+            <input type="hidden" name="_token" value="{{ csrf_token('rollover_year_' ~ centre.id) }}">
+
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">{{ 'years.rollover.name'|trans({}, 'admin') }}</label>
+                <input id="name" type="text" name="name" value="{{ values.name }}"
+                       placeholder="{{ 'years.field.name_placeholder'|trans({}, 'admin') }}" autofocus
+                       class="block w-full rounded-xl border py-2.5 px-3.5 text-sm text-gray-900 transition-colors focus:outline-none focus:ring-3
+                              {{ errors.name is defined
+                                  ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20'
+                                  : 'border-gray-200 bg-gray-50 focus:border-plum-500 focus:bg-white focus:ring-plum-500/20' }}">
+                {% if errors.name is defined %}
+                    <p class="mt-1.5 text-xs text-red-600">{{ errors.name }}</p>
+                {% endif %}
+            </div>
+
+            <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600 space-y-0.5">
+                <p class="font-medium text-gray-700">{{ 'years.rollover.preview'|trans({'%source%': source.name}, 'admin') }}</p>
+                <p>{{ 'years.rollover.count_offer'|trans({'%families%': preview.families, '%programmes%': preview.programmes, '%levels%': preview.levels, '%groups%': preview.groups}, 'admin') }}</p>
+                <p>{{ 'years.rollover.count_teachers'|trans({'%teachers%': preview.teachers}, 'admin') }}</p>
+            </div>
+
+            <fieldset class="space-y-2.5 text-sm text-gray-700">
+                <label class="flex items-center gap-2.5">
+                    <input type="checkbox" name="copy_offer" id="copy_offer" {{ values.copy_offer ? 'checked' }}
+                           class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                    {{ 'years.rollover.copy_offer'|trans({}, 'admin') }}
+                </label>
+                <div class="ml-6 space-y-2.5" id="offer-options">
+                    <label class="flex items-center gap-2.5">
+                        <input type="checkbox" name="copy_heads" {{ values.copy_heads ? 'checked' }}
+                               class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                        {{ 'years.rollover.copy_heads'|trans({}, 'admin') }}
+                    </label>
+                    <label class="flex items-center gap-2.5">
+                        <input type="checkbox" name="copy_tutors" {{ values.copy_tutors ? 'checked' }}
+                               class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                        {{ 'years.rollover.copy_tutors'|trans({}, 'admin') }}
+                    </label>
+                    <label class="flex items-center gap-2.5">
+                        <input type="checkbox" name="copy_teachers" {{ values.copy_teachers ? 'checked' }}
+                               class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                        {{ 'years.rollover.copy_teachers'|trans({}, 'admin') }}
+                    </label>
+                </div>
+                <label class="flex items-center gap-2.5">
+                    <input type="checkbox" name="copy_members" {{ values.copy_members ? 'checked' }}
+                           class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                    {{ 'years.rollover.copy_members'|trans({}, 'admin') }}
+                </label>
+                <div>
+                    <label class="flex items-center gap-2.5">
+                        <input type="checkbox" name="activate" {{ values.activate ? 'checked' }}
+                               class="h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+                        {{ 'years.rollover.activate'|trans({}, 'admin') }}
+                    </label>
+                    <p class="ml-6 mt-1 text-xs text-gray-500">{{ 'years.rollover.activate_hint'|trans({}, 'admin') }}</p>
+                </div>
+            </fieldset>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{{ path('app_admin_centres_edit', {id: centre.id}) }}"
+                   class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    {{ 'years.edit.cancel'|trans({}, 'admin') }}
+                </a>
+                <button type="submit"
+                        class="rounded-xl bg-plum-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-plum-700 transition-colors shadow-xs">
+                    {{ 'years.rollover.submit'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    const offer = document.getElementById('copy_offer');
+    const options = document.getElementById('offer-options');
+    if (!offer || !options) return;
+    function refresh() {
+        options.querySelectorAll('input').forEach((i) => { i.disabled = !offer.checked; });
+        options.classList.toggle('opacity-50', !offer.checked);
+    }
+    offer.addEventListener('change', refresh);
+    refresh();
+})();
+</script>
+{% endblock %}

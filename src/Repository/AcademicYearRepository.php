@@ -37,6 +37,19 @@ class AcademicYearRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function existsByCentreAndName(EducationalCentre $centre, string $name): bool
+    {
+        return $this->createQueryBuilder('ay')
+            ->select('1')
+            ->where('ay.educationalCentre = :centre')
+            ->andWhere('ay.name = :name')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setParameter('name', $name)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult() !== null;
+    }
+
     public function findByCentreAndId(EducationalCentre $centre, string $yearId): ?AcademicYear
     {
         return $this->createQueryBuilder('ay')

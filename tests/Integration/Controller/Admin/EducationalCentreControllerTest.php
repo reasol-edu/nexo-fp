@@ -351,6 +351,86 @@ class EducationalCentreControllerTest extends ControllerTestCase
         self::assertSame($otherId, $updated->getActiveAcademicYear()->getId()->toRfc4122());
     }
 
+    // ── Preparar curso siguiente ──────────────────────────────────────────────
+
+    public function testRolloverProposesTheNextNameAndShowsWhatWillBeCopied(): void
+    {
+        $admin  = $this->makeAdmin('admin.1');
+        $centre = $this->makeCentre('41000001');
+        $year   = $this->makeYear($centre, '2024-2025');
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $crawler = $this->client->request('GET', '/admin/centros/' . $centre->getId()->toRfc4122() . '/siguiente-curso');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('2025-2026', $crawler->filter('input[name="name"]')->attr('value'));
+    }
+
+    public function testRolloverCreatesTheYearWithTheOfferAndTheTeachersWithoutActivatingIt(): void
+    {
+        $admin   = $this->makeAdmin('admin.1');
+        $centre  = $this->makeCentre('41000001');
+        $year    = $this->makeYear($centre, '2024-2025');
+        $teacher = $this->makeTeacher('docente.1');
+        $teacher->addAcademicYear($year);
+        $family    = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
+        $programme = (new \App\Entity\Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $level     = (new \App\Entity\ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $group     = (new \App\Entity\Group())->setName('DAW1A')->setProgrammeYear($level)->addTutor($teacher);
+        $this->persist($admin, $centre, $year, $teacher, $family, $programme, $level, $group);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId . '/siguiente-curso');
+        $token    = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/siguiente-curso', [
+            '_token'        => $token,
+            'name'          => '2025-2026',
+            'copy_offer'    => '1',
+            'copy_tutors'   => '1',
+            'copy_members'  => '1',
+        ]);
+
+        self::assertResponseRedirects('/admin/centros/' . $centreId);
+        $this->em->clear();
+        $years = $this->em->getRepository(AcademicYear::class)->findBy(['name' => '2025-2026']);
+        self::assertCount(1, $years);
+        $new = $years[0];
+        self::assertSame($year->getId()->toRfc4122(), $this->em->find(EducationalCentre::class, $centre->getId())->getActiveAcademicYear()->getId()->toRfc4122());
+        $groups = $this->em->getRepository(\App\Entity\Group::class)->findBy(['name' => 'DAW1A']);
+        self::assertCount(2, $groups, 'El grupo existe en el curso anterior y en el nuevo');
+        foreach ($groups as $copied) {
+            self::assertCount(1, $copied->getTutors(), 'La tutoría de grupo se copia con la oferta');
+        }
+        self::assertTrue($this->em->find(Teacher::class, $teacher->getId())->getAcademicYears()->contains($new));
+    }
+
+    public function testRolloverRejectsADuplicatedYearName(): void
+    {
+        $admin  = $this->makeAdmin('admin.1');
+        $centre = $this->makeCentre('41000001');
+        $year   = $this->makeYear($centre, '2024-2025');
+        $this->persist($admin, $centre, $year);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin);
+
+        $centreId = $centre->getId()->toRfc4122();
+        $crawler  = $this->client->request('GET', '/admin/centros/' . $centreId . '/siguiente-curso');
+        $token    = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/admin/centros/' . $centreId . '/siguiente-curso', ['_token' => $token, 'name' => '2024-2025']);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Ya existe un curso con ese nombre');
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function makeTeacher(string $username): Teacher

@@ -9,6 +9,8 @@ use App\Pagination\Paginator;
 use App\Repository\AcademicYearRepository;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\TeacherRepository;
+use App\Service\AcademicYearRollover;
+use App\Service\ImportOptions;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Clock\ClockInterface;
@@ -30,6 +32,7 @@ class EducationalCentreController extends AbstractController
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
         private readonly ClockInterface $clock,
+        private readonly AcademicYearRollover $rollover,
     ) {}
 
     #[Route('', name: 'app_admin_centres_index')]
@@ -224,6 +227,89 @@ class EducationalCentreController extends AbstractController
         }
 
         return $this->redirectToRoute('app_admin_centres_edit', ['id' => $id]);
+    }
+
+    /** Asistente para preparar el curso siguiente a partir del activo (o del último curso del centro). */
+    #[Route('/{centreId}/siguiente-curso', name: 'app_admin_centres_year_rollover')]
+    public function rollOverYear(string $centreId, Request $request): Response
+    {
+        $centre = $this->centres->findByIdWithActiveYear($centreId);
+        if ($centre === null) {
+            throw $this->createNotFoundException();
+        }
+
+        $source = $centre->getActiveAcademicYear();
+        if ($source === null) {
+            $this->addFlash('error', $this->t('year.rollover.no_source'));
+
+            return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
+        }
+
+        $errors = [];
+        $values = [
+            'name'          => $this->rollover->suggestName($source),
+            'copy_offer'    => true,
+            'copy_heads'    => true,
+            'copy_tutors'   => true,
+            'copy_teachers' => true,
+            'copy_members'  => true,
+            'activate'      => false,
+        ];
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('rollover_year_' . $centreId, $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $values = [
+                'name'          => trim($request->request->getString('name')),
+                'copy_offer'    => $request->request->has('copy_offer'),
+                'copy_heads'    => $request->request->has('copy_heads'),
+                'copy_tutors'   => $request->request->has('copy_tutors'),
+                'copy_teachers' => $request->request->has('copy_teachers'),
+                'copy_members'  => $request->request->has('copy_members'),
+                'activate'      => $request->request->has('activate'),
+            ];
+
+            if ($values['name'] === '') {
+                $errors['name'] = $this->t('year.error.name_required');
+            } elseif ($this->years->existsByCentreAndName($centre, $values['name'])) {
+                $errors['name'] = $this->t('year.rollover.name_taken');
+            }
+
+            if ($errors === []) {
+                $result = $this->rollover->rollOver(
+                    $source,
+                    $values['name'],
+                    $values['copy_offer'],
+                    new ImportOptions(
+                        importHeads: $values['copy_heads'],
+                        importTutors: $values['copy_tutors'],
+                        importTeachers: $values['copy_teachers'],
+                    ),
+                    $values['copy_members'],
+                    $values['activate'],
+                );
+
+                $offer = $result['offer'];
+                $this->addFlash('success', $this->translator->trans('year.rollover.done', [
+                    '%year%'     => $result['year']->getName(),
+                    '%families%' => $offer['families'] ?? 0,
+                    '%groups%'   => $offer['groups'] ?? 0,
+                    '%teachers%' => $result['teachers'],
+                ], 'admin'));
+
+                return $this->redirectToRoute('app_admin_centres_edit', ['id' => $centreId]);
+            }
+        }
+
+        return $this->render('admin/educational_centre/rollover_year.html.twig', [
+            'centre'  => $centre,
+            'source'  => $source,
+            'preview' => $this->rollover->preview($source),
+            'errors'  => $errors,
+            'values'  => $values,
+        ]);
     }
 
     #[Route('/{centreId}/cursos/{yearId}', name: 'app_admin_centres_year_edit')]

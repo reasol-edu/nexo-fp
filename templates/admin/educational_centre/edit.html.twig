@@ -146,6 +146,14 @@
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-base font-semibold text-gray-900">{{ 'years.title'|trans({}, 'admin') }}</h2>
+            {% if centre.activeAcademicYear %}
+                <a href="{{ path('app_admin_centres_year_rollover', {centreId: centre.id}) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-plum-200 bg-plum-50 px-3 py-1.5
+                          text-xs font-semibold text-plum-700 hover:bg-plum-100 transition-colors">
+                    {{ ux_icon('heroicons:arrow-right-circle', {class: 'h-3.5 w-3.5'}) }}
+                    {{ 'years.rollover.action'|trans({}, 'admin') }}
+                </a>
+            {% endif %}
         </div>
 
         {# Lista de cursos #}

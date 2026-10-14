@@ -277,6 +277,20 @@ Desde la página principal de **Oferta formativa** están disponibles dos accion
 El caso de uso habitual es **copiar la oferta de un curso al siguiente**: exporta el curso actual,
 activa el nuevo curso académico e importa el fichero.
 
+### Preparar el curso siguiente
+
+Para no hacerlo a mano, la administración global dispone del botón **Preparar curso siguiente** en
+**Administración → Centros educativos → (centro) → Cursos académicos**. El asistente propone el nombre del
+nuevo curso (por ejemplo, «2025-2026» → «2026-2027») y crea de una vez:
+
+- el **curso nuevo**;
+- la **oferta formativa** copiada del curso activo (familias, enseñanzas, niveles y grupos), con o sin los
+  responsables de familia, las coordinaciones de enseñanza, las tutorías y el profesorado de cada grupo;
+- el **profesorado** del curso actual, añadido también al nuevo.
+
+Opcionalmente activa el curso nuevo al terminar; si no, el curso actual sigue activo y el nuevo se puede
+revisar con el selector de curso. El alumnado **no se copia**: se importa de nuevo desde Séneca.
+
 ## Administración
 
 ![Administración global: docentes, centros educativos y ajustes globales](img/administracion.png)
