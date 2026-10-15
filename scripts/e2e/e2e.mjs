@@ -156,6 +156,39 @@ const TESTS = [
     },
   },
   {
+    name: 'reparto por docente: las horas se guardan y el total de cada grupo cuadra con sus estudiantes',
+    run: async (page) => {
+      const href = await openStay(page, 'compartida');
+      const section = page.locator('#stay-teachers');
+      await section.waitFor({ state: 'visible', timeout: 5000 });
+
+      /** Por grupo: estudiantes y suma de lo que debería tener cada docente. */
+      const totals = () => section.evaluate((s) => [...s.querySelectorAll('h3')].map((h) => {
+        const block = h.closest('div.px-6');
+        const students = parseInt(block.textContent.match(/(\d+)\s+estudiantes?/)[1], 10);
+        const expected = [...block.querySelectorAll('tbody tr')].reduce((sum, tr) => sum + parseInt(tr.children[2].textContent, 10), 0);
+        return { group: h.textContent.trim(), students, expected };
+      }));
+
+      const before = await totals();
+      assert(before.length >= 1, 'debería haber al menos un grupo con estudiantes');
+      for (const g of before) assert(g.expected === g.students, `${g.group}: reparto ${g.expected} ≠ ${g.students} estudiantes`);
+
+      const input = section.locator('.js-teacher-hours').first();
+      const previous = await input.inputValue();
+      await input.fill(previous === '77' ? '78' : '77');
+      await input.press('Tab');                        // el cambio se guarda al salir del campo
+      await page.waitForTimeout(1500);
+
+      const after = await totals();
+      for (const g of after) assert(g.expected === g.students, `tras cambiar las horas, ${g.group}: reparto ${g.expected} ≠ ${g.students} estudiantes`);
+
+      await page.goto(`${BASE}${href}`, { waitUntil: 'networkidle' });
+      const saved = await page.locator('#stay-teachers .js-teacher-hours').first().inputValue();
+      assert(saved === (previous === '77' ? '78' : '77'), `las horas no se han guardado (${saved})`);
+    },
+  },
+  {
     name: 'desplegables de TomSelect: no los recorta su contenedor (todas las pantallas)',
     run: async (page) => {
       const cid = await centreId(page);
@@ -296,6 +329,7 @@ const A11Y_PAGES = [
   ['revision-datos', '/mi-centro/revision-datos'],
   ['calendario', '/calendario'],
   ['detalle-estancia', async (page) => openStay(page, DAW_STAY)],
+  ['detalle-estancia-reparto', async (page) => openStay(page, 'compartida')],   // con el reparto por docente
   ['perfil', '/perfil'],
   ['ajustes', '/perfil/ajustes'],
   ['empresa', async (page) => {

@@ -106,6 +106,67 @@ class StayControllerTest extends ControllerTestCase
         self::assertStringContainsString('/estancias', (string) $this->client->getResponse()->headers->get('Location'));
     }
 
+    public function testNewPostStoresTheCalculateByTeacherSetting(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $this->persist($admin, $centre, $year, $family, $programme);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+        self::assertSelectorExists('input[type="checkbox"][name="calculate_by_teacher"]');
+        $token = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/nueva', [
+            '_token'               => $token,
+            'name'                 => 'Estancia con reparto',
+            'programme_ids'        => [$programme->getId()->toRfc4122()],
+            'start_date'           => '2025-03-01',
+            'end_date'             => '2025-06-30',
+            'calculate_by_teacher' => '1',
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        $created = $this->em->getRepository(Stay::class)->findOneBy(['name' => 'Estancia con reparto']);
+        self::assertTrue($created->isCalculateByTeacher());
+    }
+
+    public function testEditPostTogglesTheCalculateByTeacherSetting(): void
+    {
+        [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
+        $stay = $this->makeStay('Estancia DAW 2025', $year, $programme);
+        $this->persist($admin, $centre, $year, $family, $programme, $stay);
+        $centre->setActiveAcademicYear($year);
+        $this->flush();
+        $this->loginAs($admin, $centre);
+        $stayId = $stay->getId()->toRfc4122();
+        $fields = [
+            'name'          => 'Estancia DAW 2025',
+            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'start_date'    => '2025-03-01',
+            'end_date'      => '2025-06-30',
+        ];
+
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId . '/editar');
+        $this->client->request('POST', '/estancias/' . $stayId . '/editar', $fields + [
+            '_token' => $crawler->filter('[name="_token"]')->first()->attr('value'),
+            'calculate_by_teacher' => '1',
+        ]);
+        $this->em->clear();
+        self::assertTrue($this->em->find(Stay::class, $stay->getId())->isCalculateByTeacher());
+
+        // Con la casilla marcada, el formulario la muestra activada y al desmarcarla se desactiva.
+        $crawler = $this->client->request('GET', '/estancias/' . $stayId . '/editar');
+        self::assertSelectorExists('input[name="calculate_by_teacher"][checked]');
+        $this->client->request('POST', '/estancias/' . $stayId . '/editar', $fields + [
+            '_token' => $crawler->filter('[name="_token"]')->first()->attr('value'),
+        ]);
+        $this->em->clear();
+        self::assertFalse($this->em->find(Stay::class, $stay->getId())->isCalculateByTeacher());
+    }
+
     public function testNewPostWithInvalidCsrfIsDenied(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();

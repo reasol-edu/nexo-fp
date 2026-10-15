@@ -1,0 +1,16 @@
+{# Ajuste de la estancia «Calcular asignaciones por docente». Variables: values.calculate_by_teacher. #}
+<div>
+    <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" id="calculate_by_teacher" name="calculate_by_teacher" value="1"
+               {{ values.calculate_by_teacher ? 'checked' }}
+               class="mt-0.5 h-4 w-4 rounded border-gray-300 text-plum-600 focus:ring-plum-500">
+        <span>
+            <span class="block text-sm font-medium text-gray-700">
+                {{ 'stays.field.calculate_by_teacher'|trans({}, 'stays') }}
+            </span>
+            <span class="block mt-0.5 text-xs text-gray-500">
+                {{ 'stays.field.calculate_by_teacher_help'|trans({}, 'stays') }}
+            </span>
+        </span>
+    </label>
+</div>

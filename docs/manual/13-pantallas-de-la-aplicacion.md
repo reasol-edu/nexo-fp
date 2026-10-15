@@ -85,6 +85,29 @@ Cada puesto formativo registra:
 | Estado | `Borrador`, `Pendiente de Séneca` o `Registrado en Séneca` |
 | Firmado | Indica si el convenio está firmado |
 
+### Reparto de tutorías por docente
+
+Al crear o editar una estancia puedes activar el ajuste **«Calcular asignaciones por docente»**. Entonces el
+detalle de la estancia muestra, entre los estudiantes y los puestos sin asignar, una sección **Docentes** que
+ayuda a repartir las tutorías duales docentes de forma proporcional a las horas que imparte cada docente:
+
+![Sección Docentes con las horas dualizadas por docente y grupo y el reparto de estudiantes](img/estancia-docentes.png)
+
+- En cada **grupo con estudiantes en la estancia** aparecen los docentes que imparten en él y una casilla para
+  indicar cuántas **horas dualizadas** imparte cada uno en ese grupo (quien gestiona la estancia; el resto las
+  ve sin poder cambiarlas). Se guardan al salir de la casilla; un campo vacío o `0` borra el dato.
+- Con esas horas se calcula cuántos estudiantes del grupo **debería** tutorizar cada docente: el total de
+  estudiantes del grupo se reparte **en proporción a sus horas** frente al total de horas dualizadas del
+  grupo. El reparto se redondea siempre de forma que **la suma de lo que debe tener cada docente coincide
+  exactamente con el número de estudiantes del grupo en la estancia**.
+- La tabla superior resume, para cada docente y sumando todos los grupos, cuántos estudiantes **debería tener**
+  y cuántos **tiene asignados** como tutor/a dual docente, con la diferencia («Faltan 2», «Sobra 1»,
+  «Completo»). Si alguien tutoriza a estudiantes de un grupo en el que no figura como docente, aparece con
+  0 esperados y los que tiene asignados.
+
+Si todavía no se ha indicado ninguna hora, la sección lo recuerda. Desmarcar el ajuste oculta la sección, pero
+las horas ya indicadas se conservan.
+
 ### Firmas pendientes
 
 ![Pestaña Firmas pendientes con la lista de puestos sin firmar](img/firmas-pendientes.png)

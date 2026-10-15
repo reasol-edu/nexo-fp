@@ -14,6 +14,17 @@
     {% endif %}
 {% endmacro %}
 
+{# Diferencia entre los estudiantes que debería tener un docente y los que tiene asignados. #}
+{% macro balance(expected, assigned) %}
+    {% if assigned == expected %}
+        <span class="text-green-700">{{ 'stays.teachers.complete'|trans({}, 'stays') }}</span>
+    {% elseif assigned < expected %}
+        <span class="text-amber-700">{{ 'stays.teachers.missing'|trans({'%count%': expected - assigned}, 'stays') }}</span>
+    {% else %}
+        <span class="text-red-600">{{ 'stays.teachers.extra'|trans({'%count%': assigned - expected}, 'stays') }}</span>
+    {% endif %}
+{% endmacro %}
+
 {% macro row_flags(position) -%}
     {%- if position is null -%}
         sin-puesto
@@ -100,6 +111,7 @@
 {%- set count_unsigned                 = d.count_unsigned -%}
 {%- set programme_teachers             = d.programme_teachers -%}
 {%- set workers_by_company_id          = d.workers_by_company_id -%}
+{%- set teacher_assignments            = d.teacher_assignments -%}
 
 {% set today_str = "now"|date("Y-m-d") %}
 {% set end_str   = stay.endDate|date("Y-m-d") %}
@@ -861,6 +873,111 @@
 
     </div>
 
+    {# ── Docentes: reparto de tutorías duales (ajuste «Calcular asignaciones por docente») ── #}
+    {% if teacher_assignments is not null %}
+    <div id="stay-teachers" class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-sm font-semibold text-gray-900">{{ 'stays.teachers.title'|trans({}, 'stays') }}</h2>
+            <p class="mt-1 text-xs text-gray-500">{{ 'stays.teachers.intro'|trans({}, 'stays') }}</p>
+        </div>
+
+        {% if teacher_assignments.groups is empty %}
+            <p class="px-6 py-6 text-sm text-gray-500">{{ 'stays.teachers.no_groups'|trans({}, 'stays') }}</p>
+        {% else %}
+
+            {# Resumen por docente (suma de todos los grupos) #}
+            {% if teacher_assignments.teachers is empty %}
+                <p class="px-6 py-4 text-sm text-gray-500">
+                    {{ (can_manage ? 'stays.teachers.no_hours_manage' : 'stays.teachers.no_hours')|trans({}, 'stays') }}
+                </p>
+            {% else %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm table-cards">
+                        <thead>
+                            <tr class="border-b border-gray-100 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                                <th scope="col" class="px-6 py-2.5 font-medium">{{ 'stays.teachers.col.teacher'|trans({}, 'stays') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium text-right">{{ 'stays.teachers.col.expected'|trans({}, 'stays') }}</th>
+                                <th scope="col" class="px-4 py-2.5 font-medium text-right">{{ 'stays.teachers.col.assigned'|trans({}, 'stays') }}</th>
+                                <th scope="col" class="px-6 py-2.5 font-medium">{{ 'stays.teachers.col.balance'|trans({}, 'stays') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            {% for t in teacher_assignments.teachers %}
+                                <tr>
+                                    <td data-label="{{ 'stays.teachers.col.teacher'|trans({}, 'stays')|e('html_attr') }}" class="px-6 py-3">
+                                        <p class="font-medium text-gray-900">{{ t.teacher.name.full() }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {% for g in t.by_group %}{{ g.group.name }}: {{ g.assigned }}/{{ g.expected }}{{ loop.last ? '' : ' · ' }}{% endfor %}
+                                        </p>
+                                    </td>
+                                    <td data-label="{{ 'stays.teachers.col.expected'|trans({}, 'stays')|e('html_attr') }}" class="px-4 py-3 text-right tabular-nums">{{ t.expected }}</td>
+                                    <td data-label="{{ 'stays.teachers.col.assigned'|trans({}, 'stays')|e('html_attr') }}" class="px-4 py-3 text-right tabular-nums">{{ t.assigned }}</td>
+                                    <td data-label="{{ 'stays.teachers.col.balance'|trans({}, 'stays')|e('html_attr') }}" class="px-6 py-3 text-xs font-medium">{{ _self.balance(t.expected, t.assigned) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            {# Horas dualizadas por grupo #}
+            <div class="border-t border-gray-100 divide-y divide-gray-100">
+                {% for entry in teacher_assignments.groups %}
+                    <div class="px-6 py-4">
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <h3 class="text-sm font-semibold text-gray-800">{{ entry.group.name }}</h3>
+                            <span class="text-xs text-gray-500">{{ 'stays.teachers.group_students'|trans({'%count%': entry.students}, 'stays') }}</span>
+                            <span class="text-xs text-gray-500 tabular-nums">{{ 'stays.teachers.group_hours_total'|trans({'%count%': entry.total_hours}, 'stays') }}</span>
+                        </div>
+
+                        {% if entry.rows is empty %}
+                            <p class="mt-2 text-xs text-gray-500">{{ 'stays.teachers.group_no_teachers'|trans({}, 'stays') }}</p>
+                        {% else %}
+                            <table class="mt-2 min-w-full text-sm table-cards">
+                                <thead>
+                                    <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
+                                        <th scope="col" class="py-1.5 pr-4 font-medium">{{ 'stays.teachers.col.teacher'|trans({}, 'stays') }}</th>
+                                        <th scope="col" class="py-1.5 px-4 font-medium text-right">{{ 'stays.teachers.col.hours'|trans({}, 'stays') }}</th>
+                                        <th scope="col" class="py-1.5 px-4 font-medium text-right">{{ 'stays.teachers.col.expected'|trans({}, 'stays') }}</th>
+                                        <th scope="col" class="py-1.5 pl-4 font-medium text-right">{{ 'stays.teachers.col.assigned'|trans({}, 'stays') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    {% for row in entry.rows %}
+                                        <tr>
+                                            <td data-label="{{ 'stays.teachers.col.teacher'|trans({}, 'stays')|e('html_attr') }}" class="py-2 pr-4 text-gray-800">
+                                                {{ row.teacher.name.full() }}
+                                                {% if not row.in_group %}
+                                                    <span class="ml-1 text-xs text-gray-500">({{ 'stays.teachers.not_in_group'|trans({}, 'stays') }})</span>
+                                                {% endif %}
+                                            </td>
+                                            <td data-label="{{ 'stays.teachers.col.hours'|trans({}, 'stays')|e('html_attr') }}" class="py-2 px-4 text-right">
+                                                {% if can_manage and row.in_group %}
+                                                    <input type="number" min="0" max="9999" step="1" inputmode="numeric"
+                                                           class="js-teacher-hours w-20 rounded-lg border border-gray-200 bg-white px-2 py-1 text-right text-sm tabular-nums focus:border-plum-400 focus:outline-none focus:ring-2 focus:ring-plum-100"
+                                                           value="{{ row.hours > 0 ? row.hours : '' }}" placeholder="0"
+                                                           data-group-id="{{ entry.group.id.toRfc4122 }}"
+                                                           data-teacher-id="{{ row.teacher.id.toRfc4122 }}"
+                                                           aria-label="{{ 'stays.teachers.hours_label'|trans({'%teacher%': row.teacher.name.full(), '%group%': entry.group.name}, 'stays')|e('html_attr') }}">
+                                                {% else %}
+                                                    <span class="tabular-nums">{{ row.hours }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td data-label="{{ 'stays.teachers.col.expected'|trans({}, 'stays')|e('html_attr') }}" class="py-2 px-4 text-right tabular-nums">{{ row.expected }}</td>
+                                            <td data-label="{{ 'stays.teachers.col.assigned'|trans({}, 'stays')|e('html_attr') }}" class="py-2 pl-4 text-right tabular-nums">{{ row.assigned }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {# ── Puestos sin asignar (solo gestores y docentes de enlace) ─────────── #}
     {% if can_view_unassigned %}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
@@ -1048,6 +1165,18 @@ const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
 // (instead of per-element listeners) avoids stale listener accumulation across
 // Idiomorph re-renders, which morph elements in place but fire live:render after.
 function setupEventDelegation() {
+    // Horas dualizadas de un docente en un grupo (ajuste «Calcular asignaciones por docente»):
+    // se guardan al salir del campo o pulsar Intro.
+    liveEl.addEventListener('change', function (e) {
+        const input = e.target.closest('.js-teacher-hours');
+        if (!input || !liveComp) return;
+        liveComp.action('setTeacherHours', {
+            groupId:   input.dataset.groupId,
+            teacherId: input.dataset.teacherId,
+            hours:     input.value,
+        });
+    });
+
     liveEl.addEventListener('click', function (e) {
 
         // Filtro «solo mis estudiantes» (estancias con varias enseñanzas)

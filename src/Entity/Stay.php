@@ -51,6 +51,13 @@ class Stay
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $lastSignatureReminderSentAt = null;
 
+    /**
+     * Si está activo, el detalle de la estancia permite indicar las horas dualizadas de cada docente en
+     * cada grupo y calcula cuántos estudiantes debería tutorizar cada uno (ver {@see StayTeacherHours}).
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $calculateByTeacher = false;
+
     /** @var Collection<int, TrainingPosition> */
     #[ORM\OneToMany(targetEntity: TrainingPosition::class, mappedBy: 'stay', fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     private Collection $trainingPositions;
@@ -255,6 +262,18 @@ class Stay
     public function setEndDate(\DateTimeImmutable $endDate): static
     {
         $this->endDate = $endDate;
+
+        return $this;
+    }
+
+    public function isCalculateByTeacher(): bool
+    {
+        return $this->calculateByTeacher;
+    }
+
+    public function setCalculateByTeacher(bool $calculateByTeacher): static
+    {
+        $this->calculateByTeacher = $calculateByTeacher;
 
         return $this;
     }

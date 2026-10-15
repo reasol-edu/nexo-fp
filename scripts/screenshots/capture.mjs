@@ -116,6 +116,10 @@ const SHOTS = [
     steps: [go('/estancias'), async ({ page }) => { await page.getByText('Firmas pendientes').first().click(); await page.waitForTimeout(1200); }] },
   { name: 'estancia-compartida', group: 'manual', out: `${M}/estancia-compartida.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)] },
+  // Sección «Docentes» (ajuste «Calcular asignaciones por docente»): horas dualizadas y reparto de tutorías.
+  { name: 'estancia-docentes', group: 'manual', out: `${M}/estancia-docentes.png`, size: [1440, 1900, 1], user: 'diego.romero',
+    steps: [openStay(SHARED_STAY), wait(1200)],
+    element: async (page) => page.locator('#stay-teachers') },
   { name: 'puesto-preferencia', group: 'manual', out: `${M}/puesto-preferencia.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [async (ctx) => { const href = await openStay(SHARED_STAY)(ctx); await ctx.page.goto(`${BASE}${href}/nuevo-puesto`, { waitUntil: 'networkidle' });
       await ctx.page.selectOption('#priority_programme_id', { index: 1 }); await ctx.page.fill('#priority_until', new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10)); }] },

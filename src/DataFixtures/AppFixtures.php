@@ -13,6 +13,7 @@ use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
+use App\Entity\StayTeacherHours;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
@@ -142,6 +143,7 @@ class AppFixtures extends Fixture
             'DELETE FROM ' . $q('training_position_programme_year'),
             'DELETE FROM ' . $q('stay_students'),
             'DELETE FROM ' . $q('training_position'),
+            'DELETE FROM ' . $q('stay_teacher_hours'),
             'DELETE FROM ' . $q('stay'),
             'DELETE FROM ' . $q('comment'),
             'DELETE FROM ' . $q('company_audit'),
@@ -452,6 +454,10 @@ class AppFixtures extends Fixture
 
             $group->addTutor($tutor);
             $group->addTeacher($co);
+            // Además del docente asignado, el tutor imparte en su grupo y hay un tercer docente, de modo
+            // que el reparto por docente de las estancias tenga varios a los que repartir.
+            $group->addTeacher($tutor);
+            $group->addTeacher($teacherList[$specialCount + (($regularIdx + 1) % $regularCount)]);
 
             $manager->persist($group);
 
@@ -1013,8 +1019,17 @@ class AppFixtures extends Fixture
             ->addProgramme($daw)
             ->addProgramme($smr)
             ->setStartDate($this->stayStart('ongoing'))
-            ->setEndDate($this->stayEnd('ongoing'));
+            ->setEndDate($this->stayEnd('ongoing'))
+            ->setCalculateByTeacher(true);
         $manager->persist($stay);
+
+        // Horas dualizadas de ejemplo de los docentes de cada grupo (40, 30, 20… h) para el reparto de tutorías.
+        foreach ([$dawGroup, $smrGroup] as $group) {
+            $hours = [40, 30, 20, 10];
+            foreach ($group->getTeachers() as $i => $teacher) {
+                $manager->persist(new StayTeacherHours($stay, $group, $teacher, $hours[$i % \count($hours)]));
+            }
+        }
 
         $dawStudents = array_slice($dawGroup->getStudents()->toArray(), 0, 6);
         $smrStudents = array_slice($smrGroup->getStudents()->toArray(), 0, 6);

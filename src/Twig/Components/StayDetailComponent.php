@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Twig\Components;
 
+use App\Entity\Group;
 use App\Entity\Stay;
+use App\Entity\StayTeacherHours;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Repository\GroupRepository;
 use App\Repository\StayRepository;
+use App\Repository\StayTeacherHoursRepository;
 use App\Repository\TeacherRepository;
 use App\Repository\TrainingPositionRepository;
 use App\Repository\WorkerRepository;
@@ -19,6 +22,7 @@ use App\Security\Voter\StayVoter;
 use App\Service\PositionStateChanger;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
+use App\Service\TeacherAssignmentCalculator;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -62,6 +66,8 @@ class StayDetailComponent extends AbstractController
         private readonly StayScope $scope,
         private readonly ClockInterface $clock,
         private readonly PositionStateChanger $stateChanger,
+        private readonly StayTeacherHoursRepository $teacherHours,
+        private readonly TeacherAssignmentCalculator $calculator,
     ) {}
 
     /** @return array<string, mixed> */
@@ -230,9 +236,101 @@ class StayDetailComponent extends AbstractController
             'workers_by_company_id'            => $workersByCompanyId,
             'stats'                            => $stats,
             'progress'                         => $progress,
+            'teacher_assignments'              => $stay->isCalculateByTeacher()
+                ? $this->buildTeacherAssignments($stay, $byGroup, $studentPositionMap)
+                : null,
         ];
 
         return $this->cache;
+    }
+
+    /**
+     * Reparto de tutorías duales docentes por docente (ajuste «Calcular asignaciones por docente»).
+     *
+     * Para cada grupo con estudiantes en la estancia, cada docente del grupo tiene indicadas unas horas
+     * dualizadas y de ellas sale cuántos estudiantes debería tutorizar (la suma por grupo es siempre el
+     * número de estudiantes del grupo). Se compara con los que ya tiene asignados como tutor dual docente.
+     *
+     * @param list<array{group: Group, students: list<\App\Entity\Student>}> $byGroup
+     * @param array<string, TrainingPosition>                                $studentPositionMap
+     *
+     * @return array{
+     *     groups: list<array{group: Group, students: int, total_hours: int, rows: list<array{teacher: Teacher, hours: int, expected: int, assigned: int, in_group: bool}>}>,
+     *     teachers: list<array{teacher: Teacher, expected: int, assigned: int, by_group: list<array{group: Group, expected: int, assigned: int}>}>
+     * }
+     */
+    private function buildTeacherAssignments(Stay $stay, array $byGroup, array $studentPositionMap): array
+    {
+        $savedHours = $this->teacherHours->findHoursByStay($stay);
+        $byName     = static fn (Teacher $a, Teacher $b): int =>
+            $a->getName()->getLastName() <=> $b->getName()->getLastName()
+            ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName();
+
+        $groups   = [];
+        $teachers = [];
+
+        foreach ($byGroup as $entry) {
+            /** @var Group $group */
+            $group   = $entry['group'];
+            $groupId = $group->getId()->toRfc4122();
+
+            // Docentes del grupo y, aunque no figuren en él, quienes ya tutorizan a estudiantes suyos.
+            /** @var array<string, Teacher> $people */
+            $people   = [];
+            foreach ($group->getTeachers() as $teacher) {
+                $people[$teacher->getId()->toRfc4122()] = $teacher;
+            }
+            $assigned = [];
+            foreach ($entry['students'] as $student) {
+                $tutor = ($studentPositionMap[$student->getId()->toRfc4122()] ?? null)?->getAcademicTutor();
+                if ($tutor !== null) {
+                    $tutorId           = $tutor->getId()->toRfc4122();
+                    $people[$tutorId] ??= $tutor;
+                    $assigned[$tutorId] = ($assigned[$tutorId] ?? 0) + 1;
+                }
+            }
+
+            $hours = [];
+            foreach ($people as $teacherId => $teacher) {
+                $hours[$teacherId] = $savedHours[$groupId][$teacherId] ?? 0;
+            }
+            $expected = $this->calculator->distribute(\count($entry['students']), $hours);
+
+            $sorted = array_values($people);
+            usort($sorted, $byName);
+
+            $rows = [];
+            foreach ($sorted as $teacher) {
+                $teacherId = $teacher->getId()->toRfc4122();
+                $row = [
+                    'teacher'  => $teacher,
+                    'hours'    => $hours[$teacherId],
+                    'expected' => $expected[$teacherId],
+                    'assigned' => $assigned[$teacherId] ?? 0,
+                    'in_group' => $group->getTeachers()->contains($teacher),
+                ];
+                $rows[] = $row;
+
+                if ($row['hours'] > 0 || $row['assigned'] > 0) {
+                    $teachers[$teacherId] ??= ['teacher' => $teacher, 'expected' => 0, 'assigned' => 0, 'by_group' => []];
+                    $teachers[$teacherId]['expected'] += $row['expected'];
+                    $teachers[$teacherId]['assigned'] += $row['assigned'];
+                    $teachers[$teacherId]['by_group'][] = ['group' => $group, 'expected' => $row['expected'], 'assigned' => $row['assigned']];
+                }
+            }
+
+            $groups[] = [
+                'group'       => $group,
+                'students'    => \count($entry['students']),
+                'total_hours' => array_sum($hours),
+                'rows'        => $rows,
+            ];
+        }
+
+        $summary = array_values($teachers);
+        usort($summary, static fn (array $a, array $b): int => $byName($a['teacher'], $b['teacher']));
+
+        return ['groups' => $groups, 'teachers' => $summary];
     }
 
     /**
@@ -849,6 +947,57 @@ class StayDetailComponent extends AbstractController
 
         $this->toast('stays.toast.academic_tutor_set', [
             '%teacher%' => $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),
+        ]);
+
+        return null;
+    }
+
+    /**
+     * Guarda las horas dualizadas de un docente en un grupo de la estancia (ajuste «Calcular
+     * asignaciones por docente»). Un valor vacío o 0 elimina el dato.
+     */
+    #[LiveAction]
+    public function setTeacherHours(#[LiveArg] string $groupId, #[LiveArg] string $teacherId, #[LiveArg] string $hours): ?Response
+    {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null || !$stay->isCalculateByTeacher() || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+            throw new AccessDeniedException();
+        }
+
+        // El grupo debe tener estudiantes en la estancia y el docente impartir en él.
+        $group = null;
+        foreach ($this->groups->findByStayWithStudents($stay) as $candidate) {
+            if ($candidate->getId()->toRfc4122() === $groupId) {
+                $group = $candidate;
+                break;
+            }
+        }
+        $teacher = $this->teachers->findById($teacherId);
+        if ($group === null || $teacher === null || !$group->getTeachers()->contains($teacher)) {
+            return null;
+        }
+
+        $value = is_numeric($hours) ? max(0, min(9999, (int) $hours)) : 0;
+        $row   = $this->teacherHours->findOne($stay, $group, $teacher);
+
+        if ($value === 0) {
+            if ($row !== null) {
+                $this->em->remove($row);
+            }
+        } elseif ($row !== null) {
+            $row->setHours($value);
+        } else {
+            $this->em->persist(new StayTeacherHours($stay, $group, $teacher, $value));
+        }
+
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+
+        $this->toast('stays.toast.teacher_hours_set', [
+            '%teacher%' => $teacher->getName()->getFirstName() . ' ' . $teacher->getName()->getLastName(),
+            '%group%'   => $group->getName(),
+            '%count%'   => $value,
         ]);
 
         return null;

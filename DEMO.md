@@ -296,6 +296,7 @@ Estancia del IES Ada Lovelace que reúne **DAW** (coordina `diego.romero`) y **S
 | Puesto con preferencia | 1 compartido, preferente para SMR durante los próximos 15 días; después se abre a DAW |
 | Puestos exclusivos | 1 solo de 2.º SMR y 1 solo de 2.º DAW |
 | Puestos ya asignados | 1 alumno de DAW y 1 de SMR, en estado «Pendiente de Séneca», con tutor/a dual docente |
+| Reparto por docente | Tiene activado «Calcular asignaciones por docente»: los docentes de cada grupo (tutor/a incluido) llevan horas dualizadas de ejemplo (40, 30, 20… h) y la sección **Docentes** muestra cuántos estudiantes debería tutorizar cada uno |
 
 Sirve para probar el reparto por coordinación: entrando como `diego.romero` solo se puede asignar a alumnado de DAW
 (el de SMR se ve con candado y sin NIE), y viceversa con `maria.garcia`.

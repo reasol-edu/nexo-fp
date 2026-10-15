@@ -73,7 +73,10 @@ tutores ni preferencia).
 Una vez creados los puestos, se completa cada uno con su asignación:
 
 1. Se selecciona el **estudiante** que ocupará el puesto (de entre los de la propia coordinación).
-2. Se designa el **tutor/a dual docente** (responsable académico).
+2. Se designa el **tutor/a dual docente** (responsable académico). Si la estancia tiene activado
+   **«Calcular asignaciones por docente»**, la sección **Docentes** indica cuántos estudiantes debería
+   tutorizar cada docente, según sus horas dualizadas en cada grupo, y cuántos tiene ya asignados (consulta
+   [Reparto de tutorías por docente](13-pantallas-de-la-aplicacion.md#reparto-de-tutorias-por-docente)).
 3. Se designa el **tutor/a dual de empresa** (responsable en la empresa).
 4. Se ajustan las fechas del puesto si difieren de las de la estancia.
 

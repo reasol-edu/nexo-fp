@@ -123,7 +123,7 @@ class StayController extends AbstractController
         $byFamily = $this->groupProgrammesByFamily($allProgrammes);
 
         $errors = [];
-        $values = ['name' => '', 'programme_ids' => [], 'start_date' => '', 'end_date' => ''];
+        $values = ['name' => '', 'programme_ids' => [], 'start_date' => '', 'end_date' => '', 'calculate_by_teacher' => false];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_stay', $request->request->getString('_token'))) {
@@ -131,10 +131,11 @@ class StayController extends AbstractController
             }
 
             $values = [
-                'name'          => trim($request->request->getString('name')),
-                'programme_ids' => array_values(array_map('strval', $request->request->all('programme_ids'))),
-                'start_date'    => trim($request->request->getString('start_date')),
-                'end_date'      => trim($request->request->getString('end_date')),
+                'name'                 => trim($request->request->getString('name')),
+                'programme_ids'        => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'start_date'           => trim($request->request->getString('start_date')),
+                'end_date'             => trim($request->request->getString('end_date')),
+                'calculate_by_teacher' => $request->request->getBoolean('calculate_by_teacher'),
             ];
 
             if ($values['name'] === '') {
@@ -186,7 +187,8 @@ class StayController extends AbstractController
                 $stay->setName($values['name'])
                      ->setAcademicYear($year)
                      ->setStartDate($startDate)
-                     ->setEndDate($endDate);
+                     ->setEndDate($endDate)
+                     ->setCalculateByTeacher($values['calculate_by_teacher']);
                 foreach ($selectedProgrammes as $selected) {
                     $stay->addProgramme($selected);
                 }
@@ -276,6 +278,7 @@ class StayController extends AbstractController
             'programme_ids' => array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $stay->getProgrammes()->toArray()),
             'start_date'    => $stay->getStartDate()->format('Y-m-d'),
             'end_date'      => $stay->getEndDate()->format('Y-m-d'),
+            'calculate_by_teacher' => $stay->isCalculateByTeacher(),
         ];
 
         if ($request->isMethod('POST')) {
@@ -284,10 +287,11 @@ class StayController extends AbstractController
             }
 
             $values = [
-                'name'          => trim($request->request->getString('name')),
-                'programme_ids' => array_values(array_map('strval', $request->request->all('programme_ids'))),
-                'start_date'    => trim($request->request->getString('start_date')),
-                'end_date'      => trim($request->request->getString('end_date')),
+                'name'                 => trim($request->request->getString('name')),
+                'programme_ids'        => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'start_date'           => trim($request->request->getString('start_date')),
+                'end_date'             => trim($request->request->getString('end_date')),
+                'calculate_by_teacher' => $request->request->getBoolean('calculate_by_teacher'),
             ];
 
             $selectedIds = [];
@@ -347,7 +351,8 @@ class StayController extends AbstractController
             if (empty($errors) && $startDate !== null && $endDate !== null) {
                 $stay->setName($values['name'])
                      ->setStartDate($startDate)
-                     ->setEndDate($endDate);
+                     ->setEndDate($endDate)
+                     ->setCalculateByTeacher($values['calculate_by_teacher']);
                 foreach ($stay->getProgrammes()->toArray() as $current) {
                     if (!in_array($current->getId()->toRfc4122(), $selectedIds, true)) {
                         $stay->removeProgramme($current);
