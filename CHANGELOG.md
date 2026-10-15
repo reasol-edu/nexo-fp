@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- En el manual en PDF, los enlaces a títulos numerados, a anclas explícitas (como `#variables-de-entorno-opcionales`) y a capítulos cuyo nombre de fichero no coincide con su título ya apuntan a su destino. El filtro de enlaces construye ahora una tabla con los identificadores reales de los encabezados, y los identificadores dejan de contener bytes inválidos.
+
 ### Changed
 
 - El manual se reorganiza en tres partes según el perfil de quien lo lee, para que cada persona solo vea lo que le concierne: **Guía del profesorado** (uso diario), **Administración** (lo que se configura desde la aplicación) y **Despliegue y operación** (instalación, correo, copias de seguridad y problemas técnicos). Los capítulos mixtos se dividen (pantallas, notificaciones, ajustes y resolución de problemas), la navegación de la web agrupa las partes y las rutas de los capítulos cambian (`09-despliegue` pasa a `32-despliegue`, etc.).
