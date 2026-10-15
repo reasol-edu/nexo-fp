@@ -13,6 +13,7 @@ use App\Repository\GroupRepository;
 use App\Repository\TeacherRepository;
 use App\Service\CentreTeacherImporter;
 use App\Service\CsvTemplateResponse;
+use App\Service\GroupAssignmentImporter;
 use App\Service\TeacherImportRow;
 use App\Service\TenantContext;
 use Symfony\Component\Uid\Uuid;
@@ -37,6 +38,7 @@ class CentreTeacherController extends AbstractController
         private readonly TranslatorInterface $translator,
         private readonly TenantContext $tenantContext,
         private readonly CentreTeacherImporter $importer,
+        private readonly GroupAssignmentImporter $assignmentImporter,
     ) {}
 
     #[Route('', name: 'app_admin_centre_teachers_index')]
@@ -239,6 +241,47 @@ class CentreTeacherController extends AbstractController
             return $this->render('admin/centre_teacher/import_assignments.html.twig', ['centre' => $centre]);
         }
 
+        $back = fn (): Response => $this->redirectToRoute('app_admin_centre_teachers_import_assignments', ['centreId' => $centre->getId()]);
+
+        // ── Paso 2: confirmación de la vista previa ──────────────────────────
+        if ($request->request->getString('import_confirmed') === '1') {
+            if (!$this->isCsrfTokenValid('import_teacher_assignments_confirm', $request->request->getString('_token'))) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $importId = $request->request->getString('import_id');
+            $path     = $this->getTempAssignmentsImportPath($importId);
+            if ($importId === '' || $importId !== $request->getSession()->get('assignments_import_id') || !is_file($path)) {
+                $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.expired'));
+
+                return $back();
+            }
+
+            $content = (string) file_get_contents($path);
+            @unlink($path);
+            $request->getSession()->remove('assignments_import_id');
+
+            try {
+                $parsed = $this->assignmentImporter->parse($content);
+            } catch (\InvalidArgumentException) {
+                $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.expired'));
+
+                return $back();
+            }
+
+            $plan   = $this->assignmentImporter->plan($centre, $parsed['rows']);
+            $linked = $this->assignmentImporter->apply($plan, array_map('strval', $request->request->all('assignments')));
+            $this->em->flush();
+
+            $this->addFlash('success', $this->translator->trans('centre_teachers.import_assignments.flash.summary', [
+                '%linked%'  => $linked,
+                '%skipped%' => $parsed['skipped'],
+            ], 'admin'));
+
+            return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
+        }
+
+        // ── Paso 1: subida del fichero → vista previa ────────────────────────
         if (!$this->isCsrfTokenValid('import_teacher_assignments', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -251,106 +294,44 @@ class CentreTeacherController extends AbstractController
         }
 
         $content = (string) file_get_contents($file->getPathname());
-        $content = ltrim($content, "\xEF\xBB\xBF");
-        if (!mb_check_encoding($content, 'UTF-8')) {
-            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+
+        try {
+            $parsed = $this->assignmentImporter->parse($content);
+        } catch (\InvalidArgumentException $e) {
+            $missing = str_starts_with($e->getMessage(), 'missing:') ? substr($e->getMessage(), 8) : null;
+            $this->addFlash('error', $missing !== null
+                ? $this->t('centre_teachers.import_assignments.error.missing_column') . ' «' . $missing . '»'
+                : $this->t('centre_teachers.import_assignments.error.empty_file'));
+
+            return $back();
         }
 
-        $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $content);
-        rewind($stream);
+        $plan = $this->assignmentImporter->plan($centre, $parsed['rows']);
 
-        $headers = fgetcsv($stream, escape: '');
-        if ($headers === false || $headers[0] === null) {
-            fclose($stream);
-            $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.empty_file'));
-
-            return $this->redirectToRoute('app_admin_centre_teachers_import_assignments', ['centreId' => $centre->getId()]);
+        // El fichero se guarda tal cual y se vuelve a leer al confirmar: lo que se aplica nunca depende
+        // de datos reenviados por el formulario, solo de qué filas se marcan.
+        $importId = Uuid::v4()->toRfc4122();
+        $dir      = dirname($this->getTempAssignmentsImportPath($importId));
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
         }
+        file_put_contents($this->getTempAssignmentsImportPath($importId), $content);
+        $request->getSession()->set('assignments_import_id', $importId);
 
-        /** @var array<string, int> $headerMap */
-        $headerMap = array_flip(array_map('trim', $headers));
+        return $this->render('admin/centre_teacher/import_assignments_preview.html.twig', [
+            'centre'   => $centre,
+            'importId' => $importId,
+            'plan'     => $plan,
+            'skipped'  => $parsed['skipped'],
+        ]);
+    }
 
-        $required = ['Unidad', 'Profesor/a'];
-        foreach ($required as $col) {
-            if (!isset($headerMap[$col])) {
-                fclose($stream);
-                $this->addFlash('error', $this->t('centre_teachers.import_assignments.error.missing_column') . ' «' . $col . '»');
+    private function getTempAssignmentsImportPath(string $importId): string
+    {
+        // El id viene del formulario: solo se admite un UUID para impedir rutas arbitrarias.
+        $safe = Uuid::isValid($importId) ? $importId : '00000000-0000-0000-0000-000000000000';
 
-                return $this->redirectToRoute('app_admin_centre_teachers_import_assignments', ['centreId' => $centre->getId()]);
-            }
-        }
-
-        /** @var array<string, Group> $groupsByName */
-        $groupsByName = [];
-        foreach ($this->groups->findByActiveYearOfCentreOrderedByName($centre) as $group) {
-            $groupsByName[mb_strtolower($group->getName())] = $group;
-        }
-
-        $linked  = 0;
-        $skipped = 0;
-        /** @var array<string, true> $unknownTeachers */
-        $unknownTeachers = [];
-        /** @var array<string, true> $unknownGroups */
-        $unknownGroups = [];
-
-        while (($row = fgetcsv($stream, escape: '')) !== false) {
-            if (count(array_filter($row, static fn ($v) => trim((string) $v) !== '')) === 0) {
-                continue;
-            }
-
-            $groupName  = trim((string) ($row[$headerMap['Unidad']] ?? ''));
-            $fullName   = trim((string) ($row[$headerMap['Profesor/a']] ?? ''));
-            $nameParts  = explode(', ', $fullName, 2);
-            $lastName   = $nameParts[0];
-            $firstName  = $nameParts[1] ?? '';
-
-            if ($groupName === '' || $firstName === '' || $lastName === '') {
-                $skipped++;
-                continue;
-            }
-
-            $group = $groupsByName[mb_strtolower($groupName)] ?? null;
-            if ($group === null) {
-                $unknownGroups[$groupName] = true;
-                continue;
-            }
-
-            $teacher = $this->teachers->findByFullName($firstName, $lastName);
-            if ($teacher === null) {
-                $unknownTeachers[$fullName] = true;
-                continue;
-            }
-
-            if (!$group->getTeachers()->contains($teacher)) {
-                $group->addTeacher($teacher);
-                $linked++;
-            }
-        }
-
-        fclose($stream);
-        $this->em->flush();
-
-        $summary = $this->translator->trans('centre_teachers.import_assignments.flash.summary', [
-            '%linked%'  => $linked,
-            '%skipped%' => $skipped,
-        ], 'admin');
-
-        if ($unknownTeachers !== []) {
-            $summary .= ' ' . $this->translator->trans('centre_teachers.import_assignments.flash.unknown_teachers', [
-                '%teachers%' => implode(', ', array_map(static fn (string $n) => '«' . $n . '»', array_keys($unknownTeachers))),
-            ], 'admin');
-        }
-
-        if ($unknownGroups !== []) {
-            $summary .= ' ' . $this->translator->trans('centre_teachers.import_assignments.flash.unknown_groups', [
-                '%groups%' => implode(', ', array_map(static fn (string $g) => '«' . $g . '»', array_keys($unknownGroups))),
-            ], 'admin');
-        }
-
-        $this->addFlash($unknownTeachers === [] && $unknownGroups === [] ? 'success' : 'error', $summary);
-
-        return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
+        return (string) $this->getParameter('kernel.project_dir') . '/var/tmp/assignment-imports/' . $safe . '.csv';
     }
 
     #[Route('/registrar', name: 'app_admin_centre_teachers_register')]

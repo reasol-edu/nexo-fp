@@ -127,9 +127,13 @@ exactos entre los del curso activo — razón por la que el paso 2 (importar doc
 antes.
 
 La pantalla de importación ofrece también **Descargar plantilla**: un CSV con las columnas `Unidad` y
-`Profesor/a` y dos filas de ejemplo que sustituyes por tus asignaciones. Esta importación se aplica
-directamente, sin vista previa: al terminar avisa de las asignaciones creadas y de los docentes o grupos no
-encontrados (las filas de ejemplo, que no coinciden con ningún docente, se omiten).
+`Profesor/a` y dos filas de ejemplo que sustituyes por tus asignaciones.
+
+Tras subir el fichero, la aplicación muestra una **vista previa** antes de aplicar nada, con una fila por
+asignación y casillas para elegir cuáles se importan (**Seleccionar todo** y **Seleccionar nada**). Cada fila
+indica qué ocurrirá: *Asignar al grupo* (la única que se puede marcar), *Ya está en el grupo*, *Docente no
+encontrado* o *Grupo no encontrado*. Las filas repetidas se unen en una. Solo se aplica lo marcado al pulsar
+**Importar la selección**.
 
 ## 5. Dar de alta a los estudiantes (equipo directivo)
 

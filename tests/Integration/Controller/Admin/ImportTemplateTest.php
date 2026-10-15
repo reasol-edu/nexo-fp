@@ -151,7 +151,19 @@ class ImportTemplateTest extends ControllerTestCase
         $url     = "/admin/centros/{$this->centreId}/docentes-curso/importar-asignaciones";
         $crawler = $this->client->request('GET', $url);
         $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
-        $this->client->request('POST', $url, ['_token' => $token], ['csv' => $this->csvFile($template)]);
+        $preview = $this->client->request('POST', $url, ['_token' => $token], ['csv' => $this->csvFile($template)]);
+
+        // Vista previa con las dos asignaciones nuevas, marcadas por defecto.
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $preview->filter('input[name="assignments[]"][checked]'));
+
+        $form = $preview->filter('form#assignments-import-form');
+        $this->client->request('POST', $url, [
+            'import_confirmed' => '1',
+            'import_id'        => $form->filter('input[name="import_id"]')->attr('value'),
+            '_token'           => $form->filter('input[name="_token"]')->attr('value'),
+            'assignments'      => $preview->filter('input[name="assignments[]"]')->each(static fn ($n): string => (string) $n->attr('value')),
+        ]);
 
         self::assertResponseRedirects();
         $this->em->clear();

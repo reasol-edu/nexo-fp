@@ -210,7 +210,7 @@ class CentreTeacherControllerTest extends ControllerTestCase
         self::assertSelectorExists('form');
     }
 
-    public function testImportAssignmentsPostWithValidCsvRedirects(): void
+    public function testImportAssignmentsPostWithValidCsvShowsThePreview(): void
     {
         [$admin, $centre, $year] = $this->makeCentreWithYear();
         $this->persist($admin, $centre, $year);
@@ -230,8 +230,10 @@ class CentreTeacherControllerTest extends ControllerTestCase
             '_token' => $token,
         ], ['csv' => $file]);
 
-        self::assertResponseRedirects();
-        self::assertStringContainsString('/docentes-curso', (string) $this->client->getResponse()->headers->get('Location'));
+        // El fichero no se aplica: se muestra la vista previa para confirmar.
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[name="import_confirmed"]');
+        self::assertSelectorExists('[name="import_id"]');
 
         @unlink($tmpFile);
     }
