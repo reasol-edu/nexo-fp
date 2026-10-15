@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.0] - 2026-10-16
+
 ### Changed
 
 - El inicio se rediseña para responder a «¿qué tengo que hacer hoy?»: cabecera con el ámbito de lo que se muestra, «Atención ahora» con tareas accionables ordenadas por urgencia (gravedad escrita y enlace al filtro), «Próximos 30 días», tarjetas por estancia con el avance en cuatro etapas, «Mis tutorías», «Mis empresas», «Mi grupo», avance del proceso, cobertura por enseñanza y datos por completar. Se eliminan las gráficas y las tarjetas de métricas. Todos los datos se cargan con un número fijo de consultas, independiente del número de estancias.
