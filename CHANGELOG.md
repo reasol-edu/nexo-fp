@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.1] - 2026-10-15
+
 ### Fixed
 
 - Actualizar una instalación existente de Ubuntu Server o de binario nativo ya no rompe la aplicación por no tener definida `APP_PASSWORD_BREACH_CHECK`: esos despliegues generan `app/.env` en cada arranque con una lista fija de variables (el script de arranque de una instalación previa no se actualiza con el paquete). La variable tiene ahora un valor por defecto (`false`) en `config/services.yaml`, que se aplica cuando no está definida en ningún sitio; si lo está, manda su valor.
