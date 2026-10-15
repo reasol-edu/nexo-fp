@@ -20,6 +20,12 @@ parameters:
     # no existe) para que el envío síncrono del correo no permita enumerar
     # cuentas por timing. En el entorno de tests se anula (services_test.yaml).
     app.password_reset.request_min_duration_us: 900000
+    # Valor por defecto de variables de entorno añadidas en versiones posteriores a una instalación.
+    # En el binario nativo y en Ubuntu Server, nexo-start.sh escribe app/.env en cada arranque con una
+    # lista fija de variables, y el script de una instalación existente no se actualiza con el paquete:
+    # sin estos valores, actualizar rompería la aplicación («Environment variable not found»).
+    # Una variable definida en .env, .env.local o en el entorno tiene siempre prioridad.
+    env(APP_PASSWORD_BREACH_CHECK): 'false'
 
 services:
     # default configuration for services in *this* file
