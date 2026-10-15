@@ -24,7 +24,7 @@
 #
 # Es la opción de despliegue continuo que NO requiere abrir ningún puerto
 # adicional ni configurar un webhook en GitHub — ver la guía completa:
-# https://reasol-edu.github.io/nexo-fp/09-despliegue.html#despliegue-continuo
+# https://reasol-edu.github.io/nexo-fp/32-despliegue.html#despliegue-continuo
 # =============================================================================
 set -euo pipefail
 

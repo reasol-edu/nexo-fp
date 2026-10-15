@@ -11,7 +11,10 @@ Ambas comparten la identidad visual de la presentación a través de `assets/the
 
 ## Ficheros
 
-- `index.md`, `01-*.md` … `10-*.md` — capítulos del manual (fuente única).
+- `index.md` y los capítulos `NN-*.md` — el manual (fuente única), organizado en tres partes por perfil:
+  `1x` guía del profesorado, `2x` administración, `3x` despliegue y operación, y `99` glosario. Cada parte
+  tiene un capítulo de presentación (`10-`, `20-`, `30-`). El nombre de cada fichero (sin el prefijo) debe
+  coincidir con el *slug* de su título `#`, porque el filtro de enlaces del PDF lo usa.
 - `assets/theme.css` — tokens de diseño compartidos (PDF y web).
 - `assets/print.css` — maquetación paginada del PDF (portada, índice, cabeceras/pies).
 - `mkdocs.yml` — configuración de la web (MkDocs Material).

@@ -15,7 +15,7 @@ en Plesk y desarrollo local hay que ejecutarlas manualmente.
 
 !!! tip "¿No tienes conocimientos técnicos?"
     Elige **Binario nativo**. La guía paso a paso en
-    [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos)
+    [Prueba rápida en tu ordenador](32-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos)
     te lleva desde la descarga hasta la aplicación en marcha en tres pasos.
 
 ## Requisitos
@@ -30,11 +30,11 @@ en Plesk y desarrollo local hay que ejecutarlas manualmente.
 
 ## Guías de instalación
 
-Las instrucciones detalladas de cada modo están en el capítulo [Despliegue](09-despliegue.md):
+Las instrucciones detalladas de cada modo están en el capítulo [Despliegue](32-despliegue.md):
 
-- [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos) — sin conocimientos técnicos, con datos de ejemplo listos para explorar
-- [Binario nativo](09-despliegue.md#ejecucion-como-binario-nativo) — un solo ejecutable, ideal para un IES sin infraestructura
-- [Docker Compose](09-despliegue.md#despliegue-con-docker) — producción con HTTPS automático y base de datos robusta
-- [Ubuntu Server 26.04](09-despliegue.md#despliegue-en-ubuntu-server-2604) — script de instalación automatizada, sin Docker
-- [Plesk](09-despliegue.md#despliegue-en-plesk) — VPS ya gestionado con Plesk, sin necesidad de Docker
-- [Desarrollo local](09-despliegue.md#desarrollo-local) — ejecutar desde el código fuente para contribuir al proyecto
+- [Prueba rápida en tu ordenador](32-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos) — sin conocimientos técnicos, con datos de ejemplo listos para explorar
+- [Binario nativo](32-despliegue.md#ejecucion-como-binario-nativo) — un solo ejecutable, ideal para un IES sin infraestructura
+- [Docker Compose](32-despliegue.md#despliegue-con-docker) — producción con HTTPS automático y base de datos robusta
+- [Ubuntu Server 26.04](32-despliegue.md#despliegue-en-ubuntu-server-2604) — script de instalación automatizada, sin Docker
+- [Plesk](32-despliegue.md#despliegue-en-plesk) — VPS ya gestionado con Plesk, sin necesidad de Docker
+- [Desarrollo local](32-despliegue.md#desarrollo-local) — ejecutar desde el código fuente para contribuir al proyecto

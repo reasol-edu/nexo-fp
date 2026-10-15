@@ -4,27 +4,11 @@ Todos los usuarios del sistema son docentes. El nivel de acceso depende de los r
 responsabilidades asignados, que son **acumulativos**: un docente con varios roles acumula todos sus
 permisos.
 
-## Acceso a la plataforma
-
-El inicio de sesión es siempre el **mismo formulario** (usuario y contraseña). Lo que cambia es **cómo se
-valida la contraseña**, según el **tipo de autenticación** que el administrador asigna a cada docente
-desde **Administración → Docentes**:
-
-- **Acceso local.** La contraseña la gestiona Nexo FP (se guarda cifrada). Estos docentes pueden usar el
-  enlace **«¿Olvidaste tu contraseña?»** para restablecerla por email (consulta
-  [Notificaciones por email](06-notificaciones-y-email.md)). La contraseña debe tener **al menos 12
-  caracteres** y **no puede contener el propio nombre de usuario**; tanto el formulario de perfil como el
-  de restablecimiento la rechazan si no lo cumple (una frase de varias palabras suele cumplirlo todo).
-  Opcionalmente, la administración puede exigir además que no figure en filtraciones de datos conocidas
-  (`APP_PASSWORD_BREACH_CHECK`, ver [Despliegue](09-despliegue.md)).
-- **Acceso externo (Séneca/iSéneca).** El docente entra con su **usuario y contraseña de Séneca**, que se
-  validan contra el servicio **iSéneca** de la Junta de Andalucía. La contraseña no se guarda en Nexo FP,
-  así que el restablecimiento por email **no aplica**: se gestiona desde Séneca.
-
-!!! info "Configuración"
-    La autenticación externa se habilita en el despliegue con `APP_EXTERNAL_ENABLED` y las variables
-    `APP_EXTERNAL_*` (consulta [Despliegue](09-despliegue.md#variables-de-entorno-opcionales)). Si está
-    desactivada, todos los accesos son locales.
+!!! info "Acceso a la plataforma"
+    Cómo inician sesión los docentes (acceso local o con Séneca/iSéneca) se explica en
+    [Acceso a la plataforma](11-acceso-a-la-plataforma.md). El tipo de acceso de cada docente lo asigna la
+    administración desde **Administración → Docentes** (consulta
+    [Administración global](24-administracion-global.md#tipo-de-acceso-de-cada-docente)).
 
 ## Los perfiles
 
@@ -34,8 +18,8 @@ Acceso completo a la aplicación, incluida la sección **Administración**. Pued
 docentes y centros del sistema, y suplantar la identidad de cualquier usuario para solucionar problemas.
 
 Se crea al menos uno durante el primer arranque (`admin` / `admin`). Se pueden crear más desde la línea
-de comandos con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin) o desde la sección de 
-"Administración".
+de comandos con [`app:create-admin`](35-comandos-de-consola.md#appcreate-admin) o desde la sección de
+[Administración global](24-administracion-global.md).
 
 ### Administrador de centro 
 

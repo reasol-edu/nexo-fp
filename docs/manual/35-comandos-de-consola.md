@@ -53,7 +53,7 @@ El comando falla si el nombre de usuario ya está registrado. La contraseña se 
 ## app:backup
 
 Crea una copia de seguridad completa de la base de datos en un único fichero ZIP (ver
-[Operación y mantenimiento → Copias de seguridad](10-operacion-y-mantenimiento.md#copias-de-seguridad)).
+[Operación y mantenimiento → Copias de seguridad](34-operacion-y-mantenimiento.md#copias-de-seguridad)).
 
 ```bash
 php bin/console app:backup [carpeta-o-fichero.zip] [--password[=CONTRASEÑA]]
@@ -95,7 +95,7 @@ php bin/console app:send-reminders [--days=N]
 | `--days` | Sobre-escribe los días de antelación en todos los centros | Ajuste `email.notification.signature_reminder.days` por centro (7 si no está definido) |
 
 Sin `--days`, cada centro usa su propio valor del ajuste
-[`email.notification.signature_reminder.days`](07-ajustes.md). Con `--days` se fuerza ese número de días
+[`email.notification.signature_reminder.days`](25-ajustes-y-bloqueos.md). Con `--days` se fuerza ese número de días
 para todos los centros (debe ser un entero ≥ 1).
 
 Requiere tener configurado el envío de correo (`MAILER_DSN` y `MAILER_FROM`) y `DEFAULT_URI` con la URL
@@ -103,7 +103,7 @@ pública de la aplicación para que los enlaces de los emails funcionen.
 
 !!! tip "Sin configuración de cron"
     El recordatorio se programa con Symfony Scheduler y lo dispara el *worker* de Messenger una vez al
-    día (consulta [Notificaciones por email](06-notificaciones-y-email.md)). El comando queda como
+    día (consulta [Configuración del correo](33-configuracion-del-correo.md#envio-asincrono)). El comando queda como
     complemento para ejecución manual o puntual.
 
 ## app:send-weekly-digest
@@ -119,7 +119,7 @@ php bin/console app:send-weekly-digest
 
 ## app:send-daily-digests
 
-Envía los [resúmenes diarios de avisos](06-notificaciones-y-email.md) pendientes de quienes tienen activado el
+Envía los [resúmenes diarios de avisos](14-avisos-por-correo.md#un-resumen-diario-en-lugar-de-muchos-correos) pendientes de quienes tienen activado el
 ajuste `email.digest`: un correo por persona y centro con los avisos acumulados desde el resumen anterior.
 Es el mismo trabajo que el *worker* ejecuta automáticamente cada hora, y solo envía los resúmenes cuya hora
 (`email.digest_hour`) ya ha pasado.

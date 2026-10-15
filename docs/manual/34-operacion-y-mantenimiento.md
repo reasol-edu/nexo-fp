@@ -62,7 +62,7 @@ en caché.
 ## Correos en cola (Messenger)
 
 Los emails se entregan de forma asíncrona (consulta
-[Notificaciones por email](06-notificaciones-y-email.md)). Si un envío falla, se reintenta hasta 3 veces;
+[Configuración del correo](33-configuracion-del-correo.md)). Si un envío falla, se reintenta hasta 3 veces;
 agotados los reintentos, el mensaje pasa al transporte `failed`. Para inspeccionarlos y gestionarlos:
 
 ```bash
@@ -93,8 +93,8 @@ funciona con normalidad sin ella.
 Lo único que persiste es el secreto que firma los avisos: en el binario nativo se genera en el primer
 arranque y se guarda en `data/.mercure_secret` (incluido, por tanto, en la copia de seguridad del
 directorio `data/`); en Docker es la variable `MERCURE_JWT_SECRET`. Consulta los detalles y la
-resolución de problemas en [Sincronización en vivo](09-despliegue.md#sincronizacion-en-vivo-mercure) y
-[Resolución de problemas](11-resolucion-de-problemas.md#la-pantalla-de-estancia-no-se-actualiza-sola).
+resolución de problemas en [Sincronización en vivo](32-despliegue.md#sincronizacion-en-vivo-mercure) y
+[Resolución de problemas](36-resolucion-de-problemas.md#la-pantalla-de-estancia-no-se-actualiza-sola).
 
 ## Recordatorios de firma
 
@@ -105,7 +105,7 @@ que recupera el último disparo perdido si el *worker* estuvo detenido, y el con
 evita reenvíos.
 
 Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzarse el comando
-[`app:send-reminders`](08-comandos-de-consola.md#appsend-reminders) manualmente o desde cron:
+[`app:send-reminders`](35-comandos-de-consola.md#appsend-reminders) manualmente o desde cron:
 
 ```cron
 # Alternativa al Scheduler: todos los días a las 8:00
@@ -140,7 +140,7 @@ las empresas colaboradoras. El **centro educativo es el responsable del tratamie
 en cuenta al operar la aplicación:
 
 - **Acceso mínimo necesario.** Los permisos están diseñados para que cada docente vea solo los datos que
-  necesita (consulta [Roles y permisos](03-roles-y-permisos.md)). Revisa periódicamente quién tiene rol
+  necesita (consulta [Roles y permisos](21-roles-y-permisos.md)). Revisa periódicamente quién tiene rol
   de administrador global o de centro.
 - **Copias de seguridad.** Las copias contienen datos personales: guárdalas en un lugar seguro, cifradas
   si es posible, y elimínalas cuando dejen de ser necesarias.
@@ -149,7 +149,7 @@ en cuenta al operar la aplicación:
   (binario) o el volumen `./data/postgres/` (Docker) para no dejar datos residuales.
 - **Comunicaciones.** Los emails automáticos incluyen enlaces a la aplicación y nombres de personas;
   asegúrate de configurar un remitente y un servidor de correo del propio centro
-  (consulta [Notificaciones por email](06-notificaciones-y-email.md)).
+  (consulta [Configuración del correo](33-configuracion-del-correo.md)).
 - **Acceso por red.** En instalaciones accesibles desde Internet, usa siempre **HTTPS** y contraseñas
   robustas (mínimo 12 caracteres, que es lo que pide el propio formulario); nunca dejes el usuario
   `admin` / `admin` por defecto. Los modos de despliegue Docker, binario nativo y Plesk añaden por

@@ -9,7 +9,7 @@ Está diseñada para ser intuitiva y fácil de usar, orientada a la eficiencia.
 Permite generar informes detallados en PDF y exportar los datos a Excel.
 
 !!! tip "¿Solo quieres probarlo?"
-    Sigue la guía [Prueba rápida en tu ordenador](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos):
+    Sigue la guía [Prueba rápida en tu ordenador](32-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos):
     en tres pasos, sin conocimientos técnicos, descargas el binario y lo arrancas con datos de demostración
     ya cargados.
 
@@ -22,20 +22,16 @@ de ese centro. Los administradores globales pueden gestionar todos los centros d
 
 ## Cómo usar este manual
 
-El manual sigue el orden natural de uso de la aplicación:
+El manual está organizado en **tres partes**, según lo que hagas con Nexo FP. Entra directamente en la
+tuya y lee solo lo que te hace falta:
 
-1. [Instalación y requisitos](01-instalacion-y-requisitos.md) — elegir el modo de despliegue.
-2. [Primeros pasos](02-primeros-pasos.md) — preparar el curso académico.
-3. [Roles y permisos](03-roles-y-permisos.md) — quién puede hacer qué.
-4. [Flujo de trabajo](04-flujo-de-trabajo.md) — el recorrido completo de un curso.
-5. [Secciones de la aplicación](05-secciones-de-la-aplicacion.md) — referencia de cada pantalla.
-6. [Notificaciones por email](06-notificaciones-y-email.md) — avisos automáticos.
-7. [Ajustes](07-ajustes.md) — configuración jerárquica.
-8. [Comandos de consola](08-comandos-de-consola.md) — administración desde la terminal.
-9. [Despliegue](09-despliegue.md) — binario nativo, Docker, Ubuntu Server y Plesk.
-10. [Operación y mantenimiento](10-operacion-y-mantenimiento.md) — el día a día.
-11. [Resolución de problemas](11-resolucion-de-problemas.md) — soluciones a las dudas más habituales.
-12. [Glosario](12-glosario.md) — los términos del manual y de la aplicación.
+| Si… | Ve a | Contiene |
+|-----|------|----------|
+| **Usas la aplicación** en el día a día (coordinación, jefatura, tutoría, enlace con empresas…) | [Guía del profesorado](10-guia-del-profesorado.md) | Acceso, flujo de trabajo, pantallas, avisos por correo, ajustes personales y problemas de uso |
+| **Preparas y configuras** el centro desde la aplicación (equipo directivo, administración de centro o global) | [Administración](20-administracion.md) | Roles y permisos, preparación del curso, centro y cursos, administración global, ajustes y bloqueos, control y registro de correos |
+| **Instalas y mantienes** el servidor | [Despliegue y operación](30-despliegue-y-operacion.md) | Instalación, despliegue, configuración del correo, copias de seguridad, comandos de consola y resolución de problemas técnicos |
+
+Al final está el [Glosario](99-glosario.md), con los términos del manual y de la aplicación.
 
 ## Sobre el proyecto
 

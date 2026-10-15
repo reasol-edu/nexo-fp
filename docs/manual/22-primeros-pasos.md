@@ -5,7 +5,7 @@
 Antes de poder gestionar estancias, el **administrador de centro** debe preparar el curso académico
 activo para cada centro educativo. Este capítulo describe la configuración inicial; el recorrido completo
 para dejar listo para su uso un curso académico está detallado en el capítulo
-[Flujo de trabajo](04-flujo-de-trabajo.md).
+[Flujo de trabajo](12-flujo-de-trabajo.md).
 
 Todo en Nexo FP gira en torno al **curso académico activo** de cada centro: al cambiar de curso, cambia
 el contexto de trabajo. Desde **Centro Educativo** se gestiona todo su contenido.
@@ -94,12 +94,12 @@ confirmación. Al borrar una familia, enseñanza o nivel se eliminan también lo
 !!! tip "¿Ya tienes la oferta en otro curso o centro?"
     No hace falta teclearla de nuevo: desde la página de **Oferta formativa** puedes **exportarla a un
     fichero** e **importarla** en otro curso o centro. Consulta
-    [Exportar e importar la oferta formativa](05-secciones-de-la-aplicacion.md#exportar-e-importar-la-oferta-formativa).
+    [Exportar e importar la oferta formativa](23-centro-y-cursos.md#exportar-e-importar-la-oferta-formativa).
 
 !!! info
     Los roles de coordinación de FP dual, jefatura de familia profesional y tutoría se asignan a
     **personas concretas**: de esas asignaciones se derivan los permisos de cada docente
-    (consulta [Roles y permisos](03-roles-y-permisos.md)).
+    (consulta [Roles y permisos](21-roles-y-permisos.md)).
 
 ## 4. Asignar tutores y docentes a los grupos (equipo directivo)
 

@@ -1,7 +1,12 @@
 # Resolución de problemas
 
-Soluciones a las dudas y los contratiempos más habituales. Si no encuentras tu caso, revisa también el
-capítulo [Operación y mantenimiento](10-operacion-y-mantenimiento.md).
+Soluciones a los problemas técnicos más habituales de una instalación de Nexo FP: arranque, acceso del
+administrador, correo y sincronización en vivo. Si no encuentras tu caso, revisa también
+[Operación y mantenimiento](34-operacion-y-mantenimiento.md).
+
+Los problemas que se resuelven desde la aplicación tienen sus propios capítulos:
+[Problemas de uso](16-problemas-de-uso.md) (profesorado) y
+[Problemas de administración](27-problemas-de-administracion.md) (importaciones, permisos y ajustes).
 
 ## No puedo arrancar la aplicación
 
@@ -21,7 +26,7 @@ En Docker, cambia `HTTP_PORT` (y `HTTPS_PORT`) en tu `.env.local`.
 
 Es el aviso de Gatekeeper porque la aplicación no está firmada con un certificado de Apple. Es normal y
 se resuelve en un par de clics: sigue las instrucciones de
-[Prueba rápida → aviso de seguridad en macOS](09-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
+[Prueba rápida → aviso de seguridad en macOS](32-despliegue.md#prueba-rapida-en-tu-ordenador-sin-conocimientos-tecnicos).
 
 ### Windows bloquea el binario (SmartScreen o antivirus)
 
@@ -41,7 +46,7 @@ php bin/console app:create-admin <nuevo_usuario>
 ```
 
 En el binario nativo: `nexo-fp php-cli bin/console app:create-admin <nuevo_usuario>`. Consulta
-[`app:create-admin`](08-comandos-de-consola.md#appcreate-admin).
+[`app:create-admin`](35-comandos-de-consola.md#appcreate-admin).
 
 ### El navegador dice «la conexión no es privada» en desarrollo
 
@@ -49,28 +54,26 @@ El servidor de desarrollo (`symfony server:start`) usa un certificado **autofirm
 `https://localhost:8000`. Es lo esperado: acepta la excepción de seguridad del navegador, o usa
 `http://localhost:8000` arrancando con `php -S`.
 
-### Un docente no ve ninguna estancia, empresa o sección
-
-El acceso depende de los roles, que **se derivan de los datos** del centro (equipo directivo, jefatura de
-familia, coordinación de FP dual, tutoría de grupo, docente de enlace…). Un docente sin ninguna de esas
-asignaciones solo ve el panel de inicio y su perfil. Revisa sus asignaciones y consulta
-[Roles y permisos](03-roles-y-permisos.md).
-
 ## No funciona el correo
 
 ### No llegan los emails
 
 1. Comprueba que el correo está **activado**: `MAILER_DSN` debe apuntar a un servidor SMTP real (por
    defecto es `null://null`, que descarta los mensajes). Ver
-   [Notificaciones por email](06-notificaciones-y-email.md).
+   [Configuración del correo](33-configuracion-del-correo.md).
 2. El *worker* de la cola debe estar en marcha (con Docker Compose y con el binario nativo se lanza
-   solo). Revisa los [mensajes fallidos](10-operacion-y-mantenimiento.md#correos-en-cola-messenger).
-3. Comprueba que la notificación está habilitada en [Ajustes](07-ajustes.md) (global, centro y personal).
+   solo). Revisa los [mensajes fallidos](34-operacion-y-mantenimiento.md#correos-en-cola-messenger).
+3. Comprueba que la notificación está habilitada en [Ajustes](25-ajustes-y-bloqueos.md) (global, centro y
+   personal) y el [registro de correos](26-control-y-registro-de-correos.md#registro-de-correos-enviados)
+   para ver si el envío aparece como **Fallido** y con qué motivo.
 4. Los destinatarios **sin dirección de email** registrada se omiten de forma silenciosa.
+5. Si el usuario tiene activado el **resumen diario**, sus avisos llegan una vez al día a la hora
+   configurada, y solo mientras el *worker* esté en marcha (el envío lo dispara cada hora). Puedes forzarlo
+   con [`app:send-daily-digests --now`](35-comandos-de-consola.md#appsend-daily-digests).
 
 ## La pantalla de estancia no se actualiza sola
 
-La [sincronización en vivo](09-despliegue.md#sincronizacion-en-vivo-mercure) puede quedar inactiva por
+La [sincronización en vivo](32-despliegue.md#sincronizacion-en-vivo-mercure) puede quedar inactiva por
 varios motivos. La aplicación sigue funcionando con normalidad; solo hay que recargar para ver los
 cambios de otras personas.
 
@@ -88,18 +91,7 @@ cambios de otras personas.
    `/.well-known/mercure`; si aparece como rechazada, revisa que tu usuario tenga permiso para ver la
    estancia (la suscripción se autoriza con el mismo permiso que la pantalla).
 
-## Problemas con la importación de estudiantes
-
-### El CSV no crea estudiantes o faltan grupos
-
-- El fichero debe tener la **primera fila de encabezados** con los nombres de columna exactos y solo se
-  importan las filas con `Estado Matrícula` **vacío**. Revisa el
-  [formato del CSV](02-primeros-pasos.md#formato-del-csv-de-importacion).
-- Si aparecen «unidades no reconocidas», los grupos del curso no se llaman igual que la columna `Unidad`
-  de Séneca. Renombra los grupos para que coincidan exactamente (ver
-  [Primeros pasos, paso 3](02-primeros-pasos.md#3-estructurar-la-oferta-formativa-del-curso-academico-equipo-directivo)).
-
 ## Copias de seguridad y actualización
 
 Para copias de seguridad, restauración y actualización de versión, consulta
-[Operación y mantenimiento](10-operacion-y-mantenimiento.md).
+[Operación y mantenimiento](34-operacion-y-mantenimiento.md).

@@ -3,8 +3,25 @@
 ## The user manual
 
 [`docs/manual/`](../docs/manual/) is the **source of reference** for what the application does and
-how each screen behaves — written in Markdown, chapters `01-instalacion-y-requisitos.md` through
-`12-glosario.md` plus `index.md`. It's compiled to two formats from the same content:
+how each screen behaves — written in Markdown. It is organised in **three parts by audience**, one
+flat directory with a numeric prefix per part (`index.md` first, then the chapters in numeric order):
+
+- **`1x` — Guía del profesorado:** day-to-day use (access, workflow, screens, e-mail notices as the
+  user sees them, personal settings, usage problems). No server or admin configuration.
+- **`2x` — Administración:** what centre/global administrators configure from the UI (roles and
+  permissions, preparing the course, centre and courses, global administration, settings and locks,
+  e-mail control and log, admin problems).
+- **`3x` — Despliegue y operación:** installation, environment variables, mail transport, backups,
+  console commands and technical troubleshooting.
+- **`99` — Glosario.**
+
+Each part has a short presentation chapter (`10-`, `20-`, `30-`). **Where to put new content:** write
+it in the part of the audience that needs it, and link across parts instead of mixing them (e.g. what a
+teacher receives goes in `14-avisos-por-correo.md`; how SMTP is configured goes in
+`33-configuracion-del-correo.md`). The files stay in one flat directory so image paths (`img/…`)
+resolve the same in MkDocs and in the single-document PDF. **Naming constraint:** the PDF link filter
+maps `NN-name.md` to the slug of the chapter's H1, so a file name (without the prefix) must equal the
+slug of its `# Title`. Chapters are compiled to two formats from the same content:
 
 - **PDF**: `make docs-pdf` → `docs/manual/nexo-fp-manual.pdf`. Uses `pandoc` (Markdown → HTML, with
   `docs/pandoc-admonitions.lua` and `docs/pandoc-internal-links.lua` filters) and `npx pagedjs-cli`

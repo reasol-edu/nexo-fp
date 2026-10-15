@@ -1,6 +1,8 @@
-# Ajustes
+# Ajustes y bloqueos
 
-La aplicación dispone de un sistema de configuración con tres niveles de granularidad:
+La aplicación dispone de un sistema de configuración con tres niveles de granularidad. Cada docente
+cambia sus preferencias en [Ajustes personales](15-ajustes-personales.md); este capítulo explica los tres
+niveles y cómo la administración puede fijar valores para todo el centro o toda la plataforma.
 
 | Nivel | URL | Quién puede acceder |
 |-------|-----|---------------------|
@@ -30,8 +32,8 @@ restablecerse al valor por defecto.
 | `email.notification.shared_position` | Booleano | Global, centro, personal | Aviso a la coordinación cuando otra asigna o elimina un puesto compartido de la estancia |
 | `email.notification.weekly_digest` | Booleano | Global, centro, personal | Resumen semanal (lunes) de tareas pendientes, con enlaces a cada estancia |
 | `email.notification.signature_reminder` | Booleano | Global, centro, personal | Recordatorio de firma |
-| `email.digest` | Booleano | Global, personal | Recibir los avisos (tutoría asignada, puestos creados, puestos compartidos, recordatorio de firma) en un único [resumen diario](06-notificaciones-y-email.md) en vez de un correo por aviso (por defecto desactivado) |
+| `email.digest` | Booleano | Global, personal | Recibir los avisos (tutoría asignada, puestos creados, puestos compartidos, recordatorio de firma) en un único [resumen diario](14-avisos-por-correo.md#un-resumen-diario-en-lugar-de-muchos-correos) en vez de un correo por aviso (por defecto desactivado) |
 | `email.digest_hour` | Entero (0–23) | Global, personal | Hora del día (del servidor) a la que se envía el resumen diario (por defecto 7) |
 | `email.notification.signature_reminder.days` | Entero (1–365) | Global, centro | Días de antelación con los que se empieza a avisar de la firma pendiente (por defecto 7) |
-| `email.log_retention_days` | Entero (0–3650) | Global | Días que se conserva cada entrada del [registro de correos enviados](06-notificaciones-y-email.md#registro-de-correos-enviados) antes de que la limpieza semanal la elimine. `0` desactiva la limpieza (por defecto 90) |
+| `email.log_retention_days` | Entero (0–3650) | Global | Días que se conserva cada entrada del [registro de correos enviados](26-control-y-registro-de-correos.md#registro-de-correos-enviados) antes de que la limpieza semanal la elimine. `0` desactiva la limpieza (por defecto 90) |
 | `security.idle_timeout_minutes` | Entero (0–1440) | Global | Minutos sin actividad tras los que se cierra la sesión de un docente, para que un equipo compartido que se deja abierto no quede utilizable por otra persona. `0` lo desactiva (por defecto 120). La pantalla de inicio de sesión explica por qué se ha cerrado |

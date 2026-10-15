@@ -1,20 +1,15 @@
 # Flujo de trabajo
 
-El proceso habitual en Nexo FP sigue estas fases, desde la configuración inicial del curso hasta el
-cierre de las estancias. Cada fase indica **quién hace qué**.
+El proceso habitual en Nexo FP sigue estas fases, desde que el curso está preparado hasta el cierre de
+las estancias. Cada fase indica **quién hace qué**.
 
-## 1 — Configurar el curso
+!!! info "Antes de empezar"
+    Para trabajar con estancias, el equipo directivo ha de haber preparado el curso activo del centro
+    (curso académico, oferta formativa, docentes, tutorías y estudiantes). Eso lo hace la administración
+    del centro y se explica en [Primeros pasos](22-primeros-pasos.md), en la parte de administración. Si
+    no ves tus grupos o estudiantes, consulta con ella.
 
-El administrador de centro accede a **Centro Educativo** y prepara el curso activo (detallado en
-[Primeros pasos](02-primeros-pasos.md)):
-
-1. Crea o activa el **curso académico**.
-2. Estructura la **oferta formativa**: familias → enseñanzas → niveles → grupos.
-3. Asigna **tutores y docentes** a cada grupo.
-4. Importa o da de alta a los **estudiantes** y los distribuye en sus grupos.
-5. Añade al resto de **docentes del curso** para que puedan acceder a la plataforma.
-
-## 2 — Registrar empresas y centros de trabajo
+## 1 — Registrar empresas y centros de trabajo
 
 Antes de crear puestos, el personal con acceso a **Empresas** registra:
 
@@ -25,7 +20,7 @@ Antes de crear puestos, el personal con acceso a **Empresas** registra:
 
 ![Directorio de empresas colaboradoras con sus docentes de enlace](img/empresas.png)
 
-## 3 — Crear estancias y puestos formativos
+## 2 — Crear estancias y puestos formativos
 
 Una **estancia** agrupa un conjunto de puestos formativos de una o varias enseñanzas dentro de un periodo
 concreto (por ejemplo, «DAW y DAM - 2.º curso, marzo-mayo 2027»).
@@ -73,7 +68,7 @@ tutores ni preferencia).
     Una misma enseñanza puede tener **varias estancias que se solapen** en el tiempo: no todos los grupos
     realizan la fase de formación a la vez. Es una situación legítima y la aplicación no la impide.
 
-## 4 — Asignar estudiantes y tutores
+## 3 — Asignar estudiantes y tutores
 
 Una vez creados los puestos, se completa cada uno con su asignación:
 
@@ -86,7 +81,7 @@ Mientras el puesto está en estado **Borrador**, todos los campos son editables.
 rápida** muestra los selectores en todas las filas a la vez para agilizar el reparto; el navegador recuerda
 si lo tenía activado (y el filtro **Mis estudiantes**) al abrir otra estancia.
 
-## 5 — Estados del puesto y tramitación en Séneca
+## 4 — Estados del puesto y tramitación en Séneca
 
 Cada puesto formativo recorre un ciclo de vida:
 
@@ -130,7 +125,7 @@ y el bloque **Pendientes** del inicio abren la estancia con el filtro ya aplicad
 !!! tip "Ten en cuenta"
     La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.
 
-## 6 — Generar informes
+## 5 — Generar informes
 
 En cualquier momento se puede descargar el **informe PDF** de cada estancia con el detalle completo de
 todos los puestos, estudiantes, tutores y fechas, o exportar los datos a **Excel**.

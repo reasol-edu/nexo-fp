@@ -9,7 +9,7 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 | **FFEOE** | Fase de Formación en Empresa u Organismo Equiparado: el periodo de formación del alumnado de FP en una empresa. Es el proceso que Nexo FP ayuda a planificar y asignar. |
 | **FP / FP dual** | Formación Profesional. En la modalidad dual, parte de la formación se realiza en la empresa, con seguimiento compartido entre centro y empresa. |
 | **Séneca** | Sistema de información para la gestión educativa de la Junta de Andalucía. La tramitación oficial de las estancias se realiza en Séneca; Nexo FP refleja su estado. |
-| **iSéneca** | Servicio de autenticación asociado a Séneca con el que el profesorado puede iniciar sesión en Nexo FP usando sus credenciales corporativas (ver [Roles y permisos](03-roles-y-permisos.md)). |
+| **iSéneca** | Servicio de autenticación asociado a Séneca con el que el profesorado puede iniciar sesión en Nexo FP usando sus credenciales corporativas (ver [Acceso a la plataforma](11-acceso-a-la-plataforma.md)). |
 | **Multicentro** | Capacidad de alojar varios centros educativos en un mismo servidor con los datos aislados entre sí. |
 
 ## Estructura académica
@@ -58,4 +58,4 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 | **Docente de enlace** | Docente asignado a una o varias empresas; prepara puestos sin estudiante asignado. |
 | **Tutor/a de grupo / Docente de grupo** | Consulta las estancias de su enseñanza y los puestos de su alumnado. |
 
-Para el detalle de qué puede hacer cada rol, consulta [Roles y permisos](03-roles-y-permisos.md).
+Para el detalle de qué puede hacer cada rol, consulta [Roles y permisos](21-roles-y-permisos.md).

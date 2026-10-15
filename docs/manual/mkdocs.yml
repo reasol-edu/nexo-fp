@@ -29,6 +29,7 @@ theme:
   features:
     - navigation.instant
     - navigation.tracking
+    - navigation.sections
     - navigation.top
     - search.suggest
     - search.highlight
@@ -52,15 +53,29 @@ plugins:
 
 nav:
   - Introducción: index.md
-  - Instalación y requisitos: 01-instalacion-y-requisitos.md
-  - Primeros pasos: 02-primeros-pasos.md
-  - Roles y permisos: 03-roles-y-permisos.md
-  - Flujo de trabajo: 04-flujo-de-trabajo.md
-  - Secciones de la aplicación: 05-secciones-de-la-aplicacion.md
-  - Notificaciones por email: 06-notificaciones-y-email.md
-  - Ajustes: 07-ajustes.md
-  - Comandos de consola: 08-comandos-de-consola.md
-  - Despliegue: 09-despliegue.md
-  - Operación y mantenimiento: 10-operacion-y-mantenimiento.md
-  - Resolución de problemas: 11-resolucion-de-problemas.md
-  - Glosario: 12-glosario.md
+  - Guía del profesorado:
+      - Presentación: 10-guia-del-profesorado.md
+      - Acceso a la plataforma: 11-acceso-a-la-plataforma.md
+      - Flujo de trabajo: 12-flujo-de-trabajo.md
+      - Pantallas de la aplicación: 13-pantallas-de-la-aplicacion.md
+      - Avisos por correo: 14-avisos-por-correo.md
+      - Ajustes personales: 15-ajustes-personales.md
+      - Problemas de uso: 16-problemas-de-uso.md
+  - Administración:
+      - Presentación: 20-administracion.md
+      - Roles y permisos: 21-roles-y-permisos.md
+      - Primeros pasos: 22-primeros-pasos.md
+      - Centro y cursos: 23-centro-y-cursos.md
+      - Administración global: 24-administracion-global.md
+      - Ajustes y bloqueos: 25-ajustes-y-bloqueos.md
+      - Control y registro de correos: 26-control-y-registro-de-correos.md
+      - Problemas de administración: 27-problemas-de-administracion.md
+  - Despliegue y operación:
+      - Presentación: 30-despliegue-y-operacion.md
+      - Instalación y requisitos: 31-instalacion-y-requisitos.md
+      - Despliegue: 32-despliegue.md
+      - Configuración del correo: 33-configuracion-del-correo.md
+      - Operación y mantenimiento: 34-operacion-y-mantenimiento.md
+      - Comandos de consola: 35-comandos-de-consola.md
+      - Resolución de problemas: 36-resolucion-de-problemas.md
+  - Glosario: 99-glosario.md

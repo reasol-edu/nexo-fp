@@ -33,7 +33,7 @@
 # Es seguro ejecutarlo repetidamente (p. ej. desde un cron o un systemd
 # timer): si ya está en la última versión, no hace nada y termina en 0. Ver
 # la guía de despliegue continuo para automatizarlo:
-# https://reasol-edu.github.io/nexo-fp/09-despliegue.html#despliegue-continuo
+# https://reasol-edu.github.io/nexo-fp/32-despliegue.html#despliegue-continuo
 # =============================================================================
 set -euo pipefail
 

@@ -4,7 +4,7 @@ Este capítulo contiene las instrucciones completas de todos los modos de despli
 (sin conocimientos técnicos), **binario nativo**, **Docker Compose**, **Plesk**,
 **Ubuntu Server 26.04** y **desarrollo local**.
 Para elegir el modo más adecuado, consulta la tabla comparativa en
-[Instalación y requisitos](01-instalacion-y-requisitos.md).
+[Instalación y requisitos](31-instalacion-y-requisitos.md).
 
 ## Prueba rápida en tu ordenador (sin conocimientos técnicos)
 
@@ -146,7 +146,7 @@ La aplicación queda disponible en `http://localhost:8080` (o el puerto indicado
 !!! danger "Cambia la contraseña por defecto"
     El usuario inicial `admin` / `admin` se crea solo para el primer acceso. En cuanto entres, ve a
     **Mi perfil → Contraseña** y establece una contraseña robusta. En instalaciones reales, crea además
-    tu propio administrador con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin).
+    tu propio administrador con [`app:create-admin`](35-comandos-de-consola.md#appcreate-admin).
     Nunca dejes `admin` / `admin` en una instalación accesible por red.
 
 ### Arranque con datos de demostración
@@ -203,17 +203,17 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `APP_SECRET` | Clave de seguridad (64 caracteres hexadecimales). En el binario se genera sola | *(generada)* |
 | `DATABASE_URL` | Conexión a la base de datos (Docker usa PostgreSQL; el binario, SQLite) | *(según el modo)* |
 | `DEFAULT_URI` | URL pública de la aplicación, usada en los enlaces de los emails | `http://localhost` |
-| `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca (ver [Roles y permisos](03-roles-y-permisos.md#acceso-a-la-plataforma)) | `true` |
+| `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca (ver [Acceso a la plataforma](11-acceso-a-la-plataforma.md)) | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
-| `MAILER_DSN` | Transporte de correo para las [notificaciones](06-notificaciones-y-email.md) | `null://null` (desactivado) |
+| `MAILER_DSN` | Transporte de correo para las [notificaciones](33-configuracion-del-correo.md) | `null://null` (desactivado) |
 | `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
 | `MESSENGER_TRANSPORT_DSN` | Cola de envío asíncrono de correos | `doctrine://default?auto_setup=0` |
 | `MERCURE_JWT_SECRET` | Clave para firmar los avisos de [sincronización en vivo](#sincronizacion-en-vivo-mercure). En Docker es obligatoria; en el binario se genera sola | *(generada en el binario)* |
 | `MERCURE_URL` | URL interna que usa la aplicación para publicar avisos (servidor→hub) | *(según el modo)* |
 | `MERCURE_PUBLIC_URL` | URL pública (navegador→hub), relativa al mismo origen | `/.well-known/mercure` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes) | `false` |
-| `APP_LOG` | Activar el [registro de actividad](05-secciones-de-la-aplicacion.md#registro-de-actividad). En el binario nativo es recomendable desactivarlo si no se necesita auditoría | `true` |
+| `APP_LOG` | Activar el [registro de actividad](24-administracion-global.md#registro-de-actividad). En el binario nativo es recomendable desactivarlo si no se necesita auditoría | `true` |
 | `APP_LOG_RETENTION_DAYS` | Días que se conservan las entradas del registro antes de la limpieza semanal automática | `90` |
 | `APP_PASSWORD_BREACH_CHECK` | Si es `true`, una contraseña nueva tampoco puede figurar en filtraciones de datos conocidas. Consulta el servicio externo «Have I Been Pwned» con k-anonimato (nunca se envía la contraseña) y se omite en pocos segundos si el servidor no tiene salida a Internet | `false` |
 | `SYMFONY_TRUSTED_PROXIES` | IPs del proxy inverso desde el que recibe peticiones la aplicación (p. ej. nginx, Caddy). Necesario para que el registro muestre la IP real del usuario. Déjalo sin definir si no usas proxy | *(sin definir)* |
@@ -221,7 +221,7 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 ### Sincronización en vivo (Mercure) {#sincronizacion-en-vivo-mercure}
 
 La pantalla de estancia se actualiza sola cuando varias personas gestionan los puestos formativos a la
-vez (ver [Secciones de la aplicación](05-secciones-de-la-aplicacion.md#estancias)). Esta función usa
+vez (ver [Pantallas de la aplicación](13-pantallas-de-la-aplicacion.md#estancias)). Esta función usa
 [Mercure](https://mercure.rocks), un protocolo de envío de eventos del servidor al navegador.
 
 No requiere ningún servicio ni contenedor adicional: el **hub de Mercure va embebido en FrankenPHP**,
@@ -305,12 +305,12 @@ La aplicación queda disponible en `http://localhost` (puerto 80 por defecto).
 
 El stack levanta tres contenedores: `app` (servidor FrankenPHP), `database` (PostgreSQL) y `worker`, que
 procesa el envío asíncrono de los correos y dispara el recordatorio diario de firma programado con
-Symfony Scheduler (consulta [Notificaciones por email](06-notificaciones-y-email.md#envio-asincrono)).
+Symfony Scheduler (consulta [Configuración del correo](33-configuracion-del-correo.md#envio-asincrono)).
 
 !!! danger "Cambia la contraseña por defecto"
     El usuario inicial `admin` / `admin` se crea solo para el primer acceso. En cuanto entres, ve a
     **Mi perfil → Contraseña** y establece una contraseña robusta. En producción, crea además tu propio
-    administrador con [`app:create-admin`](08-comandos-de-consola.md#appcreate-admin).
+    administrador con [`app:create-admin`](35-comandos-de-consola.md#appcreate-admin).
     Nunca dejes `admin` / `admin` en una instalación accesible por red.
 
 ### Datos de demostración
@@ -566,7 +566,7 @@ programados**.
 
 El transporte `async` lleva los correos pendientes y `scheduler_default` gestiona el recordatorio
 diario de firma. Si prefieres disparar el recordatorio directamente desde cron en lugar del
-Scheduler, consulta [Recordatorios de firma](10-operacion-y-mantenimiento.md#recordatorios-de-firma).
+Scheduler, consulta [Recordatorios de firma](34-operacion-y-mantenimiento.md#recordatorios-de-firma).
 
 ### 8. HTTPS y dominio definitivo
 
@@ -632,7 +632,7 @@ Guarda periódicamente:
 mysqldump -u usuario -p nombre_bd > backup-$(date +%Y%m%d).sql
 ```
 
-Consulta [Operación y mantenimiento](10-operacion-y-mantenimiento.md#copias-de-seguridad) para más
+Consulta [Operación y mantenimiento](34-operacion-y-mantenimiento.md#copias-de-seguridad) para más
 contexto sobre protección de datos y política de conservación.
 
 ## Despliegue en Ubuntu Server 26.04
@@ -1013,7 +1013,7 @@ En el repositorio ve a **Settings → Webhooks → Add webhook**:
   sudo -u postgres pg_dump nexo > backup-$(date +%Y%m%d).sql
   ```
 
-Consulta [Operación y mantenimiento](10-operacion-y-mantenimiento.md#copias-de-seguridad) para más
+Consulta [Operación y mantenimiento](34-operacion-y-mantenimiento.md#copias-de-seguridad) para más
 contexto.
 
 ## Desarrollo local

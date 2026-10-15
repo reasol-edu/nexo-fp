@@ -65,7 +65,7 @@ sistema (Windows, Mac o Linux), descomprímelo y haz doble clic en el script de 
 (`demo.bat` en Windows, `demo.command` en Mac, `demo.sh` en Linux). En unos segundos tendrás la
 aplicación funcionando con datos de ejemplo: abre tu navegador en **<http://localhost:8080>** y entra
 con el usuario `admin` y la contraseña `admin`. Tienes el paso a paso ilustrado en
-[Prueba rápida en tu ordenador](docs/manual/09-despliegue.md#prueba-rápida-en-tu-ordenador-sin-conocimientos-técnicos)
+[Prueba rápida en tu ordenador](docs/manual/32-despliegue.md#prueba-rápida-en-tu-ordenador-sin-conocimientos-técnicos)
 del manual.
 
 ---
@@ -90,23 +90,16 @@ automáticamente en cada release y están disponibles, con el número de versió
 los activos del [GitHub Release](https://github.com/reasol-edu/nexo-fp/releases). Los comandos `make`
 anteriores sirven para previsualización local.
 
-Capítulos:
+El manual tiene **tres partes**, según lo que hagas con Nexo FP:
 
-| Capítulo | Contenido |
-|----------|-----------|
-| [Introducción](docs/manual/index.md) | Qué es Nexo FP y cómo usar el manual |
-| [Instalación y requisitos](docs/manual/01-instalacion-y-requisitos.md) | Modos de despliegue y requisitos |
-| [Primeros pasos](docs/manual/02-primeros-pasos.md) | Preparar el curso académico |
-| [Roles y permisos](docs/manual/03-roles-y-permisos.md) | Perfiles y tabla de permisos |
-| [Flujo de trabajo](docs/manual/04-flujo-de-trabajo.md) | El recorrido completo de un curso |
-| [Secciones de la aplicación](docs/manual/05-secciones-de-la-aplicacion.md) | Referencia de cada pantalla |
-| [Notificaciones por email](docs/manual/06-notificaciones-y-email.md) | Avisos automáticos y SMTP |
-| [Ajustes](docs/manual/07-ajustes.md) | Configuración jerárquica |
-| [Comandos de consola](docs/manual/08-comandos-de-consola.md) | Administración por terminal |
-| [Despliegue](docs/manual/09-despliegue.md) | Docker y binario nativo |
-| [Operación y mantenimiento](docs/manual/10-operacion-y-mantenimiento.md) | Backups, colas, recordatorios |
-| [Resolución de problemas](docs/manual/11-resolucion-de-problemas.md) | Soluciones a las dudas más habituales |
-| [Glosario](docs/manual/12-glosario.md) | Términos del manual y de la aplicación |
+| Parte | Para quién | Contenido |
+|-------|-----------|-----------|
+| [Guía del profesorado](docs/manual/10-guia-del-profesorado.md) | Quien usa la aplicación a diario | Acceso, flujo de trabajo, pantallas, avisos por correo, ajustes personales |
+| [Administración](docs/manual/20-administracion.md) | Equipo directivo y administración de centro o global | Roles y permisos, preparar el curso, centro y cursos, ajustes y bloqueos, registro de correos |
+| [Despliegue y operación](docs/manual/30-despliegue-y-operacion.md) | Quien instala y mantiene el servidor | Instalación, Docker/binario/Ubuntu/Plesk, correo, copias de seguridad, comandos de consola |
+
+Y un [Glosario](docs/manual/99-glosario.md) con los términos del manual y de la aplicación. La
+[introducción](docs/manual/index.md) ayuda a elegir por dónde empezar.
 
 ---
 
@@ -121,7 +114,7 @@ docker compose up -d
 Accede a **http://localhost** con `admin` / `admin`.
 
 Para el resto de modos de despliegue (binario nativo y desarrollo local) y su configuración detallada,
-consulta el capítulo [Despliegue](docs/manual/09-despliegue.md) del manual.
+consulta el capítulo [Despliegue](docs/manual/32-despliegue.md) del manual.
 
 ---
 
