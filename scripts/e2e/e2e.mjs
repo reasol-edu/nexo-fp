@@ -33,8 +33,10 @@ const visible = (page, selector) => page.locator(selector).first().isVisible();
 async function openStay(page, text) {
   await page.goto(`${BASE}/estancias`, { waitUntil: 'networkidle' });
   const href = await page.evaluate((t) => {
-    const a = [...document.querySelectorAll('a[href^="/estancias/0"]')]
-      .find((x) => x.closest('article, li, div.rounded-2xl')?.textContent.includes(t));
+    const size = (x) => x.closest('article, li, div.rounded-2xl').textContent.length;
+    const a = [...document.querySelectorAll('a[href^="/estancias/0"]:not([href*="?"])')]   // sin los enlaces con filtro
+      .filter((x) => x.closest('article, li, div.rounded-2xl')?.textContent.includes(t))
+      .sort((p, q) => size(p) - size(q))[0];   // el contenedor más pequeño: la propia tarjeta de la estancia
     return a?.getAttribute('href');
   }, text);
   assert(href, `no hay estancia «${text}»`);
