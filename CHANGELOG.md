@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] - 2026-10-15
+
 ### Added
 
 - Ajuste de estancia «Calcular asignaciones por docente». Si se activa, el detalle de la estancia muestra una sección **Docentes** entre los estudiantes y los puestos: para cada grupo con estudiantes en la estancia, una casilla con las horas dualizadas de cada docente del grupo, de las que se calcula cuántos estudiantes debería tutorizar cada uno (en proporción a sus horas, con un reparto cuya suma por grupo coincide siempre con el número de estudiantes del grupo en la estancia) frente a cuántos tiene asignados como tutor/a dual docente. Nueva tabla `stay_teacher_hours` y columna `stay.calculate_by_teacher` (migración en las tres plataformas). La estancia compartida de los datos de demostración lo tiene activado.
