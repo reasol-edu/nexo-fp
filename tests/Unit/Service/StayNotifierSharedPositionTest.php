@@ -17,12 +17,14 @@ use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\Workcenter;
+use App\Repository\EmailDigestItemRepository;
 use App\Service\AppSettingsInterface;
 use App\Service\EmailNotificationRecorder;
 use App\Service\StayNotifier;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
@@ -118,7 +120,7 @@ class StayNotifierSharedPositionTest extends TestCase
 
         $settings = $this->createStub(AppSettingsInterface::class);
         $settings->method('getForTeacher')->willReturnCallback(
-            static fn (string $key): bool => $key !== 'email.notification.shared_position'
+            static fn (string $key): bool => $key !== 'email.notification.shared_position' && $key !== 'email.digest'
         );
         $settings->method('getForCentre')->willReturn('');
 
@@ -179,7 +181,7 @@ class StayNotifierSharedPositionTest extends TestCase
 
         if ($settings === null) {
             $settings = $this->createStub(AppSettingsInterface::class);
-            $settings->method('getForTeacher')->willReturn(true);
+            $settings->method('getForTeacher')->willReturnCallback(static fn (string $key): bool => $key !== 'email.digest');
             $settings->method('getForCentre')->willReturn('');
         }
 
@@ -192,6 +194,8 @@ class StayNotifierSharedPositionTest extends TestCase
             'Nexo FP',
             $settings,
             $this->createStub(EmailNotificationRecorder::class),
+            $this->createStub(EmailDigestItemRepository::class),
+            new MockClock('2026-10-15 10:00:00'),
         );
     }
 

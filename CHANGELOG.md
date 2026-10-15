@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Resumen diario de avisos por correo, opcional: con el ajuste personal o global «Resumen diario de avisos por correo» (`email.digest`), la tutoría asignada, los puestos creados, los cambios en puestos compartidos y el recordatorio de firma se acumulan y llegan juntos en un único correo diario por centro, agrupados por secciones y con enlaces. Se envía a la hora elegida en «Hora del resumen diario» (`email.digest_hour`, 7 por defecto). Nueva tabla `email_digest_item` (migración en las tres plataformas), tarea horaria en el *worker*, reintento si falla el transporte, purga de líneas antiguas, comando `app:send-daily-digests` y tipo «Resumen diario» en el registro de correos.
+
 ## [2.12.3] - 2026-10-15
 
 ### Fixed

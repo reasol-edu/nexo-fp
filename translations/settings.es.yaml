@@ -23,6 +23,12 @@ settings.key.page_size.description: 'Número de elementos que se muestran en los
 settings.key.email_notifications.label: 'Notificaciones por email'
 settings.key.email_notifications.description: 'Activa o desactiva todos los correos automáticos de la aplicación.'
 
+settings.key.email_digest.label: 'Resumen diario de avisos por correo'
+settings.key.email_digest.description: 'En lugar de un correo por cada aviso (tutoría asignada, puestos creados, cambios en puestos compartidos, recordatorio de firma), todos los del día llegan juntos en un único correo diario por centro, con enlaces a cada estancia. No afecta al resumen semanal ni a los correos de verificación y de restablecimiento de contraseña, que siguen siendo inmediatos.'
+
+settings.key.email_digest_hour.label: 'Hora del resumen diario'
+settings.key.email_digest_hour.description: 'Hora del día (0-23, hora del servidor) a la que se envía el resumen diario con los avisos acumulados. 7 por defecto.'
+
 settings.key.email_notification_tutor_assigned.label: 'Email al asignar tutoría docente'
 settings.key.email_notification_tutor_assigned.description: 'Envía un aviso al tutor o tutora dual docente cuando se le asigna un puesto.'
 

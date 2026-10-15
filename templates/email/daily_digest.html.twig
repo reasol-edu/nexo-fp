@@ -1,0 +1,29 @@
+{% extends 'email/_layout.html.twig' %}
+
+{% block content %}
+    <p style="margin: 0 0 16px;">{{ 'emails.greeting'|trans({'%name%': recipient.name.firstName}, 'emails') }}</p>
+
+    <p style="margin: 0 0 24px;">
+        {{ 'emails.daily_digest.intro'|trans(params, 'emails') }}
+    </p>
+
+    {% for section in sections %}
+        <p style="margin: 0 0 8px; font-weight: bold; color: #374151; font-size: 13px;">{{ section.title }}</p>
+        <ul style="margin: 0 0 24px; padding-left: 0; list-style: none; color: #374151; font-size: 13px;">
+            {% for line in section.lines %}
+                <li style="margin: 0 0 8px; padding: 10px 16px; background-color: #f9fafb; border-left: 3px solid #6d28d9;">
+                    {% if line.url %}
+                        <a href="{{ line.url }}" style="color: #6d28d9; font-weight: bold; text-decoration: none;">{{ line.text }}</a>
+                    {% else %}
+                        {{ line.text }}
+                    {% endif %}
+                    {% if line.times > 1 %}
+                        <span style="color: #6b7280;">{{ 'emails.digest.times'|trans({'%count%': line.times}, 'emails') }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <p style="margin: 0 0 16px; color: #6b7280;">{{ 'emails.daily_digest.outro'|trans({}, 'emails') }}</p>
+{% endblock %}

@@ -6,13 +6,16 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Entity\EducationalCentre;
+use App\Entity\EmailDigestItem;
 use App\Entity\Programme;
 use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Repository\EmailDigestItemRepository;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -25,6 +28,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * Envía notificaciones por email relacionadas con las estancias. Los fallos
  * de transporte se registran pero nunca se propagan: el envío ocurre después
  * del flush y no debe deshacer la operación del usuario.
+ *
+ * Quien tiene activado el ajuste «email.digest» no recibe un correo por aviso: cada aviso se
+ * encola como una línea de su resumen diario (ver {@see EmailDigestSender}).
  */
 class StayNotifier
 {
@@ -39,6 +45,8 @@ class StayNotifier
         private readonly string $appName,
         private readonly AppSettingsInterface $appSettings,
         private readonly EmailNotificationRecorder $recorder,
+        private readonly EmailDigestItemRepository $digestItems,
+        private readonly ClockInterface $clock,
     ) {}
 
     public function notifyTutorAssigned(TrainingPosition $position): void
@@ -50,6 +58,18 @@ class StayNotifier
 
         $stay   = $position->getStay();
         $centre = $stay->getAcademicYear()->getEducationalCentre();
+
+        if ($this->usesDigest($tutor)) {
+            $student = $position->getStudent();
+            $this->queue($centre, $tutor, 'tutor_assigned', [
+                '%stay%'     => $stay->getName(),
+                '%student%'  => $student !== null ? $student->getName()->getLastName() . ', ' . $student->getName()->getFirstName()
+                    : $this->translator->trans('emails.tutor_assigned.student_unassigned', [], 'emails'),
+                '%company%'  => $this->workcenterLabel($position),
+            ], $this->stayUrl($stay));
+
+            return;
+        }
 
         $this->send((new TemplatedEmail())
             ->to(new Address((string) $tutor->getEmail(), $this->fullName($tutor)))
@@ -72,6 +92,16 @@ class StayNotifier
                 continue;
             }
             if (!$this->hasEmail($liaison, 'positions_created')) {
+                continue;
+            }
+
+            if ($this->usesDigest($liaison)) {
+                $this->queue($centre, $liaison, 'positions_created', [
+                    '%company%' => $company->getName(),
+                    '%stay%'    => $stay->getName(),
+                    '%count%'   => $count,
+                ], $this->stayUrl($stay));
+
                 continue;
             }
 
@@ -145,6 +175,17 @@ class StayNotifier
                 continue;
             }
 
+            if ($this->usesDigest($recipient)) {
+                $this->queue($centre, $recipient, 'shared_position_' . $change, [
+                    '%company%'   => $this->workcenterLabel($position),
+                    '%stay%'      => $stay->getName(),
+                    '%actor%'     => $actor->getName()->full(),
+                    '%programme%' => $position->getProgrammeNames(),
+                ], $this->stayUrl($stay));
+
+                continue;
+            }
+
             $this->send((new TemplatedEmail())
                 ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
                 ->subject($this->subject('emails.shared_position.subject.' . $change, $centre))
@@ -181,6 +222,18 @@ class StayNotifier
         }
 
         $centre = $groups[0]['stay']->getAcademicYear()->getEducationalCentre();
+
+        if ($this->usesDigest($recipient)) {
+            foreach ($groups as $group) {
+                $stay = $group['stay'];
+                $this->queue($centre, $recipient, 'signature_reminder', [
+                    '%stay%'  => $stay->getName(),
+                    '%count%' => count($group['positions']),
+                ], $this->stayUrl($stay, 'sin-firmar'));
+            }
+
+            return true;
+        }
 
         $this->send((new TemplatedEmail())
             ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
@@ -233,6 +286,92 @@ class StayNotifier
         return true;
     }
 
+    /**
+     * Envía el resumen diario de una persona en un centro con las líneas acumuladas, agrupadas por
+     * sección y con las repetidas juntas («2 veces»). Devuelve false solo si falla el transporte (las
+     * líneas se reintentan en la siguiente pasada); true si se ha enviado o si ya no procede enviarlo
+     * (sin correo o con los correos desactivados), en cuyo caso las líneas se dan por tratadas.
+     *
+     * @param list<EmailDigestItem> $items
+     */
+    public function sendDailyDigest(Teacher $recipient, EducationalCentre $centre, array $items): bool
+    {
+        if ($items === [] || $recipient->getEmail() === null || $recipient->getEmail() === ''
+            || $this->appSettings->getForTeacher('email.notifications', $recipient) === false) {
+            return true;
+        }
+
+        /** @var array<string, array<string, array{text: string, url: ?string, times: int}>> $bySection */
+        $bySection = [];
+        foreach ($items as $item) {
+            $section = EmailDigestSections::forEvent($item->getEventKey());
+            $text    = $this->translator->trans('emails.digest.line.' . $item->getEventKey(), $item->getParams(), 'emails');
+            $key     = $text . '|' . ($item->getUrl() ?? '');
+            if (isset($bySection[$section][$key])) {
+                ++$bySection[$section][$key]['times'];
+            } else {
+                $bySection[$section][$key] = ['text' => $text, 'url' => $item->getUrl(), 'times' => 1];
+            }
+        }
+
+        $sections = [];
+        foreach (EmailDigestSections::ORDER as $section) {
+            if (isset($bySection[$section])) {
+                $sections[] = [
+                    'title' => $this->translator->trans('emails.digest.section.' . $section, [], 'emails'),
+                    'lines' => array_values($bySection[$section]),
+                ];
+            }
+        }
+
+        $count   = array_sum(array_map(static fn (array $s): int => count($s['lines']), $sections));
+        $params  = ['%count%' => $count, '%centre%' => $centre->getName()];
+        $subject = $this->translator->trans('emails.daily_digest.subject', $params, 'emails');
+        $prefix  = (string) $this->appSettings->getForCentre('email.subject_prefix', $centre);
+
+        return $this->send((new TemplatedEmail())
+            ->to(new Address((string) $recipient->getEmail(), $this->fullName($recipient)))
+            ->subject($prefix === '' ? $subject : $prefix . ' ' . $subject)
+            ->htmlTemplate('email/daily_digest.html.twig')
+            ->context([
+                'recipient' => $recipient,
+                'params'    => $params,
+                'sections'  => $sections,
+            ]), 'daily_digest', $centre, $recipient);
+    }
+
+    /** Si la persona recibe los avisos agrupados en un resumen diario (ajuste «email.digest»). */
+    private function usesDigest(Teacher $teacher): bool
+    {
+        return $this->appSettings->getForTeacher('email.digest', $teacher) === true;
+    }
+
+    /**
+     * Deja una línea en el próximo resumen diario de la persona. Un fallo al encolar se anota y se
+     * ignora: el aviso ocurre después del flush y no debe deshacer la operación del usuario.
+     *
+     * @param array<string, scalar|null> $params parámetros de la línea «emails.digest.line.<evento>»
+     */
+    private function queue(EducationalCentre $centre, Teacher $recipient, string $eventKey, array $params, ?string $url): void
+    {
+        try {
+            $this->digestItems->enqueue($centre, $recipient, $eventKey, $params, $url, $this->clock->now());
+        } catch (\Throwable $e) {
+            $this->logger->error('Could not queue digest line "{event}" for {username}: {error}', [
+                'event'    => $eventKey,
+                'username' => $recipient->getUsername(),
+                'error'    => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function workcenterLabel(TrainingPosition $position): string
+    {
+        $workcenter = $position->getWorkcenter();
+
+        return $workcenter !== null ? $workcenter->getCompany()->getName() . ' — ' . $workcenter->getName() : '—';
+    }
+
     /** Antepone el prefijo de asunto configurado (global o de centro) al texto traducido, si lo hay. */
     private function subject(string $translationKey, EducationalCentre $centre): string
     {
@@ -242,7 +381,8 @@ class StayNotifier
         return $prefix === '' ? $text : $prefix . ' ' . $text;
     }
 
-    private function send(TemplatedEmail $email, string $eventKey, EducationalCentre $centre, Teacher $recipient): void
+    /** @return bool false si el transporte ha fallado */
+    private function send(TemplatedEmail $email, string $eventKey, EducationalCentre $centre, Teacher $recipient): bool
     {
         $email->from(new Address($this->fromAddress, $this->appName));
 
@@ -266,6 +406,8 @@ class StayNotifier
             (string) $email->getSubject(),
             $error,
         );
+
+        return $error === null;
     }
 
     private function hasEmail(Teacher $teacher, string $kind): bool

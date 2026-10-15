@@ -116,3 +116,15 @@ no tiene pendientes ni a quien ha desactivado el ajuste `email.notification.week
 ```bash
 php bin/console app:send-weekly-digest
 ```
+
+## app:send-daily-digests
+
+Envía los [resúmenes diarios de avisos](06-notificaciones-y-email.md) pendientes de quienes tienen activado el
+ajuste `email.digest`: un correo por persona y centro con los avisos acumulados desde el resumen anterior.
+Es el mismo trabajo que el *worker* ejecuta automáticamente cada hora, y solo envía los resúmenes cuya hora
+(`email.digest_hour`) ya ha pasado.
+
+```bash
+php bin/console app:send-daily-digests
+php bin/console app:send-daily-digests --now    # envía ya todo lo pendiente, sin esperar a la hora de cada persona
+```

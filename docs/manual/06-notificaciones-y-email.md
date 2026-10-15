@@ -25,6 +25,19 @@ La aplicación puede enviar notificaciones automáticas por email en estos casos
   próximas—, con un enlace por tarea que abre la estancia con el filtro rápido ya aplicado. No se envía a
   quien no tiene nada pendiente. Se puede desactivar con el ajuste `email.notification.weekly_digest` y
   lanzar a mano con [`app:send-weekly-digest`](08-comandos-de-consola.md#appsend-weekly-digest).
+- **Resumen diario de avisos (opcional):** para no recibir un correo por cada aviso, cada persona puede
+  activar en **Ajustes → Personal** el ajuste «Resumen diario de avisos por correo»
+  (`email.digest`, desactivado por defecto; el administrador también puede activarlo para todos desde el
+  nivel global). Entonces la tutoría asignada, los puestos creados, los cambios en puestos compartidos y el
+  recordatorio de firma no se envían al momento: se acumulan y llegan **juntos en un único correo diario por
+  centro**, agrupados por secciones y con un enlace a cada estancia (las líneas idénticas se muestran una
+  sola vez con «(N veces)»). Se envía a la hora indicada en «Hora del resumen diario»
+  (`email.digest_hour`, de 0 a 23 en hora del servidor, 7 por defecto) y solo si hay algo que contar. El
+  resumen semanal de pendientes y los correos de verificación y de restablecimiento de contraseña **no** se
+  ven afectados. Si el envío falla, las líneas se reintentan en la hora siguiente; las que llevan más de 14
+  días sin poder enviarse se descartan. Queda constancia en el registro de correos con el tipo «Resumen
+  diario». El envío es **automático** (sin cron externo; el *worker* lo comprueba cada hora) y también puede
+  lanzarse a mano con [`app:send-daily-digests`](08-comandos-de-consola.md#appsend-daily-digests).
 - **Verificación de cambio de email:** cuando un docente no administrador cambia su dirección de correo,
   recibe un email en el nuevo buzón con un enlace de verificación válido 24 horas. El cambio no tiene
   efecto hasta que se confirma; el email anterior sigue activo durante ese periodo.

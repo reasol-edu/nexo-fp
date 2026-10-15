@@ -11,6 +11,7 @@ use App\Entity\PersonName;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Repository\EmailDigestItemRepository;
 use App\Service\AppSettingsInterface;
 use App\Service\EmailNotificationRecorder;
 use App\Service\StayNotifier;
@@ -18,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -214,7 +216,7 @@ class StayNotifierTest extends TestCase
             }));
 
         $settings = $this->createStub(AppSettingsInterface::class);
-        $settings->method('getForTeacher')->willReturn(true);
+        $settings->method('getForTeacher')->willReturnCallback(static fn (string $key): bool => $key !== 'email.digest');
         $settings->method('getForCentre')->willReturn('[IES Test]');
 
         $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
@@ -249,7 +251,7 @@ class StayNotifierTest extends TestCase
 
         $settings = $this->createStub(AppSettingsInterface::class);
         $settings->method('getForTeacher')->willReturnCallback(
-            fn(string $key) => $key !== 'email.notifications'
+            fn(string $key) => $key !== 'email.notifications' && $key !== 'email.digest'
         );
 
         $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
@@ -265,7 +267,7 @@ class StayNotifierTest extends TestCase
 
         $settings = $this->createStub(AppSettingsInterface::class);
         $settings->method('getForTeacher')->willReturnCallback(
-            fn(string $key) => $key !== 'email.notification.tutor_assigned'
+            fn(string $key) => $key !== 'email.notification.tutor_assigned' && $key !== 'email.digest'
         );
 
         $this->makeNotifier($mailer, settings: $settings)->notifyTutorAssigned($position);
@@ -281,7 +283,7 @@ class StayNotifierTest extends TestCase
 
         $settings = $this->createStub(AppSettingsInterface::class);
         $settings->method('getForTeacher')->willReturnCallback(
-            fn(string $key) => $key !== 'email.notification.signature_reminder'
+            fn(string $key) => $key !== 'email.notification.signature_reminder' && $key !== 'email.digest'
         );
 
         $sent = $this->makeNotifier($mailer, settings: $settings)->sendSignatureReminderDigest(
@@ -299,6 +301,7 @@ class StayNotifierTest extends TestCase
         ?LoggerInterface $logger = null,
         ?AppSettingsInterface $settings = null,
         ?EmailNotificationRecorder $recorder = null,
+        ?EmailDigestItemRepository $digestItems = null,
     ): StayNotifier {
         $urlGenerator = self::createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn('http://localhost/estancias/test');
@@ -317,13 +320,15 @@ class StayNotifierTest extends TestCase
             'Nexo FP',
             $settings,
             $recorder ?? $this->createStub(EmailNotificationRecorder::class),
+            $digestItems ?? $this->createStub(EmailDigestItemRepository::class),
+            new MockClock('2026-10-15 10:00:00'),
         );
     }
 
     private function makeAllEnabledSettings(): AppSettingsInterface
     {
         $stub = $this->createStub(AppSettingsInterface::class);
-        $stub->method('getForTeacher')->willReturn(true);
+        $stub->method('getForTeacher')->willReturnCallback(static fn (string $key): bool => $key !== 'email.digest');
         $stub->method('getForCentre')->willReturn('');
 
         return $stub;
