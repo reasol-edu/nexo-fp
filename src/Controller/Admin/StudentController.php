@@ -11,6 +11,7 @@ use App\Entity\Student;
 use App\Repository\EducationalCentreRepository;
 use App\Repository\GroupRepository;
 use App\Repository\StudentRepository;
+use App\Service\CsvTemplateResponse;
 use App\Service\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -189,6 +190,23 @@ class StudentController extends AbstractController
             'availableGroups'  => array_values($centreGroupsById),
             'selectedGroupIds' => $selectedGroupIds,
         ]);
+    }
+
+    /** CSV de ejemplo con las columnas que lee la importación (el formato de exportación de Séneca). */
+    #[Route('/plantilla', name: 'app_admin_students_import_template')]
+    public function importTemplate(string $centreId, CsvTemplateResponse $csv): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
+
+        return $csv->create(
+            'plantilla-estudiantes.csv',
+            ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad'],
+            [
+                ['', '1000001', 'García', 'López', 'Ana', '1º DAW A'],
+                ['', '1000002', 'Martín', 'Ruiz', 'Luis', '1º DAW A'],
+            ],
+        );
     }
 
     #[Route('/importar', name: 'app_admin_students_import')]

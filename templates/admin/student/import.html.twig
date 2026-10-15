@@ -33,6 +33,14 @@
                     <li>{{ 'students.import.help.existing'|trans({}, 'admin') }}</li>
                     <li>{{ 'students.import.help.groups'|trans({}, 'admin') }}</li>
                 </ul>
+                <p class="pt-2">
+                    <a href="{{ path('app_admin_students_import_template', {centreId: centre.id}) }}"
+                       class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 underline hover:text-blue-900">
+                        {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-3.5 w-3.5'}) }}
+                        {{ 'students.import.download_template'|trans({}, 'admin') }}
+                    </a>
+                    <span class="block mt-1 text-xs text-blue-600">{{ 'students.import.template_help'|trans({}, 'admin') }}</span>
+                </p>
             </div>
 
             <div>

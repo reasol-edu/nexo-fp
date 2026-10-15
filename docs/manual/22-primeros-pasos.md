@@ -33,6 +33,11 @@ El fichero resultante contiene el `Usuario IdEA`, el nombre del personal del cen
 disponible, su `Cuenta Google/Microsoft`. Si el docente ya existe en el sistema, se añade al curso activo
 sin modificar sus datos. Si no existe, se crea automáticamente con autenticación externa (IdEA).
 
+!!! tip "¿No tienes el fichero de Séneca a mano?"
+    La pantalla de importación ofrece **Descargar plantilla**: un CSV con las columnas que se leen
+    (`Empleado/a` en formato «Apellidos, Nombre», `Usuario IdEA` y `Cuenta Google/Microsoft`) y dos filas de
+    ejemplo para sustituir por tus docentes. Como siempre, antes de importar se muestra una vista previa.
+
 Tras subir el fichero, la aplicación muestra una **vista previa** antes de importar nada:
 
 ![Vista previa de la importación de docentes con selección, opciones de correo y de retirada del curso](img/docentes-importar-vista-previa.png)
@@ -121,6 +126,11 @@ grupo se busca por nombre exacto entre los grupos del curso activo, y el docente
 exactos entre los del curso activo — razón por la que el paso 2 (importar docentes) debe completarse
 antes.
 
+La pantalla de importación ofrece también **Descargar plantilla**: un CSV con las columnas `Unidad` y
+`Profesor/a` y dos filas de ejemplo que sustituyes por tus asignaciones. Esta importación se aplica
+directamente, sin vista previa: al terminar avisa de las asignaciones creadas y de los docentes o grupos no
+encontrados (las filas de ejemplo, que no coinciden con ningún docente, se omiten).
+
 ## 5. Dar de alta a los estudiantes (equipo directivo)
 
 Desde **Centro Educativo → Estudiantes** se dan de alta los estudiantes, manualmente o mediante
@@ -137,7 +147,9 @@ En Séneca, con el perfil **Dirección**:
 
 La importación está pensada para el fichero que **exporta Séneca** con el alumnado matriculado. La
 **primera fila** debe contener los encabezados de columna y el fichero debe incluir, al menos, estas
-columnas (los nombres deben coincidir exactamente):
+columnas (los nombres deben coincidir exactamente). Si prefieres partir de un fichero de ejemplo, la
+pantalla de importación ofrece **Descargar plantilla**: un CSV con estas columnas y dos filas de ejemplo que
+sustituyes por tu alumnado.
 
 | Columna | Uso en Nexo FP |
 |---------|----------------|

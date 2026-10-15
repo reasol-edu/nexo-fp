@@ -35,6 +35,14 @@
                     <li>{{ 'centre_teachers.import_assignments.help.lookup'|trans({}, 'admin') }}</li>
                     <li>{{ 'centre_teachers.import_assignments.help.prerequisite'|trans({}, 'admin') }}</li>
                 </ul>
+                <p class="pt-2">
+                    <a href="{{ path('app_admin_centre_teachers_import_assignments_template', {centreId: centre.id}) }}"
+                       class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 underline hover:text-blue-900">
+                        {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-3.5 w-3.5'}) }}
+                        {{ 'centre_teachers.import_assignments.download_template'|trans({}, 'admin') }}
+                    </a>
+                    <span class="block mt-1 text-xs text-blue-600">{{ 'centre_teachers.import_assignments.template_help'|trans({}, 'admin') }}</span>
+                </p>
             </div>
 
             <div>

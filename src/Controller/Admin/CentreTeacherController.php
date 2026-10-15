@@ -12,6 +12,7 @@ use App\Repository\EducationalCentreRepository;
 use App\Repository\GroupRepository;
 use App\Repository\TeacherRepository;
 use App\Service\CentreTeacherImporter;
+use App\Service\CsvTemplateResponse;
 use App\Service\TeacherImportRow;
 use App\Service\TenantContext;
 use Symfony\Component\Uid\Uuid;
@@ -74,6 +75,23 @@ class CentreTeacherController extends AbstractController
         }
 
         return $this->redirectToRoute('app_admin_centre_teachers_index', ['centreId' => $centre->getId()]);
+    }
+
+    /** CSV de ejemplo con las columnas que lee la importación (el formato de exportación de Séneca). */
+    #[Route('/plantilla', name: 'app_admin_centre_teachers_import_template')]
+    public function importTemplate(string $centreId, CsvTemplateResponse $csv): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
+
+        return $csv->create(
+            'plantilla-docentes.csv',
+            [CentreTeacherImporter::COLUMN_NAME, CentreTeacherImporter::COLUMN_USERNAME, CentreTeacherImporter::COLUMN_EMAIL],
+            [
+                ['Pérez Gómez, Marta', 'mperez001', 'marta.perez@ejemplo.org'],
+                ['Sánchez Ruiz, Pablo', 'psanchez002', 'pablo.sanchez@ejemplo.org'],
+            ],
+        );
     }
 
     #[Route('/importar', name: 'app_admin_centre_teachers_import')]
@@ -192,6 +210,23 @@ class CentreTeacherController extends AbstractController
         $safe = Uuid::isValid($importId) ? $importId : '00000000-0000-0000-0000-000000000000';
 
         return (string) $this->getParameter('kernel.project_dir') . '/var/tmp/teacher-imports/' . $safe . '.csv';
+    }
+
+    /** CSV de ejemplo con las columnas que lee la importación de asignaciones (formato de «Materia y grupos» de Séneca). */
+    #[Route('/importar-asignaciones/plantilla', name: 'app_admin_centre_teachers_import_assignments_template')]
+    public function importAssignmentsTemplate(string $centreId, CsvTemplateResponse $csv): Response
+    {
+        $centre = $this->requireCentreWithActiveYear($centreId);
+        $this->denyIfViewingPastYear($centre);
+
+        return $csv->create(
+            'plantilla-asignaciones-docentes.csv',
+            ['Unidad', 'Profesor/a'],
+            [
+                ['1º DAW A', 'Pérez Gómez, Marta'],
+                ['1º DAW A', 'Sánchez Ruiz, Pablo'],
+            ],
+        );
     }
 
     #[Route('/importar-asignaciones', name: 'app_admin_centre_teachers_import_assignments')]

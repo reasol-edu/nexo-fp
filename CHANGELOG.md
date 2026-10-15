@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Las pantallas de importación de estudiantes, de docentes del curso y de asignaciones de docentes a grupos ofrecen «Descargar plantilla»: un CSV (UTF-8 con BOM, separado por comas) con las columnas que lee cada importación y dos filas de ejemplo con datos inventados. Una prueba comprueba que la plantilla descargada se puede subir tal cual a su propia importación.
+
 ## [2.14.1] - 2026-10-15
 
 ### Fixed
