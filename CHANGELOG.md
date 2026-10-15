@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- El script de actualización de Ubuntu (`update-ubuntu.sh`) deja siempre todo `/opt/nexo-fp` con el propietario `nexofp`: antes copiaba como ese usuario y, si quedaban ficheros de root en la instalación, la copia fallaba o conservaba el propietario antiguo.
+
 ## [2.12.2] - 2026-10-15
 
 ### Changed

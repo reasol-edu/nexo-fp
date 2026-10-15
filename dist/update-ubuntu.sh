@@ -163,7 +163,15 @@ fi
 # data/ llega vacío dentro del paquete: copiar sobre un directorio existente no
 # borra su contenido, así que la base de datos, los secretos y .env.local (que
 # no está en el paquete) se conservan.
-sudo -u nexofp cp -a "${STAGE_DIR}/." "$INSTALL_DIR"
+#
+# La copia la hace root (no "nexofp") para que no falle si en la instalación
+# quedaron ficheros o carpetas de root (p. ej. un `sudo php bin/console` que
+# creó var/cache, o una instalación antigua extraída como root). Pero `cp`
+# sobre un fichero existente conserva su propietario, así que después se fija
+# explícitamente: todo el árbol debe ser de "nexofp", que es quien ejecuta los
+# servicios y necesita escribir en data/ y app/var/.
+cp -a "${STAGE_DIR}/." "$INSTALL_DIR"
+chown -R nexofp:nexofp "$INSTALL_DIR"
 ok "Nexo FP actualizado a ${REMOTE_TAG}"
 
 step "Arrancando los servicios"
