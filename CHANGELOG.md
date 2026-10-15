@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Los datos de demostración se calculan a partir de la fecha de instalación: el curso activo es el que contiene hoy y cada enseñanza tiene una estancia finalizada, una en curso y una próxima (antes las fechas eran fijas y con el tiempo todo quedaba como pasado). Las estancias pasan a llamarse «(finalizada)», «(en curso)» y «(próxima)».
+
+### Fixed
+
+- El contador rojo de la campana de notificaciones tenía un contraste insuficiente (3,8:1); ahora cumple WCAG AA.
+
 ## [2.12.1] - 2026-10-15
 
 ### Added

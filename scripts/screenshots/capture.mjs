@@ -25,7 +25,7 @@ const CENTRE = 'Ada Lovelace';
 const PASSWORDS = { admin: 'admin' };       // el resto de docentes de las fixtures usan «ejemplo»
 const HIDE = '.sf-toolbar, .sf-minitoolbar, #sfMiniToolbar, .sf-toolreset, .sf-toolbarreset, .ts-dropdown { display:none !important; } html, body { overflow-x: hidden; }';
 const SHARED_STAY = 'compartida';
-const DAW_STAY = 'FFEOE DAW 2026';
+const DAW_STAY = 'FFEOE DAW (en curso)';
 
 const M = 'docs/manual/img', S = 'docs/slides/img';
 
@@ -116,7 +116,7 @@ const SHOTS = [
     steps: [openStay(SHARED_STAY), wait(1200)] },
   { name: 'puesto-preferencia', group: 'manual', out: `${M}/puesto-preferencia.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [async (ctx) => { const href = await openStay(SHARED_STAY)(ctx); await ctx.page.goto(`${BASE}${href}/nuevo-puesto`, { waitUntil: 'networkidle' });
-      await ctx.page.selectOption('#priority_programme_id', { index: 1 }); await ctx.page.fill('#priority_until', '2026-03-31'); }] },
+      await ctx.page.selectOption('#priority_programme_id', { index: 1 }); await ctx.page.fill('#priority_until', new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10)); }] },
   { name: 'estancia-acciones-masivas', group: 'manual', out: `${M}/estancia-acciones-masivas.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200), async ({ page }) => {
       const boxes = page.locator('[data-bulk-select-target="row"]');
@@ -176,7 +176,7 @@ const SHOTS = [
       await page.evaluate(() => {
         const el = document.getElementById('programme_ids');
         el.tomselect.setValue([...el.options].filter((o) => /Aplicaciones Web|Microinform/.test(o.textContent)).map((o) => o.value));
-        document.querySelector('input[name="name"]').value = 'FFEOE DAW + SMR 2026';
+        document.querySelector('input[name="name"]').value = 'FFEOE DAW + SMR (compartida)';
       });
     }] },
   { name: 'slide-estancias-lista', group: 'slides', out: `${S}/10_estancias_lista.png`, size: [1184, 900, 1], full: true, steps: [go('/estancias'), wait(1200)] },
@@ -222,11 +222,13 @@ const SHOTS = [
       await page.locator('form[data-controller="form-submit"] button[type="submit"]').click();
       await page.waitForLoadState('networkidle');
       await page.goto(`${BASE}/admin/centros/${id}`, { waitUntil: 'networkidle' });
-      // Solo el curso antiguo (2025-2026, con estancias) deja de ser el activo y se puede eliminar.
+      // Solo el curso antiguo (el de las fixtures, con estancias) deja de ser el activo y se puede eliminar.
       const action = await page.locator('form[action*="/cursos/"][action$="/eliminar"]').first().getAttribute('action');
       await page.goto(`${BASE}${action.replace(/\/eliminar$/, '/eliminar-con-datos')}`, { waitUntil: 'networkidle' });
       if (!(await page.locator('#confirm_name').count())) throw new Error(`no se abrió la confirmación (${page.url()}): ${(await page.locator('h1').first().innerText())}`);
-      await page.fill('#confirm_name', '2025-2026');
+      const today = new Date();
+      const startYear = today.getFullYear() - (today.getMonth() < 8 ? 1 : 0);   // curso septiembre-agosto, como las fixtures
+      await page.fill('#confirm_name', `${startYear}-${startYear + 1}`);
     }, wait(400)] },
 ];
 

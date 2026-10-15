@@ -31,6 +31,55 @@ class AppFixtures extends Fixture
         private readonly Connection $connection,
     ) {}
 
+    /**
+     * Fecha de referencia de los datos de demostración: todas las fechas se calculan a partir de hoy
+     * para que, al instalarlos, siempre haya estancias finalizadas, en curso y futuras.
+     */
+    private function today(): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable('today');
+    }
+
+    /** Fecha relativa a hoy, p. ej. `daysFromToday(-30)` es hace 30 días. */
+    private function daysFromToday(int $days): \DateTimeImmutable
+    {
+        return $this->today()->modify(\sprintf('%+d days', $days));
+    }
+
+    /**
+     * Periodo de cada fase de estancia: finalizada (terminó hace un mes), en curso (a mitad de camino)
+     * y futura (empieza dentro de dos meses).
+     *
+     * @return array{\DateTimeImmutable, \DateTimeImmutable}
+     */
+    private function stayPeriod(string $phase): array
+    {
+        return match ($phase) {
+            'finished' => [$this->daysFromToday(-120), $this->daysFromToday(-30)],
+            'ongoing'  => [$this->daysFromToday(-45), $this->daysFromToday(45)],
+            default    => [$this->daysFromToday(60), $this->daysFromToday(150)],
+        };
+    }
+
+    /** Nombre del curso académico que contiene la fecha de hoy (septiembre a agosto). */
+    private function academicYearName(): string
+    {
+        $today = $this->today();
+        $start = (int) $today->format('Y') - ((int) $today->format('n') < 9 ? 1 : 0);
+
+        return $start . '-' . ($start + 1);
+    }
+
+    private function stayStart(string $phase): \DateTimeImmutable
+    {
+        return $this->stayPeriod($phase)[0];
+    }
+
+    private function stayEnd(string $phase): \DateTimeImmutable
+    {
+        return $this->stayPeriod($phase)[1];
+    }
+
     public function load(ObjectManager $manager): void
     {
         $this->wipeDatabase();
@@ -248,7 +297,7 @@ class AppFixtures extends Fixture
             ->setName('IES Ada Lovelace')
             ->setCity('Linares');
 
-        $year = (new AcademicYear())->setName('2025-2026')->setEducationalCentre($centre);
+        $year = (new AcademicYear())->setName($this->academicYearName())->setEducationalCentre($centre);
         $centre->setActiveAcademicYear($year);
         $manager->persist($centre);
         $manager->persist($year);
@@ -294,7 +343,7 @@ class AppFixtures extends Fixture
             ->setName('IES Monterrubio')
             ->setCity('Utrera');
 
-        $year = (new AcademicYear())->setName('2025-2026')->setEducationalCentre($centre);
+        $year = (new AcademicYear())->setName($this->academicYearName())->setEducationalCentre($centre);
         $centre->setActiveAcademicYear($year);
         $manager->persist($centre);
         $manager->persist($year);
@@ -613,13 +662,13 @@ class AppFixtures extends Fixture
 
             $abbr = preg_replace('/^\d+\.º\s+/', '', $py1->getName()) ?? '';
 
-            // ── Estancia pasada (1.er trimestre 2025-2026) ────────────────────
+            // ── Estancia finalizada ───────────────────────────────────────────
             $pastStay = (new Stay())
-                ->setName('FFEOE ' . $abbr . ' 2025 (1.er trimestre)')
+                ->setName('FFEOE ' . $abbr . ' (finalizada)')
                 ->setAcademicYear($year)
                 ->addProgramme($programme)
-                ->setStartDate(new \DateTimeImmutable('2025-09-15'))
-                ->setEndDate(new \DateTimeImmutable('2026-01-31'));
+                ->setStartDate($this->stayStart('finished'))
+                ->setEndDate($this->stayEnd('finished'));
             $manager->persist($pastStay);
 
             $students1 = $group1->getStudents()->toArray();
@@ -645,13 +694,13 @@ class AppFixtures extends Fixture
                 }
             }
 
-            // ── Estancia actual (2.º trimestre 2025-2026) ─────────────────────
+            // ── Estancia en curso ─────────────────────────────────────────────
             $currentStay = (new Stay())
-                ->setName('FFEOE ' . $abbr . ' 2026 (2.º trimestre)')
+                ->setName('FFEOE ' . $abbr . ' (en curso)')
                 ->setAcademicYear($year)
                 ->addProgramme($programme)
-                ->setStartDate(new \DateTimeImmutable('2026-03-01'))
-                ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+                ->setStartDate($this->stayStart('ongoing'))
+                ->setEndDate($this->stayEnd('ongoing'));
             $manager->persist($currentStay);
 
             $students2 = $group2->getStudents()->toArray();
@@ -683,7 +732,7 @@ class AppFixtures extends Fixture
                     ->setWorkplaceMentor($mentorOf($wc0))
                     ->addProgrammeYear($py2)->setStudent($students2[1])
                     ->setState(TrainingPositionState::PENDING)
-                    ->setEndDate(new \DateTimeImmutable('2026-06-25')));
+                    ->setEndDate($this->daysFromToday(5)));
             }
 
             // pos-5: PENDING, firmado
@@ -721,6 +770,54 @@ class AppFixtures extends Fixture
                     $currentStay->addStudent($students2[$si]);
                 }
             }
+
+            $this->buildUpcomingStay($manager, $year, $programme, $abbr, $py1, $students1, $wc1, $wc2);
+        }
+    }
+
+    /**
+     * Estancia futura: aún no ha empezado, con puestos vacantes, un puesto asignado en borrador y
+     * matriculados sin puesto. Usa al alumnado de 1.º que no participó en la estancia finalizada.
+     *
+     * @param Student[] $students
+     */
+    private function buildUpcomingStay(
+        ObjectManager $manager,
+        AcademicYear $year,
+        Programme $programme,
+        string $abbr,
+        ProgrammeYear $level,
+        array $students,
+        Workcenter $wcA,
+        Workcenter $wcB,
+    ): void {
+        $stay = (new Stay())
+            ->setName('FFEOE ' . $abbr . ' (próxima)')
+            ->setAcademicYear($year)
+            ->addProgramme($programme)
+            ->setStartDate($this->stayStart('upcoming'))
+            ->setEndDate($this->stayEnd('upcoming'));
+        $manager->persist($stay);
+
+        $manager->persist((new TrainingPosition())
+            ->setStay($stay)->setWorkcenter($wcA)
+            ->addProgrammeYear($level)->setState(TrainingPositionState::DRAFT));
+        $manager->persist((new TrainingPosition())
+            ->setStay($stay)->setWorkcenter($wcB)
+            ->addProgrammeYear($level)->setState(TrainingPositionState::DRAFT));
+
+        if (isset($students[7])) {
+            $stay->addStudent($students[7]);
+            $manager->persist((new TrainingPosition())
+                ->setStay($stay)->setWorkcenter($wcA)
+                ->addProgrammeYear($level)->setStudent($students[7])
+                ->setState(TrainingPositionState::DRAFT));
+        }
+
+        foreach ([8, 9, 10] as $si) {
+            if (isset($students[$si])) {
+                $stay->addStudent($students[$si]);
+            }
         }
     }
 
@@ -757,13 +854,13 @@ class AppFixtures extends Fixture
         $group2M = $mGroups[1]; // 2ºDAW-M
         $group2T = $tGroups[1]; // 2ºDAW-T (tarde solo en la estancia actual)
 
-        // ── Estancia pasada — grupo mañana (1ºDAW-M) ─────────────────────────
+        // ── Estancia finalizada — grupo mañana (1ºDAW-M) ─────────────────────
         $pastStay = (new Stay())
-            ->setName('FFEOE DAW 2025 (1.er trimestre)')
+            ->setName('FFEOE DAW (finalizada)')
             ->setAcademicYear($year)
             ->addProgramme($daw)
-            ->setStartDate(new \DateTimeImmutable('2025-09-15'))
-            ->setEndDate(new \DateTimeImmutable('2026-01-31'));
+            ->setStartDate($this->stayStart('finished'))
+            ->setEndDate($this->stayEnd('finished'));
         $manager->persist($pastStay);
 
         $students1M = $group1M->getStudents()->toArray();
@@ -784,13 +881,13 @@ class AppFixtures extends Fixture
             }
         }
 
-        // ── Estancia actual — grupos mañana (2ºDAW-M) y tarde (2ºDAW-T) ──────
+        // ── Estancia en curso — grupos mañana (2ºDAW-M) y tarde (2ºDAW-T) ────
         $currentStay = (new Stay())
-            ->setName('FFEOE DAW 2026 (2.º trimestre)')
+            ->setName('FFEOE DAW (en curso)')
             ->setAcademicYear($year)
             ->addProgramme($daw)
-            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
-            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+            ->setStartDate($this->stayStart('ongoing'))
+            ->setEndDate($this->stayEnd('ongoing'));
         $manager->persist($currentStay);
 
         $students2M = $group2M->getStudents()->toArray();
@@ -822,7 +919,7 @@ class AppFixtures extends Fixture
                 ->setWorkplaceMentor($mentorOf($wc0))
                 ->addProgrammeYear($py2)->setStudent($students2M[1])
                 ->setState(TrainingPositionState::PENDING)
-                ->setEndDate(new \DateTimeImmutable('2026-06-25')));
+                ->setEndDate($this->daysFromToday(5)));
         }
 
         if (isset($students2M[2])) {
@@ -866,7 +963,7 @@ class AppFixtures extends Fixture
                 ->setWorkplaceMentor($mentorOf($wc1))
                 ->addProgrammeYear($py2)->setStudent($students2T[0])
                 ->setState(TrainingPositionState::PENDING)
-                ->setEndDate(new \DateTimeImmutable('2026-06-24')));
+                ->setEndDate($this->daysFromToday(4)));
         }
 
         // DRAFT con alumno, sin tutor dual docente → «Pendientes»
@@ -884,6 +981,8 @@ class AppFixtures extends Fixture
                 $currentStay->addStudent($students2T[$si]);
             }
         }
+
+        $this->buildUpcomingStay($manager, $year, $daw, 'DAW', $py1, $students1M, $wc1, $wc2);
     }
 
     /**
@@ -909,12 +1008,12 @@ class AppFixtures extends Fixture
         $mentorOf = static fn (Workcenter $wc): ?Worker => $wc->getCompany()->getWorkers()->first() ?: null;
 
         $stay = (new Stay())
-            ->setName('FFEOE DAW + SMR 2026 (compartida)')
+            ->setName('FFEOE DAW + SMR (compartida)')
             ->setAcademicYear($year)
             ->addProgramme($daw)
             ->addProgramme($smr)
-            ->setStartDate(new \DateTimeImmutable('2026-03-01'))
-            ->setEndDate(new \DateTimeImmutable('2026-06-30'));
+            ->setStartDate($this->stayStart('ongoing'))
+            ->setEndDate($this->stayEnd('ongoing'));
         $manager->persist($stay);
 
         $dawStudents = array_slice($dawGroup->getStudents()->toArray(), 0, 6);
@@ -936,8 +1035,8 @@ class AppFixtures extends Fixture
         // Puestos libres compartidos por ambas enseñanzas
         $position($workcenters[0 % $wcCount], $py2daw, $py2smr);
         $position($workcenters[1 % $wcCount], $py2daw, $py2smr);
-        // Compartido con preferencia para SMR hasta el 31 de marzo: después se abre a DAW
-        $position($workcenters[2 % $wcCount], $py2daw, $py2smr)->setPriority($smr, new \DateTimeImmutable('2026-03-31'));
+        // Compartido con preferencia para SMR durante los próximos 15 días: después se abre a DAW
+        $position($workcenters[2 % $wcCount], $py2daw, $py2smr)->setPriority($smr, $this->daysFromToday(15));
         // Puestos exclusivos de cada enseñanza
         $position($workcenters[3 % $wcCount], $py2smr);
         $position($workcenters[4 % $wcCount], $py2daw);

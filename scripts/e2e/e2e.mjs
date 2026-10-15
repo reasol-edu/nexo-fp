@@ -20,7 +20,7 @@ const { chromium } = PW.default ?? PW;
 const AXE = PW_DIR ? readFileSync(join(PW_DIR, 'node_modules/axe-core/axe.min.js'), 'utf8') : '';
 
 const CENTRE = 'Ada Lovelace';
-const DAW_STAY = 'FFEOE DAW 2026';
+const DAW_STAY = 'FFEOE DAW (en curso)';
 const only = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice(7);
 
 function assert(condition, message) {
