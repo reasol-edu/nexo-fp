@@ -155,6 +155,136 @@ const TESTS = [
       await page.waitForSelector('[data-command-palette-target="dialog"].hidden', { state: 'attached', timeout: 5000 });
     },
   },
+  {
+    name: 'desplegables de TomSelect: no los recorta su contenedor (todas las pantallas)',
+    run: async (page) => {
+      const cid = await centreId(page);
+      const screens = [
+        ['grupos de un docente', async () => {
+          await page.goto(`${BASE}/admin/centros/${cid}/docentes-curso`, { waitUntil: 'networkidle' });
+          await page.goto(`${BASE}${await page.locator('a[href$="/editar"]').first().getAttribute('href')}`, { waitUntil: 'networkidle' });
+        }],
+        ['editar centro (administración)', () => page.goto(`${BASE}/admin/centros/${cid}`, { waitUntil: 'networkidle' })],
+        ['oferta formativa', () => page.goto(`${BASE}/admin/centros/${cid}/familias`, { waitUntil: 'networkidle' })],
+        ['registro de actividad', () => page.goto(`${BASE}/admin/registro-actividad`, { waitUntil: 'networkidle' })],
+        ['listado de estancias', () => page.goto(`${BASE}/estancias`, { waitUntil: 'networkidle' })],
+        ['nueva estancia', () => page.goto(`${BASE}/estancias/nueva`, { waitUntil: 'networkidle' })],
+        ['nuevo puesto', async () => { const h = await openStay(page, DAW_STAY); await page.goto(`${BASE}${h}/nuevo-puesto`, { waitUntil: 'networkidle' }); }],
+        ['editar puesto', async () => {
+          await openStay(page, DAW_STAY);
+          // Los puestos registrados están bloqueados: se busca el primero cuyo formulario sea editable.
+          const hrefs = await page.locator('a[href*="/puesto/"][href$="/editar"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')));
+          for (const href of hrefs.slice(0, 8)) {
+            await page.goto(`${BASE}${href}`, { waitUntil: 'networkidle' });
+            if (await page.locator('.ts-wrapper:not(.disabled):not(.locked)').count()) break;
+          }
+        }],
+        ['editar empresa', async () => {
+          await page.goto(`${BASE}/empresas`, { waitUntil: 'networkidle' });
+          await page.goto(`${BASE}${await page.locator('a[href^="/empresas/0"]').first().getAttribute('href')}`, { waitUntil: 'networkidle' });
+        }],
+      ];
+
+      let checked = 0;
+      const problems = [];
+      const skipped = [];
+      for (const [label, go] of screens) {
+        await go();
+        const total = await page.locator('.ts-wrapper').count();
+        for (let i = 0; i < total; i++) {
+          const wrapper = page.locator('.ts-wrapper').nth(i);
+          if (!(await wrapper.isVisible())) continue;
+          await wrapper.scrollIntoViewIfNeeded();
+          await wrapper.locator('.ts-control').click();
+          await page.waitForTimeout(250);
+          const inspect = (index) => page.evaluate((index) => {
+            const w = document.querySelectorAll('.ts-wrapper')[index];
+            const dd = [...document.querySelectorAll('.ts-dropdown')].find((d) => getComputedStyle(d).display !== 'none' && d.getBoundingClientRect().height > 0);
+            if (!dd) return { error: 'no se abre' };
+            const r = dd.getBoundingClientRect();
+            const probe = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height - 2, 12));
+            return {
+              underBody: dd.parentElement === document.body,
+              insideViewportWidth: r.left >= -1 && r.right <= window.innerWidth + 1,
+              onTop: !!probe && dd.contains(probe),
+              inWrapper: w.contains(dd),
+            };
+          }, index);
+          let report = await inspect(i);
+          if (report.error) {
+            // En un selector múltiple ya relleno el clic no siempre lo abre: se abre por API.
+            await wrapper.evaluate((w) => w.previousElementSibling?.tomselect?.open());
+            await page.waitForTimeout(400);
+            report = await inspect(i);
+          }
+          // Los autocompletados remotos piden al menos dos letras antes de mostrar resultados.
+          for (const term of ['an', 'ar', 'er', 'ma']) {
+            if (!report.error) break;
+            await page.keyboard.press('Control+a');
+            await page.keyboard.type(term, { delay: 50 });
+            await page.waitForTimeout(900);
+            report = await inspect(i);
+          }
+          if (report.error) {
+            skipped.push(`${label} #${i}`);   // sin opciones que mostrar: no hay desplegable que recortar
+            await page.keyboard.press('Escape');
+            continue;
+          }
+          checked++;
+          if (report.error) problems.push(`${label} #${i}: ${report.error}`);
+          else if (!report.underBody || report.inWrapper) problems.push(`${label} #${i}: el desplegable no cuelga de <body>, lo puede recortar su contenedor`);
+          else if (!report.insideViewportWidth) problems.push(`${label} #${i}: el desplegable se sale de la pantalla`);
+          else if (!report.onTop) problems.push(`${label} #${i}: el desplegable queda tapado por otro elemento`);
+          await page.keyboard.press('Escape');
+          await page.locator('body').click({ position: { x: 2, y: 2 } }).catch(() => {});
+        }
+      }
+      if (skipped.length) console.log(`   (sin opciones, no comprobados: ${skipped.join(', ')})`);
+      assert(checked > 0, 'no se ha encontrado ningún desplegable');
+      assert(problems.length === 0, `desplegables con problemas (${problems.length} de ${checked}): ${problems.join('; ')}`);
+    },
+  },
+  {
+    name: 'otros popups (campana y estilos del editor): se ven enteros y no los tapa ni recorta nada',
+    run: async (page) => {
+      /** Un elemento «se ve entero» si cabe en la pantalla y sus esquinas y su centro no los tapa otro elemento. */
+      const fullyVisible = (selector) => page.evaluate((sel) => {
+        const el = [...document.querySelectorAll(sel)].find((e) => e.getBoundingClientRect().height > 0);
+        if (!el) return { error: 'no se abre' };
+        const r = el.getBoundingClientRect();
+        const inside = r.left >= -1 && r.top >= -1 && r.right <= window.innerWidth + 1 && r.bottom <= window.innerHeight + 1;
+        const points = [[r.left + 6, r.top + 6], [r.right - 6, r.top + 6], [r.left + r.width / 2, r.top + r.height / 2]];
+        // La barra de depuración de Symfony (solo en desarrollo) no es parte de la aplicación.
+        const debugBar = (t) => t.closest('.sf-toolbar, [id^="sfwdt"]');
+        const covered = points.filter(([x, y]) => { const t = document.elementFromPoint(x, y); return !t || (!el.contains(t) && !debugBar(t)); }).length;
+        return { inside, covered, rect: [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)], viewport: [window.innerWidth, window.innerHeight] };
+      }, selector);
+
+      const problems = [];
+      for (const [label, size] of [['escritorio', { width: 1280, height: 800 }], ['móvil', { width: 390, height: 844 }]]) {
+        await page.setViewportSize(size);
+
+        await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+        await page.locator('[data-dropdown-target="menu"]').first().evaluate((m) => m.parentElement.querySelector('button').click());
+        await page.waitForTimeout(300);
+        let r = await fullyVisible('[data-dropdown-target="menu"]');
+        if (r.error || !r.inside || r.covered) problems.push(`campana (${label}): ${JSON.stringify(r)}`);
+
+        await page.goto(`${BASE}/empresas`, { waitUntil: 'networkidle' });
+        await page.goto(`${BASE}${await page.locator('a[href^="/empresas/0"]').first().getAttribute('href')}`, { waitUntil: 'networkidle' });
+        const picker = page.locator('.ql-header .ql-picker-label').first();
+        if (await picker.count()) {
+          await picker.scrollIntoViewIfNeeded();
+          await picker.click();
+          await page.waitForTimeout(300);
+          r = await fullyVisible('.ql-header .ql-picker-options');
+          if (r.error || !r.inside || r.covered) problems.push(`estilos del editor (${label}): ${JSON.stringify(r)}`);
+        }
+      }
+      await page.setViewportSize({ width: 1280, height: 800 });
+      assert(problems.length === 0, `popups con problemas: ${problems.join('; ')}`);
+    },
+  },
 ];
 
 // ── Accesibilidad (axe-core) ────────────────────────────────────────────────

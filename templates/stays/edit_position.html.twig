@@ -388,6 +388,7 @@ if (elMentor) {
     const initialCompanyId = elWc?.querySelector(`option[value="${CSS.escape(elWc.value)}"]`)?.dataset.companyId ?? '';
 
     tsMentor = new TomSelect(elMentor, {
+        dropdownParent:   'body',   // que no lo recorte el contenedor
         options:          getMentorOpts(initialCompanyId),
         items:            currentMentor ? [currentMentor] : [],
         valueField:       'value',
@@ -427,6 +428,7 @@ if (elWc) {
     });
 
     const tsWc = new TomSelect(elWc, {
+        dropdownParent:   'body',
         options:          wcOptions,
         items:            currentWc ? [currentWc] : [],
         valueField:       'value',
@@ -483,6 +485,7 @@ if (elTutor) {
     });
 
     const tsTutor = new TomSelect(elTutor, {
+        dropdownParent:   'body',
         options:          tutorOpts,
         items:            currentTutor ? [currentTutor] : [],
         valueField:       'value',
@@ -577,6 +580,7 @@ if (elStudent) {
     });
 
     const tsStudent = new TomSelect(elStudent, {
+        dropdownParent:   'body',
         options:          studentOpts,
         items:            currentStudent ? [currentStudent] : [],
         valueField:       'value',

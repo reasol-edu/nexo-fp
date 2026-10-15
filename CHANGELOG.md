@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Los desplegables de selección (por ejemplo, al asignar grupos a un docente, al elegir centro de trabajo, tutor o estudiante en un puesto, o las enseñanzas de una estancia) ya no los recorta la tarjeta o la tabla que los contiene: se muestran sobre el resto de la página. La auditoría de navegador (`make e2e`) comprueba ahora que ningún desplegable de selección ni popup (campana de notificaciones, estilos del editor de texto) quede recortado.
+
 ## [2.13.0] - 2026-10-15
 
 ### Added

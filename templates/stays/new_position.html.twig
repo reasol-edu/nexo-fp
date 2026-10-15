@@ -156,6 +156,7 @@ el.querySelectorAll('option[data-company]').forEach(opt => {
 });
 
 const ts = new TomSelect(el, {
+    dropdownParent: 'body',   // que no lo recorte el contenedor
     options,
     items:        currentValue ? [currentValue] : [],
     valueField:   'value',

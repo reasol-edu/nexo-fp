@@ -51,6 +51,12 @@ Thin client-side behaviors, each a small, focused controller:
   components under `src/Twig/Components/` — see
   [`skills/architecture.md`](architecture.md#ui-layer) for the inventory and patterns.
 - **Autocomplete** (`symfony/ux-autocomplete`): teacher pickers in `src/Autocomplete/`.
+- **TomSelect dropdowns must hang from `<body>`** (`dropdownParent: 'body'`). Cards use
+  `overflow-hidden` and tables scroll, so a dropdown rendered inside its wrapper gets clipped at the
+  container edge. `assets/app.js` applies it to every UX Autocomplete field (`autocomplete:pre-connect`
+  event); any hand-written `new TomSelect(...)` in a template must pass it explicitly. Don't write CSS
+  that depends on `.ts-wrapper .ts-dropdown` (the dropdown is no longer a descendant). The e2e test
+  «desplegables de TomSelect» opens every picker and fails if one is clipped.
 - **Icons** (`symfony/ux-icons`): Heroicons under `assets/icons/heroicons`.
 
 ## CSP-relevant frontend quirks

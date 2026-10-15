@@ -57,6 +57,7 @@ el.querySelectorAll('optgroup').forEach((og, i) => {
 });
 
 const ts = new TomSelect(el, {
+    dropdownParent:     'body',   // que no lo recorte el contenedor
     options,
     items:              selected,
     optgroups,
