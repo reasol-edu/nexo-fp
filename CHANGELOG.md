@@ -7,17 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+## [2.13.0] - 2026-10-15
 
-- En el manual en PDF, los enlaces a títulos numerados, a anclas explícitas (como `#variables-de-entorno-opcionales`) y a capítulos cuyo nombre de fichero no coincide con su título ya apuntan a su destino. El filtro de enlaces construye ahora una tabla con los identificadores reales de los encabezados, y los identificadores dejan de contener bytes inválidos.
+### Added
+
+- Resumen diario de avisos por correo, opcional: con el ajuste personal o global «Resumen diario de avisos por correo» (`email.digest`), la tutoría asignada, los puestos creados, los cambios en puestos compartidos y el recordatorio de firma se acumulan y llegan juntos en un único correo diario por centro, agrupados por secciones y con enlaces. Se envía a la hora elegida en «Hora del resumen diario» (`email.digest_hour`, 7 por defecto). Nueva tabla `email_digest_item` (migración en las tres plataformas), tarea horaria en el *worker*, reintento si falla el transporte, purga de líneas antiguas, comando `app:send-daily-digests` y tipo «Resumen diario» en el registro de correos.
 
 ### Changed
 
 - El manual se reorganiza en tres partes según el perfil de quien lo lee, para que cada persona solo vea lo que le concierne: **Guía del profesorado** (uso diario), **Administración** (lo que se configura desde la aplicación) y **Despliegue y operación** (instalación, correo, copias de seguridad y problemas técnicos). Los capítulos mixtos se dividen (pantallas, notificaciones, ajustes y resolución de problemas), la navegación de la web agrupa las partes y las rutas de los capítulos cambian (`09-despliegue` pasa a `32-despliegue`, etc.).
 
-### Added
+### Fixed
 
-- Resumen diario de avisos por correo, opcional: con el ajuste personal o global «Resumen diario de avisos por correo» (`email.digest`), la tutoría asignada, los puestos creados, los cambios en puestos compartidos y el recordatorio de firma se acumulan y llegan juntos en un único correo diario por centro, agrupados por secciones y con enlaces. Se envía a la hora elegida en «Hora del resumen diario» (`email.digest_hour`, 7 por defecto). Nueva tabla `email_digest_item` (migración en las tres plataformas), tarea horaria en el *worker*, reintento si falla el transporte, purga de líneas antiguas, comando `app:send-daily-digests` y tipo «Resumen diario» en el registro de correos.
+- En el manual en PDF, los enlaces a títulos numerados, a anclas explícitas (como `#variables-de-entorno-opcionales`) y a capítulos cuyo nombre de fichero no coincide con su título ya apuntan a su destino. El filtro de enlaces construye ahora una tabla con los identificadores reales de los encabezados, y los identificadores dejan de contener bytes inválidos.
 
 ## [2.12.3] - 2026-10-15
 
