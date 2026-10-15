@@ -23,6 +23,11 @@ settings.key.page_size.description: 'Número de elementos que se muestran en los
 settings.key.email_notifications.label: 'Notificaciones por email'
 settings.key.email_notifications.description: 'Activa o desactiva todos los correos automáticos de la aplicación.'
 
+settings.key.attention_urgent_days.label: 'Días para considerar una tarea urgente'
+settings.key.attention_urgent_days.description: 'En el inicio, una tarea pendiente se marca como «Crítica» cuando la estancia empieza dentro de estos días (o ya ha empezado). 7 por defecto.'
+settings.key.attention_soon_days.label: 'Días para considerar una tarea próxima'
+settings.key.attention_soon_days.description: 'En el inicio, una tarea pendiente se marca como «Próxima» cuando la estancia empieza dentro de estos días. Tiene que ser mayor que el plazo de las tareas urgentes. 21 por defecto.'
+
 settings.key.email_digest.label: 'Resumen diario de avisos por correo'
 settings.key.email_digest.description: 'En lugar de un correo por cada aviso (tutoría asignada, puestos creados, cambios en puestos compartidos, recordatorio de firma), todos los del día llegan juntos en un único correo diario por centro, con enlaces a cada estancia. No afecta al resumen semanal ni a los correos de verificación y de restablecimiento de contraseña, que siguen siendo inmediatos.'
 

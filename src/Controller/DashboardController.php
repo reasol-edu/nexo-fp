@@ -2,27 +2,26 @@
 
 namespace App\Controller;
 
+use App\Dashboard\DashboardBuilder;
+use App\Dashboard\DashboardService;
 use App\Entity\Teacher;
-use App\Repository\StayRepository;
-use App\Repository\StudentRepository;
-use App\Security\Voter\EducationalCentreVoter;
-use App\Service\PendingTasksProvider;
 use App\Service\TenantContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class DashboardController extends AbstractController
 {
+    private const FUNNEL_MODES = [DashboardBuilder::FUNNEL_ACTIVE, DashboardBuilder::FUNNEL_UPCOMING, DashboardBuilder::FUNNEL_ALL];
+
     public function __construct(
         private readonly TenantContext $tenantContext,
-        private readonly StayRepository $stayRepository,
-        private readonly StudentRepository $studentRepository,
-        private readonly PendingTasksProvider $pendingTasksProvider,
+        private readonly DashboardService $dashboard,
     ) {}
 
     #[Route('/', name: 'app_dashboard')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $centre = $this->tenantContext->getSelectedCentre();
         if ($centre === null) {
@@ -30,31 +29,16 @@ class DashboardController extends AbstractController
         }
 
         $year = $this->tenantContext->getViewYear($centre);
+        $user = $this->getUser();
 
-        if ($year === null) {
-            return $this->render('dashboard/index.html.twig', [
-                'stats'             => null,
-                'studentCount'      => 0,
-                'upcomingStays'     => [],
-                'alerts'            => [],
-                'familyStats'       => [],
-                'studentFamilyStats' => [],
-            ]);
+        if ($year === null || !$user instanceof Teacher) {
+            return $this->render('dashboard/index.html.twig', ['page' => null]);
         }
 
-        $user   = $this->getUser();
-        $viewer = $user instanceof Teacher ? $user : null;
-
-        // The by-family breakdowns are only shown to global and centre admins.
-        $canSeeFamilyStats = $this->isGranted(EducationalCentreVoter::SECTION, $centre);
+        $mode = $request->query->getString('avance');
 
         return $this->render('dashboard/index.html.twig', [
-            'stats'              => $this->stayRepository->findDashboardStats($year, $viewer),
-            'studentCount'       => $this->studentRepository->countByActiveYear($centre, $viewer, $year),
-            'upcomingStays'      => $this->stayRepository->findActiveAndUpcoming($year, $viewer),
-            'alerts'             => $this->pendingTasksProvider->findAlertsByStay($year, $viewer),
-            'familyStats'        => $canSeeFamilyStats ? $this->stayRepository->countPositionsByFamily($year, $viewer) : [],
-            'studentFamilyStats' => $canSeeFamilyStats ? $this->stayRepository->countStudentsByFamilyState($year, $viewer) : [],
+            'page' => $this->dashboard->build($centre, $year, $user, \in_array($mode, self::FUNNEL_MODES, true) ? $mode : DashboardBuilder::FUNNEL_ACTIVE),
         ]);
     }
 }

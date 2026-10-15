@@ -783,7 +783,11 @@ class StayRepository extends ServiceEntityRepository
             . ' WHERE xs = s AND (' . $condition . '))';
     }
 
-    private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer): void
+    /**
+     * @param bool $includeTutored también las estancias donde el docente es tutor/a dual docente de algún
+     *                             puesto (el inicio las muestra aunque no gestione ni imparta en ellas)
+     */
+    private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer, bool $includeTutored = false): void
     {
         if ($viewer === null || $viewer->isAdmin()) {
             return;
@@ -799,11 +803,139 @@ class StayRepository extends ServiceEntityRepository
             . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
             . '))';
 
-        $qb->andWhere($qb->expr()->orX(
+        $conditions = [
             'EXISTS(SELECT 1 FROM ' . EducationalCentre::class . ' vece JOIN vece.admins vcea WHERE vece = vvc AND vcea.id = :vViewer)',
             $viaProgramme,
             'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtp JOIN vtp.workcenter vwc JOIN vwc.company vco JOIN vco.liaisons vli WHERE vtp.stay = s AND vli.id = :vViewer)',
-        ))->setParameter('vViewer', $viewer->getId(), 'uuid');
+        ];
+        if ($includeTutored) {
+            $conditions[] = 'EXISTS(SELECT 1 FROM App\Entity\TrainingPosition vtt WHERE vtt.stay = s AND vtt.academicTutor = :vViewer)';
+        }
+
+        $qb->andWhere($qb->expr()->orX(...$conditions))->setParameter('vViewer', $viewer->getId(), 'uuid');
+    }
+
+    // ── Inicio (consultas agregadas) ─────────────────────────────────────────
+    //
+    // El inicio se calcula en memoria sobre estas cuatro consultas, que no dependen del número de
+    // estancias: una por estancias, otra por puestos, otra por estudiantes y otra por niveles de los
+    // puestos libres. Todas parten de la estancia y aplican el mismo filtro de visibilidad.
+
+    /**
+     * Estancias del curso que la persona puede ver (más las que tutoriza), con enseñanzas y familias cargadas.
+     *
+     * @return list<Stay>
+     */
+    public function findForDashboard(AcademicYear $year, Teacher $viewer): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->addSelect('p', 'f')
+            ->leftJoin('s.programmes', 'p')
+            ->leftJoin('p.professionalFamily', 'f')
+            ->where('s.academicYear = :year')
+            ->orderBy('s.startDate', 'ASC')
+            ->addOrderBy('s.name', 'ASC')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer, true);
+
+        /** @var list<Stay> $stays */
+        $stays = $qb->getQuery()->getResult();
+
+        return $stays;
+    }
+
+    /**
+     * Un puesto por fila con sus datos escalares, sin entidades: estancia, estado, firma, estudiante, tutores,
+     * empresa, fechas y preferencia.
+     *
+     * @return list<array{
+     *     id: mixed, stay: mixed, state: mixed, signed: bool, student: mixed, tutor: mixed, mentor: mixed,
+     *     workcenter: mixed, company: mixed, startDate: ?\DateTimeImmutable, endDate: ?\DateTimeImmutable,
+     *     priorityUntil: ?\DateTimeImmutable, priorityProgramme: mixed
+     * }>
+     */
+    public function findDashboardPositionRows(AcademicYear $year, Teacher $viewer): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select(
+                'tp.id AS id',
+                's.id AS stay',
+                'tp.state AS state',
+                'tp.signed AS signed',
+                'st.id AS student',
+                'at.id AS tutor',
+                'wm.id AS mentor',
+                'wc.id AS workcenter',
+                'co.id AS company',
+                'tp.startDate AS startDate',
+                'tp.endDate AS endDate',
+                'tp.priorityUntil AS priorityUntil',
+                'pp.id AS priorityProgramme',
+            )
+            ->from(Stay::class, 's')
+            ->join('s.trainingPositions', 'tp')
+            ->leftJoin('tp.student', 'st')
+            ->leftJoin('tp.academicTutor', 'at')
+            ->leftJoin('tp.workplaceMentor', 'wm')
+            ->leftJoin('tp.workcenter', 'wc')
+            ->leftJoin('wc.company', 'co')
+            ->leftJoin('tp.priorityProgramme', 'pp')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer, true);
+
+        /** @var list<array{id: mixed, stay: mixed, state: mixed, signed: bool, student: mixed, tutor: mixed, mentor: mixed, workcenter: mixed, company: mixed, startDate: ?\DateTimeImmutable, endDate: ?\DateTimeImmutable, priorityUntil: ?\DateTimeImmutable, priorityProgramme: mixed}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return $rows;
+    }
+
+    /**
+     * Niveles a los que se ofertan los puestos libres (un par puesto-nivel por fila).
+     *
+     * @return list<array{positionId: mixed, level: mixed}>
+     */
+    public function findDashboardFreePositionLevelRows(AcademicYear $year, Teacher $viewer): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('tp.id AS positionId', 'py.id AS level')
+            ->from(Stay::class, 's')
+            ->join('s.trainingPositions', 'tp')
+            ->join('tp.programmeYears', 'py')
+            ->where('s.academicYear = :year')
+            ->andWhere('tp.student IS NULL')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer, true);
+
+        /** @var list<array{positionId: mixed, level: mixed}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return $rows;
+    }
+
+    /**
+     * Estudiantes matriculados en cada estancia, con sus grupos (uno por fila; sin grupo, las columnas
+     * del grupo van vacías). Los grupos de enseñanzas ajenas a la estancia los descarta quien lo llama.
+     *
+     * @return list<array{stay: mixed, student: mixed, level: mixed, programme: mixed, grp: mixed, groupName: ?string}>
+     */
+    public function findDashboardStudentRows(AcademicYear $year, Teacher $viewer): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->select('s.id AS stay', 'st.id AS student', 'py.id AS level', 'pr.id AS programme', 'g.id AS grp', 'g.name AS groupName')
+            ->from(Stay::class, 's')
+            ->join('s.students', 'st')
+            ->leftJoin('st.groups', 'g')
+            ->leftJoin('g.programmeYear', 'py')
+            ->leftJoin('py.programme', 'pr')
+            ->where('s.academicYear = :year')
+            ->setParameter('year', $year->getId(), 'uuid');
+        $this->addViewerFilter($qb, $viewer, true);
+
+        /** @var list<array{stay: mixed, student: mixed, level: mixed, programme: mixed, grp: mixed, groupName: ?string}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        return $rows;
     }
 
     /**

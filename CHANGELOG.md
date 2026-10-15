@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- El inicio se rediseña para responder a «¿qué tengo que hacer hoy?»: cabecera con el ámbito de lo que se muestra, «Atención ahora» con tareas accionables ordenadas por urgencia (gravedad escrita y enlace al filtro), «Próximos 30 días», tarjetas por estancia con el avance en cuatro etapas, «Mis tutorías», «Mis empresas», «Mi grupo», avance del proceso, cobertura por enseñanza y datos por completar. Se eliminan las gráficas y las tarjetas de métricas. Todos los datos se cargan con un número fijo de consultas, independiente del número de estancias.
+
+### Fixed
+
+- El inicio ya no muestra cifras ajenas: quien coordina una enseñanza en una estancia compartida solo cuenta a los estudiantes de la suya, el docente de enlace solo ve los puestos de sus empresas y quien imparte en un grupo no ve puestos libres. Quien no tiene responsabilidades en el curso ve una explicación en lugar de «Todo al día».
+
 ### Added
+
+- Dos ajustes, globales y por centro, fijan los umbrales de urgencia del inicio: `attention.urgent_days` (por defecto 7) y `attention.soon_days` (por defecto 21).
 
 - La importación de asignaciones de docentes a grupos tiene ahora vista previa, como las de docentes y estudiantes: una fila por asignación indicando si se asignará, ya existía o el docente o el grupo no se han encontrado, con casillas para elegir qué se aplica («Seleccionar todo» y «Seleccionar nada»). Antes se aplicaba directamente al subir el fichero.
 

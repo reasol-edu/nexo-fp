@@ -15,22 +15,35 @@ plataforma, se describen en la [parte de administración](20-administracion.md).
 
 ## Inicio
 
-![Panel de inicio con las métricas del curso y las estancias activas](img/inicio.png)
+![Panel de inicio con las tareas urgentes y las estancias del curso](img/inicio.png)
 
-Panel resumen del curso académico activo. Muestra el número de estancias abiertas, puestos formativos
-creados, estudiantes inscritos y el estado general de las asignaciones. Cada tarjeta de métricas enlaza
-con su sección correspondiente y, según tus permisos, se muestran **accesos rápidos** para crear una
-estancia, importar estudiantes o registrar una empresa.
+El inicio responde a «¿qué tengo que hacer hoy?» y **solo muestra lo que te corresponde** según tus
+responsabilidades, no según un cargo: coordinar o dirigir una enseñanza, tutorizar a estudiantes, ser
+docente de enlace de una empresa o impartir en un grupo. Quien administra el centro lo ve todo. La
+cabecera indica el ámbito («Administras el centro», «Gestionas: DAM», «Impartes en: DAM1A»…). Si todavía
+no tienes ninguna responsabilidad en el curso, el inicio te lo explica en lugar de mostrar un falso «todo
+al día».
 
-La gráfica **Estado de los puestos** desglosa los puestos del curso en cuatro categorías: *Borrador*,
-*Pendiente de Séneca*, *Registrado en Séneca* (registrado pero aún sin firmar) y *Firmado* (registrado en
-Séneca y con el convenio firmado). Quien administra el centro ve además dos gráficas por familia
-profesional (estudiantes por estado del puesto, y puestos totales, ocupados y firmados).
+- **Atención ahora**: frases accionables («3 estudiantes sin puesto», «2 puestos sin tutor/a dual
+  docente»…), ordenadas por urgencia y con un enlace al listado ya filtrado. Cada tarea lleva una
+  gravedad escrita (*Crítico*, *Próximo*, *Informativo*) calculada según los días que faltan para que
+  empiece la estancia: crítico si empieza en 7 días o menos (o ya ha empezado), próximo hasta 21 días.
+  Ambos umbrales son [ajustes configurables](25-ajustes-y-bloqueos.md). Un puesto completo listo para
+  Séneca nunca es crítico, y la falta de puestos libres es siempre informativa.
+- **Próximos 30 días**: hitos con fecha (inicio y fin de estancias, firmas por completar antes del inicio,
+  fin de la preferencia de una enseñanza en puestos compartidos, puestos que empiezan).
+- **Mis estancias**: una tarjeta por estancia no finalizada con su periodo, el avance en cuatro etapas
+  (puesto, tutores, Séneca, firmado) y el siguiente paso, que enlaza con el filtro rápido
+  correspondiente. Con muchas estancias se muestra como tabla.
+- **Mis tutorías**: tus estudiantes tutorizados con empresa, centro de trabajo y siguiente acción; si la
+  estancia calcula asignaciones por docente, también cuántos estudiantes te corresponden y cuántos tienes.
+- **Mis empresas** (enlace), **Mi grupo** (quien imparte en un grupo ve sus estudiantes con y sin puesto).
+- **Avance del proceso** (con selector «En curso y próximas / Solo próximas / Todo el curso»),
+  **Cobertura por enseñanza** (administración y jefaturas de familia), **Datos por completar** y las
+  estancias **finalizadas** en una línea.
 
-Justo debajo de los accesos rápidos, el bloque **Pendientes** lista las estancias activas que requieren
-atención: estudiantes sin puesto asignado, puestos libres, puestos sin tutor/a dual docente o de empresa, y
-puestos finalizados sin firmar. Cada estancia enlaza con su página de detalle y cada etiqueta de color la abre
-con el **filtro rápido** correspondiente ya aplicado.
+Si ves un curso anterior, el inicio muestra solo su resumen, sin tareas ni plazos. El panel carga todos
+sus datos con un número fijo de consultas, aunque haya muchas estancias.
 
 La cabecera incluye una **campana de notificaciones** que muestra en tiempo real tus tareas pendientes:
 firmas próximas a vencer, puestos sin estudiante, sin tutor académico o sin tutor de empresa, y

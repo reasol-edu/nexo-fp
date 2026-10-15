@@ -100,16 +100,6 @@ const quillSample = async ({ page }) => {
 const SHOTS = [
   // ·········· Manual ··········
   { name: 'inicio', group: 'manual', out: `${M}/inicio.png`, size: [1440, 900, 1], steps: [go('/'), wait(1500)] },
-  { name: 'inicio-familias', group: 'manual', out: `${M}/inicio-familias.png`, size: [1440, 900, 1], steps: [go('/'), wait(1500)],
-    element: async (page) => {
-      await page.evaluate(() => {
-        const h = [...document.querySelectorAll('h2, h3, p')].find((e) => /Estudiantes por familia/.test(e.textContent));
-        let n = h;
-        while (n && !(n.textContent.includes('Puestos por familia') && n.getBoundingClientRect().height < 420)) n = n.parentElement;
-        n?.setAttribute('data-shot', '1');
-      });
-      return page.locator('[data-shot="1"]');
-    } },
   { name: 'estancias', group: 'manual', out: `${M}/estancias.png`, size: [1440, 900, 1], steps: [go('/estancias'), wait(1200)] },
   { name: 'estancias-pestanas', group: 'manual', out: `${M}/estancias-pestanas.png`, size: [1440, 900, 1], steps: [go('/estancias'), wait(1200)] },
   { name: 'firmas-pendientes', group: 'manual', out: `${M}/firmas-pendientes.png`, size: [1440, 900, 1],

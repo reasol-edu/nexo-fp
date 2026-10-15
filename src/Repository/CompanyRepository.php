@@ -23,6 +23,30 @@ class CompanyRepository extends ServiceEntityRepository
         parent::__construct($registry, Company::class);
     }
 
+    /**
+     * Empresas del centro de las que el docente es enlace, con su número de trabajadores (una consulta).
+     *
+     * @return list<array{id: mixed, name: string, workers: int}>
+     */
+    public function findLiaisonSummaryForTeacher(EducationalCentre $centre, Teacher $teacher): array
+    {
+        /** @var list<array{id: mixed, name: string, workers: mixed}> $rows */
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id AS id', 'c.name AS name', 'COUNT(w.id) AS workers')
+            ->join('c.liaisons', 'l')
+            ->leftJoin('c.workers', 'w')
+            ->where('c.educationalCentre = :centre')
+            ->andWhere('l.id = :teacher')
+            ->groupBy('c.id', 'c.name')
+            ->orderBy('c.name', 'ASC')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $r): array => ['id' => $r['id'], 'name' => $r['name'], 'workers' => (int) $r['workers']], $rows);
+    }
+
     /** @return Query<null, Company> */
     public function createByCentreOrderedByNameQuery(EducationalCentre $centre): Query
     {

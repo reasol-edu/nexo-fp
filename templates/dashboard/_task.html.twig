@@ -1,0 +1,37 @@
+{# Una fila de «Atención ahora»: gravedad, frase de acción con número, estancia y plazo, y enlace al filtro. #}
+{% import 'dashboard/_parts.html.twig' as ui %}
+
+{% set stay_url = path('app_stays_show', {id: task.stayId}) %}
+{% if task.key == 'company_without_workers' and task.subjectId %}
+    {% set url = path('app_companies_edit', {id: task.subjectId}) %}
+    {% set cta = 'attention.action.company' %}
+{% elseif task.key == 'supply_deficit' %}
+    {% set url = path('app_stays_new_position', {id: task.stayId}) %}
+    {% set cta = 'attention.action.create' %}
+{% else %}
+    {% set url = task.filter ? stay_url ~ '?filtro=' ~ task.filter : stay_url %}
+    {% set cta = {
+        students_without_position: 'attention.action.assign',
+        missing_tutor: 'attention.action.assign',
+        missing_mentor: 'attention.action.assign',
+        registered_unsigned: 'attention.action.sign',
+        my_unsigned: 'attention.action.sign',
+    }[task.key]|default('attention.action.view') %}
+{% endif %}
+
+<li class="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:gap-4">
+    <div class="shrink-0 sm:w-28">{{ ui.severity(task.severity) }}</div>
+    <div class="min-w-0 sm:flex-1">
+        <p class="text-sm font-medium text-gray-900">
+            {{ ('attention.task.' ~ task.key)|trans({'%count%': task.count, '%subject%': task.subject ?? '', '%extra%': task.extra}, 'dashboard') }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-600">
+            {{ task.stayName }} · {{ ui.when(task.daysToStart) }}
+        </p>
+    </div>
+    <a href="{{ url }}"
+       class="inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-lg border border-plum-200 bg-white px-3.5 py-1.5 text-sm font-medium text-plum-700 hover:bg-plum-50 transition-colors sm:min-h-0">
+        {{ cta|trans({}, 'dashboard') }}
+        <span aria-hidden="true">→</span>
+    </a>
+</li>

@@ -23,4 +23,12 @@ interface AppSettingsInterface
 
     /** Returns the resolved value for a specific centre (centre → global → default, no teacher). */
     public function getForCentre(string $key, EducationalCentre $centre): mixed;
+
+    /**
+     * Resuelve varios ajustes de un centro con una sola consulta (centro → global → predeterminado).
+     *
+     * @param list<string> $keys
+     * @return array<string, mixed> valor de cada clave (null si no existe el ajuste)
+     */
+    public function getManyForCentre(array $keys, EducationalCentre $centre): array;
 }

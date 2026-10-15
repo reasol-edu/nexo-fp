@@ -95,7 +95,29 @@ final class AppSettings implements AppSettingsInterface
             return null;
         }
 
+        return $this->resolveForCentre($key, $this->centreValues->findByCentreIndexedByKey($centre));
+    }
+
+    public function getManyForCentre(array $keys, EducationalCentre $centre): array
+    {
+        $this->ensureBaseLoaded();
+
         $centreMap = $this->centreValues->findByCentreIndexedByKey($centre);
+        $values    = [];
+        foreach ($keys as $key) {
+            $values[$key] = $this->resolveForCentre($key, $centreMap);
+        }
+
+        return $values;
+    }
+
+    /** @param array<string, \App\Entity\CentreSettingValue> $centreMap valores del centro indexados por clave */
+    private function resolveForCentre(string $key, array $centreMap): mixed
+    {
+        $definition = $this->allDefinitions[$key] ?? null;
+        if ($definition === null) {
+            return null;
+        }
 
         $raw = match (true) {
             isset($this->globalMap[$key]) && $this->globalMap[$key]->isLocked()

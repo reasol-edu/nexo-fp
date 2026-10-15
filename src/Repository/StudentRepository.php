@@ -24,6 +24,43 @@ class StudentRepository extends ServiceEntityRepository
         parent::__construct($registry, Student::class);
     }
 
+    /**
+     * Nombre completo («Nombre Apellidos») de los estudiantes indicados, como mucho 200. Se compara de uno en
+     * uno con tipo «uuid» porque `IN (:ids)` falla con ids binarios (MySQL, SQLite).
+     *
+     * @param list<string> $ids
+     * @return array<string, string> id (RFC 4122) → nombre
+     */
+    public function findNamesByIds(array $ids): array
+    {
+        $ids = \array_slice(array_values(array_unique($ids)), 0, 200);
+        if ($ids === []) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('s')->select('s.id AS id', 's.name.firstName AS firstName', 's.name.lastName AS lastName');
+        $or = $qb->expr()->orX();
+        foreach ($ids as $i => $id) {
+            if (\Symfony\Component\Uid\Uuid::isValid($id)) {
+                $or->add('s.id = :id' . $i);
+                $qb->setParameter('id' . $i, $id, 'uuid');
+            }
+        }
+        if ($or->count() === 0) {
+            return [];
+        }
+
+        /** @var list<array{id: mixed, firstName: string, lastName: string}> $rows */
+        $rows = $qb->where($or)->getQuery()->getResult();
+
+        $names = [];
+        foreach ($rows as $row) {
+            $names[(string) $row['id']] = trim($row['firstName'] . ' ' . $row['lastName']);
+        }
+
+        return $names;
+    }
+
     /** Columnas ordenables: clave pública => campo DQL (allowlist contra inyección). */
     private const SORTABLE = [
         'nie' => 's.studentId',

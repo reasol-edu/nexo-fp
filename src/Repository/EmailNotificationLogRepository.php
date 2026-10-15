@@ -102,6 +102,21 @@ class EmailNotificationLogRepository extends ServiceEntityRepository
     }
 
     /** Elimina las entradas anteriores a la fecha dada. Devuelve cuántas. */
+    /** Correos del centro que el servidor rechazó desde la fecha indicada. */
+    public function countFailedSince(EducationalCentre $centre, \DateTimeImmutable $since): int
+    {
+        return (int) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->where('l.educationalCentre = :centre')
+            ->andWhere('l.success = :failed')
+            ->andWhere('l.sentAt >= :since')
+            ->setParameter('centre', $centre->getId(), 'uuid')
+            ->setParameter('failed', false)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function deleteOlderThan(\DateTimeImmutable $cutoff): int
     {
         return $this->createQueryBuilder('l')

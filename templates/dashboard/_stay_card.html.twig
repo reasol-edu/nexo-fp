@@ -1,0 +1,45 @@
+{# Tarjeta de una estancia no finalizada: periodo, avance en 4 etapas y siguiente paso. #}
+{% import 'dashboard/_parts.html.twig' as ui %}
+
+<article class="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+    <header class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+            <h3 class="text-sm font-semibold text-gray-900">
+                <a href="{{ path('app_stays_show', {id: card.id}) }}" class="hover:text-plum-700 transition-colors">{{ card.name }}</a>
+            </h3>
+            <p class="mt-0.5 text-xs text-gray-600">{{ card.programmeNames }}</p>
+        </div>
+        {% if card.worst %}<div class="shrink-0">{{ ui.severity(card.worst) }}</div>{% endif %}
+    </header>
+
+    <div>
+        <p class="flex justify-between gap-2 text-xs text-gray-600">
+            <span>{{ card.start|date('d/m/Y') }} – {{ card.end|date('d/m/Y') }}</span>
+            <span>{{ ui.when(card.daysToStart) }}</span>
+        </p>
+        {% if card.current %}
+            <div class="mt-1.5 h-1.5 rounded-full bg-gray-100" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ card.elapsedPercent }}"
+                 aria-label="{{ 'stays.elapsed'|trans({'%percent%': card.elapsedPercent}, 'dashboard')|e('html_attr') }}">
+                <div class="h-full rounded-full bg-gray-400" style="width: {{ card.elapsedPercent }}%"></div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if card.students > 0 %}
+        <div class="grid gap-1.5">
+            {% for step in card.steps %}
+                {{ ui.meter(('funnel.step.' ~ step.key)|trans({}, 'dashboard'), step.done, step.total, loop.index0) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <p class="text-sm font-medium text-plum-700">
+        {% if card.next.filter %}
+            <a href="{{ path('app_stays_show', {id: card.id, filtro: card.next.filter}) }}" class="hover:underline">
+                ▸ {{ ('stays.progress.next_step.' ~ card.next.key)|trans({'%count%': card.next.count}, 'stays') }}
+            </a>
+        {% else %}
+            ▸ {{ ('stays.progress.next_step.' ~ card.next.key)|trans({'%count%': card.next.count}, 'stays') }}
+        {% endif %}
+    </p>
+</article>

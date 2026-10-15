@@ -25,6 +25,29 @@ class GroupRepository extends ServiceEntityRepository
     }
 
     /**
+     * Grupos del curso en los que el docente es tutor/a o imparte clase (una consulta).
+     *
+     * @return list<array{id: mixed, name: string, programme: mixed}>
+     */
+    public function findTaughtByTeacherInYear(AcademicYear $year, Teacher $teacher): array
+    {
+        /** @var list<array{id: mixed, name: string, programme: mixed}> $rows */
+        $rows = $this->createQueryBuilder('g')
+            ->select('DISTINCT g.id AS id', 'g.name AS name', 'pr.id AS programme')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'pr')
+            ->where('pr.academicYear = :year')
+            ->andWhere(':teacher MEMBER OF g.teachers OR :teacher MEMBER OF g.tutors')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->orderBy('g.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    /**
      * Number of groups per level, keyed by level UUID (RFC4122). Single grouped query.
      *
      * @param  ProgrammeYear[] $levels

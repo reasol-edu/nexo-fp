@@ -19,6 +19,43 @@ class WorkcenterRepository extends ServiceEntityRepository
         parent::__construct($registry, Workcenter::class);
     }
 
+    /**
+     * Nombre de la empresa y del centro de trabajo de los indicados («Empresa — Centro»), como mucho 200.
+     * Se compara de uno en uno con tipo «uuid» porque `IN (:ids)` falla con ids binarios.
+     *
+     * @param list<string> $ids
+     * @return array<string, string> id (RFC 4122) → «Empresa — Centro»
+     */
+    public function findLabelsByIds(array $ids): array
+    {
+        $ids = \array_slice(array_values(array_unique($ids)), 0, 200);
+        if ($ids === []) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('w')->select('w.id AS id', 'w.name AS name', 'c.name AS company')->join('w.company', 'c');
+        $or = $qb->expr()->orX();
+        foreach ($ids as $i => $id) {
+            if (\Symfony\Component\Uid\Uuid::isValid($id)) {
+                $or->add('w.id = :id' . $i);
+                $qb->setParameter('id' . $i, $id, 'uuid');
+            }
+        }
+        if ($or->count() === 0) {
+            return [];
+        }
+
+        /** @var list<array{id: mixed, name: string, company: string}> $rows */
+        $rows = $qb->where($or)->getQuery()->getResult();
+
+        $labels = [];
+        foreach ($rows as $row) {
+            $labels[(string) $row['id']] = $row['company'] . ' — ' . $row['name'];
+        }
+
+        return $labels;
+    }
+
     /** @return Workcenter[] */
     public function findByCompanyOrderedByName(Company $company): array
     {

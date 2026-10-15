@@ -123,7 +123,7 @@ afectadas.
 
 Sobre la lista de estudiantes hay **filtros rápidos** (*Sin puesto*, *Sin tutor/a docente*, *Sin tutor/a de
 empresa*, *Sin firmar* y *Puestos libres*) con el número de filas de cada uno. La campana de notificaciones
-y el bloque **Pendientes** del inicio abren la estancia con el filtro ya aplicado.
+y el bloque **Atención ahora** del inicio abren la estancia con el filtro ya aplicado.
 
 !!! tip "Ten en cuenta"
     La aplicación bloquea las transiciones inválidas y avisa de lo que falta en cada momento.

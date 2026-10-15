@@ -22,6 +22,29 @@ class StayTeacherHoursRepository extends ServiceEntityRepository
     }
 
     /**
+     * Horas dualizadas de todas las estancias del curso con «Calcular asignaciones por docente» (una consulta).
+     *
+     * @return list<array{stay: mixed, grp: mixed, teacher: mixed, hours: int}>
+     */
+    public function findRowsByYear(\App\Entity\AcademicYear $year): array
+    {
+        /** @var list<array{stay: mixed, grp: mixed, teacher: mixed, hours: int}> $rows */
+        $rows = $this->createQueryBuilder('h')
+            ->select('s.id AS stay', 'g.id AS grp', 't.id AS teacher', 'h.hours AS hours')
+            ->join('h.stay', 's')
+            ->join('h.group', 'g')
+            ->join('h.teacher', 't')
+            ->where('s.academicYear = :year')
+            ->andWhere('s.calculateByTeacher = :on')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('on', true)
+            ->getQuery()
+            ->getResult();
+
+        return $rows;
+    }
+
+    /**
      * Horas de la estancia indexadas por grupo y docente: `[groupId][teacherId] => horas`.
      *
      * @return array<string, array<string, int>>
