@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.16.0] - 2026-10-18
+
 ### Added
 
-- Nueva variable opcional `APP_EXTERNAL_URL_PROXY` para los servidores que no pueden conectar directamente con Séneca: si no está vacía, la validación IdEA se hace a través de ese proxy (p. ej. `http://proxy.centro.local:3128`). Vacía por defecto (conexión directa); en `config/services.yaml` tiene valor por defecto para no romper actualizaciones de despliegues que no la definen.
+- Nueva variable opcional `APP_EXTERNAL_URL_PROXY` para los servidores que no pueden conectar directamente con Séneca: si no está vacía, la validación IdEA se hace a través de ese proxy (p. ej. `http://proxy.centro.local:3128`). Está documentada en el manual (Despliegue y Acceso a la plataforma) y los scripts de arranque de los binarios y de Ubuntu Server la pasan a la aplicación. Vacía por defecto (conexión directa); en `config/services.yaml` tiene valor por defecto para no romper actualizaciones de despliegues que no la definen.
 
 ## [2.15.1] - 2026-10-18
 
