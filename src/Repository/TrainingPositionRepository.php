@@ -70,7 +70,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
             $qb->andWhere(
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-                    $this->stayProgrammeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
+                    $this->stayProgrammeExists('UNACCENT(LOWER({p}.name)) LIKE UNACCENT(LOWER(:q))'),
                     'UNACCENT(LOWER(st.name.lastName)) LIKE UNACCENT(LOWER(:q))',
                     'UNACCENT(LOWER(st.name.firstName)) LIKE UNACCENT(LOWER(:q))',
                     'EXISTS(SELECT 1 FROM App\Entity\Group sg JOIN sg.programmeYear sgpy WHERE sgpy MEMBER OF tp.programmeYears AND UNACCENT(LOWER(sg.name)) LIKE UNACCENT(LOWER(:q)))',
@@ -79,12 +79,12 @@ class TrainingPositionRepository extends ServiceEntityRepository
         }
 
         if ($familyId !== '') {
-            $qb->andWhere($this->stayProgrammeExists('xf.id = :familyId'))
+            $qb->andWhere($this->stayProgrammeExists('{f}.id = :familyId'))
                ->setParameter('familyId', $familyId, 'uuid');
         }
 
         if ($programmeId !== '') {
-            $qb->andWhere($this->stayProgrammeExists('xp.id = :programmeId'))
+            $qb->andWhere($this->stayProgrammeExists('{p}.id = :programmeId'))
                ->setParameter('programmeId', $programmeId, 'uuid');
         }
 
@@ -261,13 +261,19 @@ class TrainingPositionRepository extends ServiceEntityRepository
 
     /**
      * Condición EXISTS sobre las enseñanzas de la estancia `s`. Dentro de $condition están
-     * disponibles los alias `xp` (enseñanza) y `xf` (su familia profesional).
+     * disponibles los marcadores `{p}` (enseñanza) y `{f}` (su familia profesional).
      */
     private function stayProgrammeExists(string $condition): string
     {
-        return 'EXISTS(SELECT 1 FROM App\Entity\Stay xs JOIN xs.programmes xp JOIN xp.professionalFamily xf'
-            . ' WHERE xs = s AND (' . $condition . '))';
+        // Los alias de DQL son únicos en toda la consulta: cada subconsulta lleva los suyos.
+        $n = ++$this->existsCounter;
+
+        return 'EXISTS(SELECT 1 FROM App\Entity\Stay xs' . $n . ' JOIN xs' . $n . '.programmes xp' . $n
+            . ' JOIN xp' . $n . '.professionalFamily xf' . $n
+            . ' WHERE xs' . $n . ' = s AND (' . strtr($condition, ['{p}' => 'xp' . $n, '{f}' => 'xf' . $n]) . '))';
     }
+
+    private int $existsCounter = 0;
 
     private function addViewerFilter(QueryBuilder $qb, ?Teacher $viewer): void
     {

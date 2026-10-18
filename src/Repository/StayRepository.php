@@ -55,18 +55,18 @@ class StayRepository extends ServiceEntityRepository
             $qb->andWhere(
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-                    $this->programmeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
+                    $this->programmeExists('UNACCENT(LOWER({p}.name)) LIKE UNACCENT(LOWER(:q))'),
                 )
             )->setParameter('q', $q);
         }
 
         if ($familyId !== '') {
-            $qb->andWhere($this->programmeExists('xf.id = :familyId'))
+            $qb->andWhere($this->programmeExists('{f}.id = :familyId'))
                ->setParameter('familyId', $familyId, 'uuid');
         }
 
         if ($programmeId !== '') {
-            $qb->andWhere($this->programmeExists('xp.id = :programmeId'))
+            $qb->andWhere($this->programmeExists('{p}.id = :programmeId'))
                ->setParameter('programmeId', $programmeId, 'uuid');
         }
 
@@ -618,8 +618,8 @@ class StayRepository extends ServiceEntityRepository
             ->setMaxResults($limit);
         $qb->andWhere($qb->expr()->orX(
             'UNACCENT(LOWER(s.name)) LIKE UNACCENT(LOWER(:q))',
-            $this->programmeExists('UNACCENT(LOWER(xp.name)) LIKE UNACCENT(LOWER(:q))'),
-        ));
+            $this->programmeExists('UNACCENT(LOWER({p}.name)) LIKE UNACCENT(LOWER(:q))'),
+));
         $this->addViewerFilter($qb, $viewer);
 
         /** @var list<Stay> $result */
@@ -779,9 +779,16 @@ class StayRepository extends ServiceEntityRepository
      */
     private function programmeExists(string $condition): string
     {
-        return 'EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp JOIN xp.professionalFamily xf'
-            . ' WHERE xs = s AND (' . $condition . '))';
+        // Los alias de DQL son únicos en toda la consulta: cada subconsulta lleva los suyos, para poder
+        // combinar búsqueda, familia y enseñanza. La condición se escribe con {p} (enseñanza) y {f} (familia).
+        $n = ++$this->existsCounter;
+
+        return 'EXISTS(SELECT 1 FROM ' . Stay::class . ' xs' . $n . ' JOIN xs' . $n . '.programmes xp' . $n
+            . ' JOIN xp' . $n . '.professionalFamily xf' . $n
+            . ' WHERE xs' . $n . ' = s AND (' . strtr($condition, ['{p}' => 'xp' . $n, '{f}' => 'xf' . $n]) . '))';
     }
+
+    private int $existsCounter = 0;
 
     /**
      * @param bool $includeTutored también las estancias donde el docente es tutor/a dual docente de algún

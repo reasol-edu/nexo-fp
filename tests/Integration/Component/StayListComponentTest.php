@@ -306,6 +306,27 @@ class StayListComponentTest extends ControllerTestCase
         self::assertSame($programme->getId()->toRfc4122(), $component->programmeId);
     }
 
+    public function testListingWithFamilyAndProgrammeFiltersTogetherDoesNotFail(): void
+    {
+        $centre = $this->makeCentreWithStay('42010005', 'Estancia D', '-5 days', '+5 days');
+        $year   = $centre->requireActiveAcademicYear();
+
+        $family    = self::getContainer()->get(\App\Repository\ProfessionalFamilyRepository::class)->findByAcademicYearFiltered($year, '')[0];
+        $programme = self::getContainer()->get(\App\Repository\ProgrammeRepository::class)
+            ->findByAcademicYearFilteredByFamily($year, $family->getId()->toRfc4122())[0];
+
+        $component              = $this->makeComponent($centre);
+        $component->familyId    = $family->getId()->toRfc4122();
+        $component->programmeId = $programme->getId()->toRfc4122();
+        $component->mount();
+
+        self::assertCount(1, $component->getItems());
+        $component->getStats();
+        $component->getPendingItems();
+        $component->getPendingCount();
+        self::assertNotEmpty($component->getAvailableProgrammes());
+    }
+
     public function testMountClearsBothWhenActiveYearIsNull(): void
     {
         // Centro sin curso activo: cualquier UUID se descarta sin consultar nada.

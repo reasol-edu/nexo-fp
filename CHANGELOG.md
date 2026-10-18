@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Filtrar el listado de estancias por familia profesional y por enseñanza a la vez (o combinar la búsqueda con cualquiera de los dos filtros) provocaba un error 500: las subconsultas compartían alias de DQL. Lo mismo ocurría en la pestaña de firmas pendientes. Cada subconsulta usa ahora los suyos y una prueba cubre la combinación.
+
 ## [2.15.0] - 2026-10-16
 
 ### Changed
