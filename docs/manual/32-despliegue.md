@@ -206,6 +206,7 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `APP_EXTERNAL_ENABLED` | Activar autenticación iSéneca (ver [Acceso a la plataforma](11-acceso-a-la-plataforma.md)) | `true` |
 | `APP_EXTERNAL_URL` | URL del servicio iSéneca | *(URL oficial)* |
 | `APP_EXTERNAL_URL_FORCE_SECURITY` | Verificar certificado TLS de iSéneca | `true` |
+| `APP_EXTERNAL_URL_PROXY` | Proxy por el que se conecta con iSéneca cuando el servidor no tiene salida directa (p. ej. `http://proxy.centro.local:3128`, admite `usuario:clave@`). Vacío: conexión directa | *(vacío)* |
 | `MAILER_DSN` | Transporte de correo para las [notificaciones](33-configuracion-del-correo.md) | `null://null` (desactivado) |
 | `MAILER_FROM` | Dirección remitente de los emails automáticos | `no-responder@example.com` |
 | `MESSENGER_TRANSPORT_DSN` | Cola de envío asíncrono de correos | `doctrine://default?auto_setup=0` |

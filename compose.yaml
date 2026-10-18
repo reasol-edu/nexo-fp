@@ -28,6 +28,7 @@ x-app-environment: &app-environment
   APP_EXTERNAL_ENABLED:         "${APP_EXTERNAL_ENABLED:-true}"
   APP_EXTERNAL_URL:             "${APP_EXTERNAL_URL:-https://seneca.juntadeandalucia.es/seneca/jsp/ComprobarUsuarioExt.jsp}"
   APP_EXTERNAL_URL_FORCE_SECURITY: "${APP_EXTERNAL_URL_FORCE_SECURITY:-true}"
+  APP_EXTERNAL_URL_PROXY:       "${APP_EXTERNAL_URL_PROXY:-}"
   # Mercure (sincronización en vivo). El hub va embebido en FrankenPHP (servicio
   # «app»); no hace falta un contenedor aparte. MERCURE_URL es la publicación
   # interna app→hub; MERCURE_PUBLIC_URL es relativa (mismo origen) para el navegador.

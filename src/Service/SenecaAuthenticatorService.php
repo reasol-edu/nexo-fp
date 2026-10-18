@@ -33,6 +33,10 @@ class SenecaAuthenticatorService
         private readonly bool $forceSecurity,
         #[Autowire(env: 'bool:APP_EXTERNAL_ENABLED')]
         private readonly bool $enabled,
+        // Proxy opcional para los servidores que no pueden conectar directamente con iSéneca
+        // (p. ej. «http://proxy.centro.local:3128»). Vacío: conexión directa.
+        #[Autowire(env: 'APP_EXTERNAL_URL_PROXY')]
+        private readonly string $proxy,
         private readonly LoggerInterface $logger,
     ) {
         if (!$this->forceSecurity) {
@@ -152,6 +156,9 @@ class SenecaAuthenticatorService
         curl_setopt($curl, CURLOPT_MAXREDIRS, 2);
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        if (trim($this->proxy) !== '') {
+            curl_setopt($curl, CURLOPT_PROXY, trim($this->proxy));
+        }
         curl_setopt(
             $curl,
             CURLOPT_USERAGENT,

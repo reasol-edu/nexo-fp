@@ -14,7 +14,30 @@ final class SenecaAuthenticatorServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->service = new SenecaAuthenticatorService('https://example.invalid/', true, true, new NullLogger());
+        $this->service = new SenecaAuthenticatorService('https://example.invalid/', true, true, '', new NullLogger());
+    }
+
+    public function testTheConnectionGoesThroughTheProxyWhenOneIsConfigured(): void
+    {
+        $errors = [];
+        $logger = new class ($errors) extends \Psr\Log\AbstractLogger {
+            /** @param list<string> $errors */
+            public function __construct(private array &$errors) {}
+
+            public function log($level, \Stringable|string $message, array $context = []): void
+            {
+                $this->errors[] = (string) ($context['error'] ?? '');
+            }
+        };
+
+        // Un proxy inexistente en el puerto 1: el error nombra al proxy, no al servidor de destino.
+        try {
+            (new SenecaAuthenticatorService('http://seneca.invalid/', true, true, 'http://127.0.0.1:1', $logger))
+                ->checkUserCredentials('usuario', 'clave');
+        } catch (\Throwable) {
+        }
+
+        self::assertStringContainsString('127.0.0.1', implode(' ', $errors), 'la conexión debe intentarse contra el proxy');
     }
 
     public function testAcceptsACorrectResponse(): void

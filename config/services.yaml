@@ -26,6 +26,7 @@ parameters:
     # sin estos valores, actualizar rompería la aplicación («Environment variable not found»).
     # Una variable definida en .env, .env.local o en el entorno tiene siempre prioridad.
     env(APP_PASSWORD_BREACH_CHECK): 'false'
+    env(APP_EXTERNAL_URL_PROXY): ''
 
 services:
     # default configuration for services in *this* file
