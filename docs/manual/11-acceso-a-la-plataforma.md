@@ -12,7 +12,9 @@ valida la contraseña**, según el **tipo de acceso** que la administración asi
   también puede rechazarse una contraseña que aparezca en filtraciones de datos conocidas.
 - **Acceso externo (Séneca/iSéneca).** Entras con tu **usuario y contraseña de Séneca**, que se validan
   contra el servicio **iSéneca** de la Junta de Andalucía. La contraseña no se guarda en Nexo FP, así que
-  el restablecimiento por correo **no aplica**: se gestiona desde Séneca.
+  el restablecimiento por correo **no aplica**: se gestiona desde Séneca. Si el servidor no puede
+  conectar directamente con Séneca, quien despliega puede configurar un
+  [proxy](32-despliegue.md#proxy-para-iseneca).
 
 Si no sabes qué tipo de acceso tienes o no consigues entrar, pregunta a la persona que administra Nexo FP
 en tu centro.

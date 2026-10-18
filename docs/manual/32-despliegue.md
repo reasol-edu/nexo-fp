@@ -219,6 +219,24 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `APP_PASSWORD_BREACH_CHECK` | Si es `true`, una contraseña nueva tampoco puede figurar en filtraciones de datos conocidas. Consulta el servicio externo «Have I Been Pwned» con k-anonimato (nunca se envía la contraseña) y se omite en pocos segundos si el servidor no tiene salida a Internet | `false` |
 | `SYMFONY_TRUSTED_PROXIES` | IPs del proxy inverso desde el que recibe peticiones la aplicación (p. ej. nginx, Caddy). Necesario para que el registro muestre la IP real del usuario. Déjalo sin definir si no usas proxy | *(sin definir)* |
 
+### Servidor sin salida directa a Séneca {#proxy-para-iseneca}
+
+El acceso con usuario y contraseña de Séneca necesita que el servidor de Nexo FP conecte con el servicio
+iSéneca de la Junta de Andalucía. Si la red del servidor no permite esa conexión directa (por ejemplo, en
+una red de centro que obliga a salir por un proxy), define `APP_EXTERNAL_URL_PROXY` con la dirección del
+proxy y la validación se hará a través de él:
+
+```
+APP_EXTERNAL_URL_PROXY=http://proxy.centro.local:3128
+```
+
+Si el proxy exige autenticación, se indica en la propia dirección (`http://usuario:clave@proxy.centro.local:3128`).
+Déjala vacía (valor por defecto) para conectar directamente. En Docker se define en
+`.env.local`; en el binario nativo y en Ubuntu Server, como variable de entorno antes de lanzar el script. Si tras configurarlo
+no consigues entrar con Séneca, el motivo exacto de la conexión fallida queda en el registro de la
+aplicación (`iSéneca cURL error`). Esta variable solo afecta a iSéneca: la comprobación opcional de
+contraseñas filtradas (`APP_PASSWORD_BREACH_CHECK`) no usa el proxy.
+
 ### Sincronización en vivo (Mercure) {#sincronizacion-en-vivo-mercure}
 
 La pantalla de estancia se actualiza sola cuando varias personas gestionan los puestos formativos a la
