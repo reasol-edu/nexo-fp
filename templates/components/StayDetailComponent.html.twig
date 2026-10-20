@@ -2,15 +2,15 @@
 
 {% macro state_badge(state) %}
     {% if state.value == 'PENDING' %}
-        <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
             {{ 'stays.state.pending'|trans({}, 'stays') }}
         </span>
     {% elseif state.value == 'DONE' %}
-        <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
             {{ 'stays.state.done'|trans({}, 'stays') }}
         </span>
     {% else %}
-        <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
             {{ 'stays.state.draft'|trans({}, 'stays') }}
         </span>
     {% endif %}
@@ -215,7 +215,7 @@
                                 {{ 'stays.period.badge.future'|trans({}, 'stays') }}
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                            <span class="inline-flex items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                                 {{ 'stays.period.badge.past'|trans({}, 'stays') }}
                             </span>
                         {% endif %}
@@ -666,15 +666,16 @@
                                       {% endif %}
                                     </td>
 
-                                    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[9rem]">
+                                    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[13rem]">
                                         {% if position %}
                                             {{ _self.state_cell(position, manageable_position_ids[position.id.toRfc4122] is defined, stay.id.toRfc4122) }}
                                         {% endif %}
                                     </td>
 
                                     {% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}
-                                    <td class="px-3 py-4 align-top text-right w-24">
-                                        <div class="inline-flex items-center gap-1">
+                                    <td class="px-3 py-4 align-top text-right w-14">
+                                        <div class="inline-flex items-center gap-1 sm:flex-col">
+                                            {# En columna desde 640 px (liberan ancho para el estado); en tarjeta, en fila al pie. #}
                                             {% if position.state.value == 'DRAFT' %}
                                                 {# Sin diálogo de confirmación: el aviso del cambio ofrece «Deshacer». #}
                                                 <button type="button"
@@ -712,7 +713,7 @@
                                         </div>
                                     </td>
                                     {% elseif can_manage or manageable_position_ids is not empty %}
-                                    <td class="px-3 py-4 w-24"></td>
+                                    <td class="px-3 py-4 w-14"></td>
                                     {% endif %}
 
                                 </tr>
@@ -874,14 +875,15 @@
                                       </div>
                                       {% endif %}
                                     </td>
-                                    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[9rem]">
+                                    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[13rem]">
                                         {% if position %}
                                             {{ _self.state_cell(position, manageable_position_ids[position.id.toRfc4122] is defined, stay.id.toRfc4122) }}
                                         {% endif %}
                                     </td>
                                     {% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}
-                                    <td class="px-3 py-4 align-top text-right w-24">
-                                        <div class="inline-flex items-center gap-1">
+                                    <td class="px-3 py-4 align-top text-right w-14">
+                                        <div class="inline-flex items-center gap-1 sm:flex-col">
+                                            {# En columna desde 640 px (liberan ancho para el estado); en tarjeta, en fila al pie. #}
                                             {% if position.state.value == 'DRAFT' %}
                                                 {# Sin diálogo de confirmación: el aviso del cambio ofrece «Deshacer». #}
                                                 <button type="button"
@@ -919,7 +921,7 @@
                                         </div>
                                     </td>
                                     {% elseif can_manage or manageable_position_ids is not empty %}
-                                    <td class="px-3 py-4 w-24"></td>
+                                    <td class="px-3 py-4 w-14"></td>
                                     {% endif %}
                                 </tr>
                             {% endfor %}
