@@ -58,7 +58,8 @@
             {% endif %}
         </div>
         {% if can_edit %}
-            <div class="flex flex-wrap gap-1.5">
+            {# Rejilla de una columna: si hay varios botones, todos miden lo que el más ancho. #}
+            <div class="inline-grid gap-1.5">
                 {% if st == 'DRAFT' %}
                     {% if blocked %}
                         <span class="inline-flex items-center gap-1 text-xs text-amber-700"
@@ -74,7 +75,7 @@
                     {{ _self.state_button(position, 'DRAFT', 'stays.state_action.to_draft', false) }}
                 {% else %}
                     <button type="button"
-                            class="inline-flex items-center rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                            class="inline-flex items-center justify-center rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
                             data-action="live#action" data-live-action-param="setSigned"
                             data-live-position-id-param="{{ position.id.toRfc4122 }}"
                             data-live-signed-param="{{ position.signed ? 'false' : 'true' }}">
@@ -89,7 +90,7 @@
 
 {% macro state_button(position, target, label, primary) %}
     <button type="button"
-            class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors
+            class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors
                    {{ primary ? 'border-plum-200 bg-plum-50 text-plum-700 hover:bg-plum-100' : 'border-gray-200 text-gray-500 hover:bg-gray-50' }}"
             data-action="live#action" data-live-action-param="changeState"
             data-live-position-id-param="{{ position.id.toRfc4122 }}"
