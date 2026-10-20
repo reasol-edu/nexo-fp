@@ -1,0 +1,83 @@
+{# Formulario de la ficha del estudiante en el curso. Se usa dentro del diálogo y en la página completa. #}
+{% set seg = 'cursor-pointer select-none rounded-[10px] px-3.5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 has-[:checked]:bg-plum-600 has-[:checked]:text-white has-[:checked]:shadow-xs has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-plum-500 has-[:focus-visible]:ring-offset-1' %}
+<form method="post" action="{{ path('app_student_profile', {id: student.id.toRfc4122}) }}" class="space-y-5" data-student-profile-form>
+    <input type="hidden" name="_token" value="{{ csrf_token('student_profile_' ~ student.id.toRfc4122) }}">
+    <input type="hidden" name="return" value="{{ return }}">
+
+    <div>
+        <h2 class="text-base font-semibold text-gray-900" id="student-profile-title">{{ student.name.full() }}</h2>
+        <p class="mt-0.5 text-xs text-gray-500">{{ 'student_profile.subtitle'|trans({}, 'stays') }}</p>
+    </div>
+
+    <twig:Form:YesNo name="has_nuss" :value="values.has_nuss"
+        label="{{ 'student_profile.field.nuss'|trans({}, 'stays') }}"
+        help="{{ 'student_profile.field.nuss_help'|trans({}, 'stays') }}" />
+
+    <div class="group space-y-3">
+        <twig:Form:YesNo name="takes_ffeoe" :value="values.takes_ffeoe"
+            label="{{ 'student_profile.field.takes_ffeoe'|trans({}, 'stays') }}" />
+        <div class="hidden group-has-[[name=takes\_ffeoe][value='0']:checked]:block">
+            <twig:Form:Textarea id="sp-reason" name="exclusion_reason" rows="2"
+                label="{{ 'student_profile.field.reason'|trans({}, 'stays') }}"
+                help="{{ 'student_profile.field.reason_help'|trans({}, 'stays') }}"
+                value="{{ values.exclusion_reason }}" :error="errors.exclusion_reason ?? null" />
+        </div>
+    </div>
+
+    <twig:Form:YesNo name="has_car" :value="values.has_car"
+        label="{{ 'student_profile.field.car'|trans({}, 'stays') }}" />
+
+    <div class="group space-y-3">
+        <twig:Form:YesNo name="brings_company" :value="values.brings_company"
+            label="{{ 'student_profile.field.brings_company'|trans({}, 'stays') }}" />
+        <div class="hidden group-has-[[name=brings\_company][value='1']:checked]:block">
+            <twig:Form:Field id="sp-company" name="company_name" type="text"
+                label="{{ 'student_profile.field.company'|trans({}, 'stays') }}"
+                value="{{ values.company_name }}" :error="errors.company_name ?? null" />
+        </div>
+    </div>
+
+    <fieldset>
+        <legend class="block text-sm font-medium text-gray-700 mb-1.5">{{ 'student_profile.field.attitude'|trans({}, 'stays') }}</legend>
+        <div class="inline-flex flex-wrap rounded-xl border p-0.5 {{ errors.attitude is defined ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-100' }}">
+            <label class="{{ seg }}">
+                <input type="radio" name="attitude" value="" class="sr-only" {{ values.attitude == '' ? 'checked' : '' }}>
+                {{ 'student_profile.field.attitude_none'|trans({}, 'stays') }}
+            </label>
+            {% for n in 1..5 %}
+                <label class="{{ seg }}">
+                    <input type="radio" name="attitude" value="{{ n }}" class="sr-only" {{ values.attitude == n|trim ? 'checked' : '' }}>
+                    {{ n }}
+                </label>
+            {% endfor %}
+        </div>
+        <p class="mt-1.5 text-xs text-gray-400">{{ 'student_profile.field.attitude_help'|trans({}, 'stays') }}</p>
+        {% if errors.attitude is defined %}<p class="mt-1.5 text-xs text-red-600">{{ errors.attitude }}</p>{% endif %}
+    </fieldset>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <twig:Form:Field id="sp-residence" name="residence_city" type="text"
+            label="{{ 'student_profile.field.residence'|trans({}, 'stays') }}"
+            value="{{ values.residence_city }}" />
+        <twig:Form:Field id="sp-preferred" name="preferred_city" type="text"
+            label="{{ 'student_profile.field.preferred'|trans({}, 'stays') }}"
+            value="{{ values.preferred_city }}" />
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-1">
+        {% if inDialog %}
+            <button type="button" data-student-profile-close
+                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                {{ 'ui.cancel'|trans({}, 'messages') }}
+            </button>
+        {% else %}
+            <a href="{{ return }}" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                {{ 'ui.cancel'|trans({}, 'messages') }}
+            </a>
+        {% endif %}
+        <button type="submit"
+                class="rounded-lg border border-plum-600 bg-plum-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:border-plum-700 hover:bg-plum-700 transition-colors">
+            {{ 'student_profile.save'|trans({}, 'stays') }}
+        </button>
+    </div>
+</form>

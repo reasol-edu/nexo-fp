@@ -18,6 +18,8 @@ final readonly class Task
     public const COMPANY_WITHOUT_WORKERS   = 'company_without_workers';
     public const MY_UNSIGNED               = 'my_unsigned';
     public const GROUP_WITHOUT_POSITION    = 'group_without_position';
+    public const STUDENTS_WITHOUT_NUSS     = 'students_without_nuss';
+    public const GROUP_WITHOUT_NUSS        = 'group_without_nuss';
 
     public function __construct(
         public string $key,

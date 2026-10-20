@@ -7,10 +7,15 @@ namespace App\Dashboard\Facts;
 /** Un estudiante matriculado en una estancia, con los grupos que tiene en las enseñanzas de ésta. */
 final readonly class StudentFacts
 {
-    /** @param list<LevelFacts> $levels vacío si no tiene grupo en ninguna enseñanza de la estancia */
+    /**
+     * @param list<LevelFacts> $levels      vacío si no tiene grupo en ninguna enseñanza de la estancia
+     * @param bool             $missingNuss consta en su ficha del curso que no dispone de NUSS
+     *                                      (el alumnado que no realiza la FFEOE ni llega a cargarse)
+     */
     public function __construct(
         public string $id,
         public array $levels,
+        public bool $missingNuss = false,
     ) {}
 
     /** @return list<string> */

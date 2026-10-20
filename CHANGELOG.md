@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ficha del estudiante en el curso, con datos que valen solo para ese curso (empieza vacía cada curso): si dispone de **NUSS** (sí / no / sin informar), si **realiza la FFEOE** (con el motivo si no la realiza), si dispone de **coche**, si **aporta empresa** (y cuál), **actitud** de 1 a 5 (opcional), **localidad de residencia** y **localidad preferente**. Se edita en un diálogo desde el lápiz de cada estudiante, con selectores dobles Sí / No. La editan la administración del centro, la coordinación de las enseñanzas del estudiante, la jefatura de su familia y la tutoría de sus grupos; la actitud solo la ven quienes pueden editar la ficha. Un curso anterior es de solo lectura.
+- La lista de estudiantes de la estancia destaca solo lo que merece atención: «Sin NUSS» en rojo (si realiza la FFEOE), «No realiza FFEOE» en gris (con el motivo), la empresa aportada, el coche y las localidades. Dos filtros rápidos nuevos, *Sin NUSS* y *No realizan FFEOE*, también en Centro educativo → Estudiantes, y una tarea «Atención ahora» para los estudiantes sin NUSS.
+- La importación de estudiantes lee las columnas opcionales `NºSeg.Social` (con valor: dispone de NUSS; vacía: sin NUSS; el número no se guarda) y `Localidad de residencia`; la vista previa avisa de cuántos quedan sin NUSS. Los datos manuales de la ficha no se tocan al reimportar. La plantilla CSV incluye las dos columnas.
+- Cuando hay estudiantes que no realizan la FFEOE y siguen en la estancia, un aviso ofrece **quitarlos de la estancia** de una vez (solo a los que no tienen puesto). Al asignar puesto a quien no tiene NUSS se pide confirmación.
+- El Excel de la estancia incluye las columnas NUSS, Realiza FFEOE, Coche, Empresa aportada y las dos localidades (nunca la actitud).
+
+### Changed
+
+- Quien no realiza la FFEOE deja de contar como «sin puesto» y sale del avance, la cobertura, los avisos y el reparto de tutorías por docente; no se le puede asignar un puesto mientras no cambie su ficha.
+- El NIE ya no se muestra en los listados de la interfaz (lista de la estancia, matrícula de la estancia, lista de estudiantes, selector de estudiante del puesto y búsqueda global): solo en la ficha del estudiante. Las exportaciones lo siguen incluyendo.
+
 ## [2.16.0] - 2026-10-18
 
 ### Added

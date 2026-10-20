@@ -167,6 +167,11 @@ final class DashboardBuilder
 
                 $withoutIds = array_diff_key($c['managed'], $c['byStudent']);
                 $add(Task::STUDENTS_WITHOUT_POSITION, $severity, \count($withoutIds), 'sin-puesto');
+                // Realizan la FFEOE pero consta que no tienen NUSS: sin él no pueden hacer la estancia.
+                $add(Task::STUDENTS_WITHOUT_NUSS, $severity, $this->count(
+                    array_keys($c['managed']),
+                    static fn (string|int $id): bool => ($facts->students[$stay->id][(string) $id] ?? null)?->missingNuss === true,
+                ), 'sin-nuss');
                 $add(Task::MISSING_TUTOR, $severity, $this->count($managedPositions, static fn (PositionFacts $p): bool => $p->tutorId === null), 'sin-tutor');
                 $add(Task::MISSING_MENTOR, $severity, $this->count($managedPositions, static fn (PositionFacts $p): bool => $p->mentorId === null), 'sin-empresa');
                 $add(Task::REGISTERED_UNSIGNED, $severity, $this->count($managedPositions, static fn (PositionFacts $p): bool => $p->isRegistered() && !$p->signed), 'sin-firmar');
@@ -187,9 +192,20 @@ final class DashboardBuilder
             if ($scope->teaches()) {
                 $groupNames = [];
                 $without    = 0;
+                $nussNames  = [];
+                $noNuss     = 0;
                 foreach ($facts->students[$stay->id] ?? [] as $studentId => $student) {
                     $mine = array_filter($student->levels, static fn ($l): bool => \in_array($l->groupId, $scope->groupIds(), true));
-                    if ($mine === [] || isset($c['byStudent'][(string) $studentId])) {
+                    if ($mine === []) {
+                        continue;
+                    }
+                    if ($student->missingNuss) {
+                        ++$noNuss;
+                        foreach ($mine as $level) {
+                            $nussNames[$level->groupName] = true;
+                        }
+                    }
+                    if (isset($c['byStudent'][(string) $studentId])) {
                         continue;
                     }
                     ++$without;
@@ -198,6 +214,7 @@ final class DashboardBuilder
                     }
                 }
                 $add(Task::GROUP_WITHOUT_POSITION, $severity, $without, 'sin-puesto', implode(', ', array_keys($groupNames)));
+                $add(Task::GROUP_WITHOUT_NUSS, $severity, $noNuss, 'sin-nuss', implode(', ', array_keys($nussNames)));
             }
         }
 

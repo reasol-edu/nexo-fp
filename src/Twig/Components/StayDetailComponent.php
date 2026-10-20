@@ -69,6 +69,8 @@ class StayDetailComponent extends AbstractController
         private readonly PositionStateChanger $stateChanger,
         private readonly StayTeacherHoursRepository $teacherHours,
         private readonly TeacherAssignmentCalculator $calculator,
+        private readonly \App\Repository\StudentYearProfileRepository $profiles,
+        private readonly \App\Repository\StudentRepository $students,
     ) {}
 
     /** @return array<string, mixed> */
@@ -143,9 +145,28 @@ class StayDetailComponent extends AbstractController
             ?: $a->getName()->getFirstName() <=> $b->getName()->getFirstName()
         );
 
+        // Quien no realiza la FFEOE sigue en la lista mientras no se le quite de la estancia, pero no
+        // cuenta como alumnado de la estancia (sin puesto, avance, reparto por docente), salvo que ya tenga puesto.
+        $profileMap       = $this->profiles->findByStay($stay);
+        $countedStudents  = array_filter(
+            $enrolledStudents,
+            static fn (\App\Entity\Student $s, string $sid): bool => ($profileMap[$sid] ?? null)?->takesFfeoe() !== false || isset($studentPositionMap[$sid]),
+            ARRAY_FILTER_USE_BOTH,
+        );
+        $countedByGroup = [];
+        foreach ($byGroup as $entry) {
+            $entry['students'] = array_values(array_filter(
+                $entry['students'],
+                static fn (\App\Entity\Student $s): bool => isset($countedStudents[$s->getId()->toRfc4122()]),
+            ));
+            if ($entry['students'] !== []) {
+                $countedByGroup[] = $entry;
+            }
+        }
+
         $countWithoutPosition = 0;
         $countUnsigned        = 0;
-        foreach ($enrolledStudents as $sid => $student) {
+        foreach ($countedStudents as $sid => $student) {
             $tp = $studentPositionMap[$sid] ?? null;
             if ($tp === null) {
                 $countWithoutPosition++;
@@ -198,7 +219,7 @@ class StayDetailComponent extends AbstractController
         }
 
         $programmeSummary = $stay->getProgrammes()->count() > 1
-            ? $this->buildProgrammeSummary($stay, $actor, $enrolledStudents, $studentPositionMap, $unassignedPositions, $today)
+            ? $this->buildProgrammeSummary($stay, $actor, $countedStudents, $studentPositionMap, $unassignedPositions, $today)
             : [];
 
         $programmeTeachers = $this->teachers->findByStayProgrammesOrderedByName($stay);
@@ -215,7 +236,33 @@ class StayDetailComponent extends AbstractController
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
 
-        $progress = $this->buildProgress(\count($enrolledStudents), \count($allPositions), array_values($studentPositionMap), $canManage, $canViewUnassigned);
+        // Ficha del curso de cada estudiante (una consulta) y a quién puede editar quien consulta.
+        $year             = $stay->getAcademicYear();
+        $centre           = $year->getEducationalCentre();
+        $activeYear       = $centre->getActiveAcademicYear();
+        $yearIsActive     = $activeYear === null || $activeYear->getId()->toRfc4122() === $year->getId()->toRfc4122();
+        $editsAllProfiles = $actor->isAdmin() || $centre->getAdmins()->contains($actor);
+        $profileEditable  = [];
+        if ($yearIsActive && !$editsAllProfiles) {
+            $profileEditable = array_fill_keys($this->students->findResponsibleStudentIds($actor, $year), true);
+        }
+
+        // Quien no realiza la FFEOE y no tiene puesto se puede quitar de la estancia de una vez
+        // (solo los de las enseñanzas que gestiona quien consulta).
+        $removableNonFfeoe = [];
+        $blockedNonFfeoe   = 0;
+        foreach ($enrolledStudents as $sid => $student) {
+            if (($profileMap[$sid] ?? null)?->takesFfeoe() !== false) {
+                continue;
+            }
+            if (isset($studentPositionMap[$sid])) {
+                $blockedNonFfeoe++;
+            } elseif (isset($manageableStudentIds[$sid])) {
+                $removableNonFfeoe[] = $student;
+            }
+        }
+
+        $progress = $this->buildProgress(\count($countedStudents), \count($allPositions), array_values($studentPositionMap), $canManage, $canViewUnassigned);
 
         $this->cache = [
             'stay'                             => $stay,
@@ -237,8 +284,13 @@ class StayDetailComponent extends AbstractController
             'workers_by_company_id'            => $workersByCompanyId,
             'stats'                            => $stats,
             'progress'                         => $progress,
+            'profiles'                         => $profileMap,
+            'profile_edit_all'                 => $yearIsActive && $editsAllProfiles,
+            'profile_editable_ids'             => $profileEditable,
+            'removable_non_ffeoe'              => $removableNonFfeoe,
+            'blocked_non_ffeoe'                => $blockedNonFfeoe,
             'teacher_assignments'              => $stay->isCalculateByTeacher()
-                ? $this->buildTeacherAssignments($stay, $byGroup, $studentPositionMap)
+                ? $this->buildTeacherAssignments($stay, $countedByGroup, $studentPositionMap)
                 : null,
         ];
 
@@ -466,6 +518,16 @@ class StayDetailComponent extends AbstractController
             throw new AccessDeniedException();
         }
 
+        // Quien no realiza la FFEOE no puede tener puesto: antes hay que cambiar su ficha (o quitarlo de la estancia).
+        $profile = $this->profiles->findByStudentAndYear($student, $stay->getAcademicYear());
+        if ($profile !== null && !$profile->takesFfeoe()) {
+            $this->toast('stays.toast.student_no_ffeoe', [
+                '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
+            ]);
+
+            return null;
+        }
+
         if (!$position->acceptsStudent($student)) {
             $this->toast('stays.toast.position_incompatible', [
                 '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
@@ -540,6 +602,53 @@ class StayDetailComponent extends AbstractController
         $this->toast('stays.toast.position_assigned', [
             '%student%' => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
         ]);
+
+        return null;
+    }
+
+    /**
+     * Quita de la estancia a todo el alumnado que no realiza la FFEOE y no tiene puesto, y que gestiona
+     * quien lo pide (los de otras enseñanzas y los que ya tienen puesto no se tocan).
+     */
+    #[LiveAction]
+    public function removeNonFfeoeStudents(): ?Response
+    {
+        $stay = $this->stays->findById($this->stayId);
+        if ($stay === null || !$this->isGranted(StayVoter::MANAGE, $stay)) {
+            throw new AccessDeniedException();
+        }
+
+        /** @var Teacher $actor */
+        $actor    = $this->getUser();
+        $profiles = $this->profiles->findByStay($stay);
+        $positioned = [];
+        foreach ($this->positions->findByStayOrdered($stay) as $tp) {
+            if ($tp->getStudent() !== null) {
+                $positioned[$tp->getStudent()->getId()->toRfc4122()] = true;
+            }
+        }
+
+        $removed = 0;
+        foreach ($stay->getStudents()->toArray() as $student) {
+            $sid = $student->getId()->toRfc4122();
+            if (($profiles[$sid] ?? null)?->takesFfeoe() !== false || isset($positioned[$sid])) {
+                continue;
+            }
+            if ($this->scope->canManageStudent($actor, $stay, $student)) {
+                $stay->removeStudent($student);
+                $removed++;
+            }
+        }
+
+        if ($removed === 0) {
+            return null;
+        }
+
+        if (($conflict = $this->flushWithRealtime($stay)) !== null) {
+            return $conflict;
+        }
+
+        $this->toast('stays.toast.non_ffeoe_removed', ['%count%' => $removed]);
 
         return null;
     }

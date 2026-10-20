@@ -6,6 +6,7 @@ ui.cancel: 'Cancelar'
 ui.close: 'Cerrar'
 ui.confirm_delete: 'Sí, eliminar'
 ui.yes: 'Sí'
+ui.no: 'No'
 ui.export_started: 'Generando el archivo Excel…'
 year.switch.unavailable: 'Esa página no está disponible en el curso académico seleccionado. Te hemos llevado al inicio.'
 

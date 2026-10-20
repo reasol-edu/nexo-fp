@@ -9,6 +9,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
 use App\Entity\Student;
+use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -80,6 +81,7 @@ class StudentRepository extends ServiceEntityRepository
         string $sort = '',
         string $sortDir = 'asc',
         ?AcademicYear $year = null,
+        string $profileFilter = '',
     ): Query {
         $year ??= $centre->getActiveAcademicYear();
         $qb = $this->createQueryBuilder('s')
@@ -118,6 +120,14 @@ class StudentRepository extends ServiceEntityRepository
             )->setParameter('search', '%' . $search . '%');
         }
 
+        // Ficha del curso: «sin NUSS» (realizan la FFEOE y consta que no tienen) o «no realizan la FFEOE».
+        if (\in_array($profileFilter, [StudentYearProfile::FILTER_NO_NUSS, StudentYearProfile::FILTER_NO_FFEOE], true)) {
+            $condition = $profileFilter === StudentYearProfile::FILTER_NO_NUSS
+                ? 'p.takesFfeoe = true AND p.hasNuss = false'
+                : 'p.takesFfeoe = false';
+            $qb->andWhere('EXISTS(SELECT 1 FROM ' . StudentYearProfile::class . ' p WHERE p.student = s AND p.academicYear = :activeYear AND ' . $condition . ')');
+        }
+
         return $qb->getQuery();
     }
 
@@ -141,6 +151,68 @@ class StudentRepository extends ServiceEntityRepository
     public function findByStudentId(string $studentId): ?Student
     {
         return $this->findOneBy(['studentId' => $studentId]);
+    }
+
+    /** ¿Tiene el estudiante algún grupo en una enseñanza del curso? */
+    public function isInYear(Student $student, AcademicYear $year): bool
+    {
+        return (int) $this->createQueryBuilder('s')
+            ->select('COUNT(g.id)')
+            ->join('s.groups', 'g')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'prog')
+            ->join('prog.professionalFamily', 'f')
+            ->where('s.id = :student')
+            ->andWhere('f.academicYear = :year')
+            ->setParameter('student', $student->getId(), 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
+    /**
+     * ¿Es el docente responsable del estudiante en el curso? Lo es quien coordina una enseñanza o dirige
+     * la familia de alguno de sus grupos del curso, o tutoriza alguno de esos grupos.
+     */
+    public function isResponsibleInYear(Teacher $teacher, Student $student, AcademicYear $year): bool
+    {
+        return $this->responsibleQuery($teacher, $year)
+            ->andWhere('s.id = :student')
+            ->setParameter('student', $student->getId(), 'uuid')
+            ->select('COUNT(g.id)')
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
+    /**
+     * Ids (RFC 4122) de los estudiantes del curso de los que el docente es responsable (una consulta).
+     *
+     * @return list<string>
+     */
+    public function findResponsibleStudentIds(Teacher $teacher, AcademicYear $year): array
+    {
+        /** @var list<array{id: mixed}> $rows */
+        $rows = $this->responsibleQuery($teacher, $year)
+            ->select('DISTINCT s.id AS id')
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_map(static fn (array $row): string => $row['id'] instanceof \Symfony\Component\Uid\Uuid ? $row['id']->toRfc4122() : (string) $row['id'], $rows);
+    }
+
+    private function responsibleQuery(Teacher $teacher, AcademicYear $year): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->createQueryBuilder('s')
+            ->join('s.groups', 'g')
+            ->join('g.programmeYear', 'py')
+            ->join('py.programme', 'prog')
+            ->join('prog.professionalFamily', 'f')
+            ->leftJoin('g.tutors', 'gt')
+            ->leftJoin('prog.coordinators', 'pc')
+            ->where('f.academicYear = :year')
+            ->andWhere('gt.id = :teacher OR pc.id = :teacher OR f.head = :teacher')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid');
     }
 
     public function countByActiveYear(EducationalCentre $centre, ?Teacher $viewer = null, ?AcademicYear $year = null): int

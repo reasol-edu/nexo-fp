@@ -61,6 +61,7 @@ class StayController extends AbstractController
         private readonly ProgrammeRepository $programmes,
         private readonly ProfessionalFamilyRepository $families,
         private readonly StayScope $scope,
+        private readonly \App\Repository\StudentYearProfileRepository $studentProfiles,
         private readonly TeacherRepository $teachers,
         private readonly TranslatorInterface $translator,
         private readonly PdfService $pdf,
@@ -616,12 +617,17 @@ class StayController extends AbstractController
         /** @var Teacher $actor */
         $actor = $this->getUser();
 
+        // Ficha del curso del alumnado (sin la actitud, que no sale del centro).
+        $profiles = $this->studentProfiles->findByStay($stay);
+        $yesNo    = fn (?bool $value): string => $value === null ? '' : $this->t($value ? 'stays.export.yes' : 'stays.export.no');
+
         $rows = [];
         foreach ($this->positions->findByStayOrdered($stay) as $position) {
             $student    = $position->getStudent();
             if ($student === null && !$canViewUnassigned) {
                 continue;
             }
+            $profile    = $student !== null ? ($profiles[$student->getId()->toRfc4122()] ?? null) : null;
             // El NIE solo lo ve la coordinación del alumno cuando la estancia reúne varias enseñanzas.
             $showNie = $student !== null
                 && ($stay->getProgrammes()->count() < 2 || $this->scope->canManageStudent($actor, $stay, $student));
@@ -641,6 +647,12 @@ class StayController extends AbstractController
                 $this->t('stays.state.' . strtolower($position->getState()->value)),
                 $position->isSigned() ? $this->t('stays.export.yes') : $this->t('stays.export.no'),
                 $position->getDetails(),
+                $yesNo($profile?->hasNuss()),
+                $profile !== null ? $yesNo($profile->takesFfeoe()) : '',
+                $profile !== null ? $yesNo($profile->hasCar()) : '',
+                $profile?->bringsCompany() === true ? ($profile->getBroughtCompanyName() ?? '') : '',
+                $profile?->getResidenceCity() ?? '',
+                $profile?->getPreferredCity() ?? '',
             ];
         }
 
@@ -660,6 +672,12 @@ class StayController extends AbstractController
                 $this->t('stays.show.col.state'),
                 $this->t('stays.position.field.signed'),
                 $this->t('stays.show.col.details'),
+                $this->t('stays.export.col.nuss'),
+                $this->t('stays.export.col.takes_ffeoe'),
+                $this->t('stays.export.col.car'),
+                $this->t('stays.export.col.brought_company'),
+                $this->t('stays.export.col.residence'),
+                $this->t('stays.export.col.preferred_city'),
             ],
             $rows,
         );

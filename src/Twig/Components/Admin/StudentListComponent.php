@@ -34,6 +34,10 @@ class StudentListComponent extends AbstractController
     #[LiveProp(writable: true)]
     public string $groupId = '';
 
+    /** Filtro por ficha del curso: '', 'sin-nuss' o 'no-ffeoe'. */
+    #[LiveProp(writable: true)]
+    public string $profile = '';
+
     #[LiveProp(writable: true)]
     public int $page = 1;
 
@@ -45,6 +49,7 @@ class StudentListComponent extends AbstractController
 
     public function __construct(
         private readonly StudentRepository $students,
+        private readonly \App\Repository\StudentYearProfileRepository $profiles,
         private readonly GroupRepository $groups,
         private readonly AppSettings $appSettings,
         private readonly TenantContext $tenantContext,
@@ -81,15 +86,28 @@ class StudentListComponent extends AbstractController
                 $this->sort,
                 $this->sortDir,
                 $year,
+                $this->profile,
             ),
             max(1, $this->page),
             (int) $this->appSettings->get('page.size'),
         );
     }
 
+    /**
+     * Fichas del curso del alumnado (una consulta), indexadas por id de estudiante.
+     *
+     * @return array<string, \App\Entity\StudentYearProfile>
+     */
+    public function getProfiles(): array
+    {
+        $year = $this->tenantContext->getViewYear($this->centre);
+
+        return $year === null ? [] : $this->profiles->findByYear($year);
+    }
+
     public function hasActiveFilters(): bool
     {
-        return $this->search !== '' || $this->groupId !== '';
+        return $this->search !== '' || $this->groupId !== '' || $this->profile !== '';
     }
 
     #[LiveAction]

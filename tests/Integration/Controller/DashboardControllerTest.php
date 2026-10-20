@@ -91,6 +91,27 @@ class DashboardControllerTest extends ControllerTestCase
         self::assertStringContainsString($stay->getName(), $text);
     }
 
+    public function testStudentsWhoDoTheFfeoeButHaveNoNussGetTheirOwnTask(): void
+    {
+        [$admin, $stay, $level] = $this->adminWithStay();
+        $student = $this->enrol($stay, $level);
+        $this->persist(new \App\Entity\StudentYearProfile($student, $this->year));
+        $this->em->clear();
+        $profile = self::getContainer()->get(\App\Repository\StudentYearProfileRepository::class)
+            ->findByStudentAndYear(
+                $this->em->getReference(\App\Entity\Student::class, $student->getId()),
+                $this->em->getReference(AcademicYear::class, $this->year->getId()),
+            );
+        $profile->setHasNuss(false);
+        $this->flush();
+        $this->loginAs($this->em->getReference(Teacher::class, $admin->getId()), $this->em->getReference(EducationalCentre::class, $this->centre->getId()));
+
+        $attention = $this->client->request('GET', '/')->filter('#attention-title')->ancestors()->filter('section')->first();
+
+        self::assertStringContainsString('1 estudiante que realiza la FFEOE sin NUSS', $attention->text());
+        self::assertCount(1, $attention->filter('a[href$="?filtro=sin-nuss"]'));
+    }
+
     public function testAttentionNowComesBeforeTheStaysAndTheProcess(): void
     {
         [$admin, $stay, $level] = $this->adminWithStay();

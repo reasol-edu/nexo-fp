@@ -22,7 +22,9 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 | **Nivel** | Cada curso de una enseñanza (1.º, 2.º…). |
 | **Grupo / Unidad** | Conjunto de estudiantes dentro de un nivel, con tutor/a y docentes asignados. «Unidad» es el nombre que usa Séneca para el grupo. |
 | **Estudiante** | Alumno/a matriculado, identificado por su **NIE**. |
-| **NIE** | Número de Identificación Escolar que identifica de forma única a cada estudiante. |
+| **NIE** | Número de Identificación Escolar que identifica de forma única a cada estudiante. Solo se muestra en la ficha del estudiante, no en los listados de la interfaz. |
+| **NUSS** | Número de la Seguridad Social. Sin él, un estudiante que realiza la FFEOE no puede hacer la estancia: la aplicación lo marca como **Sin NUSS**. |
+| **Ficha del estudiante** | Datos de un estudiante en un curso concreto: NUSS, si realiza la FFEOE, coche, empresa aportada, actitud y localidades de residencia y preferente. |
 
 ## Tejido empresarial
 

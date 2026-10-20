@@ -102,7 +102,7 @@ class SearchController extends AbstractController
             if ($students !== []) {
                 $groups['students'] = array_map(fn ($s) => [
                     'label'    => $s->getName()->getLastName() . ', ' . $s->getName()->getFirstName(),
-                    'sublabel' => $s->getStudentId(),
+                    'sublabel' => '',
                     'url'      => $this->generateUrl('app_admin_students_edit', [
                         'centreId' => $centre->getId()->toRfc4122(),
                         'id'       => $s->getId()->toRfc4122(),

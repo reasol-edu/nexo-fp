@@ -37,7 +37,7 @@ para al menos una de las que elige, pero puede añadir otras para compartir pues
 
 En una estancia con varias enseñanzas, cada coordinación **gestiona solo a su alumnado** (matricularlo,
 asignarle puesto, designar sus tutores), mientras que **ve** todo el alumnado de la estancia y todas las
-asignaciones, aunque no sean suyas. El NIE del alumnado ajeno no se muestra. Los puestos **libres** son
+asignaciones, aunque no sean suyas. Los puestos **libres** son
 compartidos: cualquier coordinación de la estancia puede crearlos, editarlos o eliminarlos (se avisa por
 correo a las demás coordinaciones a las que se ofertaban); un puesto **asignado** solo lo gestiona la
 coordinación del estudiante. Por último, una estancia solo se puede **eliminar** quien gestiona todas sus
@@ -60,7 +60,11 @@ empresas, y solo puede editar o eliminar los puestos **sin estudiante asignado**
 
 Docente asignado a un grupo como tutor o docente. Puede **ver** las estancias de la enseñanza
 correspondiente y consultar los puestos formativos **con estudiante asignado**, pero no puede modificar
-las estancias ni ver los puestos formativos **sin estudiante asignado**.
+las estancias ni ver los puestos formativos **sin estudiante asignado**. Quien es **tutor/a** del grupo
+(no basta con impartir en él) puede además **editar la ficha** de sus estudiantes en el curso (NUSS, FFEOE,
+coche, empresa aportada, actitud y localidades) y ver la actitud, igual que la administración del centro, la
+coordinación de sus enseñanzas y la jefatura de su familia. El resto del profesorado ve esos datos, salvo la
+actitud, pero no los modifica.
 
 ### Docente (sin rol específico)
 

@@ -163,8 +163,8 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
         // Ve a todo el alumnado de la estancia…
         self::assertStringContainsString('Ana Daw', $html);
         self::assertStringContainsString('Luis Dam', $html);
-        // …pero el NIE solo del suyo.
-        self::assertStringContainsString('NIE-DAW', $html);
+        // El NIE solo se muestra en la ficha del estudiante, no en las listas.
+        self::assertStringNotContainsString('NIE-DAW', $html);
         self::assertStringNotContainsString('NIE-DAM', $html);
         // Filtro «Mis estudiantes» y panel de reparto por enseñanza.
         self::assertStringContainsString('js-mine-toggle', $html);

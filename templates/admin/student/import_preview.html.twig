@@ -92,6 +92,11 @@
                                     </td>
                                     <td class="px-2 py-2 text-gray-800">{{ row.name }}</td>
                                     <td class="px-2 py-2 text-xs text-gray-500">{{ row.group != '' ? row.group : ('students.import.preview.students.no_group'|trans({}, 'admin')) }}</td>
+                                    <td class="px-2 py-2 text-xs">
+                                        {% if row.hasNuss is same as(false) %}
+                                            <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{{ 'students.import.preview.no_nuss'|trans({}, 'admin') }}</span>
+                                        {% endif %}
+                                    </td>
                                     <td class="px-2 py-2 text-xs text-right {{ row.isNew ? 'text-green-700' : 'text-blue-700' }}">
                                         {{ (row.isNew ? 'students.import.preview.students.new' : 'students.import.preview.students.update')|trans({}, 'admin') }}
                                     </td>
@@ -122,6 +127,12 @@
                         <li class="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm">
                             {{ ux_icon('heroicons:pencil', {class: 'h-5 w-5 text-blue-600 shrink-0'}) }}
                             <span class="font-semibold text-blue-800">{{ 'students.import.preview.updated'|trans({'%count%': updated}, 'admin') }}</span>
+                        </li>
+                        {% endif %}
+                        {% if withoutNuss > 0 %}
+                        <li class="flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm">
+                            {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-5 w-5 text-red-600 shrink-0'}) }}
+                            <span class="font-semibold text-red-800">{{ 'students.import.preview.without_nuss'|trans({'%count%': withoutNuss}, 'admin') }}</span>
                         </li>
                         {% endif %}
                         {% if skipped > 0 %}

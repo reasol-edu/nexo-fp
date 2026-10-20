@@ -163,10 +163,16 @@ sustituyes por tu alumnado.
 | `Primer apellido` | Primer apellido (obligatorio). |
 | `Segundo apellido` | Segundo apellido (opcional; se une al primero). |
 | `Unidad` | Grupo al que pertenece. Debe coincidir con un grupo del curso activo (sin distinguir mayúsculas). |
+| `NºSeg.Social` | **Opcional.** Si trae valor, el estudiante dispone de NUSS; si está vacía, se marca **sin NUSS** (no podrá realizar la estancia). El número no se guarda, solo si existe. |
+| `Localidad de residencia` | **Opcional.** Se guarda en la ficha del estudiante en el curso. |
 
 Notas sobre el comportamiento:
 
-- Los estudiantes que ya existen (mismo `Nº Id. Escolar`) se **actualizan**; los nuevos se **crean**.
+- Los estudiantes que ya existen (mismo `Nº Id. Escolar`) se **actualizan**; los nuevos se **crean**. Si
+  el fichero trae las columnas `NºSeg.Social` o `Localidad de residencia`, también se actualiza esa parte de
+  su [ficha del curso](12-flujo-de-trabajo.md#ficha-del-estudiante-en-el-curso); los demás datos de la ficha
+  (FFEOE, coche, empresa, actitud, localidad preferente) no se tocan. La vista previa avisa de cuántos
+  estudiantes quedan sin NUSS.
 - Si la `Unidad` no coincide con ningún grupo del curso, el estudiante se importa **sin grupo** y al
   final se muestra la lista de unidades no reconocidas. Por eso es importante que los grupos se llamen
   **exactamente** igual que en Séneca (ver el paso 3).

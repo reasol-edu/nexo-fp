@@ -29,6 +29,7 @@ class StudentController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly EducationalCentreRepository $centres,
         private readonly StudentRepository $students,
+        private readonly \App\Repository\StudentYearProfileRepository $profiles,
         private readonly GroupRepository $groups,
         private readonly TranslatorInterface $translator,
         private readonly TenantContext $tenantContext,
@@ -201,10 +202,10 @@ class StudentController extends AbstractController
 
         return $csv->create(
             'plantilla-estudiantes.csv',
-            ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad'],
+            ['Estado Matrícula', 'Nº Id. Escolar', 'Primer apellido', 'Segundo apellido', 'Nombre', 'Unidad', 'Localidad de residencia', 'NºSeg.Social'],
             [
-                ['', '1000001', 'García', 'López', 'Ana', '1º DAW A'],
-                ['', '1000002', 'Martín', 'Ruiz', 'Luis', '1º DAW A'],
+                ['', '1000001', 'García', 'López', 'Ana', '1º DAW A', 'Sevilla', '410000000001'],
+                ['', '1000002', 'Martín', 'Ruiz', 'Luis', '1º DAW A', 'Dos Hermanas', ''],
             ],
         );
     }
@@ -255,6 +256,7 @@ class StudentController extends AbstractController
                 dryRun: false,
                 allowedGroupIds: $allowedGroupIds,
                 allowedStudentIds: $allowedStudentIds,
+                year: $centre->requireActiveAcademicYear(),
             );
             $this->em->flush();
             $this->buildImportFlash($result);
@@ -301,7 +303,7 @@ class StudentController extends AbstractController
         }
 
         $groupsByName = $this->buildGroupsByName($centre);
-        $result       = $this->processCsvImport($content, $groupsByName, dryRun: true);
+        $result       = $this->processCsvImport($content, $groupsByName, dryRun: true, year: $centre->requireActiveAcademicYear());
 
         $importId = Uuid::v4()->toRfc4122();
         $dir      = dirname($this->getTempImportPath($importId));
@@ -317,6 +319,7 @@ class StudentController extends AbstractController
             'created'       => $result['created'],
             'updated'       => $result['updated'],
             'skipped'       => $result['skipped'],
+            'withoutNuss'   => $result['withoutNuss'],
             'unknownGroups' => $result['unknownGroups'],
             'groupStats'    => $result['groupStats'],
             'rows'          => $result['rows'],
@@ -341,7 +344,22 @@ class StudentController extends AbstractController
      *   rows: list<array{studentId: string, name: string, group: string, isNew: bool}>
      * }
      */
-    private function processCsvImport(string $content, array $groupsByName, bool $dryRun, ?array $allowedGroupIds = null, ?array $allowedStudentIds = null): array
+    /**
+     * Las columnas «NºSeg.Social» y «Localidad de residencia» son opcionales: si existen, rellenan la ficha del
+     * estudiante en el curso (NUSS sí/no según haya valor, y la localidad). Los datos manuales de la ficha no se tocan.
+     *
+     * @param array<string, Group> $groupsByName
+     * @param list<string>|null    $allowedGroupIds
+     * @param list<string>|null    $allowedStudentIds
+     *
+     * @return array{
+     *     created: int, updated: int, skipped: int, withoutNuss: int,
+     *     unknownGroups: array<string, true>,
+     *     groupStats: array<string, array{group: Group, name: string, created: int, updated: int}>,
+     *     rows: list<array{studentId: string, name: string, group: string, isNew: bool, hasNuss: bool|null}>
+     * }
+     */
+    private function processCsvImport(string $content, array $groupsByName, bool $dryRun, ?array $allowedGroupIds = null, ?array $allowedStudentIds = null, ?\App\Entity\AcademicYear $year = null): array
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $content);
@@ -353,9 +371,12 @@ class StudentController extends AbstractController
         $created       = 0;
         $updated       = 0;
         $skipped       = 0;
+        $withoutNuss   = 0;
         $unknownGroups = [];
         $groupStats    = [];
         $rows          = [];
+        $nussColumn      = $headerMap['NºSeg.Social'] ?? null;
+        $residenceColumn = $headerMap['Localidad de residencia'] ?? null;
 
         while (($row = fgetcsv($stream, escape: '')) !== false) {
             if (count(array_filter($row, static fn($v) => trim((string) $v) !== '')) === 0) {
@@ -398,11 +419,16 @@ class StudentController extends AbstractController
                 continue;
             }
 
-            $existing = $this->students->findByStudentId($studentId);
-            $isNew    = $existing === null;
+            $existing  = $this->students->findByStudentId($studentId);
+            $isNew     = $existing === null;
+            $hasNuss   = $nussColumn !== null ? trim((string) ($row[$nussColumn] ?? '')) !== '' : null;
+            $residence = $residenceColumn !== null ? trim((string) ($row[$residenceColumn] ?? '')) : '';
+            if ($hasNuss === false) {
+                $withoutNuss++;
+            }
 
             if ($dryRun) {
-                $rows[] = ['studentId' => $studentId, 'name' => $lastName . ', ' . $firstName, 'group' => $group?->getName() ?? '', 'isNew' => $isNew];
+                $rows[] = ['studentId' => $studentId, 'name' => $lastName . ', ' . $firstName, 'group' => $group?->getName() ?? '', 'isNew' => $isNew, 'hasNuss' => $hasNuss];
             }
 
             if (!$dryRun) {
@@ -418,6 +444,17 @@ class StudentController extends AbstractController
                 }
                 if ($group !== null && !$student->getGroups()->contains($group)) {
                     $student->addGroup($group);
+                }
+                if ($year !== null && ($hasNuss !== null || $residence !== '')) {
+                    $profile = $isNew ? null : $this->profiles->findByStudentAndYear($student, $year);
+                    $profile ??= new \App\Entity\StudentYearProfile($student, $year);
+                    if ($hasNuss !== null) {
+                        $profile->setHasNuss($hasNuss);
+                    }
+                    if ($residence !== '') {
+                        $profile->setResidenceCity(mb_substr($residence, 0, 255));
+                    }
+                    $this->em->persist($profile);
                 }
             } else {
                 if ($isNew) {
@@ -450,6 +487,7 @@ class StudentController extends AbstractController
             'created'       => $created,
             'updated'       => $updated,
             'skipped'       => $skipped,
+            'withoutNuss'   => $withoutNuss,
             'unknownGroups' => $unknownGroups,
             'groupStats'    => $groupStats,
             'rows'          => $rows,

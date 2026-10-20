@@ -25,7 +25,7 @@ no tienes ninguna responsabilidad en el curso, el inicio te lo explica en lugar 
 al día».
 
 - **Atención ahora**: frases accionables («3 estudiantes sin puesto», «2 puestos sin tutor/a dual
-  docente»…), ordenadas por urgencia y con un enlace al listado ya filtrado. Cada tarea lleva una
+  docente», «1 estudiante que realiza la FFEOE sin NUSS»…), ordenadas por urgencia y con un enlace al listado ya filtrado. Cada tarea lleva una
   gravedad escrita (*Crítico*, *Próximo*, *Informativo*) calculada según los días que faltan para que
   empiece la estancia: crítico si empieza en 7 días o menos (o ya ha empezado), próximo hasta 21 días.
   Ambos umbrales son [ajustes configurables](25-ajustes-y-bloqueos.md). Un puesto completo listo para

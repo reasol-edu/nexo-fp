@@ -171,7 +171,6 @@
                     {% for sid, student in enrolled_students %}
                         <option value="{{ sid }}"
                                 data-group="{{ student_group_map[sid] is defined ? student_group_map[sid].name|e('html_attr') : '' }}"
-                                data-nie="{{ student.studentId|e('html_attr') }}"
                                 data-disabled="{{ other_assigned_ids[sid] is defined ? '1' : '' }}"
                                 {{ values.student_id == sid ? 'selected' : '' }}>
                             {{ student.name.lastName }} {{ student.name.firstName }}
@@ -573,8 +572,7 @@ if (elStudent) {
             value:    opt.value,
             text:     opt.textContent.trim(),
             group:    opt.dataset.group ?? '',
-            nie:      opt.dataset.nie   ?? '',
-            search:   `${opt.textContent.trim()} ${opt.dataset.nie ?? ''} ${opt.dataset.group ?? ''}`,
+            search:   `${opt.textContent.trim()} ${opt.dataset.group ?? ''}`,
             disabled: opt.dataset.disabled === '1',
         });
     });
@@ -596,7 +594,7 @@ if (elStudent) {
         render: {
             option: (d, esc) => {
                 if (!d.value) return `<div class="py-0.5 text-gray-400 italic">${esc(d.text)}</div>`;
-                const sub = [d.nie, d.group].filter(Boolean).join(' · ');
+                const sub = d.group;
                 return sub
                     ? renderTwoLineOption(esc, d.text, sub)
                     : `<div class="py-0.5">${esc(d.text)}</div>`;

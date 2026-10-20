@@ -106,6 +106,18 @@ const SHOTS = [
     steps: [go('/estancias'), async ({ page }) => { await page.getByText('Firmas pendientes').first().click(); await page.waitForTimeout(1200); }] },
   { name: 'estancia-compartida', group: 'manual', out: `${M}/estancia-compartida.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)] },
+  // Ficha del estudiante en el curso: insignias en la lista (sin NUSS, no realiza FFEOE, empresa aportada…) y diálogo de edición.
+  { name: 'estancia-ficha-insignias', group: 'manual', out: `${M}/estancia-ficha-insignias.png`, size: [1440, 1450, 1],
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      await page.addStyleTag({ content: 'header, [class*="sticky"], [class*="fixed"] { display:none !important; }' });
+    }],
+    element: async (page) => page.locator('div.rounded-2xl:has(.js-filter-chip)').first() },
+  { name: 'ficha-estudiante', group: 'manual', out: `${M}/ficha-estudiante.png`, size: [1440, 900, 1],
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      await page.locator('tr.js-student-row:has(span[title*="NUSS"]) a[data-controller="student-profile"]').first().click();
+      await page.waitForSelector('dialog[open] [data-student-profile-form]');
+      await page.waitForTimeout(500);
+    }] },
   // Sección «Docentes» (ajuste «Calcular asignaciones por docente»): horas dualizadas y reparto de tutorías.
   { name: 'estancia-docentes', group: 'manual', out: `${M}/estancia-docentes.png`, size: [1440, 1900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)],

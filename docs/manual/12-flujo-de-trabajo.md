@@ -45,7 +45,7 @@ tutores ni preferencia).
 ![Estancia compartida entre DAW y SMR con el reparto por enseñanza y el filtro «Mis estudiantes»](img/estancia-compartida.png)
 
 - **Cada coordinación gestiona a su alumnado**: solo puede inscribirlo y asignarle puesto a él. El
-  alumnado de las demás enseñanzas se ve (con un candado y sin NIE) pero no se puede modificar; el botón
+  alumnado de las demás enseñanzas se ve (con un candado) pero no se puede modificar; el botón
   **Mis estudiantes** filtra la lista al propio.
 - **Un puesto, un estudiante**: cuando una coordinación asigna un puesto compartido, deja de estar
   disponible para cualquier otro estudiante, sea o no de la misma enseñanza. Si dos coordinaciones lo
@@ -83,6 +83,54 @@ Una vez creados los puestos, se completa cada uno con su asignación:
 Mientras el puesto está en estado **Borrador**, todos los campos son editables. El modo de **asignación
 rápida** muestra los selectores en todas las filas a la vez para agilizar el reparto; el navegador recuerda
 si lo tenía activado (y el filtro **Mis estudiantes**) al abrir otra estancia.
+
+### Ficha del estudiante en el curso
+
+Cada estudiante tiene en cada curso una **ficha** con los datos que ayudan a decidir su puesto. Empieza
+vacía al llegar un curso nuevo (los datos son de ese curso, no del estudiante para siempre):
+
+| Dato | Qué significa |
+|------|---------------|
+| **¿Dispone de NUSS?** | Sí / No / sin informar. Al importar el alumnado se rellena sola: si la columna `NºSeg.Social` del CSV de Séneca trae valor, dispone de NUSS; si está vacía, no. Sin NUSS no se puede realizar la estancia. |
+| **¿Realiza la FFEOE?** | Sí por defecto. Si es **No**, hay que indicar el **motivo** (por ejemplo, que ya la realizó o que tiene suspendido PRL). |
+| **¿Dispone de coche?** | Sí / No. |
+| **¿Aporta empresa?** | Si es **Sí**, se indica la empresa que aporta (texto libre). |
+| **Actitud** | De 1 a 5, opcional. |
+| **Localidad de residencia** | Se rellena al importar (columna `Localidad de residencia`). |
+| **Localidad preferente** | Texto libre: dónde le gustaría hacer la FFEOE si no es su localidad de residencia. |
+
+![Lista de estudiantes con las insignias de la ficha: sin NUSS, no realiza FFEOE, empresa aportada y coche](img/estancia-ficha-insignias.png)
+
+La lista de estudiantes de la estancia solo destaca lo que merece atención:
+
+- **Sin NUSS** (insignia roja): el estudiante realiza la FFEOE pero consta que no tiene NUSS, así que no
+  podrá hacer la estancia. Quien aún está *sin informar* no se marca.
+- **No realiza FFEOE** (insignia gris, con el motivo al pasar el ratón por encima).
+- **Aporta: empresa**, el icono del **coche** y la **localidad preferente**; la localidad de residencia
+  aparece bajo el nombre.
+
+Hay dos **filtros rápidos** nuevos, *Sin NUSS* y *No realizan FFEOE*, y el mismo filtro en
+**Centro educativo → Estudiantes**. El inicio añade a **Atención ahora** la tarea «N estudiantes que realizan
+la FFEOE sin NUSS».
+
+![Ficha del estudiante en un diálogo, con selectores Sí / No](img/ficha-estudiante.png)
+
+El **lápiz** junto a cada estudiante abre la ficha en un diálogo. La **actitud** y la edición de la ficha son
+solo para quien puede asignar puesto al estudiante (administración del centro, coordinación de sus
+enseñanzas, jefatura de su familia) y para la **tutoría de sus grupos**; el resto del profesorado ve los
+demás datos pero no la actitud. Un curso anterior es de solo lectura.
+
+Quien **no realiza la FFEOE**:
+
+- No cuenta como «sin puesto» ni en el avance, la cobertura o el reparto de tutorías por docente, y no se le
+  puede asignar puesto mientras no cambie su ficha.
+- Mientras siga inscrito en la estancia, un aviso sobre la lista ofrece **Quitarlos de la estancia** de una
+  vez (solo a los que no tienen puesto; los que ya lo tienen se señalan para liberar su puesto antes).
+- Si el estudiante **no tiene NUSS**, la aplicación avisa antes de asignarle un puesto y hay que confirmar.
+
+El **NIE** solo se muestra en la ficha del estudiante (Centro educativo → Estudiantes), no en los listados de
+la interfaz. El Excel de la estancia lo mantiene e incluye además las columnas NUSS, Realiza FFEOE, Coche,
+Empresa aportada y las dos localidades, pero nunca la actitud.
 
 ## 4 — Estados del puesto y tramitación en Séneca
 
@@ -122,7 +170,8 @@ registrado en Séneca y firmado) y el **siguiente paso recomendado**, con un enl
 afectadas.
 
 Sobre la lista de estudiantes hay **filtros rápidos** (*Sin puesto*, *Sin tutor/a docente*, *Sin tutor/a de
-empresa*, *Sin firmar* y *Puestos libres*) con el número de filas de cada uno. La campana de notificaciones
+empresa*, *Sin firmar*, *Puestos libres*, *Sin NUSS* y *No realizan FFEOE*) con el número de filas de cada
+uno. La campana de notificaciones
 y el bloque **Atención ahora** del inicio abren la estancia con el filtro ya aplicado.
 
 !!! tip "Ten en cuenta"

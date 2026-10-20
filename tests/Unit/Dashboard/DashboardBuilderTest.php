@@ -292,6 +292,49 @@ class DashboardBuilderTest extends TestCase
         self::assertSame('s', $group->stayId);
     }
 
+    // ── Estudiantes sin NUSS ─────────────────────────────────────────────────
+
+    public function testAManagerIsToldHowManyOfTheirStudentsHaveNoNuss(): void
+    {
+        $this->stay('shared', -5, 80, [$this->daw, $this->smr]);
+        $this->student('shared', 'd1', $this->daw);
+        $this->student('shared', 'd2', $this->daw);
+        $this->student('shared', 's1', $this->smr);
+        $this->missingNuss('shared', 'd1');
+        $this->missingNuss('shared', 's1');   // de otra enseñanza: no es suyo
+
+        $view = $this->build($this->scope('diego', manage: [$this->daw]));
+
+        $task = $this->task($view, Task::STUDENTS_WITHOUT_NUSS);
+        self::assertSame(1, $task->count);
+        self::assertSame('sin-nuss', $task->filter);
+        self::assertSame(Severity::Critical, $task->severity, 'la estancia ya ha empezado');
+    }
+
+    public function testAnUnknownNussGeneratesNoTask(): void
+    {
+        $this->stay('s', -5, 80, [$this->daw]);
+        $this->student('s', 'd1', $this->daw);
+
+        self::assertNull($this->find($this->build($this->scope('diego', manage: [$this->daw])), Task::STUDENTS_WITHOUT_NUSS));
+    }
+
+    public function testAGroupTeacherIsOnlyToldAboutTheStudentsOfTheirGroups(): void
+    {
+        $this->stay('s', -45, 45, [$this->daw]);
+        $this->student('s', 'mine', $this->daw, group: 'g-mine');
+        $this->student('s', 'other', $this->daw, group: 'g-other');
+        $this->missingNuss('s', 'mine');
+        $this->missingNuss('s', 'other');
+
+        $view = $this->build(new ScopeFacts('fernando', false, [], [], [new GroupRef('g-mine', 'DAW1A', 'prog-daw')], []));
+
+        $task = $this->task($view, Task::GROUP_WITHOUT_NUSS);
+        self::assertSame(1, $task->count);
+        self::assertSame('G-MINE', $task->subject);
+        self::assertNull($this->find($view, Task::STUDENTS_WITHOUT_NUSS), 'no gestiona la estancia');
+    }
+
     // ── Docente de enlace: solo sus empresas ─────────────────────────────────
 
     public function testALiaisonOnlySeesTheTasksAndFiguresOfTheirCompanies(): void
@@ -545,6 +588,13 @@ class DashboardBuilderTest extends TestCase
         if ($level !== 'lvl') {
             $this->students[$stayId][$id] = new StudentFacts($id, [new LevelFacts($level, $programme->id, $group, strtoupper($group))]);
         }
+    }
+
+    /** Consta en la ficha del estudiante que no dispone de NUSS. */
+    private function missingNuss(string $stayId, string $id): void
+    {
+        $student = $this->students[$stayId][$id];
+        $this->students[$stayId][$id] = new StudentFacts($student->id, $student->levels, true);
     }
 
     /** @param list<string> $levels */

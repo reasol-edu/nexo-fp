@@ -1,0 +1,59 @@
+{#
+  Insignias de la ficha del estudiante en el curso. Solo se pinta lo que merece atención:
+  - «Sin NUSS» (rojo) solo si realiza la FFEOE: sin NUSS no puede hacer la estancia.
+  - «No realiza FFEOE» (gris), con el motivo en el tooltip.
+  - «Aporta: empresa», el icono del coche y la localidad preferente, en tono sobrio.
+  El lápiz abre la ficha en un diálogo y solo se ofrece a quien puede editarla.
+#}
+{% macro badges(student, profile, can_edit, return_url) %}
+    {% set has_flags = profile is not null and (not profile.takesFfeoe or profile.hasNuss is same as(false) or profile.bringsCompany or profile.hasCar or profile.preferredCity) %}
+    {% if has_flags or can_edit %}
+        <span class="mt-1 flex flex-wrap items-center gap-1">
+            {% if profile is not null %}
+                {% if not profile.takesFfeoe %}
+                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700"
+                          title="{{ 'student_profile.badge.no_ffeoe.title'|trans({'%reason%': profile.ffeoeExclusionReason ?? ''}, 'stays')|e('html_attr') }}">
+                        {{ 'student_profile.badge.no_ffeoe'|trans({}, 'stays') }}
+                    </span>
+                {% elseif profile.hasNuss is same as(false) %}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700"
+                          title="{{ 'student_profile.badge.no_nuss.title'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3 w-3 shrink-0'}) }}
+                        {{ 'student_profile.badge.no_nuss'|trans({}, 'stays') }}
+                    </span>
+                {% endif %}
+                {% if profile.bringsCompany %}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
+                        {{ ux_icon('heroicons:building-office', {class: 'h-3 w-3 shrink-0'}) }}
+                        {{ 'student_profile.badge.company'|trans({'%company%': profile.broughtCompanyName}, 'stays') }}
+                    </span>
+                {% endif %}
+                {% if profile.hasCar %}
+                    <span class="inline-flex items-center text-gray-500" title="{{ 'student_profile.badge.car'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ ux_icon('heroicons:truck', {class: 'h-3.5 w-3.5'}) }}
+                        <span class="sr-only">{{ 'student_profile.badge.car'|trans({}, 'stays') }}</span>
+                    </span>
+                {% endif %}
+                {% if profile.preferredCity %}
+                    <span class="text-[11px] text-gray-500">{{ 'student_profile.badge.preferred_city'|trans({'%city%': profile.preferredCity}, 'stays') }}</span>
+                {% endif %}
+            {% endif %}
+            {% if can_edit %}
+                <a href="{{ path('app_student_profile', {id: student.id.toRfc4122, return: return_url}) }}"
+                   data-controller="student-profile"
+                   data-student-profile-url-value="{{ path('app_student_profile', {id: student.id.toRfc4122}) }}"
+                   data-action="click->student-profile#open"
+                   class="inline-flex items-center rounded-md p-0.5 text-gray-400 hover:bg-gray-100 hover:text-plum-700 transition-colors"
+                   title="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"
+                   aria-label="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">
+                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+                </a>
+            {% endif %}
+        </span>
+    {% endif %}
+{% endmacro %}
+
+{# Localidad de residencia, en tono discreto bajo el nombre. #}
+{% macro residence(profile) %}
+    {%- if profile is not null and profile.residenceCity %}<p class="text-xs text-gray-400 mt-0.5">{{ profile.residenceCity }}</p>{% endif -%}
+{% endmacro %}

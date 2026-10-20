@@ -218,7 +218,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $this->client->getResponse()->getContent();
         self::assertStringContainsString('Luis Dam', $html);
-        self::assertStringContainsString('NIE-DAW', $html);
+        self::assertStringNotContainsString('NIE-DAW', $html);
         self::assertStringNotContainsString('NIE-DAM', $html);
     }
 

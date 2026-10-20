@@ -1,0 +1,18 @@
+{# Selector doble Sí / No para valores booleanos. «value» es true, false o null (sin elegir). #}
+{% props name, label, value = null, error = null, help = null, yes = null, no = null %}
+{% set base = 'cursor-pointer select-none rounded-[10px] px-5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 has-[:checked]:bg-plum-600 has-[:checked]:text-white has-[:checked]:shadow-xs has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-plum-500 has-[:focus-visible]:ring-offset-1' %}
+<fieldset>
+    <legend class="block text-sm font-medium text-gray-700 mb-1.5">{{ label }}</legend>
+    {% if help is not null %}<p class="text-xs text-gray-400 mb-2">{{ help }}</p>{% endif %}
+    <div class="inline-flex rounded-xl border p-0.5 {{ error is not null ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-100' }}">
+        <label class="{{ base }}">
+            <input type="radio" name="{{ name }}" value="1" class="sr-only" {{ value is same as(true) ? 'checked' : '' }}>
+            {{ yes ?? 'ui.yes'|trans({}, 'messages') }}
+        </label>
+        <label class="{{ base }}">
+            <input type="radio" name="{{ name }}" value="0" class="sr-only" {{ value is same as(false) ? 'checked' : '' }}>
+            {{ no ?? 'ui.no'|trans({}, 'messages') }}
+        </label>
+    </div>
+    {% if error is not null %}<p class="mt-1.5 text-xs text-red-600">{{ error }}</p>{% endif %}
+</fieldset>

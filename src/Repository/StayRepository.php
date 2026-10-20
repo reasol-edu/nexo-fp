@@ -10,6 +10,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
 use App\Entity\Stay;
+use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
 use App\Entity\TrainingPositionState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -350,6 +351,7 @@ class StayRepository extends ServiceEntityRepository
             ->select('DISTINCT s.id AS stay_id', 'st.id AS student_id')
             ->join('s.students', 'st')
             ->where('s.academicYear = :year')
+            ->andWhere($this->takesFfeoe())
             ->setParameter('year', $year->getId(), 'uuid');
         $this->addViewerFilter($enrolledQb, $viewer);
 
@@ -560,7 +562,7 @@ class StayRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('s')
             ->select('s')
             ->addSelect($expr . ' AS students_without_position')
-            ->leftJoin('s.students', 'st')
+            ->leftJoin('s.students', 'st', 'WITH', $this->takesFfeoe())
             ->leftJoin('s.trainingPositions', 'tp')
             ->where('s.academicYear = :year')
             ->andWhere('s.endDate IS NULL OR s.endDate >= :today')
@@ -707,7 +709,7 @@ class StayRepository extends ServiceEntityRepository
         $stQb = $em->createQueryBuilder()
             ->select('s.id AS stayId', 'COUNT(st.id) AS cnt')
             ->from(Stay::class, 's')
-            ->leftJoin('s.students', 'st')
+            ->leftJoin('s.students', 'st', 'WITH', $this->takesFfeoe())
             ->groupBy('s.id');
         $stConds = [];
         foreach ($stays as $i => $stay) {
@@ -777,6 +779,18 @@ class StayRepository extends ServiceEntityRepository
      * Condición EXISTS sobre las enseñanzas de la estancia `s`. Dentro de $condition están
      * disponibles los alias `xp` (enseñanza) y `xf` (su familia profesional).
      */
+    /**
+     * Condición DQL: el estudiante realiza la FFEOE de su curso, es decir, no consta en su ficha que no
+     * la realice. Quien no la realiza no cuenta como alumnado de la estancia en los recuentos.
+     */
+    private function takesFfeoe(string $student = 'st', string $stay = 's'): string
+    {
+        $n = ++$this->existsCounter;
+
+        return 'NOT EXISTS(SELECT 1 FROM ' . StudentYearProfile::class . ' nf' . $n
+            . ' WHERE nf' . $n . '.student = ' . $student . ' AND nf' . $n . '.academicYear = ' . $stay . '.academicYear AND nf' . $n . '.takesFfeoe = false)';
+    }
+
     private function programmeExists(string $condition): string
     {
         // Los alias de DQL son únicos en toda la consulta: cada subconsulta lleva los suyos, para poder
@@ -936,6 +950,7 @@ class StayRepository extends ServiceEntityRepository
             ->leftJoin('g.programmeYear', 'py')
             ->leftJoin('py.programme', 'pr')
             ->where('s.academicYear = :year')
+            ->andWhere($this->takesFfeoe())
             ->setParameter('year', $year->getId(), 'uuid');
         $this->addViewerFilter($qb, $viewer, true);
 

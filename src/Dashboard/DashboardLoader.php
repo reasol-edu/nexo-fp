@@ -23,6 +23,7 @@ use App\Repository\GroupRepository;
 use App\Repository\ProgrammeRepository;
 use App\Repository\StayRepository;
 use App\Repository\StayTeacherHoursRepository;
+use App\Repository\StudentYearProfileRepository;
 use Symfony\Component\Clock\ClockInterface;
 
 /**
@@ -31,7 +32,8 @@ use Symfony\Component\Clock\ClockInterface;
  *
  *  - responsabilidades de la persona: hasta 3 (enseñanzas que gestiona, grupos y empresas de enlace) y,
  *    para saber si administra el centro, la consulta del conjunto de administradores;
- *  - estancias (1), puestos (1), niveles de los puestos libres (1) y estudiantes con sus grupos (1);
+ *  - estancias (1), puestos (1), niveles de los puestos libres (1), estudiantes con sus grupos (1) y
+ *    estudiantes del curso sin NUSS (1);
  *  - horas dualizadas (1, solo si alguna estancia tiene «Calcular asignaciones por docente»).
  *
  * Todo lo demás se calcula en memoria ({@see DashboardBuilder}).
@@ -44,6 +46,7 @@ final class DashboardLoader
         private readonly GroupRepository $groups,
         private readonly CompanyRepository $companies,
         private readonly StayTeacherHoursRepository $hours,
+        private readonly StudentYearProfileRepository $profiles,
         private readonly ClockInterface $clock,
     ) {}
 
@@ -192,10 +195,12 @@ final class DashboardLoader
             }
         }
 
+        $missingNuss = $this->profiles->findMissingNussStudentIds($year);
+
         $students = [];
         foreach ($levels as $stayId => $byStudent) {
             foreach ($byStudent as $studentId => $studentLevels) {
-                $students[$stayId][$studentId] = new StudentFacts($studentId, $studentLevels);
+                $students[$stayId][$studentId] = new StudentFacts($studentId, $studentLevels, isset($missingNuss[$studentId]));
             }
         }
 

@@ -1,3 +1,5 @@
+{% import 'student_profile/_badges.html.twig' as sp %}
+
 {% macro state_badge(state) %}
     {% if state.value == 'PENDING' %}
         <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -25,9 +27,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro row_flags(position) -%}
+{# Marcas de la fila para los filtros rápidos. Quien no realiza la FFEOE no cuenta como «sin puesto». #}
+{% macro row_flags(position, profile) -%}
+    {%- if profile is not null and not profile.takesFfeoe %}no-ffeoe {% endif -%}
+    {%- if profile is not null and profile.isMissingNuss %}sin-nuss {% endif -%}
     {%- if position is null -%}
-        sin-puesto
+        {%- if profile is null or profile.takesFfeoe %}sin-puesto{% endif -%}
     {%- else -%}
         {%- if position.academicTutor is null %}sin-tutor {% endif -%}
         {%- if position.workplaceMentor is null %}sin-empresa {% endif -%}
@@ -105,6 +110,11 @@
 {%- set by_group                       = d.by_group -%}
 {%- set ungrouped_students             = d.ungrouped_students -%}
 {%- set student_position_map           = d.student_position_map -%}
+{%- set profiles                       = d.profiles -%}
+{%- set profile_edit_all               = d.profile_edit_all -%}
+{%- set profile_editable_ids           = d.profile_editable_ids -%}
+{%- set removable_non_ffeoe            = d.removable_non_ffeoe -%}
+{%- set blocked_non_ffeoe              = d.blocked_non_ffeoe -%}
 {%- set unassigned_positions           = d.unassigned_positions -%}
 {%- set compatible_positions_for_student = d.compatible_positions_for_student -%}
 {%- set count_without_position         = d.count_without_position -%}
@@ -418,10 +428,31 @@
             {% endif %}
         </div>
 
+        {# Alumnado que no realiza la FFEOE y sigue en la estancia: se ofrece quitarlo de una vez. #}
+        {% if removable_non_ffeoe is not empty or blocked_non_ffeoe > 0 %}
+        <div class="px-6 py-2.5 border-b border-gray-100 bg-gray-50/70 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-600">
+            <span class="inline-flex items-center gap-1.5">
+                {{ ux_icon('heroicons:information-circle', {class: 'h-4 w-4 text-gray-400 shrink-0'}) }}
+                {{ 'student_profile.remove.text'|trans({'%count%': removable_non_ffeoe|length + blocked_non_ffeoe}, 'stays') }}
+                {% if blocked_non_ffeoe > 0 %}{{ 'student_profile.remove.blocked'|trans({'%count%': blocked_non_ffeoe}, 'stays') }}{% endif %}
+            </span>
+            {% if removable_non_ffeoe is not empty %}
+                <form class="js-confirm-form" data-live-action="removeNonFfeoeStudents" data-live-params="{}"
+                      data-confirm="{{ 'student_profile.remove.confirm'|trans({'%count%': removable_non_ffeoe|length}, 'stays')|e('html_attr') }}"
+                      data-confirm-label="{{ 'student_profile.remove.button'|trans({}, 'stays')|e('html_attr') }}">
+                    <button type="button"
+                            class="js-confirm-trigger inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-xs hover:bg-gray-50 transition-colors">
+                        {{ 'student_profile.remove.button'|trans({}, 'stays') }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
         {% if by_group is not empty or ungrouped_students is not empty %}
         <div class="px-6 py-2.5 border-b border-gray-100 flex flex-wrap items-center gap-1.5">
             <span class="text-xs text-gray-400 mr-1">{{ 'stays.quickfilter.title'|trans({}, 'stays') }}</span>
-            {% for key in ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres'] %}
+            {% for key in ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'] %}
                 <button type="button" data-filter="{{ key }}" aria-pressed="false"
                         class="js-filter-chip hidden inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
                     {{ ('stays.quickfilter.' ~ key)|trans({}, 'stays') }}
@@ -492,6 +523,7 @@
                             {% for student in entry.students %}
                                 {% set sid = student.id.toRfc4122 %}
                                 {% set position = student_position_map[sid] is defined ? student_position_map[sid] : null %}
+                                {% set profile = profiles[sid] ?? null %}
                                 {% if position is null %}
                                     {% set row_bg = 'hover:bg-gray-50/50' %}
                                 {% elseif position.signed %}
@@ -499,7 +531,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position) }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position, profile) }}">
 
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
@@ -512,18 +544,19 @@
                                                     </span>
                                                 {% endif %}
                                             </p>
-                                            {% if not multi_programme or manageable_student_ids[sid] is defined %}
-                                                <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
-                                            {% endif %}
+                                            {{ sp.residence(profile) }}
+                                            {{ sp.badges(student, profile, profile_edit_all or profile_editable_ids[sid] is defined, path('app_stays_show', {id: stay.id.toRfc4122})) }}
                                         </div>
                                     </td>
 
                                     <td data-label="{{ 'stays.show.card.workcenter'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-64">
-                                        {% if position is null %}
+                                        {% if position is null and profile is not null and not profile.takesFfeoe %}
+                                            <span class="text-xs text-gray-400">{{ 'student_profile.no_position_needed'|trans({}, 'stays') }}</span>
+                                        {% elseif position is null %}
                                             {% set compatible = compatible_positions_for_student[sid] ?? [] %}
                                             {% set manageable_compatible = compatible|filter(pos => manageable_position_ids[pos.id.toRfc4122] is defined) %}
                                             {% if manageable_compatible is not empty %}
-                                                <form class="js-assign-form" data-student-id="{{ sid }}">
+                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"{% endif %}>
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
@@ -688,6 +721,7 @@
                             {% for student in ungrouped_students %}
                                 {% set sid = student.id.toRfc4122 %}
                                 {% set position = student_position_map[sid] is defined ? student_position_map[sid] : null %}
+                                {% set profile = profiles[sid] ?? null %}
                                 {% if position is null %}
                                     {% set row_bg = 'hover:bg-gray-50/50' %}
                                 {% elseif position.signed %}
@@ -695,7 +729,7 @@
                                 {% else %}
                                     {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
                                 {% endif %}
-                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position) }}">
+                                <tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ _self.row_flags(position, profile) }}">
                                     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-44">
                                         <div>
                                             <p class="font-medium text-gray-900 leading-snug">{% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}<input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
@@ -707,17 +741,18 @@
                                                     </span>
                                                 {% endif %}
                                             </p>
-                                            {% if not multi_programme or manageable_student_ids[sid] is defined %}
-                                                <p class="text-xs text-gray-400 font-mono mt-0.5">{{ student.studentId }}</p>
-                                            {% endif %}
+                                            {{ sp.residence(profile) }}
+                                            {{ sp.badges(student, profile, profile_edit_all or profile_editable_ids[sid] is defined, path('app_stays_show', {id: stay.id.toRfc4122})) }}
                                         </div>
                                     </td>
                                     <td data-label="{{ 'stays.show.card.workcenter'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-3 w-64">
-                                        {% if position is null %}
+                                        {% if position is null and profile is not null and not profile.takesFfeoe %}
+                                            <span class="text-xs text-gray-400">{{ 'student_profile.no_position_needed'|trans({}, 'stays') }}</span>
+                                        {% elseif position is null %}
                                             {% set compatible = compatible_positions_for_student[sid] ?? [] %}
                                             {% set manageable_compatible = compatible|filter(pos => manageable_position_ids[pos.id.toRfc4122] is defined) %}
                                             {% if manageable_compatible is not empty %}
-                                                <form class="js-assign-form" data-student-id="{{ sid }}">
+                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"{% endif %}>
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
@@ -1153,7 +1188,7 @@ function writePref(key, value) {
 
 let quickMode = readPref('quickMode');
 let mineOnly  = readPref('mineOnly');
-const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres'];
+const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'];
 let activeFilter = new URLSearchParams(window.location.search).get('filtro');
 if (!FILTERS.includes(activeFilter)) activeFilter = null;
 
@@ -1373,6 +1408,11 @@ function initAssignForm(form) {
         },
         onChange: function (positionId) {
             if (!positionId || !liveComp) return;
+            // Sin NUSS no puede realizar la estancia: se avisa y hay que confirmar.
+            if (form.dataset.nussWarning && !window.confirm(form.dataset.nussWarning)) {
+                dropdown.tomselect?.clear(true);
+                return;
+            }
             liveComp.action('assignPosition', { studentId, positionId });
         },
         onDropdownClose: function () {

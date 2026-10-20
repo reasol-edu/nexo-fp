@@ -15,6 +15,7 @@ use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\StayTeacherHours;
 use App\Entity\Student;
+use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
@@ -122,7 +123,55 @@ class AppFixtures extends Fixture
         $this->buildSharedStay($manager, $aYear, $dawProg, $aProgrammes[0], $dawPy2, $aPyears[1], $dawMGroups[1], $aGroups[1], $mWorkcenters, $aTeachers);
         $this->buildStays($manager, $mYear, $mProgrammes, $mPyears, $sGroups, $sWorkcenters, $mTeachers);
 
+        $this->buildStudentProfiles($manager, $aYear, array_merge($aGroups, $dawMGroups, $dawTGroups));
+        $this->buildStudentProfiles($manager, $mYear, $sGroups);
+
         $manager->flush();
+    }
+
+    /**
+     * Ficha del curso de los estudiantes (NUSS, FFEOE, coche, empresa aportada, actitud y localidades), con
+     * todos los casos a la vista: algún estudiante sin NUSS, alguno que no realiza la FFEOE, alguno con
+     * empresa propia. Todo inventado; una parte del alumnado se queda sin ficha («sin informar»).
+     *
+     * @param list<Group> $groups
+     */
+    private function buildStudentProfiles(ObjectManager $manager, AcademicYear $year, array $groups): void
+    {
+        $towns    = ['Utrera', 'Dos Hermanas', 'Alcalá de Guadaíra', 'Sevilla', 'Los Palacios', 'Lebrija', 'Mairena del Alcor', 'Carmona'];
+        $reasons  = ['Ya realizó la FFEOE en un curso anterior', 'Tiene pendiente aprobar PRL', 'Convalidada por experiencia laboral'];
+        $firms    = ['Informática Peñarroya S.L.', 'Taller Hermanos Ledesma', 'Estudio Gráfico Lucero', 'Soluciones Marisma S.L.'];
+
+        foreach ($groups as $g => $group) {
+            $s = 0;
+            foreach ($group->getStudents() as $student) {
+                $s++;
+                // Cada cuatro estudiantes uno se queda sin ficha: «sin informar».
+                if (($g + $s) % 4 === 0) {
+                    continue;
+                }
+
+                $profile = (new StudentYearProfile($student, $year))
+                    ->setHasNuss(($g * 2 + $s) % 7 !== 3)
+                    ->setHasCar($s % 3 === 0)
+                    ->setResidenceCity($towns[($g + $s) % \count($towns)]);
+
+                if (($g * 3 + $s) % 11 === 6) {
+                    $profile->setTakesFfeoe(false)->setFfeoeExclusionReason($reasons[($g + $s) % \count($reasons)]);
+                }
+                if (($g + $s * 2) % 9 === 4) {
+                    $profile->setBringsCompany(true)->setBroughtCompanyName($firms[($g + $s) % \count($firms)]);
+                }
+                if ($s % 5 === 2) {
+                    $profile->setAttitude(1 + ($g + $s) % 5);
+                }
+                if ($s % 6 === 1) {
+                    $profile->setPreferredCity($towns[($g + $s + 3) % \count($towns)]);
+                }
+
+                $manager->persist($profile);
+            }
+        }
     }
 
     // ── Limpieza de base de datos ─────────────────────────────────────────────
@@ -144,6 +193,7 @@ class AppFixtures extends Fixture
             'DELETE FROM ' . $q('stay_students'),
             'DELETE FROM ' . $q('training_position'),
             'DELETE FROM ' . $q('stay_teacher_hours'),
+            'DELETE FROM ' . $q('student_year_profile'),
             'DELETE FROM ' . $q('stay'),
             'DELETE FROM ' . $q('comment'),
             'DELETE FROM ' . $q('company_audit'),

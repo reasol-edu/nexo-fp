@@ -42,6 +42,8 @@ attention.task.registered_unsigned: '{1} 1 convenio registrado en Séneca sin fi
 attention.task.supply_deficit: '{1} Falta 1 puesto libre (hay %extra% sin puesto)|]1,Inf[ Faltan %count% puestos libres (hay %extra% sin puesto)'
 attention.task.company_without_workers: '{1} %subject%: 1 puesto y ningún trabajador registrado|]1,Inf[ %subject%: %count% puestos y ningún trabajador registrado'
 attention.task.my_unsigned: '{1} 1 de tus convenios sin firmar|]1,Inf[ %count% de tus convenios sin firmar'
+attention.task.students_without_nuss: '{1} 1 estudiante que realiza la FFEOE sin NUSS|]1,Inf[ %count% estudiantes que realizan la FFEOE sin NUSS'
+attention.task.group_without_nuss: '{1} 1 estudiante de %subject% sin NUSS|]1,Inf[ %count% estudiantes de %subject% sin NUSS'
 attention.task.group_without_position: '{1} 1 estudiante de %subject% sin puesto|]1,Inf[ %count% estudiantes de %subject% sin puesto'
 
 # ── Próximos 30 días ─────────────────────────────────────────────────────────────
