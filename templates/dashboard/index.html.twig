@@ -181,7 +181,7 @@
                         {% for card in view.stays %}
                             <tr>
                                 <th scope="row" class="px-4 py-3 text-left font-medium">
-                                    <a href="{{ path('app_stays_show', {id: card.id}) }}" class="text-gray-900 hover:text-plum-700">{{ card.name }}</a>
+                                    <a href="{{ path('app_stays_show', {id: card.id}) }}" class="text-gray-900 underline decoration-gray-300 underline-offset-2 hover:text-plum-700 hover:decoration-plum-400">{{ card.name }}</a>
                                     <span class="block text-xs font-normal text-gray-600">{{ card.programmeNames }}</span>
                                 </th>
                                 <td class="px-4 py-3 text-xs text-gray-700">
@@ -340,7 +340,7 @@
             <h2 id="coverage-title" class="text-sm font-semibold text-gray-800">{{ 'coverage.title'|trans({}, 'dashboard') }}</h2>
             <p class="mt-0.5 text-xs text-gray-600">{{ 'coverage.intro'|trans({}, 'dashboard') }}</p>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto" tabindex="0" role="region" aria-label="{{ 'coverage.title'|trans({}, 'dashboard')|e('html_attr') }}">
             <table class="min-w-full text-sm">
                 <caption class="sr-only">{{ 'coverage.title'|trans({}, 'dashboard') }}</caption>
                 <thead>
