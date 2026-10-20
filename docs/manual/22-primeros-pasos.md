@@ -139,7 +139,7 @@ encontrado* o *Grupo no encontrado*. Las filas repetidas se unen en una. Solo se
 
 Desde **Centro Educativo → Estudiantes** se dan de alta los estudiantes, manualmente o mediante
 **importación masiva por CSV desde Séneca**, y se distribuyen en sus grupos. El listado permite
-búsqueda por NIE o nombre, filtro por grupo y **exportación a Excel**.
+búsqueda por nombre, filtro por grupo y por ficha (sin NUSS, no realizan FFEOE) y **exportación a Excel**.
 
 ### Cómo exportar el CSV de Séneca (perfil Dirección)
 

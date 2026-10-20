@@ -113,7 +113,6 @@
                                                     {{ is_enrolled and not is_locked ? 'data-enrolled' : '' }}
                                                     {{ is_locked ? 'data-locked' : '' }}
                                                     data-name="{{ (student.name.lastName ~ ' ' ~ student.name.firstName)|lower }}"
-                                                    data-id="{{ is_foreign ? '' : student.studentId|lower }}"
                                                     title="{{ is_foreign ? 'stays.students.foreign_hint'|trans({}, 'stays') : (has_position ? 'stays.students.has_position_hint'|trans({}, 'stays') : '') }}">
 
                                                     <input type="checkbox"
@@ -295,7 +294,7 @@
         const q = this.value.trim().toLowerCase();
 
         document.querySelectorAll('.js-student-card').forEach(function (card) {
-            const match = q === '' || (card.dataset.name || '').includes(q) || (card.dataset.id || '').includes(q);
+            const match = q === '' || (card.dataset.name || '').includes(q);
             card.style.display = match ? '' : 'none';
         });
 

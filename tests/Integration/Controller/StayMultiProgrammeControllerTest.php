@@ -502,7 +502,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         }
     }
 
-    public function testExportIncludesProgrammeColumnAndHidesForeignNie(): void
+    public function testExportIncludesProgrammeColumnAndNeverTheNie(): void
     {
         $s = $this->makeScenario();
         $s['shared']->setStudent($s['damStudent']);
@@ -517,7 +517,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         self::assertContains('Enseñanza', $values);
         self::assertContains('DAW', $values);
         self::assertContains('DAM', $values);
-        self::assertContains('NIE-DAW', $values);
+        self::assertNotContains('NIE-DAW', $values);
         self::assertNotContains('NIE-DAM', $values);
     }
 

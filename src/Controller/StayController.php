@@ -566,7 +566,6 @@ class StayController extends AbstractController
             $rows[] = [
                 $student?->getName()->getLastName() ?? '',
                 $student?->getName()->getFirstName() ?? '',
-                $student?->getStudentId() ?? '',
                 $stay->getName(),
                 $stay->getStartDate()->format('d/m/Y'),
                 $groups,
@@ -581,7 +580,6 @@ class StayController extends AbstractController
             [
                 $this->t('stays.export_pending.col.last_name'),
                 $this->t('stays.export_pending.col.first_name'),
-                $this->t('stays.export.col.nie'),
                 $this->t('stays.pending.col.stay'),
                 $this->t('stays.pending.col.start_date'),
                 $this->t('stays.pending.col.group'),
@@ -628,16 +626,12 @@ class StayController extends AbstractController
                 continue;
             }
             $profile    = $student !== null ? ($profiles[$student->getId()->toRfc4122()] ?? null) : null;
-            // El NIE solo lo ve la coordinación del alumno cuando la estancia reúne varias enseñanzas.
-            $showNie = $student !== null
-                && ($stay->getProgrammes()->count() < 2 || $this->scope->canManageStudent($actor, $stay, $student));
-            $tutor      = $position->getAcademicTutor();
+            $tutor     = $position->getAcademicTutor();
             $mentor     = $position->getWorkplaceMentor();
             $workcenter = $position->getWorkcenter();
 
             $rows[] = [
                 $student !== null ? $student->getName()->getLastName() . ', ' . $student->getName()->getFirstName() : '',
-                $showNie ? $student->getStudentId() : '',
                 $position->getProgrammeNames(),
                 $workcenter?->getCompany()->getName() ?? '',
                 $workcenter?->getName() ?? '',
@@ -662,7 +656,6 @@ class StayController extends AbstractController
             'estancia-' . $slug . '-' . $this->clock->now()->format('Y-m-d') . '.xlsx',
             [
                 $this->t('stays.show.col.student'),
-                $this->t('stays.export.col.nie'),
                 $this->t('stays.export.col.programme'),
                 $this->t('stays.export.col.company'),
                 $this->t('stays.export.col.workcenter'),

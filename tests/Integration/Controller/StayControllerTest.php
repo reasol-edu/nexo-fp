@@ -1476,7 +1476,7 @@ class StayControllerTest extends ControllerTestCase
 
         $values = $this->parseXlsxResponse();
         self::assertContains('Empresa Test S.L.', $values);
-        self::assertContains('2024-001', $values);
+        self::assertNotContains('2024-001', $values, 'el NIE solo se muestra en la ficha del estudiante');
     }
 
     /** @return list<string> all non-empty cell values from the first sheet */

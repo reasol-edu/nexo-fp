@@ -128,9 +128,9 @@ Quien **no realiza la FFEOE**:
   vez (solo a los que no tienen puesto; los que ya lo tienen se señalan para liberar su puesto antes).
 - Si el estudiante **no tiene NUSS**, la aplicación avisa antes de asignarle un puesto y hay que confirmar.
 
-El **NIE** solo se muestra en la ficha del estudiante (Centro educativo → Estudiantes), no en los listados de
-la interfaz. El Excel de la estancia lo mantiene e incluye además las columnas NUSS, Realiza FFEOE, Coche,
-Empresa aportada y las dos localidades, pero nunca la actitud.
+El **NIE** solo se muestra en la ficha del estudiante (Centro educativo → Estudiantes): no aparece en ningún
+listado ni exportación. El Excel de la estancia incluye las columnas NUSS, Realiza FFEOE, Coche, Empresa
+aportada y las dos localidades, pero nunca la actitud.
 
 ## 4 — Estados del puesto y tramitación en Séneca
 

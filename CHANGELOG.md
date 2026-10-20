@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Quien no realiza la FFEOE deja de contar como «sin puesto» y sale del avance, la cobertura, los avisos y el reparto de tutorías por docente; no se le puede asignar un puesto mientras no cambie su ficha.
-- El NIE ya no se muestra en los listados de la interfaz (lista de la estancia, matrícula de la estancia, lista de estudiantes, selector de estudiante del puesto y búsqueda global): solo en la ficha del estudiante. Las exportaciones lo siguen incluyendo.
+- El NIE ya no se muestra en ningún listado: ni en la lista de la estancia, la matrícula de la estancia, la lista de estudiantes, el selector de estudiante del puesto o la búsqueda global, ni en el Excel de la estancia y el de firmas pendientes. Solo se ve en la ficha del estudiante.
+- La tabla de asignaciones de la estancia respira más: los dos tutores comparten columna con su etiqueta, el estado y sus acciones se reparten en horizontal, las columnas ya no tienen anchos fijos que apretaban el nombre y las filas tienen más espacio vertical.
 
 ## [2.16.0] - 2026-10-18
 
