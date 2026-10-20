@@ -555,7 +555,7 @@
                                             {% set compatible = compatible_positions_for_student[sid] ?? [] %}
                                             {% set manageable_compatible = compatible|filter(pos => manageable_position_ids[pos.id.toRfc4122] is defined) %}
                                             {% if manageable_compatible is not empty %}
-                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"{% endif %}>
+                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}" data-nuss-confirm-label="{{ 'student_profile.assign_nuss_confirm'|trans({}, 'stays')|e('html_attr') }}"{% endif %}>
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
@@ -758,7 +758,7 @@
                                             {% set compatible = compatible_positions_for_student[sid] ?? [] %}
                                             {% set manageable_compatible = compatible|filter(pos => manageable_position_ids[pos.id.toRfc4122] is defined) %}
                                             {% if manageable_compatible is not empty %}
-                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"{% endif %}>
+                                                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}" data-nuss-confirm-label="{{ 'student_profile.assign_nuss_confirm'|trans({}, 'stays')|e('html_attr') }}"{% endif %}>
                                                     <button type="button"
                                                             class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                                                             title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
@@ -1209,6 +1209,87 @@ if (!FILTERS.includes(activeFilter)) activeFilter = null;
 const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
 const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
 
+// ── Diálogo de confirmación propio de la aplicación ───────────────────────────
+// Modal centrado anclado a <body>, así nunca lo recorta el contenedor de la fila. Accesible:
+// role=dialog, Escape y clic fuera lo cancelan, foco atrapado y devuelto al disparador.
+// Lo usan las acciones destructivas (borrar, duplicar) y los avisos previos a una asignación.
+//   message, label     texto y botón de confirmar
+//   copiesMax/Label    si copiesMax > 0, pide además un número de 1 a copiesMax (onConfirm lo recibe)
+//   warning            tono ámbar en lugar de rojo, para avisos que no son destructivos
+//   onConfirm, onCancel
+function showConfirmDialog(opts) {
+    if (document.querySelector('.js-confirm-overlay')) return;
+    const previousFocus = document.activeElement;
+    const warning = !!opts.warning;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'js-confirm-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4';
+
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.className = 'w-full max-w-sm rounded-2xl border bg-white p-5 shadow-xl ' + (warning ? 'border-amber-200' : 'border-red-200');
+    dialog.innerHTML =
+        '<p class="text-sm leading-snug text-gray-700 mb-4"></p>' +
+        '<div class="flex items-center justify-end gap-2">' +
+        '  <button type="button" class="js-confirm-cancel rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">' + LABEL_CANCEL + '</button>' +
+        '  <button type="button" class="js-confirm-go rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors ' + (warning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700') + '"></button>' +
+        '</div>';
+    dialog.querySelector('p').textContent = opts.message ?? '';
+    dialog.querySelector('.js-confirm-go').textContent = opts.label ?? LABEL_CONFIRM;
+
+    // Diálogos que piden además un número (p. ej. cuántas copias de un puesto crear)
+    let copiesInput = null;
+    if (opts.copiesMax > 0) {
+        const label = document.createElement('label');
+        label.className = 'mb-4 flex items-center gap-2 text-sm text-gray-700';
+        label.textContent = opts.copiesLabel ?? '';
+        copiesInput = document.createElement('input');
+        copiesInput.type = 'number';
+        copiesInput.min = '1';
+        copiesInput.max = String(opts.copiesMax);
+        copiesInput.value = '1';
+        copiesInput.className = 'w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm focus:border-plum-500 focus:outline-none focus:ring-1 focus:ring-plum-500';
+        label.appendChild(copiesInput);
+        dialog.insertBefore(label, dialog.querySelector('.flex.items-center.justify-end'));
+    }
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    const cancelBtn = dialog.querySelector('.js-confirm-cancel');
+    const goBtn     = dialog.querySelector('.js-confirm-go');
+
+    function closeDialog() {
+        document.removeEventListener('keydown', onKeydown);
+        overlay.remove();
+        if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    }
+    function cancel() {
+        closeDialog();
+        if (opts.onCancel) opts.onCancel();
+    }
+    function onKeydown(ev) {
+        if (ev.key === 'Escape') { ev.preventDefault(); cancel(); return; }
+        if (ev.key === 'Tab') {
+            const f = dialog.querySelectorAll('button');
+            const first = f[0], last = f[f.length - 1];
+            if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+            else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+        }
+    }
+    cancelBtn.addEventListener('click', cancel);
+    overlay.addEventListener('mousedown', function (ev) { if (ev.target === overlay) cancel(); });
+    goBtn.addEventListener('click', function () {
+        const copies = copiesInput
+            ? Math.max(1, Math.min(opts.copiesMax, parseInt(copiesInput.value, 10) || 1))
+            : null;
+        closeDialog();
+        if (opts.onConfirm) opts.onConfirm(copies);
+    });
+    document.addEventListener('keydown', onKeydown);
+    cancelBtn.focus();
+}
+
 // ── Single delegated listener for all interactive clicks ──────────────────────
 // Handles confirm panels, assign triggers, and inline triggers. Using delegation
 // (instead of per-element listeners) avoids stale listener accumulation across
@@ -1275,76 +1356,25 @@ function setupEventDelegation() {
             const form = confirmTrigger.closest('.js-confirm-form');
             if (!form || document.querySelector('.js-confirm-overlay')) return;
             const isLive = !!form.dataset.liveAction;
-            const previousFocus = document.activeElement;
-
-            const overlay = document.createElement('div');
-            overlay.className = 'js-confirm-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4';
-
-            const dialog = document.createElement('div');
-            dialog.setAttribute('role', 'dialog');
-            dialog.setAttribute('aria-modal', 'true');
-            dialog.className = 'w-full max-w-sm rounded-2xl border border-red-200 bg-white p-5 shadow-xl';
-            dialog.innerHTML =
-                '<p class="text-sm leading-snug text-gray-700 mb-4"></p>' +
-                '<div class="flex items-center justify-end gap-2">' +
-                '  <button type="button" class="js-confirm-cancel rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">' + LABEL_CANCEL + '</button>' +
-                '  <button type="button" class="js-confirm-go rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">' + (form.dataset.confirmLabel || LABEL_CONFIRM) + '</button>' +
-                '</div>';
-            dialog.querySelector('p').textContent = form.dataset.confirm ?? '';
-
-            // Diálogos que piden además un número (p. ej. cuántas copias de un puesto crear)
-            let copiesInput = null;
-            if (form.dataset.confirmCopies) {
-                const label = document.createElement('label');
-                label.className = 'mb-4 flex items-center gap-2 text-sm text-gray-700';
-                label.textContent = form.dataset.confirmCopiesLabel ?? '';
-                copiesInput = document.createElement('input');
-                copiesInput.type = 'number';
-                copiesInput.min = '1';
-                copiesInput.max = form.dataset.confirmCopies;
-                copiesInput.value = '1';
-                copiesInput.className = 'w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm focus:border-plum-500 focus:outline-none focus:ring-1 focus:ring-plum-500';
-                label.appendChild(copiesInput);
-                dialog.insertBefore(label, dialog.querySelector('.flex.items-center.justify-end'));
-            }
-            overlay.appendChild(dialog);
-            document.body.appendChild(overlay);
-
-            const cancelBtn = dialog.querySelector('.js-confirm-cancel');
-            const goBtn     = dialog.querySelector('.js-confirm-go');
-
-            function closeDialog() {
-                document.removeEventListener('keydown', onKeydown);
-                overlay.remove();
-                if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
-            }
-            function onKeydown(ev) {
-                if (ev.key === 'Escape') { ev.preventDefault(); closeDialog(); return; }
-                if (ev.key === 'Tab') {
-                    const f = dialog.querySelectorAll('button');
-                    const first = f[0], last = f[f.length - 1];
-                    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
-                    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
-                }
-            }
-            cancelBtn.addEventListener('click', closeDialog);
-            overlay.addEventListener('mousedown', function (ev) { if (ev.target === overlay) closeDialog(); });
-            goBtn.addEventListener('click', function () {
-                if (copiesInput) {
-                    const hidden = form.querySelector('input[name="copies"]');
-                    if (hidden) hidden.value = String(Math.max(1, Math.min(parseInt(form.dataset.confirmCopies, 10), parseInt(copiesInput.value, 10) || 1)));
-                }
-                closeDialog();
-                if (isLive) {
-                    if (liveComp) liveComp.action(form.dataset.liveAction, JSON.parse(form.dataset.liveParams || '{}'));
-                } else if (typeof form.requestSubmit === 'function') {
-                    form.requestSubmit();
-                } else {
-                    form.submit();
-                }
+            showConfirmDialog({
+                message: form.dataset.confirm ?? '',
+                label: form.dataset.confirmLabel || LABEL_CONFIRM,
+                copiesMax: form.dataset.confirmCopies ? parseInt(form.dataset.confirmCopies, 10) : 0,
+                copiesLabel: form.dataset.confirmCopiesLabel ?? '',
+                onConfirm: function (copies) {
+                    if (copies !== null) {
+                        const hidden = form.querySelector('input[name="copies"]');
+                        if (hidden) hidden.value = String(copies);
+                    }
+                    if (isLive) {
+                        if (liveComp) liveComp.action(form.dataset.liveAction, JSON.parse(form.dataset.liveParams || '{}'));
+                    } else if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
+                },
             });
-            document.addEventListener('keydown', onKeydown);
-            cancelBtn.focus();
             return;
         }
 
@@ -1423,8 +1453,14 @@ function initAssignForm(form) {
         onChange: function (positionId) {
             if (!positionId || !liveComp) return;
             // Sin NUSS no puede realizar la estancia: se avisa y hay que confirmar.
-            if (form.dataset.nussWarning && !window.confirm(form.dataset.nussWarning)) {
-                dropdown.tomselect?.clear(true);
+            if (form.dataset.nussWarning) {
+                showConfirmDialog({
+                    message: form.dataset.nussWarning,
+                    label: form.dataset.nussConfirmLabel || LABEL_CONFIRM,
+                    warning: true,
+                    onConfirm: function () { liveComp.action('assignPosition', { studentId, positionId }); },
+                    onCancel: function () { dropdown.tomselect?.clear(true); },
+                });
                 return;
             }
             liveComp.action('assignPosition', { studentId, positionId });

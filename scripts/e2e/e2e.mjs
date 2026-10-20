@@ -141,6 +141,38 @@ const TESTS = [
     },
   },
   {
+    name: 'ficha del estudiante: diálogo con selectores Sí/No y aviso propio al asignar a quien no tiene NUSS',
+    run: async (page) => {
+      await openStay(page, DAW_STAY);
+      // Un estudiante sin puesto al que se puede asignar uno.
+      const row = page.locator('tr.js-student-row:has(.js-assign-trigger):has(a[data-controller="student-profile"])').first();
+      if (!(await row.count())) return; // sin alumnado asignable
+      await row.locator('a[data-controller="student-profile"]').click();
+      const dialog = page.locator('dialog[open]');
+      await dialog.waitFor({ timeout: 5000 });
+      assert((await dialog.locator('input[type="radio"][name="has_nuss"]').count()) === 2, 'NUSS debería ser un selector doble Sí / No');
+      await page.keyboard.press('Escape');
+      assert((await page.locator('dialog[open]').count()) === 0, 'Escape debería cerrar la ficha');
+
+      // Se marca sin NUSS desde la propia ficha y se intenta asignar un puesto.
+      await row.locator('a[data-controller="student-profile"]').click();
+      await dialog.waitFor({ timeout: 5000 });
+      await dialog.locator('label:has(input[name="has_nuss"][value="0"])').click();
+      await Promise.all([page.waitForLoadState('networkidle'), dialog.locator('button[type="submit"]').click()]);
+      await page.waitForSelector('[data-nuss-warning]', { timeout: 10000 });
+
+      const form = page.locator('form.js-assign-form[data-nuss-warning]').first();
+      await form.locator('.js-assign-trigger').click();
+      await page.locator('.ts-dropdown .option:not(:empty)').nth(1).click();
+      const overlay = page.locator('.js-confirm-overlay');
+      await overlay.waitFor({ timeout: 5000 });
+      assert((await overlay.textContent()).includes('no dispone de NUSS'), 'el aviso debería hablar del NUSS');
+      await overlay.locator('.js-confirm-cancel').click();
+      assert((await page.locator('.js-confirm-overlay').count()) === 0, 'Cancelar debería cerrar el aviso');
+      assert((await page.locator('form.js-assign-form[data-nuss-warning]').count()) > 0, 'cancelar no asigna el puesto');
+    },
+  },
+  {
     name: 'paleta de búsqueda (Ctrl+K): acciones al abrir, búsqueda y Escape',
     run: async (page) => {
       await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });

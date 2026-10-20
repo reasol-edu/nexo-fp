@@ -396,6 +396,7 @@ student_profile.field.preferred: 'Localidad preferente'
 
 # Insignias de la ficha en las listas
 student_profile.assign_nuss_warning: '%student% no dispone de NUSS y no podrá realizar la estancia. ¿Asignarle el puesto de todos modos?'
+student_profile.assign_nuss_confirm: 'Asignar de todos modos'
 student_profile.no_position_needed: 'No necesita puesto'
 student_profile.remove.text: '{1} 1 estudiante no realiza la FFEOE y sigue en la estancia.|]1,Inf[ %count% estudiantes no realizan la FFEOE y siguen en la estancia.'
 student_profile.remove.button: 'Quitarlos de la estancia'
