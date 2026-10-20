@@ -209,6 +209,11 @@ const SHOTS = [
       ['calendario', go('/calendario')], ['centro', go('/mi-centro')]].map(([n, step]) => (
     { name: `movil-${n}`, group: 'mobile', out: `var/screenshots/mobile/${n}.png`, size: [390, 844, 2], full: true, steps: [step, wait(1500)] })),
 
+  // ── Revisión del detalle de la estancia a distintos anchos (tarjetas, tablet, escritorio). Grupo `responsive`. ──
+  ...[[360, 780], [390, 844], [600, 900], [768, 1024], [1024, 768], [1280, 800], [1920, 1080]].map(([w, h]) => (
+    { name: `ancho-${w}`, group: 'responsive', out: `var/screenshots/responsive/estancia-${w}.png`, size: [w, h, 1], full: true,
+      steps: [openStay(DAW_STAY), wait(1500)] })),
+
   // ── Capturas que MODIFICAN los datos de las fixtures: van al final para no alterar las anteriores ──
   // Asigna un tutor a varios puestos y deja a la vista el aviso con «Deshacer».
   { name: 'estancia-deshacer', group: 'manual', out: `${M}/estancia-deshacer.png`, size: [1440, 900, 1], user: 'diego.romero',
