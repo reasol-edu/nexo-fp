@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.17.1] - 2026-10-21
+
+### Fixed
+
+- En la lista de estudiantes de la estancia, en el modo tarjeta (móvil) el tutor/a docente aparecía duplicado.
+- Entre 640 y 1279 px de ancho (tabletas y portátiles pequeños) los tutores no se veían o la tabla se cortaba por la derecha. Ahora se resumen bajo la empresa en solo lectura y la columna de tutores, con la asignación en línea, aparece desde 1280 px.
+
+### Changed
+
+- La tabla de la estancia da más espacio al estado: los botones de la fila van en vertical y los de cambio de estado miden todos lo mismo. En móvil siguen al pie de la tarjeta.
+
 ## [2.17.0] - 2026-10-21
 
 ### Added
