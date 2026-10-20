@@ -107,7 +107,7 @@ const SHOTS = [
   { name: 'estancia-compartida', group: 'manual', out: `${M}/estancia-compartida.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200)] },
   // Ficha del estudiante en el curso: insignias en la lista (sin NUSS, no realiza FFEOE, empresa aportada…) y diálogo de edición.
-  { name: 'estancia-ficha-insignias', group: 'manual', out: `${M}/estancia-ficha-insignias.png`, size: [1440, 1450, 1],
+  { name: 'estancia-ficha-insignias', group: 'manual', out: `${M}/estancia-ficha-insignias.png`, size: [1440, 2000, 1],
     steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
       await page.addStyleTag({ content: 'header, [class*="sticky"], [class*="fixed"] { display:none !important; }' });
     }],
