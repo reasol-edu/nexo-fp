@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.17.0] - 2026-10-21
+
 ### Added
 
 - Ficha del estudiante en el curso, con datos que valen solo para ese curso (empieza vacía cada curso): si dispone de **NUSS** (sí / no / sin informar), si **realiza la FFEOE** (con el motivo si no la realiza), si dispone de **coche**, si **aporta empresa** (y cuál), **actitud** de 1 a 5 (opcional), **localidad de residencia** y **localidad preferente**. Se edita en un diálogo desde el lápiz de cada estudiante, con selectores dobles Sí / No. La editan la administración del centro, la coordinación de las enseñanzas del estudiante, la jefatura de su familia y la tutoría de sus grupos; la actitud solo la ven quienes pueden editar la ficha. Un curso anterior es de solo lectura.
