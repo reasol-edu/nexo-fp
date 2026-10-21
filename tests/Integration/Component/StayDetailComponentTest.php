@@ -491,7 +491,7 @@ class StayDetailComponentTest extends ControllerTestCase
         $this->flush();
 
         $component = $this->detail($admin, $stay);
-        self::assertStringContainsString('Falta el tutor dual docente o el de empresa', (string) $component->render());
+        self::assertStringContainsString('Faltan los tutores', (string) $component->render());
 
         $component->call('changeState', ['positionId' => $position->getId()->toRfc4122(), 'state' => 'PENDING']);
 

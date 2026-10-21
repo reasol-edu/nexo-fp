@@ -63,7 +63,7 @@
                 {% if st == 'DRAFT' %}
                     {% if blocked %}
                         <span class="inline-flex items-center gap-1 text-xs text-amber-700"
-                              title="{{ 'stays.state_action.missing_tutors'|trans({}, 'stays')|e('html_attr') }}">
+                              title="{{ 'stays.state_action.missing_tutors_hint'|trans({}, 'stays')|e('html_attr') }}">
                             {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
                             {{ (missing_academic and missing_mentor ? 'stays.state_action.missing_tutors' : (missing_academic ? 'stays.state_action.missing_academic' : 'stays.state_action.missing_mentor'))|trans({}, 'stays') }}
                         </span>
