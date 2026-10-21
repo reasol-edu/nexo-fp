@@ -22,11 +22,20 @@ export default class extends Controller {
         this.selected = new Set();
         this.observer = new MutationObserver(() => this.sync());
         this.observer.observe(this.element, { childList: true, subtree: true });
+        // La lista avisa cuando un filtro, una búsqueda o un grupo plegado ocultan filas (no cambia el DOM, solo clases).
+        this.onRefresh = () => this.sync();
+        this.element.addEventListener('bulk-select:refresh', this.onRefresh);
         this.sync();
     }
 
     disconnect() {
         this.observer?.disconnect();
+        this.element.removeEventListener('bulk-select:refresh', this.onRefresh);
+    }
+
+    // Casillas de las filas que se ven: las ocultas por un filtro o un grupo plegado no se marcan ni se envían.
+    get visibleBoxes() {
+        return this.rowTargets.filter((box) => !box.closest('tr.hidden'));
     }
 
     toggle(event) {
@@ -36,7 +45,7 @@ export default class extends Controller {
     }
 
     toggleAll(event) {
-        this.rowTargets.forEach((box) => {
+        this.visibleBoxes.forEach((box) => {
             if (event.target.checked) this.selected.add(box.value); else this.selected.delete(box.value);
         });
         this.sync();
@@ -49,7 +58,7 @@ export default class extends Controller {
 
     async run(event) {
         const op = event.currentTarget.dataset.op;
-        const ids = [...this.selected].filter((id) => this.rowTargets.some((box) => box.value === id));
+        const ids = [...this.selected].filter((id) => this.visibleBoxes.some((box) => box.value === id));
         if (ids.length === 0) return;
 
         const args = { op, positionIds: ids };
@@ -74,17 +83,19 @@ export default class extends Controller {
         [...this.selected].forEach((id) => { if (!present.has(id)) this.selected.delete(id); });
         this.rowTargets.forEach((box) => { box.checked = this.selected.has(box.value); });
 
+        // Solo cuentan las filas visibles: lo marcado que queda oculto no se ve ni se envía.
+        const visible         = this.visibleBoxes;
+        const selectedVisible = visible.filter((box) => this.selected.has(box.value)).length;
         if (this.hasAllTarget) {
-            const total = this.rowTargets.length;
-            this.allTarget.checked = total > 0 && this.selected.size === total;
-            this.allTarget.indeterminate = this.selected.size > 0 && this.selected.size < total;
+            this.allTarget.checked = visible.length > 0 && selectedVisible === visible.length;
+            this.allTarget.indeterminate = selectedVisible > 0 && selectedVisible < visible.length;
         }
         if (this.hasBarTarget) {
-            this.barTarget.classList.toggle('hidden', this.selected.size === 0);
+            this.barTarget.classList.toggle('hidden', selectedVisible === 0);
         }
         if (this.hasCountTarget) {
             const template = this.countTarget.dataset.template ?? '%count%';
-            this.countTarget.textContent = template.replace('%count%', String(this.selected.size));
+            this.countTarget.textContent = template.replace('%count%', String(selectedVisible));
         }
         // Las modificaciones anteriores disparan el observador: se ignoran en este turno.
         setTimeout(() => { this.syncing = false; }, 0);

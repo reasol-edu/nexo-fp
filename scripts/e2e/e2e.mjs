@@ -112,6 +112,99 @@ const TESTS = [
     },
   },
   {
+    name: 'búsqueda y filtro de grupo: reducen la lista, avisan si no hay coincidencias y se quitan',
+    run: async (page) => {
+      await openStay(page, DAW_STAY);
+      const rowsBefore = await page.locator('tbody tr.js-student-row:visible').count();
+      const search = page.locator('.js-stay-search');
+      await search.fill('indra');
+      const found = await page.locator('tbody tr.js-student-row:visible').count();
+      assert(found > 0 && found < rowsBefore, `buscar por empresa debería dejar algunas filas (${rowsBefore} → ${found})`);
+      for (const text of await page.locator('tbody tr.js-student-row:visible').evaluateAll((rows) => rows.map((r) => r.dataset.search.toLowerCase()))) {
+        assert(text.includes('indra'), `todas las filas visibles deberían coincidir con la búsqueda (${text})`);
+      }
+      await search.fill('zzzz sin coincidencias');
+      assert(await page.locator('.js-empty-row').isVisible(), 'debería avisar de que no hay coincidencias');
+      await search.fill('');
+      assert((await page.locator('tbody tr.js-student-row:visible').count()) === rowsBefore, 'al vaciar la búsqueda vuelven todas las filas');
+      assert(!(await page.locator('.js-empty-row').isVisible()), 'el aviso de sin coincidencias debería desaparecer');
+
+      // El texto buscado no va a la URL (los nombres de estudiantes no deben acabar en el historial); el grupo sí.
+      await search.fill('indra');
+      assert(!page.url().includes('indra'), 'la búsqueda de texto no debería escribirse en la URL');
+      await search.fill('');
+      const group = page.locator('.js-stay-group');
+      const options = await group.locator('option').evaluateAll((os) => os.map((o) => o.value).filter(Boolean));
+      assert(options.length > 1, 'debería haber varios grupos para filtrar');
+      await group.selectOption(options[0]);
+      assert(page.url().includes('grupo=' + options[0]), 'el grupo elegido debería quedar en la URL');
+      const inGroup = await page.locator('tbody tr.js-student-row:visible').count();
+      assert(inGroup > 0 && inGroup < rowsBefore, `el filtro de grupo debería reducir la lista (${rowsBefore} → ${inGroup})`);
+      await group.selectOption('');
+      assert((await page.locator('tbody tr.js-student-row:visible').count()) === rowsBefore, 'al quitar el grupo vuelven todas las filas');
+    },
+  },
+  {
+    name: 'grupos plegables: se oculta el grupo, se recuerda al recargar y la selección múltiple solo cuenta lo visible',
+    run: async (page) => {
+      await openStay(page, DAW_STAY);
+      await page.evaluate(() => Object.keys(window.localStorage).filter((k) => k.startsWith('nexo.stay.collapsed')).forEach((k) => window.localStorage.removeItem(k)));
+      await page.reload({ waitUntil: 'networkidle' });
+      const rowsBefore = await page.locator('tbody tr.js-student-row:visible').count();
+      const toggle = page.locator('tr.table-group-header .js-group-toggle').first();
+      assert((await toggle.getAttribute('aria-expanded')) === 'true', 'el grupo debería empezar desplegado');
+      await toggle.click();
+      assert((await toggle.getAttribute('aria-expanded')) === 'false', 'el grupo debería quedar plegado (aria-expanded)');
+      const rowsAfter = await page.locator('tbody tr.js-student-row:visible').count();
+      assert(rowsAfter < rowsBefore, `plegar debería ocultar filas (${rowsBefore} → ${rowsAfter})`);
+
+      // «Marcar todos» no marca lo que está oculto por un grupo plegado
+      const all = page.locator('[data-bulk-select-target="all"]');
+      if (await all.count()) {
+        await all.check();
+        const checkedHidden = await page.locator('tr.js-student-row.hidden [data-bulk-select-target="row"]:checked').count();
+        assert(checkedHidden === 0, 'no debería marcarse ninguna casilla de una fila oculta');
+        await all.uncheck();
+      }
+
+      await page.reload({ waitUntil: 'networkidle' });
+      assert((await page.locator('tbody tr.js-student-row:visible').count()) === rowsAfter, 'el grupo plegado debería recordarse al recargar');
+      await page.locator('tr.table-group-header .js-group-toggle').first().click();
+      assert((await page.locator('tbody tr.js-student-row:visible').count()) === rowsBefore, 'al desplegar vuelven todas las filas');
+    },
+  },
+  {
+    name: 'menú «⋯» del estado: se abre, ofrece volver a borrador y Escape lo cierra',
+    run: async (page) => {
+      await openStay(page, DAW_STAY);
+      const button = page.locator('button[popovertarget^="state-menu-"]').first();
+      await button.scrollIntoViewIfNeeded();
+      await button.click();
+      const menu = page.locator('.js-state-menu:popover-open');
+      await menu.waitFor({ state: 'visible', timeout: 3000 });
+      assert((await menu.innerText()).match(/borrador/i), 'el menú debería ofrecer volver a borrador');
+      const box = await menu.boundingBox();
+      const view = page.viewportSize();
+      assert(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height, 'el menú debería quedar dentro de la ventana');
+      await page.keyboard.press('Escape');
+      assert((await page.locator('.js-state-menu:popover-open').count()) === 0, 'Escape debería cerrar el menú');
+    },
+  },
+  {
+    name: 'la barra de búsqueda y la cabecera de la tabla se quedan fijas al hacer scroll (escritorio)',
+    run: async (page) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await openStay(page, DAW_STAY);
+      await page.mouse.move(700, 400);
+      await page.mouse.wheel(0, 600);
+      await page.waitForTimeout(400);
+      const bar = await page.locator('.js-stay-toolbar').boundingBox();
+      const head = await page.locator('table.table-sticky thead th').first().boundingBox();
+      assert(bar && bar.y >= 50 && bar.y < 120, `la barra debería quedar fija bajo la cabecera (y=${bar?.y})`);
+      assert(head && head.y >= bar.y + bar.height - 2 && head.y < bar.y + bar.height + 30, `la cabecera de la tabla debería quedar pegada bajo la barra (y=${head?.y})`);
+    },
+  },
+  {
     name: 'preferencias recordadas en el navegador (modo asignación rápida)',
     run: async (page) => {
       await openStay(page, DAW_STAY);

@@ -29,12 +29,18 @@
     {%- endif -%}
 {%- endmacro %}
 
+{#
+  Estado del puesto: la insignia con el estado y la firma, una barra de tres tramos con el avance
+  (borrador → pendiente → registrado), el siguiente paso como único botón destacado y las acciones
+  poco habituales (volver a borrador, quitar la firma) en el menú «⋯».
+#}
 {% macro state_cell(position, can_edit, stay_id) %}
     {% set st = position.state.value %}
+    {% set step = st == 'DONE' ? 3 : (st == 'PENDING' ? 2 : 1) %}
     {% set missing_academic = position.academicTutor is null %}
     {% set missing_mentor = position.workplaceMentor is null %}
     {% set blocked = (st == 'DRAFT') and (missing_academic or missing_mentor) %}
-    <div class="space-y-2">
+    <div class="space-y-1.5">
         <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             {{ _self.state_badge(position.state) }}
             {% if position.signed %}
@@ -46,9 +52,14 @@
                 <span class="text-xs text-gray-400">{{ 'stays.show.not_signed'|trans({}, 'stays') }}</span>
             {% endif %}
         </div>
+        <div class="flex w-24 gap-0.5" aria-hidden="true">
+            {% for n in 1..3 %}
+                <span class="h-1 flex-1 rounded-full {{ n <= step ? (st == 'DONE' ? 'bg-green-500' : (st == 'PENDING' ? 'bg-amber-400' : 'bg-gray-400')) : 'bg-gray-200' }}"></span>
+            {% endfor %}
+        </div>
         {% if can_edit %}
-            {# Rejilla de una columna: si hay varios botones, todos miden lo que el más ancho. #}
-            <div class="inline-grid gap-1.5">
+            {% set secondary = st == 'PENDING' or st == 'DONE' %}
+            <div class="flex items-center gap-1.5">
                 {% if st == 'DRAFT' %}
                     {% if blocked %}
                         <span class="inline-flex items-center gap-1 text-xs text-amber-700"
@@ -61,16 +72,39 @@
                     {% endif %}
                 {% elseif st == 'PENDING' %}
                     {{ _self.state_button(position, 'DONE', 'stays.state_action.to_done', true) }}
-                    {{ _self.state_button(position, 'DRAFT', 'stays.state_action.to_draft', false) }}
-                {% else %}
+                {% elseif not position.signed %}
                     <button type="button"
-                            class="inline-flex items-center justify-center rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
                             data-action="live#action" data-live-action-param="setSigned"
                             data-live-position-id-param="{{ position.id.toRfc4122 }}"
-                            data-live-signed-param="{{ position.signed ? 'false' : 'true' }}">
-                        {{ (position.signed ? 'stays.state_action.unsign' : 'stays.state_action.sign')|trans({}, 'stays') }}
+                            data-live-signed-param="true">
+                        {{ 'stays.state_action.sign'|trans({}, 'stays') }}
                     </button>
-                    {{ _self.state_button(position, 'DRAFT', 'stays.state_action.to_draft', false) }}
+                {% endif %}
+                {% if secondary %}
+                    {# Menú con la API Popover (capa superior): no lo recorta la tabla con scroll. Se coloca en el script de la lista. #}
+                    {% set menu_id = 'state-menu-' ~ position.id.toRfc4122 %}
+                    <button type="button" popovertarget="{{ menu_id }}"
+                            class="inline-flex items-center rounded-md border border-gray-200 p-0.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                            title="{{ 'stays.state_action.more'|trans({}, 'stays')|e('html_attr') }}" aria-label="{{ 'stays.state_action.more'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ ux_icon('heroicons:ellipsis-horizontal', {class: 'h-4 w-4'}) }}
+                    </button>
+                    <div id="{{ menu_id }}" popover class="js-state-menu m-0 min-w-40 rounded-lg border border-gray-200 bg-white p-1 text-xs shadow-lg">
+                        {% if st == 'DONE' and position.signed %}
+                            <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+                                    data-action="live#action" data-live-action-param="setSigned"
+                                    data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                                    data-live-signed-param="false">
+                                {{ 'stays.state_action.unsign'|trans({}, 'stays') }}
+                            </button>
+                        {% endif %}
+                        <button type="button" class="block w-full rounded-md px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+                                data-action="live#action" data-live-action-param="changeState"
+                                data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                                data-live-state-param="DRAFT">
+                            {{ 'stays.state_action.to_draft'|trans({}, 'stays') }}
+                        </button>
+                    </div>
                 {% endif %}
             </div>
         {% endif %}
@@ -79,7 +113,7 @@
 
 {% macro state_button(position, target, label, primary) %}
     <button type="button"
-            class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors
                    {{ primary ? 'border-plum-200 bg-plum-50 text-plum-700 hover:bg-plum-100' : 'border-gray-200 text-gray-500 hover:bg-gray-50' }}"
             data-action="live#action" data-live-action-param="changeState"
             data-live-position-id-param="{{ position.id.toRfc4122 }}"

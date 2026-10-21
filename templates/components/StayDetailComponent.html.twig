@@ -32,6 +32,9 @@
 {%- set blocked_non_ffeoe              = d.blocked_non_ffeoe -%}
 {%- set unassigned_positions           = d.unassigned_positions -%}
 {%- set compatible_positions_for_student = d.compatible_positions_for_student -%}
+{%- set position_fits                  = d.position_fits -%}
+{%- set tutor_suggestions              = d.tutor_suggestions -%}
+{%- set group_stats                    = d.group_stats -%}
 {%- set count_without_position         = d.count_without_position -%}
 {%- set count_unsigned                 = d.count_unsigned -%}
 {%- set programme_teachers             = d.programme_teachers -%}
@@ -287,7 +290,8 @@
     {% endif %}
 
     {# ── Estudiantes ──────────────────────────────────────────────────────── #}
-    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden">
+    {# overflow-clip (no hidden): recorta igual las esquinas pero no crea un contenedor de scroll, que rompería el sticky de la barra y la cabecera. #}
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-clip">
 
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
             <h2 class="text-sm font-semibold text-gray-900 shrink-0">
@@ -365,16 +369,48 @@
         {% endif %}
 
         {% if by_group is not empty or ungrouped_students is not empty %}
-        <div class="px-6 py-2.5 border-b border-gray-100 flex flex-wrap items-center gap-1.5">
-            <span class="text-xs text-gray-400 mr-1">{{ 'stays.quickfilter.title'|trans({}, 'stays') }}</span>
-            {% for key in ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'] %}
-                <button type="button" data-filter="{{ key }}" aria-pressed="false"
-                        class="js-filter-chip hidden inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                    {{ ('stays.quickfilter.' ~ key)|trans({}, 'stays') }}
-                    <span class="js-chip-count tabular-nums text-gray-400"></span>
-                </button>
-            {% endfor %}
-            <button type="button" class="js-filter-clear hidden text-xs text-plum-600 hover:text-plum-800 ml-1">{{ 'stays.quickfilter.clear'|trans({}, 'stays') }}</button>
+        {# Barra de búsqueda y filtros: se queda fija bajo la cabecera al hacer scroll (desde 1024 px). #}
+        <div class="js-stay-toolbar border-b border-gray-100 bg-white lg:sticky lg:top-14 lg:z-20">
+            <div class="px-6 pt-3 pb-1.5 flex flex-wrap items-center gap-2">
+                {# data-live-ignore: lo escrito no se pierde cuando la lista se repinta por un cambio de otra persona. #}
+                <div data-live-ignore class="relative flex-1 min-w-48 max-w-xs">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        {{ ux_icon('heroicons:magnifying-glass', {class: 'h-4 w-4 text-gray-400'}) }}
+                    </div>
+                    <input type="search" class="js-stay-search block w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-9 pr-3 text-sm
+                                                  text-gray-900 placeholder-gray-400 focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                           placeholder="{{ 'stays.toolbar.search'|trans({}, 'stays')|e('html_attr') }}"
+                           aria-label="{{ 'stays.toolbar.search'|trans({}, 'stays')|e('html_attr') }}" autocomplete="off">
+                </div>
+                {% if by_group|length + (ungrouped_students is not empty ? 1 : 0) > 1 %}
+                    <select class="js-stay-group rounded-lg border border-gray-200 bg-white py-1.5 pl-3 pr-8 text-sm text-gray-700 focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors"
+                            aria-label="{{ 'stays.toolbar.group'|trans({}, 'stays')|e('html_attr') }}">
+                        <option value="">{{ 'stays.toolbar.all_groups'|trans({}, 'stays') }}</option>
+                        {% for entry in by_group %}
+                            <option value="{{ entry.group.id.toRfc4122 }}">{{ entry.group.name }}</option>
+                        {% endfor %}
+                        {% if ungrouped_students is not empty %}
+                            <option value="none">{{ 'stays.show.no_group'|trans({}, 'stays') }}</option>
+                        {% endif %}
+                    </select>
+                    <button type="button" class="js-groups-toggle-all ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                            data-label-collapse="{{ 'stays.toolbar.collapse'|trans({}, 'stays')|e('html_attr') }}"
+                            data-label-expand="{{ 'stays.toolbar.expand'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ 'stays.toolbar.collapse'|trans({}, 'stays') }}
+                    </button>
+                {% endif %}
+            </div>
+            <div class="px-6 pb-2.5 flex flex-wrap items-center gap-1.5">
+                <span class="text-xs text-gray-400 mr-1">{{ 'stays.quickfilter.title'|trans({}, 'stays') }}</span>
+                {% for key in ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'] %}
+                    <button type="button" data-filter="{{ key }}" aria-pressed="false"
+                            class="js-filter-chip hidden inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                        {{ ('stays.quickfilter.' ~ key)|trans({}, 'stays') }}
+                        <span class="js-chip-count tabular-nums text-gray-400"></span>
+                    </button>
+                {% endfor %}
+                <button type="button" class="js-filter-clear hidden text-xs text-plum-600 hover:text-plum-800 ml-1">{{ 'stays.quickfilter.clear'|trans({}, 'stays') }}</button>
+            </div>
         </div>
         {% endif %}
 
@@ -393,8 +429,9 @@
                 {% endif %}
             </div>
         {% else %}
-            <div class="overflow-x-auto">
-                <table class="table-cards min-w-full text-sm">
+            {# Con scroll horizontal hasta 1023 px; desde 1024 px la tabla cabe y overflow-x-clip deja que la cabecera se quede fija (sticky). #}
+            <div class="overflow-x-auto lg:overflow-x-clip">
+                <table class="table-cards table-sticky min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[15rem] xl:min-w-[19rem]">
@@ -412,23 +449,29 @@
                             <th scope="col" class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
                                 {{ 'stays.show.col.state'|trans({}, 'stays') }}
                             </th>
-                            {% if can_manage or manageable_position_ids is not empty %}<th scope="col" class="px-3 py-3 w-24"></th>{% endif %}
+                            {% if can_manage or manageable_position_ids is not empty %}<th scope="col" class="px-3 py-3 w-14"></th>{% endif %}
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
 
                         {% for entry in by_group %}
-                            <tr class="table-group-header">
-                                <td colspan="99" class="px-5 py-2 bg-gray-50/70 border-y border-gray-100">
-                                    <div class="flex items-center gap-2">
-                                        {{ ux_icon('heroicons:users', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
+                            {% set stats_g = group_stats[entry.group.id.toRfc4122] ?? null %}
+                            <tr class="table-group-header" data-group-id="{{ entry.group.id.toRfc4122 }}">
+                                <td colspan="99" class="px-5 py-1 bg-gray-50/70 border-y border-gray-100">
+                                    <button type="button" class="js-group-toggle flex w-full items-center gap-2 rounded-md py-1.5 text-left" aria-expanded="true">
+                                        {{ ux_icon('heroicons:chevron-down', {class: 'js-group-chevron h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform'}) }}
                                         <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ entry.group.name }}</span>
                                         {% if multi_programme %}
                                             <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
                                                 {{ entry.group.programmeYear.programme.name }}
                                             </span>
                                         {% endif %}
-                                    </div>
+                                        {% if stats_g is not null and stats_g.total > 0 %}
+                                            <span class="ml-auto text-[11px] font-medium tabular-nums {{ stats_g.assigned == stats_g.total ? 'text-green-700' : 'text-gray-500' }}">
+                                                {{ 'stays.group.progress'|trans({'%assigned%': stats_g.assigned, '%total%': stats_g.total}, 'stays') }}
+                                            </span>
+                                        {% endif %}
+                                    </button>
                                 </td>
                             </tr>
 
@@ -439,18 +482,22 @@
 
                         {# ── Ungrouped students ─────────────────────────────────── #}
                         {% if ungrouped_students is not empty %}
-                            <tr class="table-group-header">
-                                <td colspan="99" class="px-5 py-2 bg-gray-50/70 border-y border-gray-100">
-                                    <div class="flex items-center gap-2">
-                                        {{ ux_icon('heroicons:question-mark-circle', {class: 'h-3.5 w-3.5 text-gray-400 shrink-0'}) }}
+                            <tr class="table-group-header" data-group-id="none">
+                                <td colspan="99" class="px-5 py-1 bg-gray-50/70 border-y border-gray-100">
+                                    <button type="button" class="js-group-toggle flex w-full items-center gap-2 rounded-md py-1.5 text-left" aria-expanded="true">
+                                        {{ ux_icon('heroicons:chevron-down', {class: 'js-group-chevron h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform'}) }}
                                         <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ 'stays.show.no_group'|trans({}, 'stays') }}</span>
-                                    </div>
+                                    </button>
                                 </td>
                             </tr>
                             {% for student in ungrouped_students %}
                                 {% include 'stays/detail/_student_row.html.twig' %}
                             {% endfor %}
                         {% endif %}
+
+                        <tr class="js-empty-row hidden">
+                            <td colspan="99" class="px-5 py-10 text-center text-sm text-gray-500">{{ 'stays.toolbar.empty'|trans({}, 'stays') }}</td>
+                        </tr>
 
                     </tbody>
                 </table>
@@ -742,6 +789,20 @@ let mineOnly  = readPref('mineOnly');
 const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'];
 let activeFilter = new URLSearchParams(window.location.search).get('filtro');
 if (!FILTERS.includes(activeFilter)) activeFilter = null;
+// Búsqueda y grupo: se pueden compartir por URL (?filtro=…&grupo=…); la búsqueda de texto no, porque un
+// nombre de estudiante en la URL acabaría en el historial y en los registros de acceso.
+let groupFilter = new URLSearchParams(window.location.search).get('grupo') ?? '';
+let searchQuery = '';
+// Grupos plegados (por estancia, recordados en este navegador)
+const COLLAPSED_KEY = 'nexo.stay.collapsed:' + window.location.pathname;
+let collapsed = new Set();
+try { collapsed = new Set(JSON.parse(window.localStorage.getItem(COLLAPSED_KEY) || '[]')); } catch (e) { /* sin almacenamiento */ }
+function saveCollapsed() {
+    try { window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...collapsed])); } catch (e) { /* sin almacenamiento */ }
+}
+function normalise(text) {
+    return (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
 
 const LABEL_CANCEL  = '{{ 'ui.cancel'|trans }}';
 const LABEL_CONFIRM = '{{ 'ui.confirm_delete'|trans }}';
@@ -844,6 +905,38 @@ function setupEventDelegation() {
         });
     });
 
+    // Búsqueda de texto y filtro por grupo (solo presentación en el cliente, como los filtros rápidos)
+    liveEl.addEventListener('input', function (e) {
+        if (!e.target.closest('.js-stay-search')) return;
+        searchQuery = e.target.value;
+        applyVisibility();
+    });
+    liveEl.addEventListener('change', function (e) {
+        const select = e.target.closest('.js-stay-group');
+        if (!select) return;
+        groupFilter = select.value;
+        applyVisibility();
+    });
+
+    // Menús «⋯» del estado del puesto (API Popover, en la capa superior para que no los recorte la tabla):
+    // se colocan junto a su botón al abrirse y se cierran al hacer scroll, porque la posición es fija.
+    liveEl.addEventListener('toggle', function (e) {
+        const menu = e.target;
+        if (!menu.classList || !menu.classList.contains('js-state-menu') || e.newState !== 'open') return;
+        const invoker = liveEl.querySelector('[popovertarget="' + menu.id + '"]');
+        if (!invoker) return;
+        const r = invoker.getBoundingClientRect();
+        menu.style.inset = 'auto';
+        menu.style.top  = Math.max(8, Math.min(r.bottom + 4, window.innerHeight - menu.offsetHeight - 8)) + 'px';
+        menu.style.left = Math.max(8, Math.min(r.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+    }, true);
+    const closeStateMenus = function (e) {
+        if (e && e.target && e.target.closest && e.target.closest('.js-state-menu')) return;
+        liveEl.querySelectorAll('.js-state-menu:popover-open').forEach(function (m) { m.hidePopover(); });
+    };
+    document.addEventListener('scroll', closeStateMenus, true);
+    window.addEventListener('resize', closeStateMenus);
+
     liveEl.addEventListener('click', function (e) {
 
         // Filtro «solo mis estudiantes» (estancias con varias enseñanzas)
@@ -851,7 +944,7 @@ function setupEventDelegation() {
         if (mineToggle) {
             mineOnly = !mineOnly;
             writePref('mineOnly', mineOnly);
-            applyMineOnly();
+            applyVisibility();
             return;
         }
 
@@ -859,19 +952,38 @@ function setupEventDelegation() {
         const chip = e.target.closest('.js-filter-chip');
         if (chip) {
             activeFilter = activeFilter === chip.dataset.filter ? null : chip.dataset.filter;
-            applyMineOnly();
+            applyVisibility();
             return;
         }
         const nextFilter = e.target.closest('.js-next-filter');
         if (nextFilter) {
             activeFilter = nextFilter.dataset.filter;
-            applyMineOnly();
+            applyVisibility();
             liveEl.querySelector('.js-filter-chip')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
         if (e.target.closest('.js-filter-clear')) {
             activeFilter = null;
-            applyMineOnly();
+            applyVisibility();
+            return;
+        }
+
+        // Plegar / desplegar un grupo, o todos a la vez
+        const groupToggle = e.target.closest('.js-group-toggle');
+        if (groupToggle) {
+            const id = groupToggle.closest('tr.table-group-header')?.dataset.groupId;
+            if (id !== undefined) {
+                if (collapsed.has(id)) collapsed.delete(id); else collapsed.add(id);
+                saveCollapsed();
+                applyVisibility();
+            }
+            return;
+        }
+        if (e.target.closest('.js-groups-toggle-all')) {
+            const ids = Array.from(liveEl.querySelectorAll('tr.table-group-header')).map(function (h) { return h.dataset.groupId; });
+            if (ids.every(function (id) { return collapsed.has(id); })) collapsed.clear(); else ids.forEach(function (id) { collapsed.add(id); });
+            saveCollapsed();
+            applyVisibility();
             return;
         }
 
@@ -963,6 +1075,7 @@ function initAssignForm(form) {
         const company = opt.dataset.company ?? '', center = opt.dataset.center ?? '';
         const city    = opt.dataset.city    ?? '', details = opt.dataset.details ?? '';
         opts.push({ value: opt.value, text: opt.textContent.trim(), company, center, city, details,
+            fit: opt.dataset.fit ?? '', fitLabel: opt.dataset.fitLabel ?? '',
             search: [company, center, city, details].filter(Boolean).join(' ') });
     });
 
@@ -975,7 +1088,11 @@ function initAssignForm(form) {
                 if (!d.value) return '<div class="py-0.5 text-gray-400 italic">' + esc(d.text) + '</div>';
                 const citySpan = d.city    ? ' <span class="ts-wc-city">· ' + esc(d.city) + '</span>' : '';
                 const detailEl = d.details ? '<p class="ts-pos-details">' + esc(d.details) + '</p>' : '';
-                return '<div class="ts-pos-option"><p class="ts-pos-company">' + esc(d.company) + '</p>'
+                // Encaje con la ficha del estudiante (empresa que aporta, localidad preferente o de residencia)
+                const fitTag = d.fit
+                    ? ' <span class="ml-1 inline-block rounded-full bg-plum-50 px-1.5 py-px text-[10px] font-medium text-plum-700 align-middle">&#9733; ' + esc(d.fitLabel) + '</span>'
+                    : '';
+                return '<div class="ts-pos-option"><p class="ts-pos-company">' + esc(d.company) + fitTag + '</p>'
                      + '<p class="ts-pos-sub">' + esc(d.center) + citySpan + '</p>' + detailEl + '</div>';
             },
             item: function (d, esc) {
@@ -1072,30 +1189,78 @@ function applyQuickMode() {
     }
 }
 
-// ── Filtro «solo mis estudiantes» ─────────────────────────────────────────────
+function syncToolbarHeight() {
+    const toolbar = liveEl.querySelector('.js-stay-toolbar');
+    document.documentElement.style.setProperty('--stay-toolbar-h', (toolbar ? toolbar.offsetHeight : 0) + 'px');
+}
+
+// ── Búsqueda, filtros, grupos plegados y «solo mis estudiantes» ──────────────
+// Todo es presentación en el cliente (una sola función, para que no se pisen entre sí): decide qué
+// filas se ven y se reaplica tras cada render.
 // Pura presentación en el cliente: oculta las filas de alumnado de otras enseñanzas y las
 // cabeceras de grupo que se quedan vacías. Se reaplica tras cada render.
-function applyMineOnly() {
+function applyVisibility() {
+    // El grupo elegido en el desplegable debe existir (la URL puede traer uno que ya no está)
+    const groupSelect = liveEl.querySelector('.js-stay-group');
+    if (groupSelect) {
+        if (groupFilter !== '' && !Array.from(groupSelect.options).some(function (o) { return o.value === groupFilter; })) groupFilter = '';
+        groupSelect.value = groupFilter;
+    } else if (groupFilter !== '') {
+        groupFilter = '';
+    }
+    const query = normalise(searchQuery.trim());
+    const filtering = mineOnly || activeFilter !== null || groupFilter !== '' || query !== '';
+    let shownTotal = 0;
     liveEl.querySelectorAll('tbody').forEach(function (tbody) {
         let header = null;
-        let visible = 0;
+        let groupId = '';
+        let shown = 0;
         const closeHeader = function () {
-            if (header) header.classList.toggle('hidden', (mineOnly || activeFilter !== null) && visible === 0);
+            if (!header) return;
+            // Plegar solo aplica sin búsqueda ni filtros: al filtrar se ven todas las coincidencias.
+            const isCollapsed = !filtering && collapsed.has(groupId);
+            header.classList.toggle('hidden', filtering && shown === 0);
+            header.querySelector('.js-group-toggle')?.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            header.querySelector('.js-group-chevron')?.classList.toggle('-rotate-90', isCollapsed);
         };
         tbody.querySelectorAll(':scope > tr').forEach(function (row) {
+            if (row.classList.contains('js-empty-row')) return;
             if (row.classList.contains('table-group-header')) {
                 closeHeader();
                 header = row;
-                visible = 0;
+                groupId = row.dataset.groupId ?? '';
+                shown = 0;
                 return;
             }
-            const hide = (mineOnly && row.dataset.mine === '0')
-                || (activeFilter !== null && row.dataset.flags !== undefined && !row.dataset.flags.split(' ').includes(activeFilter));
+            const matches = !(mineOnly && row.dataset.mine === '0')
+                && !(activeFilter !== null && row.dataset.flags !== undefined && !row.dataset.flags.split(' ').includes(activeFilter))
+                && (groupFilter === '' || groupId === groupFilter)
+                && (query === '' || normalise(row.dataset.search).includes(query));
+            const hide = !matches || (!filtering && collapsed.has(groupId));
             row.classList.toggle('hidden', hide);
-            if (!hide) visible++;
+            if (matches) { shown++; shownTotal++; }
         });
         closeHeader();
     });
+    liveEl.querySelector('.js-empty-row')?.classList.toggle('hidden', !(filtering && shownTotal === 0));
+    // «Plegar / desplegar grupos»: el texto del botón depende de si ya están todos plegados
+    const allToggle = liveEl.querySelector('.js-groups-toggle-all');
+    if (allToggle) {
+        const ids = Array.from(liveEl.querySelectorAll('tr.table-group-header')).map(function (h) { return h.dataset.groupId; });
+        allToggle.textContent = ids.length > 0 && ids.every(function (id) { return collapsed.has(id); })
+            ? allToggle.dataset.labelExpand : allToggle.dataset.labelCollapse;
+    }
+    // La URL recuerda el filtro rápido y el grupo (no el texto buscado)
+    try {
+        const url = new URL(window.location.href);
+        if (activeFilter) url.searchParams.set('filtro', activeFilter); else url.searchParams.delete('filtro');
+        if (groupFilter) url.searchParams.set('grupo', groupFilter); else url.searchParams.delete('grupo');
+        if (url.href !== window.location.href) window.history.replaceState(null, '', url);
+    } catch (e) { /* sin historial */ }
+    // La barra fija mide lo que mida (los filtros se reparten en una o varias líneas): la cabecera de la tabla se pega debajo.
+    syncToolbarHeight();
+    // La selección múltiple solo cuenta las filas que se ven
+    liveEl.querySelectorAll('[data-controller~="bulk-select"]').forEach(function (el) { el.dispatchEvent(new CustomEvent('bulk-select:refresh')); });
     // Contadores y estado de los filtros rápidos
     liveEl.querySelectorAll('.js-filter-chip').forEach(function (chip) {
         const key = chip.dataset.filter;
@@ -1140,7 +1305,7 @@ function dismissToasts() {
 function onRender() {
     initAllForms();
     applyQuickMode();
-    applyMineOnly();
+    applyVisibility();
     dismissToasts();
 }
 

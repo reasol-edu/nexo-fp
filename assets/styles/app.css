@@ -77,6 +77,17 @@ summary:focus-visible {
     }
 }
 
+/* Lista de asignaciones de la estancia: desde 1024 px la cabecera de la tabla se queda fija bajo la cabecera
+   de la página (3.5 rem) y la barra de búsqueda y filtros (--stay-toolbar-h, la mide el script de la lista). */
+@media (min-width: 1024px) {
+    table.table-sticky thead th {
+        position: sticky;
+        top: calc(3.5rem + var(--stay-toolbar-h, 0px));
+        z-index: 10;
+        background-color: var(--color-gray-50);
+    }
+}
+
 /* Tabla adaptable a tarjetas: en móvil (<640px) cada fila se apila como tarjeta
    y cada celda muestra su etiqueta (atributo data-label), evitando el scroll
    horizontal. En escritorio se comporta como una tabla normal. Las celdas sin

@@ -8,14 +8,15 @@
 {% set sid = student.id.toRfc4122 %}
 {% set position = student_position_map[sid] is defined ? student_position_map[sid] : null %}
 {% set profile = profiles[sid] ?? null %}
+{# El estado de la fila se marca con un borde de color a la izquierda (verde firmado, ámbar sin firmar), no con el fondo. #}
 {% if position is null %}
-    {% set row_bg = 'hover:bg-gray-50/50' %}
+    {% set row_edge = 'border-l-transparent' %}
 {% elseif position.signed %}
-    {% set row_bg = 'bg-green-50/60 hover:bg-green-50' %}
+    {% set row_edge = 'border-l-green-500' %}
 {% else %}
-    {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
+    {% set row_edge = 'border-l-amber-400' %}
 {% endif %}
-<tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ m.row_flags(position, profile) }}">
+<tr class="border-l-4 {{ row_edge }} hover:bg-gray-50/60 transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ m.row_flags(position, profile) }}" data-search="{{ (student.name.full() ~ (position is not null and position.workcenter ? ' ' ~ position.workcenter.company.name ~ ' ' ~ position.workcenter.name ~ ' ' ~ position.workcenter.city : ''))|e('html_attr') }}">
 
     <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top min-w-[15rem] xl:min-w-[19rem]">
         <div>
@@ -50,8 +51,12 @@
                     <div class="js-assign-select hidden mt-1.5">
                         <select class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
                             <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
+                            {% set fits = position_fits[sid] ?? {} %}
                             {% for pos in manageable_compatible %}
+                                {% set fit = fits[pos.id.toRfc4122] ?? '' %}
                                 <option value="{{ pos.id.toRfc4122 }}"
+                                        data-fit="{{ fit }}"
+                                        data-fit-label="{{ fit ? ('stays.position_fit.' ~ fit)|trans({}, 'stays')|e('html_attr') : '' }}"
                                         data-company="{{ pos.workcenter ? pos.workcenter.company.name|e('html_attr') : '' }}"
                                         data-center="{{ pos.workcenter ? pos.workcenter.name|e('html_attr') : '' }}"
                                         data-city="{{ pos.workcenter and pos.workcenter.city ? pos.workcenter.city|e('html_attr') : '' }}"
@@ -74,8 +79,8 @@
                 <p class="text-xs text-gray-500 mt-0.5">{{ position.workcenter.name }}{% if position.workcenter.city %} · {{ position.workcenter.city }}{% endif %}</p>
                 {# Entre 640 y 1279 px la columna de tutores no cabe: se resumen aquí, en solo lectura. #}
                 <dl class="mt-2 hidden sm:block xl:hidden space-y-0.5 text-xs text-gray-600">
-                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.tutor'|trans({}, 'stays') }}:</dt> <dd class="inline">{{ position.academicTutor ? position.academicTutor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
-                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.workplace_mentor'|trans({}, 'stays') }}:</dt> <dd class="inline">{{ position.workplaceMentor ? position.workplaceMentor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
+                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.tutor'|trans({}, 'stays') }}:</dt> <dd class="inline{{ position.academicTutor ? '' : ' font-medium text-amber-700' }}">{{ position.academicTutor ? position.academicTutor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
+                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.workplace_mentor'|trans({}, 'stays') }}:</dt> <dd class="inline{{ position.workplaceMentor ? '' : ' font-medium text-amber-700' }}">{{ position.workplaceMentor ? position.workplaceMentor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
                 </dl>
             </div>
         {% else %}
@@ -83,7 +88,7 @@
         {% endif %}
     </td>
 
-    <td data-label="" class="px-5 py-4 align-top hidden xl:table-cell min-w-[11rem]">
+    <td data-label="" class="px-5 py-4 align-top hidden xl:table-cell min-w-[13rem]">
       {% if position is not null %}
       <div class="space-y-2.5">
         <div>
@@ -96,7 +101,7 @@
                   data-live-action="setAcademicTutor"
                   data-live-arg-name="teacherId">
                 <button type="button"
-                        class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                        class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 transition-colors">
                     {{ 'stays.show.tutor_none'|trans({}, 'stays') }}
                     {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
                 </button>
@@ -109,6 +114,16 @@
                     </select>
                 </div>
             </form>
+            {% set suggestion = tutor_suggestions[position.id.toRfc4122] ?? null %}
+            {% if suggestion is not null and suggestion.academic is not null %}
+                <button type="button" class="mt-1 inline-flex items-center gap-1 rounded-md border border-plum-200 bg-plum-50 px-1.5 py-0.5 text-[11px] font-medium text-plum-700 hover:bg-plum-100 transition-colors"
+                        data-action="live#action" data-live-action-param="setAcademicTutor"
+                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                        data-live-teacher-id-param="{{ suggestion.academic.id.toRfc4122 }}"
+                        title="{{ 'stays.show.suggest_tutor_hint'|trans({}, 'stays')|e('html_attr') }}">
+                    {{ 'stays.show.suggest_tutor'|trans({'%name%': suggestion.academic.name.full()}, 'stays') }}
+                </button>
+            {% endif %}
         {% else %}
             <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
         {% endif %}
@@ -126,7 +141,7 @@
                       data-live-action="setWorkplaceMentor"
                       data-live-arg-name="workerId">
                     <button type="button"
-                            class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                            class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 transition-colors">
                         {{ 'stays.show.mentor_none'|trans({}, 'stays') }}
                         {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
                     </button>
@@ -139,6 +154,16 @@
                         </select>
                     </div>
                 </form>
+                {% set suggestion = tutor_suggestions[position.id.toRfc4122] ?? null %}
+                {% if suggestion is not null and suggestion.mentor is not null %}
+                    <button type="button" class="mt-1 inline-flex items-center gap-1 rounded-md border border-plum-200 bg-plum-50 px-1.5 py-0.5 text-[11px] font-medium text-plum-700 hover:bg-plum-100 transition-colors"
+                            data-action="live#action" data-live-action-param="setWorkplaceMentor"
+                            data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                            data-live-worker-id-param="{{ suggestion.mentor.id.toRfc4122 }}"
+                            title="{{ 'stays.show.suggest_tutor_hint'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ 'stays.show.suggest_tutor'|trans({'%name%': suggestion.mentor.name.full()}, 'stays') }}
+                    </button>
+                {% endif %}
             {% else %}
                 <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
             {% endif %}
@@ -150,7 +175,7 @@
       {% endif %}
     </td>
 
-    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[9rem] xl:min-w-[11rem]">
+    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[11rem] xl:min-w-[13rem]">
         {% if position %}
             {{ m.state_cell(position, manageable_position_ids[position.id.toRfc4122] is defined, stay.id.toRfc4122) }}
         {% endif %}

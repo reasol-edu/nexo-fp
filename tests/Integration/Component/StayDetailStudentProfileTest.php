@@ -17,6 +17,7 @@ use App\Entity\Student;
 use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
+use App\Entity\TrainingPositionState;
 use App\Entity\Workcenter;
 use App\Tests\Integration\ControllerTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
@@ -258,6 +259,87 @@ class StayDetailStudentProfileTest extends ControllerTestCase
         $this->component($teacher)->call('removeNonFfeoeStudents');
     }
 
+    // ── Mejoras de la lista de asignaciones ──────────────────────────────────
+
+    public function testTheAssignDropdownOffersTheBestFittingPositionsFirst(): void
+    {
+        $student = $this->student('Ana', 'Martínez');
+        $this->profile($student)->setResidenceCity('Lebrija');
+        $this->freePosition('Beta S.L.', 'Jaén');
+        $this->freePosition('Gamma S.L.', 'Lebrija');
+        $this->flush();
+
+        $options = $this->crawler()->filter('.js-assign-dropdown option[data-company]');
+
+        self::assertCount(2, $options);
+        self::assertSame('Gamma S.L.', $options->eq(0)->attr('data-company'), 'el de su localidad va primero');
+        self::assertSame('residence', $options->eq(0)->attr('data-fit'));
+        self::assertSame('Su localidad', $options->eq(0)->attr('data-fit-label'));
+        self::assertSame('', $options->eq(1)->attr('data-fit'));
+    }
+
+    public function testSuggestsTheTutorsOfOtherPositionsOfTheSameCompany(): void
+    {
+        $teacher = (new Teacher(new PersonName('Tutor', 'Habitual')))->setUsername('tutor.habitual');
+        $this->persist($teacher);
+        $this->group->addTeacher($teacher);
+        $first  = $this->student('Ana', 'Uno');
+        $second = $this->student('Beatriz', 'Dos');
+        $a      = $this->freePosition('Alfa S.L.', 'Sevilla')->setStudent($first)->setAcademicTutor($teacher);
+        $b      = $this->freePosition('Alfa S.L.', 'Sevilla', $a->getWorkcenter()->getCompany())->setStudent($second);
+        $this->flush();
+
+        $crawler = $this->crawler();
+        $buttons = $crawler->filter('button[data-live-action-param="setAcademicTutor"]');
+
+        self::assertCount(1, $buttons, 'solo se sugiere donde falta el tutor');
+        self::assertSame($b->getId()->toRfc4122(), $buttons->attr('data-live-position-id-param'));
+        self::assertSame($teacher->getId()->toRfc4122(), $buttons->attr('data-live-teacher-id-param'));
+        self::assertStringContainsString('Usar a', $buttons->text());
+    }
+
+    public function testTheGroupHeaderShowsHowManyStudentsHaveAPosition(): void
+    {
+        $withPosition = $this->student('Ana', 'Uno');
+        $this->student('Beatriz', 'Dos');
+        $this->student('Carla', 'Tres');
+        $this->freePosition()->setStudent($withPosition);
+        $this->flush();
+
+        self::assertStringContainsString('1/3 con puesto', $this->html());
+    }
+
+    public function testThePendingStateOffersBackToDraftInsideTheMoreMenu(): void
+    {
+        $student = $this->student('Ana', 'Uno');
+        $this->freePosition()->setStudent($student)->setState(TrainingPositionState::PENDING);
+        $this->flush();
+
+        $crawler = $this->crawler();
+
+        self::assertCount(1, $crawler->filter('button[popovertarget^="state-menu-"]'));
+        $menu = $crawler->filter('.js-state-menu');
+        self::assertCount(1, $menu);
+        self::assertStringContainsString('Volver a borrador', $menu->text());
+        self::assertStringNotContainsString('Volver a borrador', $crawler->filter('td')->reduce(
+            static fn ($td): bool => $td->filter('.js-state-menu')->count() === 0,
+        )->text(''), 'fuera del menú ya no hay un botón de volver a borrador');
+    }
+
+    public function testTheSearchAttributeNeverContainsTheStudentId(): void
+    {
+        $student = $this->student('Ana', 'Martínez');
+        $this->freePosition('Alfa S.L.', 'Sevilla')->setStudent($student);
+        $this->flush();
+
+        $row = $this->crawler()->filter('tr.js-student-row')->first();
+
+        self::assertStringContainsString('Ana Martínez', $row->attr('data-search'));
+        self::assertStringContainsString('Alfa S.L.', $row->attr('data-search'));
+        self::assertStringNotContainsString($student->getStudentId(), $row->attr('data-search'), 'el NIE no sale en ninguna parte de la lista');
+        self::assertStringNotContainsString($student->getStudentId(), $this->html());
+    }
+
     // ── Ayudantes ────────────────────────────────────────────────────────────
 
     private function student(string $first, string $last): Student
@@ -278,10 +360,10 @@ class StayDetailStudentProfileTest extends ControllerTestCase
         return $profile;
     }
 
-    private function freePosition(): TrainingPosition
+    private function freePosition(string $companyName = 'Alfa S.L.', string $city = 'Sevilla', ?Company $company = null): TrainingPosition
     {
-        $company    = (new Company())->setName('Alfa S.L.')->setVatNumber('B' . ++$this->seq)->setCity('Sevilla')->setEducationalCentre($this->centre);
-        $workcenter = (new Workcenter())->setName('Sede')->setCity('Sevilla')->setCompany($company);
+        $company  ??= (new Company())->setName($companyName)->setVatNumber('B' . ++$this->seq)->setCity($city)->setEducationalCentre($this->centre);
+        $workcenter = (new Workcenter())->setName('Sede')->setCity($city)->setCompany($company);
         $position   = (new TrainingPosition())->setStay($this->stay)->setWorkcenter($workcenter);
         $position->addProgrammeYear($this->level);
         $this->persist($company, $workcenter, $position);

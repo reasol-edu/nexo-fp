@@ -84,6 +84,27 @@ Mientras el puesto está en estado **Borrador**, todos los campos son editables.
 rápida** muestra los selectores en todas las filas a la vez para agilizar el reparto; el navegador recuerda
 si lo tenía activado (y el filtro **Mis estudiantes**) al abrir otra estancia.
 
+**Los puestos que mejor encajan salen primero.** Al elegir puesto para un estudiante, el desplegable ofrece
+antes los que coinciden con su ficha, con una etiqueta: la **empresa que él mismo aporta**, su **localidad
+preferente** y su **localidad de residencia** (en ese orden). La comparación ignora mayúsculas y acentos y no
+usa distancias, así que los demás puestos siguen ahí, sin etiqueta.
+
+![Desplegable para asignar puesto con los puestos que encajan con la ficha del estudiante marcados](img/estancia-asignar-encaje.png)
+
+**Tutores sugeridos.** Si a un puesto le falta el tutor docente o el de empresa, y otros puestos de la misma
+empresa en la estancia ya tienen uno, aparece un botón **Usar a …** con el más repetido (solo entre quienes se
+pueden asignar). Un clic lo asigna. Lo que falta se marca en ámbar.
+
+**Buscar, filtrar y plegar.** Sobre la lista hay una barra con un cuadro de **búsqueda** (estudiante o empresa,
+sin distinguir acentos), un **filtro de grupo** y los filtros rápidos. Desde 1024 px de ancho la barra y la
+cabecera de la tabla se quedan fijas al hacer scroll. Cada grupo muestra cuántos estudiantes tienen puesto
+(«5/6 con puesto») y se puede **plegar**; **Plegar grupos** los pliega todos. Los grupos plegados se recuerdan
+en este navegador y, mientras se busca o se filtra, se muestran todas las coincidencias. El filtro rápido y el
+grupo quedan en la dirección de la página (para compartir la vista); lo que se escribe en la búsqueda, no. La
+casilla de la cabecera solo marca las filas que se ven.
+
+![Búsqueda por empresa en el detalle de la estancia](img/estancia-busqueda.png)
+
 ### Ficha del estudiante en el curso
 
 Cada estudiante tiene en cada curso una **ficha** con los datos que ayudan a decidir su puesto. Empieza
@@ -151,9 +172,13 @@ Borrador → Pendiente de Séneca → Registrado en Séneca
 4. Los puestos en estado **Registrado** quedan bloqueados para evitar modificaciones accidentales; se
    puede volver a *Borrador* para corregir datos.
 
-Desde el detalle de la estancia, cada fila ofrece los pasos disponibles (**Pasar a Séneca**,
-**Registrar en Séneca**, **Marcar firmado**, **Volver a borrador**) sin abrir la ficha del puesto. Si falta
-algún tutor, la fila lo indica. Cada cambio muestra un aviso con **Deshacer** durante unos segundos; lo
+Desde el detalle de la estancia, cada fila muestra el estado con una barra de tres tramos (borrador,
+pendiente, registrado) y la firma, y ofrece **un único botón con el siguiente paso** (**Pasar a Séneca**,
+**Registrar en Séneca**, **Marcar firmado**) sin abrir la ficha del puesto. Las acciones menos habituales,
+**Volver a borrador** y **Quitar firma**, están en el menú **⋯** de la misma fila. Si falta algún tutor, la
+fila lo indica («Faltan los tutores», «Falta tutor docente», «Falta tutor de empresa»). El color de la fila
+no se usa para el estado: una franja a la izquierda es verde si el puesto está firmado y ámbar si no.
+Cada cambio muestra un aviso con **Deshacer** durante unos segundos; lo
 mismo ocurre al **liberar el puesto** de un estudiante, que no pide confirmación: si se deshace, vuelve el
 estudiante con sus tutorías (siempre que el puesto siga libre y el estudiante no tenga otro).
 

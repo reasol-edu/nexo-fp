@@ -109,7 +109,7 @@ const SHOTS = [
   // Ficha del estudiante en el curso: insignias en la lista (sin NUSS, no realiza FFEOE, empresa aportada…) y diálogo de edición.
   { name: 'estancia-ficha-insignias', group: 'manual', out: `${M}/estancia-ficha-insignias.png`, size: [1440, 2000, 1],
     steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
-      await page.addStyleTag({ content: 'header, [class*="sticky"], [class*="fixed"] { display:none !important; }' });
+      await page.addStyleTag({ content: 'header, [class*="fixed"] { display:none !important; }' });
     }],
     element: async (page) => page.locator('div.rounded-2xl:has(.js-filter-chip)').first() },
   { name: 'ficha-estudiante', group: 'manual', out: `${M}/ficha-estudiante.png`, size: [1440, 900, 1],
@@ -214,6 +214,43 @@ const SHOTS = [
     { name: `ancho-${w}`, group: 'responsive', out: `var/screenshots/responsive/estancia-${w}.png`, size: [w, h, 1], full: true,
       steps: [openStay(DAW_STAY), wait(1500)] })),
 
+  // Menú «⋯» del estado y desplegable de asignar puesto abiertos (ventana fija: el menú y el desplegable flotan). Grupo `responsive`.
+  { name: 'menu-estado', group: 'responsive', out: 'var/screenshots/responsive/menu-estado.png', size: [1280, 900, 1],
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      await page.locator('button[popovertarget^="state-menu-"]').first().scrollIntoViewIfNeeded();
+      await page.locator('button[popovertarget^="state-menu-"]').first().click();
+      await page.waitForTimeout(400);
+    }] },
+  // Tarjetas del móvil (390 px) a tamaño real: barra de búsqueda, grupo y primeras tarjetas.
+  { name: 'movil-tarjetas', group: 'responsive', out: 'var/screenshots/responsive/movil-tarjetas.png', size: [390, 1900, 1], region: { x: 0, y: 560, width: 390, height: 1300 },
+    steps: [openStay(DAW_STAY), wait(1500)] },
+  // Barra de búsqueda y cabecera fijas tras hacer scroll, con un grupo plegado y una búsqueda activa.
+  { name: 'barra-fija', group: 'responsive', out: 'var/screenshots/responsive/barra-fija.png', size: [1280, 800, 1], keepScroll: true,
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      await page.locator('tr.table-group-header .js-group-toggle').first().click();
+      await page.mouse.move(700, 400);
+      await page.mouse.wheel(0, 700);
+      await page.waitForTimeout(800);
+    }] },
+  { name: 'estancia-busqueda', group: 'manual', out: `${M}/estancia-busqueda.png`, size: [1440, 900, 1], keepScroll: true,
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      await page.fill('.js-stay-search', 'indra');
+      await page.mouse.move(700, 400);
+      await page.mouse.wheel(0, 330);
+      await page.waitForTimeout(800);
+    }] },
+  // El desplegable de asignar puesto, con las etiquetas de encaje con la ficha (la región se calcula junto al desplegable).
+  { name: 'estancia-asignar-encaje', group: 'manual', out: `${M}/estancia-asignar-encaje.png`, size: [1440, 1900, 1], keepDropdown: true,
+    region: async (page) => { const box = await page.locator('.ts-dropdown:visible').first().boundingBox(); return { x: 256, y: Math.max(0, box.y - 330), width: 1184, height: 560 }; },
+    steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {
+      // El primer estudiante cuyo desplegable tiene algún puesto que encaja con su ficha
+      const trigger = page.locator('form.js-assign-form:has(option[data-fit]:not([data-fit=""])) .js-assign-trigger').first();
+      await trigger.scrollIntoViewIfNeeded();
+      await trigger.click();
+      await page.waitForSelector('.ts-dropdown .ts-pos-option');
+      await page.waitForTimeout(400);
+    }] },
+
   // Listado «Centro educativo → Estudiantes» a distintos anchos. Grupo `responsive`.
   ...[390, 768, 1024, 1440].map((w) => (
     { name: `estudiantes-${w}`, group: 'responsive', out: `var/screenshots/responsive/estudiantes-${w}.png`, size: [w, 900, 1], full: true,
@@ -292,9 +329,15 @@ for (const shot of selected) {
   const page = await ctx.newPage();
   try {
     for (const step of shot.steps) await step({ page, ctx });
-    await page.addStyleTag({ content: HIDE });
+    // Con keepScroll tampoco se toca el overflow de html/body: rompería el comportamiento sticky que se quiere ver.
+    await page.addStyleTag({ content: (shot.keepDropdown ? HIDE.replace(', .ts-dropdown', '') : HIDE).replace(shot.keepScroll ? / html, body \{[^}]*\}/ : /(?!)/, '') });
     await page.waitForTimeout(500);
-    await page.evaluate(() => { document.querySelectorAll('*').forEach((e) => { e.scrollLeft = 0; }); window.scrollTo(0, 0); document.activeElement?.blur?.(); });
+    // keepDropdown / keepScroll: se deja el desplegable abierto o el scroll donde lo dejaron los pasos (barra fija, menús).
+    await page.evaluate(([keepDropdown, keepScroll]) => {
+      document.querySelectorAll('*').forEach((e) => { e.scrollLeft = 0; });
+      if (!keepScroll) window.scrollTo(0, 0);
+      if (!keepDropdown) document.activeElement?.blur?.();
+    }, [!!shot.keepDropdown, !!shot.keepScroll]);
     if (shot.full) {
       // El contenido hace scroll dentro del diseño (barra lateral fija), así que `fullPage` no basta:
       // se alarga la ventana hasta la altura real del contenido.
@@ -308,6 +351,7 @@ for (const shot of selected) {
       await page.waitForTimeout(500);
     }
     if (shot.element) await (await shot.element(page)).screenshot({ path: shot.out });
+    else if (shot.region) await page.screenshot({ path: shot.out, clip: typeof shot.region === 'function' ? await shot.region(page) : shot.region });
     else await page.screenshot({ path: shot.out });
     console.log('✅', shot.out);
   } catch (e) {

@@ -166,7 +166,11 @@ class AppFixtures extends Fixture
                     $profile->setAttitude(1 + ($g + $s) % 5);
                 }
                 if ($s % 6 === 1) {
-                    $profile->setPreferredCity($towns[($g + $s + 3) % \count($towns)]);
+                    // Linares es donde están las empresas de demostración: así el desplegable de asignar muestra el encaje.
+                    $preferred = [...$towns, 'Linares'];
+                    $profile->setPreferredCity($preferred[($g + $s + 3) % \count($preferred)]);
+                } elseif ($s % 6 === 4) {
+                    $profile->setPreferredCity('Linares');
                 }
 
                 $manager->persist($profile);

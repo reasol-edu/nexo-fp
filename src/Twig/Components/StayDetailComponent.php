@@ -11,6 +11,7 @@ use App\Entity\StayTeacherHours;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
+use App\Entity\Worker;
 use App\Repository\GroupRepository;
 use App\Repository\StayRepository;
 use App\Repository\StayTeacherHoursRepository;
@@ -20,6 +21,7 @@ use App\Repository\WorkerRepository;
 use App\Security\StayScope;
 use App\Security\Voter\PositionAssignment;
 use App\Security\Voter\StayVoter;
+use App\Service\PositionFit;
 use App\Service\PositionStateChanger;
 use App\Service\StayNotifier;
 use App\Service\StayRealtimeNotifier;
@@ -164,6 +166,18 @@ class StayDetailComponent extends AbstractController
             }
         }
 
+        // «7/13 con puesto» en la cabecera de cada grupo (con el mismo criterio que los recuentos de la estancia).
+        $groupStats = [];
+        foreach ($countedByGroup as $entry) {
+            $assigned = 0;
+            foreach ($entry['students'] as $student) {
+                if (isset($studentPositionMap[$student->getId()->toRfc4122()])) {
+                    $assigned++;
+                }
+            }
+            $groupStats[$entry['group']->getId()->toRfc4122()] = ['assigned' => $assigned, 'total' => \count($entry['students'])];
+        }
+
         $countWithoutPosition = 0;
         $countUnsigned        = 0;
         foreach ($countedStudents as $sid => $student) {
@@ -181,6 +195,7 @@ class StayDetailComponent extends AbstractController
         $today                         = $this->clock->now();
         $manageableStudentIds          = [];
         $compatiblePositionsForStudent = [];
+        $positionFits                  = [];
         // Puestos libres de empresas de las que el docente es enlace (una consulta por puesto, no por alumno).
         $liaisonPositionIds = [];
         $liaisonOfCompany   = [];
@@ -210,12 +225,13 @@ class StayDetailComponent extends AbstractController
                 continue;
             }
             $isMine = isset($manageableStudentIds[$sid]);
-            $compatiblePositionsForStudent[$sid] = array_values(array_filter(
+            // Los puestos que mejor encajan con su ficha (empresa que aporta, localidades) van primero.
+            [$compatiblePositionsForStudent[$sid], $positionFits[$sid]] = PositionFit::rank(array_values(array_filter(
                 $unassignedPositions,
                 fn (TrainingPosition $pos): bool => $pos->acceptsStudent($student)
                     && !$pos->isReservedAgainst($student, $today)
                     && ($isMine || isset($liaisonPositionIds[$pos->getId()->toRfc4122()]))
-            ));
+            )), $profileMap[$sid] ?? null);
         }
 
         $programmeSummary = $stay->getProgrammes()->count() > 1
@@ -232,6 +248,7 @@ class StayDetailComponent extends AbstractController
             }
         }
         $workersByCompanyId = $this->workers->findGroupedByCompanies(array_values($companiesNeedingWorkers));
+        $tutorSuggestions   = $this->buildTutorSuggestions($studentPositionMap, $manageablePositionIds, $programmeTeachers, $workersByCompanyId);
 
         $statsMap = $this->stays->findStatsForStays([$stay]);
         $stats    = $statsMap[$stay->getId()->toRfc4122()] ?? [];
@@ -278,10 +295,13 @@ class StayDetailComponent extends AbstractController
             'student_position_map'             => $studentPositionMap,
             'unassigned_positions'             => $unassignedPositions,
             'compatible_positions_for_student' => $compatiblePositionsForStudent,
+            'position_fits'                    => $positionFits,
+            'group_stats'                      => $groupStats,
             'count_without_position'           => $countWithoutPosition,
             'count_unsigned'                   => $countUnsigned,
             'programme_teachers'               => $programmeTeachers,
             'workers_by_company_id'            => $workersByCompanyId,
+            'tutor_suggestions'                => $tutorSuggestions,
             'stats'                            => $stats,
             'progress'                         => $progress,
             'profiles'                         => $profileMap,
@@ -386,6 +406,74 @@ class StayDetailComponent extends AbstractController
         usort($summary, static fn (array $a, array $b): int => $byName($a['teacher'], $b['teacher']));
 
         return ['groups' => $groups, 'teachers' => $summary];
+    }
+
+    /**
+     * Sugerencia de tutores para los puestos a los que les falta alguno: el tutor docente y el tutor de
+     * empresa que más repiten los demás puestos de la misma empresa en esta estancia. Solo se sugiere a
+     * quien se puede asignar (docentes de las enseñanzas, trabajadores de esa empresa) y solo en puestos
+     * que quien consulta gestiona. No hace consultas: usa lo ya cargado.
+     *
+     * @param array<string, TrainingPosition>  $studentPositionMap  puestos con estudiante
+     * @param array<string, true>              $manageablePositionIds
+     * @param list<Teacher>                    $programmeTeachers
+     * @param array<string, list<Worker>>      $workersByCompanyId
+     *
+     * @return array<string, array{academic: ?Teacher, mentor: ?Worker}> por id de puesto
+     */
+    private function buildTutorSuggestions(array $studentPositionMap, array $manageablePositionIds, array $programmeTeachers, array $workersByCompanyId): array
+    {
+        $assignableTeachers = [];
+        foreach ($programmeTeachers as $teacher) {
+            $assignableTeachers[$teacher->getId()->toRfc4122()] = $teacher;
+        }
+
+        // Frecuencia de cada tutor en los puestos de cada empresa
+        $academicByCompany = [];
+        $mentorByCompany   = [];
+        foreach ($studentPositionMap as $position) {
+            $companyId = $position->getWorkcenter()?->getCompany()->getId()->toRfc4122();
+            if ($companyId === null) {
+                continue;
+            }
+            if (($tutor = $position->getAcademicTutor()) !== null && isset($assignableTeachers[$tutor->getId()->toRfc4122()])) {
+                $academicByCompany[$companyId][$tutor->getId()->toRfc4122()] = ($academicByCompany[$companyId][$tutor->getId()->toRfc4122()] ?? 0) + 1;
+            }
+            if (($mentor = $position->getWorkplaceMentor()) !== null) {
+                $mentorByCompany[$companyId][$mentor->getId()->toRfc4122()] = ($mentorByCompany[$companyId][$mentor->getId()->toRfc4122()] ?? 0) + 1;
+            }
+        }
+
+        $suggestions = [];
+        foreach ($studentPositionMap as $position) {
+            $positionId = $position->getId()->toRfc4122();
+            $companyId  = $position->getWorkcenter()?->getCompany()->getId()->toRfc4122();
+            if ($companyId === null || !isset($manageablePositionIds[$positionId])) {
+                continue;
+            }
+
+            $academic = null;
+            if ($position->getAcademicTutor() === null && isset($academicByCompany[$companyId])) {
+                arsort($academicByCompany[$companyId]);
+                $academic = $assignableTeachers[array_key_first($academicByCompany[$companyId])] ?? null;
+            }
+            $mentor = null;
+            if ($position->getWorkplaceMentor() === null && isset($mentorByCompany[$companyId])) {
+                arsort($mentorByCompany[$companyId]);
+                $mentorId = array_key_first($mentorByCompany[$companyId]);
+                foreach ($workersByCompanyId[$companyId] ?? [] as $worker) {
+                    if ($worker->getId()->toRfc4122() === $mentorId) {
+                        $mentor = $worker;
+                        break;
+                    }
+                }
+            }
+            if ($academic !== null || $mentor !== null) {
+                $suggestions[$positionId] = ['academic' => $academic, 'mentor' => $mentor];
+            }
+        }
+
+        return $suggestions;
     }
 
     /**

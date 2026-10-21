@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.19.0] - 2026-10-22
+
+### Added
+
+- Al asignar puesto a un estudiante, el desplegable ofrece primero los puestos que encajan con su ficha, con una etiqueta: la empresa que él mismo aporta, su localidad preferente y su localidad de residencia. La comparación ignora mayúsculas y acentos.
+- Si a un puesto le falta el tutor docente o el de empresa y otros puestos de la misma empresa en la estancia ya tienen uno, aparece un botón «Usar a …» con el más repetido para asignarlo con un clic.
+- Barra de búsqueda en la lista de asignaciones (por estudiante o empresa, sin distinguir acentos) y filtro por grupo. El filtro rápido y el grupo quedan en la dirección de la página; el texto buscado no.
+- Los grupos de la lista muestran cuántos estudiantes tienen puesto («5/6 con puesto») y se pueden plegar, uno a uno o todos a la vez; el navegador recuerda los plegados.
+- Desde 1024 px de ancho, la barra de búsqueda y filtros y la cabecera de la tabla se quedan fijas al hacer scroll.
+
+### Changed
+
+- Estado del puesto en la lista de asignaciones: una barra de tres tramos con el avance, un único botón con el siguiente paso («Pasar a Séneca», «Registrar en Séneca», «Marcar firmado») y las acciones poco habituales («Volver a borrador», «Quitar firma») en un menú «⋯».
+- El estado de la fila se marca con una franja de color a la izquierda (verde si está firmado, ámbar si no) en lugar de colorear toda la fila.
+- Lo que falta (tutores sin asignar) se destaca en ámbar y el aviso de tutores que faltan es más corto.
+- La casilla de la cabecera de la lista y las acciones masivas solo cuentan las filas que se ven, no las ocultas por un filtro, una búsqueda o un grupo plegado.
+
 ## [2.18.0] - 2026-10-21
 
 ### Changed
