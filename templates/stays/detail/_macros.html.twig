@@ -1,0 +1,89 @@
+{# Piezas de la lista de asignaciones del detalle de la estancia (StayDetailComponent). #}
+
+{% macro state_badge(state) %}
+    {% if state.value == 'PENDING' %}
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+            {{ 'stays.state.pending'|trans({}, 'stays') }}
+        </span>
+    {% elseif state.value == 'DONE' %}
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+            {{ 'stays.state.done'|trans({}, 'stays') }}
+        </span>
+    {% else %}
+        <span class="inline-flex items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+            {{ 'stays.state.draft'|trans({}, 'stays') }}
+        </span>
+    {% endif %}
+{% endmacro %}
+
+{# Marcas de la fila para los filtros rápidos. Quien no realiza la FFEOE no cuenta como «sin puesto». #}
+{% macro row_flags(position, profile) -%}
+    {%- if profile is not null and not profile.takesFfeoe %}no-ffeoe {% endif -%}
+    {%- if profile is not null and profile.isMissingNuss %}sin-nuss {% endif -%}
+    {%- if position is null -%}
+        {%- if profile is null or profile.takesFfeoe %}sin-puesto{% endif -%}
+    {%- else -%}
+        {%- if position.academicTutor is null %}sin-tutor {% endif -%}
+        {%- if position.workplaceMentor is null %}sin-empresa {% endif -%}
+        {%- if position.state.value == 'DONE' and not position.signed %}sin-firmar{% endif -%}
+    {%- endif -%}
+{%- endmacro %}
+
+{% macro state_cell(position, can_edit, stay_id) %}
+    {% set st = position.state.value %}
+    {% set missing_academic = position.academicTutor is null %}
+    {% set missing_mentor = position.workplaceMentor is null %}
+    {% set blocked = (st == 'DRAFT') and (missing_academic or missing_mentor) %}
+    <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            {{ _self.state_badge(position.state) }}
+            {% if position.signed %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                    {{ ux_icon('heroicons:check-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                    {{ 'stays.show.signed'|trans({}, 'stays') }}
+                </span>
+            {% else %}
+                <span class="text-xs text-gray-400">{{ 'stays.show.not_signed'|trans({}, 'stays') }}</span>
+            {% endif %}
+        </div>
+        {% if can_edit %}
+            {# Rejilla de una columna: si hay varios botones, todos miden lo que el más ancho. #}
+            <div class="inline-grid gap-1.5">
+                {% if st == 'DRAFT' %}
+                    {% if blocked %}
+                        <span class="inline-flex items-center gap-1 text-xs text-amber-700"
+                              title="{{ 'stays.state_action.missing_tutors_hint'|trans({}, 'stays')|e('html_attr') }}">
+                            {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                            {{ (missing_academic and missing_mentor ? 'stays.state_action.missing_tutors' : (missing_academic ? 'stays.state_action.missing_academic' : 'stays.state_action.missing_mentor'))|trans({}, 'stays') }}
+                        </span>
+                    {% else %}
+                        {{ _self.state_button(position, 'PENDING', 'stays.state_action.to_pending', true) }}
+                    {% endif %}
+                {% elseif st == 'PENDING' %}
+                    {{ _self.state_button(position, 'DONE', 'stays.state_action.to_done', true) }}
+                    {{ _self.state_button(position, 'DRAFT', 'stays.state_action.to_draft', false) }}
+                {% else %}
+                    <button type="button"
+                            class="inline-flex items-center justify-center rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                            data-action="live#action" data-live-action-param="setSigned"
+                            data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                            data-live-signed-param="{{ position.signed ? 'false' : 'true' }}">
+                        {{ (position.signed ? 'stays.state_action.unsign' : 'stays.state_action.sign')|trans({}, 'stays') }}
+                    </button>
+                    {{ _self.state_button(position, 'DRAFT', 'stays.state_action.to_draft', false) }}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro state_button(position, target, label, primary) %}
+    <button type="button"
+            class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 text-xs font-medium transition-colors
+                   {{ primary ? 'border-plum-200 bg-plum-50 text-plum-700 hover:bg-plum-100' : 'border-gray-200 text-gray-500 hover:bg-gray-50' }}"
+            data-action="live#action" data-live-action-param="changeState"
+            data-live-position-id-param="{{ position.id.toRfc4122 }}"
+            data-live-state-param="{{ target }}">
+        {{ label|trans({}, 'stays') }}
+    </button>
+{% endmacro %}

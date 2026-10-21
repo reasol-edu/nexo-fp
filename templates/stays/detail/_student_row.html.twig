@@ -1,0 +1,202 @@
+{#
+  Fila de un estudiante en la lista de asignaciones. Se incluye desde StayDetailComponent, tanto para
+  el alumnado de cada grupo como para el que no tiene grupo, y hereda su contexto (student, profiles,
+  student_position_map, manageable_*…). Una sola copia: dos filas casi idénticas acabaron divergiendo.
+#}
+{% import 'student_profile/_badges.html.twig' as sp %}
+{% import 'stays/detail/_macros.html.twig' as m %}
+{% set sid = student.id.toRfc4122 %}
+{% set position = student_position_map[sid] is defined ? student_position_map[sid] : null %}
+{% set profile = profiles[sid] ?? null %}
+{% if position is null %}
+    {% set row_bg = 'hover:bg-gray-50/50' %}
+{% elseif position.signed %}
+    {% set row_bg = 'bg-green-50/60 hover:bg-green-50' %}
+{% else %}
+    {% set row_bg = 'bg-amber-50/60 hover:bg-amber-50' %}
+{% endif %}
+<tr class="{{ row_bg }} transition-colors js-student-row" data-sync-key="student-{{ sid }}" data-mine="{{ manageable_student_ids[sid] is defined ? '1' : '0' }}" data-flags="{{ m.row_flags(position, profile) }}">
+
+    <td data-label="{{ 'stays.show.col.student'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top min-w-[15rem] xl:min-w-[19rem]">
+        <div>
+            <p class="font-medium text-gray-900 leading-snug">{% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}<input type="checkbox" value="{{ position.id.toRfc4122 }}" data-bulk-select-target="row" data-action="change->bulk-select#toggle"
+                       class="mr-2 h-4 w-4 align-middle rounded border-gray-300 text-plum-600 focus:ring-plum-500"
+                       aria-label="{{ 'stays.bulk.select_row'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">{% endif %}{{ student.name.full() }}
+                {% if multi_programme and manageable_student_ids[sid] is not defined %}
+                    <span class="inline-block align-middle text-gray-400" title="{{ 'stays.show.foreign_student_hint'|trans({}, 'stays')|e('html_attr') }}">
+                        {{ ux_icon('heroicons:lock-closed', {class: 'h-3 w-3'}) }}
+                    </span>
+                {% endif %}
+            </p>
+            {{ sp.student_info(student, profile, profile_edit_all or profile_editable_ids[sid] is defined, attitude_all or attitude_visible_ids[sid] is defined, path('app_stays_show', {id: stay.id.toRfc4122})) }}
+        </div>
+    </td>
+
+    <td data-label="{{ 'stays.show.card.workcenter'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top min-w-[13rem]">
+        {% if position is null and profile is not null and not profile.takesFfeoe %}
+            <span class="text-xs text-gray-400">{{ 'student_profile.no_position_needed'|trans({}, 'stays') }}</span>
+        {% elseif position is null %}
+            {% set compatible = compatible_positions_for_student[sid] ?? [] %}
+            {% set manageable_compatible = compatible|filter(pos => manageable_position_ids[pos.id.toRfc4122] is defined) %}
+            {% if manageable_compatible is not empty %}
+                <form class="js-assign-form" data-student-id="{{ sid }}"{% if profile is not null and profile.isMissingNuss %} data-nuss-warning="{{ 'student_profile.assign_nuss_warning'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}" data-nuss-confirm-label="{{ 'student_profile.assign_nuss_confirm'|trans({}, 'stays')|e('html_attr') }}"{% endif %}>
+                    <button type="button"
+                            class="js-assign-trigger inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
+                            title="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.show.assign_position_hint'|trans({}, 'stays') }}">
+                        {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                        {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                    </button>
+                    <div class="js-assign-select hidden mt-1.5">
+                        <select class="js-assign-dropdown w-full text-xs rounded-lg border border-plum-300 bg-white px-2 py-1.5 text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-plum-500 focus:border-plum-500">
+                            <option value="">{{ 'stays.show.assign_position_placeholder'|trans({}, 'stays') }}</option>
+                            {% for pos in manageable_compatible %}
+                                <option value="{{ pos.id.toRfc4122 }}"
+                                        data-company="{{ pos.workcenter ? pos.workcenter.company.name|e('html_attr') : '' }}"
+                                        data-center="{{ pos.workcenter ? pos.workcenter.name|e('html_attr') : '' }}"
+                                        data-city="{{ pos.workcenter and pos.workcenter.city ? pos.workcenter.city|e('html_attr') : '' }}"
+                                        data-details="{{ pos.details ? pos.details|e('html_attr') : '' }}">
+                                    {{- pos.workcenter ? pos.workcenter.company.name ~ ' — ' ~ pos.workcenter.name : '—' -}}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            {% else %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                    {{ ux_icon('heroicons:x-circle', {class: 'h-3.5 w-3.5 shrink-0'}) }}
+                    {{ 'stays.show.position_none'|trans({}, 'stays') }}
+                </span>
+            {% endif %}
+        {% elseif position.workcenter %}
+            <div>
+                <p class="font-medium text-gray-900 leading-snug">{{ position.workcenter.company.name }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ position.workcenter.name }}{% if position.workcenter.city %} · {{ position.workcenter.city }}{% endif %}</p>
+                {# Entre 640 y 1279 px la columna de tutores no cabe: se resumen aquí, en solo lectura. #}
+                <dl class="mt-2 hidden sm:block xl:hidden space-y-0.5 text-xs text-gray-600">
+                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.tutor'|trans({}, 'stays') }}:</dt> <dd class="inline">{{ position.academicTutor ? position.academicTutor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
+                    <div><dt class="inline text-gray-400">{{ 'stays.show.card.workplace_mentor'|trans({}, 'stays') }}:</dt> <dd class="inline">{{ position.workplaceMentor ? position.workplaceMentor.name.full() : 'stays.show.no_tutor'|trans({}, 'stays') }}</dd></div>
+                </dl>
+            </div>
+        {% else %}
+            <span class="text-gray-300">{{ 'stays.show.no_workcenter'|trans({}, 'stays') }}</span>
+        {% endif %}
+    </td>
+
+    <td data-label="" class="px-5 py-4 align-top hidden xl:table-cell min-w-[11rem]">
+      {% if position is not null %}
+      <div class="space-y-2.5">
+        <div>
+        <p class="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-gray-400">{{ 'stays.show.card.tutor'|trans({}, 'stays') }}</p>
+        {% if position and position.academicTutor %}
+            <p class="text-gray-700 leading-snug">{{ position.academicTutor.name.full() }}</p>
+        {% elseif position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}
+            <form class="js-inline-assign-form"
+                  data-position-id="{{ position.id.toRfc4122 }}"
+                  data-live-action="setAcademicTutor"
+                  data-live-arg-name="teacherId">
+                <button type="button"
+                        class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                    {{ 'stays.show.tutor_none'|trans({}, 'stays') }}
+                    {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                </button>
+                <div class="js-inline-select-wrap hidden mt-1.5">
+                    <select class="js-inline-select w-full">
+                        <option value="">{{ 'stays.show.assign_tutor_placeholder'|trans({}, 'stays') }}</option>
+                        {% for teacher in programme_teachers %}
+                            <option value="{{ teacher.id.toRfc4122 }}">{{ teacher.name.lastName }} {{ teacher.name.firstName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        {% else %}
+            <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
+        {% endif %}
+        </div>
+        <div>
+        <p class="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-gray-400">{{ 'stays.show.card.workplace_mentor'|trans({}, 'stays') }}</p>
+        {% if position and position.workplaceMentor %}
+            <p class="text-gray-700 leading-snug">{{ position.workplaceMentor.name.full() }}</p>
+        {% elseif position is not null and position.workcenter and manageable_position_ids[position.id.toRfc4122] is defined %}
+            {% set cid = position.workcenter.company.id.toRfc4122 %}
+            {% set mentorOpts = workers_by_company_id[cid] ?? [] %}
+            {% if mentorOpts is not empty %}
+                <form class="js-inline-assign-form"
+                      data-position-id="{{ position.id.toRfc4122 }}"
+                      data-live-action="setWorkplaceMentor"
+                      data-live-arg-name="workerId">
+                    <button type="button"
+                            class="js-inline-trigger inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                        {{ 'stays.show.mentor_none'|trans({}, 'stays') }}
+                        {{ ux_icon('heroicons:chevron-down', {class: 'h-3 w-3 shrink-0 opacity-60'}) }}
+                    </button>
+                    <div class="js-inline-select-wrap hidden mt-1.5">
+                        <select class="js-inline-select w-full">
+                            <option value="">{{ 'stays.show.assign_mentor_placeholder'|trans({}, 'stays') }}</option>
+                            {% for w in mentorOpts %}
+                                <option value="{{ w.id.toRfc4122 }}">{{ w.name.lastName }} {{ w.name.firstName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            {% else %}
+                <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
+            {% endif %}
+        {% else %}
+            <span class="text-gray-300">{{ 'stays.show.no_tutor'|trans({}, 'stays') }}</span>
+        {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </td>
+
+    <td data-label="{{ 'stays.show.col.state'|trans({}, 'stays')|e('html_attr') }}" class="px-5 py-4 align-top hidden sm:table-cell min-w-[9rem] xl:min-w-[11rem]">
+        {% if position %}
+            {{ m.state_cell(position, manageable_position_ids[position.id.toRfc4122] is defined, stay.id.toRfc4122) }}
+        {% endif %}
+    </td>
+
+    {% if position is not null and manageable_position_ids[position.id.toRfc4122] is defined %}
+    <td class="px-3 py-4 align-top text-right w-14">
+        <div class="inline-flex items-center gap-1 sm:flex-col">
+            {# En columna desde 640 px (liberan ancho para el estado); en tarjeta, en fila al pie. #}
+            {% if position.state.value == 'DRAFT' %}
+                {# Sin diálogo de confirmación: el aviso del cambio ofrece «Deshacer». #}
+                <button type="button"
+                        data-action="live#action"
+                        data-live-action-param="unassignPosition"
+                        data-live-position-id-param="{{ position.id.toRfc4122 }}"
+                        class="inline-flex items-center rounded-lg border border-amber-200 p-1.5
+                               text-amber-500 hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                        title="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.unassign.btn'|trans({}, 'stays') }}">
+                    {{ ux_icon('heroicons:user-minus', {class: 'h-4 w-4'}) }}
+                </button>
+            {% endif %}
+            <a href="{{ path('app_stays_edit_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+               class="inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                      text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+               title="{{ 'stays.position.edit.title'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.edit.title'|trans({}, 'stays') }}">
+                {{ ux_icon('heroicons:pencil-square', {class: 'h-4 w-4'}) }}
+            </a>
+            <form method="post"
+                  action="{{ path('app_stays_duplicate_position', {id: stay.id.toRfc4122, positionId: position.id.toRfc4122}) }}"
+                  class="js-confirm-form"
+                  data-confirm="{{ 'stays.position.duplicate.confirm'|trans({}, 'stays')|e('html_attr') }}"
+                  data-confirm-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays')|e('html_attr') }}"
+                  data-confirm-copies="20"
+                  data-confirm-copies-label="{{ 'stays.position.duplicate.copies'|trans({}, 'stays')|e('html_attr') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('duplicate_position_' ~ position.id.toRfc4122) }}">
+                <input type="hidden" name="copies" value="1">
+                <button type="button"
+                        class="js-confirm-trigger inline-flex items-center rounded-lg border border-gray-200 p-1.5
+                               text-gray-400 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                        title="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}" aria-label="{{ 'stays.position.duplicate.btn'|trans({}, 'stays') }}">
+                    {{ ux_icon('heroicons:document-duplicate', {class: 'h-4 w-4'}) }}
+                </button>
+            </form>
+        </div>
+    </td>
+    {% elseif can_manage or manageable_position_ids is not empty %}
+    <td class="px-3 py-4 w-14"></td>
+    {% endif %}
+</tr>
