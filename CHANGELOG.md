@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.18.0] - 2026-10-21
+
 ### Changed
 
+- El aviso de tutores que faltan en el estado del puesto es más corto («Faltan los tutores», «Falta tutor docente», «Falta tutor de empresa»); la explicación completa queda en el tooltip.
 - En Centro educativo → Estudiantes, las insignias de la ficha van a continuación del nombre, la columna «Grupos» es más estrecha y la ficha se abre con un botón **Ficha** junto a *Editar*, de modo que las filas recuperan su altura original.
 - En el listado de asignaciones de la estancia, las insignias cortas (sin NUSS, no realiza FFEOE, coche, localidad preferente) van a continuación de la localidad de residencia, y la empresa aportada y la actitud en una línea aparte debajo. La columna «Estudiante» es más ancha a costa de «Estado».
 - La actitud del estudiante se muestra en el listado de la estancia a quien puede asignarle puesto o editar su ficha.
