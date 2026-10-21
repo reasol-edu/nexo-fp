@@ -214,6 +214,11 @@ const SHOTS = [
     { name: `ancho-${w}`, group: 'responsive', out: `var/screenshots/responsive/estancia-${w}.png`, size: [w, h, 1], full: true,
       steps: [openStay(DAW_STAY), wait(1500)] })),
 
+  // Listado «Centro educativo → Estudiantes» a distintos anchos. Grupo `responsive`.
+  ...[390, 768, 1024, 1440].map((w) => (
+    { name: `estudiantes-${w}`, group: 'responsive', out: `var/screenshots/responsive/estudiantes-${w}.png`, size: [w, 900, 1], full: true,
+      steps: [async ({ page }) => { const id = await centreId(page); await page.goto(`${BASE}/admin/centros/${id}/estudiantes`, { waitUntil: 'networkidle' }); }, wait(800)] })),
+
   // ── Capturas que MODIFICAN los datos de las fixtures: van al final para no alterar las anteriores ──
   // Asigna un tutor a varios puestos y deja a la vista el aviso con «Deshacer».
   { name: 'estancia-deshacer', group: 'manual', out: `${M}/estancia-deshacer.png`, size: [1440, 900, 1], user: 'diego.romero',

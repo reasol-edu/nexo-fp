@@ -62,7 +62,7 @@ Docente asignado a un grupo como tutor o docente. Puede **ver** las estancias de
 correspondiente y consultar los puestos formativos **con estudiante asignado**, pero no puede modificar
 las estancias ni ver los puestos formativos **sin estudiante asignado**. Quien es **tutor/a** del grupo
 (no basta con impartir en él) puede además **editar la ficha** de sus estudiantes en el curso (NUSS, FFEOE,
-coche, empresa aportada, actitud y localidades) y ver la actitud, igual que la administración del centro, la
+coche, empresa aportada, actitud y localidades) y ver la actitud en la lista, igual que la administración del centro, la
 coordinación de sus enseñanzas y la jefatura de su familia. El resto del profesorado ve esos datos, salvo la
 actitud, pero no los modifica.
 

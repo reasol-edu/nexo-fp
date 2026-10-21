@@ -134,6 +134,24 @@ class StayDetailStudentProfileTest extends ControllerTestCase
         self::assertStringContainsString('/estudiantes/' . $student->getId()->toRfc4122() . '/ficha', $html);
     }
 
+    public function testTheAttitudeIsOnlyShownToThoseWhoCanAssignAPositionOrEditTheProfile(): void
+    {
+        $student = $this->student('Ana', 'Martínez');
+        $this->profile($student)->setAttitude(4)->setResidenceCity('Lebrija');
+        $coordinator = (new Teacher(new PersonName('Coor', 'Dinadora')))->setUsername('coordinadora');
+        $plain       = (new Teacher(new PersonName('Doc', 'Ente')))->setUsername('docente');
+        $this->persist($coordinator, $plain);
+        $this->programme->addCoordinator($coordinator);
+        $this->group->addTeacher($plain);
+        $this->flush();
+
+        self::assertStringContainsString('Actitud 4/5', $this->html($this->admin), 'la administración la ve');
+        self::assertStringContainsString('Actitud 4/5', $this->html($coordinator), 'quien puede asignar puesto la ve');
+        $plainHtml = $this->html($plain);
+        self::assertStringContainsString('Lebrija', $plainHtml, 'el resto de la ficha sí se ve');
+        self::assertStringNotContainsString('Actitud 4/5', $plainHtml, 'un docente sin permiso sobre el estudiante no la ve');
+    }
+
     // ── Recuentos ────────────────────────────────────────────────────────────
 
     public function testStudentsWhoDoNotDoTheFfeoeDoNotCountAsWithoutPosition(): void

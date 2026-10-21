@@ -106,8 +106,10 @@ La lista de estudiantes de la estancia solo destaca lo que merece atención:
 - **Sin NUSS** (insignia roja): el estudiante realiza la FFEOE pero consta que no tiene NUSS, así que no
   podrá hacer la estancia. Quien aún está *sin informar* no se marca.
 - **No realiza FFEOE** (insignia gris, con el motivo al pasar el ratón por encima).
-- **Aporta: empresa**, el icono del **coche** y la **localidad preferente**; la localidad de residencia
-  aparece bajo el nombre.
+- El icono del **coche** y la **localidad preferente**, a continuación de la **localidad de residencia**
+  que aparece bajo el nombre.
+- **Aporta: empresa** y la **actitud** (de 1 a 5), en una línea aparte debajo de la localidad. La actitud
+  solo la ven quienes pueden asignar puesto al estudiante o editar su ficha.
 
 Hay dos **filtros rápidos** nuevos, *Sin NUSS* y *No realizan FFEOE*, y el mismo filtro en
 **Centro educativo → Estudiantes**. El inicio añade a **Atención ahora** la tarea «N estudiantes que realizan
@@ -115,10 +117,12 @@ la FFEOE sin NUSS».
 
 ![Ficha del estudiante en un diálogo, con selectores Sí / No](img/ficha-estudiante.png)
 
-El **lápiz** junto a cada estudiante abre la ficha en un diálogo. La **actitud** y la edición de la ficha son
-solo para quien puede asignar puesto al estudiante (administración del centro, coordinación de sus
-enseñanzas, jefatura de su familia) y para la **tutoría de sus grupos**; el resto del profesorado ve los
-demás datos pero no la actitud. Un curso anterior es de solo lectura.
+El **lápiz** junto a la localidad de cada estudiante (o el botón **Ficha** de **Centro educativo →
+Estudiantes**, junto a *Editar*) abre la ficha en un diálogo. La edición de la ficha es para quien puede
+asignar puesto al estudiante (administración del centro, coordinación de sus enseñanzas, jefatura de su
+familia) y para la **tutoría de sus grupos**. La **actitud** la ven además esas mismas personas en la lista de
+la estancia; el resto del profesorado ve los demás datos pero no la actitud. Un curso anterior es de solo
+lectura.
 
 Quien **no realiza la FFEOE**:
 

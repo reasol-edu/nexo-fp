@@ -2,58 +2,109 @@
   Insignias de la ficha del estudiante en el curso. Solo se pinta lo que merece atención:
   - «Sin NUSS» (rojo) solo si realiza la FFEOE: sin NUSS no puede hacer la estancia.
   - «No realiza FFEOE» (gris), con el motivo en el tooltip.
-  - «Aporta: empresa», el icono del coche y la localidad preferente, en tono sobrio.
-  El lápiz abre la ficha en un diálogo y solo se ofrece a quien puede editarla.
+  - El icono del coche y la localidad preferente, en tono sobrio.
+  - «Aporta: empresa» y la actitud, que van aparte (company_line) porque son más largas.
+  La ficha se abre en un diálogo y solo se ofrece a quien puede editarla.
 #}
-{% macro badges(student, profile, can_edit, return_url) %}
-    {% set has_flags = profile is not null and (not profile.takesFfeoe or profile.hasNuss is same as(false) or profile.bringsCompany or profile.hasCar or profile.preferredCity) %}
-    {% if has_flags or can_edit %}
-        <span class="mt-1 flex flex-wrap items-center gap-1">
-            {% if profile is not null %}
-                {% if not profile.takesFfeoe %}
-                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700"
-                          title="{{ 'student_profile.badge.no_ffeoe.title'|trans({'%reason%': profile.ffeoeExclusionReason ?? ''}, 'stays')|e('html_attr') }}">
-                        {{ 'student_profile.badge.no_ffeoe'|trans({}, 'stays') }}
-                    </span>
-                {% elseif profile.hasNuss is same as(false) %}
-                    <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700"
-                          title="{{ 'student_profile.badge.no_nuss.title'|trans({}, 'stays')|e('html_attr') }}">
-                        {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3 w-3 shrink-0'}) }}
-                        {{ 'student_profile.badge.no_nuss'|trans({}, 'stays') }}
-                    </span>
-                {% endif %}
-                {% if profile.bringsCompany %}
-                    <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
-                        {{ ux_icon('heroicons:building-office', {class: 'h-3 w-3 shrink-0'}) }}
-                        {{ 'student_profile.badge.company'|trans({'%company%': profile.broughtCompanyName}, 'stays') }}
-                    </span>
-                {% endif %}
-                {% if profile.hasCar %}
-                    <span class="inline-flex items-center text-gray-500" title="{{ 'student_profile.badge.car'|trans({}, 'stays')|e('html_attr') }}">
-                        {{ ux_icon('heroicons:truck', {class: 'h-3.5 w-3.5'}) }}
-                        <span class="sr-only">{{ 'student_profile.badge.car'|trans({}, 'stays') }}</span>
-                    </span>
-                {% endif %}
-                {% if profile.preferredCity %}
-                    <span class="text-[11px] text-gray-500">{{ 'student_profile.badge.preferred_city'|trans({'%city%': profile.preferredCity}, 'stays') }}</span>
-                {% endif %}
-            {% endif %}
-            {% if can_edit %}
-                <a href="{{ path('app_student_profile', {id: student.id.toRfc4122, return: return_url}) }}"
-                   data-controller="student-profile"
-                   data-student-profile-url-value="{{ path('app_student_profile', {id: student.id.toRfc4122}) }}"
-                   data-action="click->student-profile#open"
-                   class="inline-flex items-center rounded-md p-0.5 text-gray-400 hover:bg-gray-100 hover:text-plum-700 transition-colors"
-                   title="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"
-                   aria-label="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">
-                    {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
-                </a>
-            {% endif %}
-        </span>
+
+{# Insignias cortas, para ir en línea detrás del nombre o de la localidad. Con with_company, también la empresa aportada. #}
+{% macro flags(profile, with_company = false) %}
+    {% if profile is not null %}
+        {% if not profile.takesFfeoe %}
+            <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-700"
+                  title="{{ 'student_profile.badge.no_ffeoe.title'|trans({'%reason%': profile.ffeoeExclusionReason ?? ''}, 'stays')|e('html_attr') }}">
+                {{ 'student_profile.badge.no_ffeoe'|trans({}, 'stays') }}
+            </span>
+        {% elseif profile.hasNuss is same as(false) %}
+            <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700"
+                  title="{{ 'student_profile.badge.no_nuss.title'|trans({}, 'stays')|e('html_attr') }}">
+                {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-3 w-3 shrink-0'}) }}
+                {{ 'student_profile.badge.no_nuss'|trans({}, 'stays') }}
+            </span>
+        {% endif %}
+        {% if with_company and profile.bringsCompany %}
+            <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
+                {{ ux_icon('heroicons:building-office', {class: 'h-3 w-3 shrink-0'}) }}
+                {{ 'student_profile.badge.company'|trans({'%company%': profile.broughtCompanyName}, 'stays') }}
+            </span>
+        {% endif %}
+        {% if profile.hasCar %}
+            <span class="inline-flex items-center text-gray-500" title="{{ 'student_profile.badge.car'|trans({}, 'stays')|e('html_attr') }}">
+                {{ ux_icon('heroicons:truck', {class: 'h-3.5 w-3.5'}) }}
+                <span class="sr-only">{{ 'student_profile.badge.car'|trans({}, 'stays') }}</span>
+            </span>
+        {% endif %}
+        {% if profile.preferredCity %}
+            <span class="text-[11px] text-gray-500">{{ 'student_profile.badge.preferred_city'|trans({'%city%': profile.preferredCity}, 'stays') }}</span>
+        {% endif %}
     {% endif %}
 {% endmacro %}
 
-{# Localidad de residencia, en tono discreto bajo el nombre. #}
-{% macro residence(profile) %}
-    {%- if profile is not null and profile.residenceCity %}<p class="text-xs text-gray-400 mt-0.5">{{ profile.residenceCity }}</p>{% endif -%}
+{# Lápiz que abre la ficha en un diálogo (listado de la estancia). #}
+{% macro edit_link(student, return_url) %}
+    <a href="{{ path('app_student_profile', {id: student.id.toRfc4122, return: return_url}) }}"
+       data-controller="student-profile"
+       data-student-profile-url-value="{{ path('app_student_profile', {id: student.id.toRfc4122}) }}"
+       data-action="click->student-profile#open"
+       class="inline-flex items-center rounded-md p-0.5 text-gray-400 hover:bg-gray-100 hover:text-plum-700 transition-colors"
+       title="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}"
+       aria-label="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">
+        {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}
+    </a>
+{% endmacro %}
+
+{# Botón «Ficha» que abre el mismo diálogo (listado de estudiantes del centro). #}
+{% macro edit_button(student, return_url) %}
+    <a href="{{ path('app_student_profile', {id: student.id.toRfc4122, return: return_url}) }}"
+       data-controller="student-profile"
+       data-student-profile-url-value="{{ path('app_student_profile', {id: student.id.toRfc4122}) }}"
+       data-action="click->student-profile#open"
+       class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
+              text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+       aria-label="{{ 'student_profile.edit'|trans({'%student%': student.name.full()}, 'stays')|e('html_attr') }}">
+        {{ ux_icon('heroicons:clipboard-document-list', {class: 'h-3.5 w-3.5'}) }}
+        {{ 'student_profile.button'|trans({}, 'stays') }}
+    </a>
+{% endmacro %}
+
+{#
+  Línea aparte con la empresa aportada y, si quien consulta puede verla, la actitud.
+  No pinta nada si no hay ninguna de las dos.
+#}
+{% macro company_line(profile, show_attitude) %}
+    {% if profile is not null and (profile.bringsCompany or (show_attitude and profile.attitude is not null)) %}
+        <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {% if profile.bringsCompany %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-plum-50 px-2 py-0.5 text-[11px] font-medium text-plum-700">
+                    {{ ux_icon('heroicons:building-office', {class: 'h-3 w-3 shrink-0'}) }}
+                    {{ 'student_profile.badge.company'|trans({'%company%': profile.broughtCompanyName}, 'stays') }}
+                </span>
+            {% endif %}
+            {% if show_attitude and profile.attitude is not null %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600"
+                      title="{{ 'student_profile.badge.attitude.title'|trans({}, 'stays')|e('html_attr') }}">
+                    {{ ux_icon('heroicons:star', {class: 'h-3 w-3 shrink-0 text-amber-500'}) }}
+                    {{ 'student_profile.badge.attitude'|trans({'%n%': profile.attitude}, 'stays') }}
+                </span>
+            {% endif %}
+        </p>
+    {% endif %}
+{% endmacro %}
+
+{#
+  Datos del estudiante bajo su nombre en el listado de la estancia: en una línea la localidad de
+  residencia seguida de las insignias cortas y del lápiz, y debajo la empresa aportada y la actitud.
+#}
+{% macro student_info(student, profile, can_edit, show_attitude, return_url) %}
+    {% set has_flags = profile is not null and (not profile.takesFfeoe or profile.hasNuss is same as(false) or profile.hasCar or profile.preferredCity) %}
+    {% if (profile is not null and profile.residenceCity) or has_flags or can_edit %}
+        <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {% if profile is not null and profile.residenceCity %}
+                <span class="text-xs text-gray-400">{{ profile.residenceCity }}</span>
+            {% endif %}
+            {{ _self.flags(profile) }}
+            {% if can_edit %}{{ _self.edit_link(student, return_url) }}{% endif %}
+        </div>
+    {% endif %}
+    {{ _self.company_line(profile, show_attitude) }}
 {% endmacro %}

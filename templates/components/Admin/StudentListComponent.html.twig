@@ -93,24 +93,26 @@
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50">
                         {{ sort.th('students.col.name'|trans({}, 'admin'), 'name', this.sort, this.sortDir) }}
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.groups'|trans({}, 'admin') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sm:w-40">{{ 'students.col.groups'|trans({}, 'admin') }}</th>
                         {% if can_write %}<th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ 'students.col.actions'|trans({}, 'admin') }}</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     {% for student in pagination.items %}
                         <tr class="hover:bg-gray-50 transition-colors">
+                            {% set student_profile = profiles[student.id.toRfc4122] ?? null %}
                             <td data-label="{{ 'students.col.name'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
-                                {% if can_write %}
-                                    <a href="{{ path('app_admin_students_edit', {centreId: centre.id, id: student.id}) }}"
-                                       class="font-medium text-gray-900 hover:text-plum-700 transition-colors">{{ student.name.lastName }}, {{ student.name.firstName }}</a>
-                                {% else %}
-                                    <span class="font-medium text-gray-900">{{ student.name.lastName }}, {{ student.name.firstName }}</span>
-                                {% endif %}
-                                {% set student_profile = profiles[student.id.toRfc4122] ?? null %}
-                                {{ sp.badges(student, student_profile, can_write, path('app_admin_students_index', {centreId: centre.id})) }}
+                                <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                    {% if can_write %}
+                                        <a href="{{ path('app_admin_students_edit', {centreId: centre.id, id: student.id}) }}"
+                                           class="font-medium text-gray-900 hover:text-plum-700 transition-colors">{{ student.name.lastName }}, {{ student.name.firstName }}</a>
+                                    {% else %}
+                                        <span class="font-medium text-gray-900">{{ student.name.lastName }}, {{ student.name.firstName }}</span>
+                                    {% endif %}
+                                    {{ sp.flags(student_profile, true) }}
+                                </div>
                             </td>
-                            <td data-label="{{ 'students.col.groups'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4">
+                            <td data-label="{{ 'students.col.groups'|trans({}, 'admin')|e('html_attr') }}" class="px-6 py-4 sm:w-40 sm:max-w-40">
                                 <div class="flex flex-wrap gap-1 sm:justify-start justify-end">
                                     {% for group in student.groups|filter(g => g.id.toRfc4122 in activeGroupIds) %}
                                         <span class="inline-flex items-center rounded-full bg-plum-50 px-2 py-0.5 text-xs font-medium text-plum-700">
@@ -124,7 +126,8 @@
                             {% if can_write %}
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ path('app_admin_students_edit', {centreId: centre.id, id: student.id}) }}"
+                                    {{ sp.edit_button(student, path('app_admin_students_index', {centreId: centre.id})) }}
+                                    <a href="{{ path('app_admin_students_edit',{centreId: centre.id, id: student.id}) }}"
                                        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
                                               text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
                                         {{ ux_icon('heroicons:pencil-square', {class: 'h-3.5 w-3.5'}) }}

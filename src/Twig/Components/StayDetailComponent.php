@@ -242,10 +242,10 @@ class StayDetailComponent extends AbstractController
         $activeYear       = $centre->getActiveAcademicYear();
         $yearIsActive     = $activeYear === null || $activeYear->getId()->toRfc4122() === $year->getId()->toRfc4122();
         $editsAllProfiles = $actor->isAdmin() || $centre->getAdmins()->contains($actor);
-        $profileEditable  = [];
-        if ($yearIsActive && !$editsAllProfiles) {
-            $profileEditable = array_fill_keys($this->students->findResponsibleStudentIds($actor, $year), true);
-        }
+        $responsibleIds   = $editsAllProfiles ? [] : array_fill_keys($this->students->findResponsibleStudentIds($actor, $year), true);
+        $profileEditable  = $yearIsActive ? $responsibleIds : [];
+        // La actitud la ven quienes editan la ficha (también en un curso anterior) y quienes pueden asignar puesto al estudiante.
+        $attitudeVisible  = $responsibleIds + $manageableStudentIds;
 
         // Quien no realiza la FFEOE y no tiene puesto se puede quitar de la estancia de una vez
         // (solo los de las enseñanzas que gestiona quien consulta).
@@ -287,6 +287,8 @@ class StayDetailComponent extends AbstractController
             'profiles'                         => $profileMap,
             'profile_edit_all'                 => $yearIsActive && $editsAllProfiles,
             'profile_editable_ids'             => $profileEditable,
+            'attitude_all'                     => $editsAllProfiles,
+            'attitude_visible_ids'             => $attitudeVisible,
             'removable_non_ffeoe'              => $removableNonFfeoe,
             'blocked_non_ffeoe'                => $blockedNonFfeoe,
             'teacher_assignments'              => $stay->isCalculateByTeacher()
