@@ -91,7 +91,7 @@ El panel de inicio resume el curso de un vistazo: alumnado, estancias, plazas y 
 `Empresa` → `Centro de trabajo` → `Trabajadores` (tutores duales de empresa)
 
 **El nexo entre ambos**
-`Estancia` (período + una o varias enseñanzas) → `Puestos formativos`
+`Estancia` (período + uno o varios niveles) → `Puestos formativos`
   cada puesto = **un estudiante + un tutor docente + un tutor de empresa + un estado**
 
 </div>
@@ -109,7 +109,7 @@ El panel de inicio resume el curso de un vistazo: alumnado, estancias, plazas y 
 | **Admin global** | TIC / soporte | Todo, en todos los centros; alta de centros y docentes |
 | **Admin de centro** | Equipo directivo | Gestiona su centro: curso, oferta, estudiantes, ajustes |
 | **Jefe/a de familia** | Jefatura de departamento | Gestiona las enseñanzas de su familia profesional |
-| **Coordinador/a dual** | Coordinación de la FFEOE | Gestiona estancias y puestos de sus enseñanzas |
+| **Coordinador/a dual** | Coordinación de la FFEOE | Gestiona estancias y puestos de sus niveles |
 | **Docente de enlace** | Profesorado en empresa | Edita los puestos **sin estudiante** asignado de su empresa |
 | **Tutor/a de grupo** | Tutoría docente | Consulta sus estancias y firma los puestos a su cargo |
 | **Docente** | Profesorado | Acceso de consulta según sus asignaciones |
@@ -191,7 +191,7 @@ En **Centro educativo › Oferta formativa**:
 
 Al seleccionar un elemento, su detalle se edita **en el mismo panel**:
 
-- **Coordinadores duales** de cada enseñanza (gestionan sus estancias).
+- **Coordinadores duales** por nivel, o de toda la enseñanza (gestionan sus estancias).
 - **Niveles** del ciclo (1.º, 2.º…), y dentro de cada nivel, los **grupos**.
 - En cada grupo se asignan **tutores/as** y **docentes**, sin salir de la pantalla.
 - También por CSV de Séneca: **Personal › Personal del centro › Materia y grupos › Exportar datos** (formato CSV)
@@ -232,9 +232,9 @@ En **Empresas**:
 
 ![bg right:54%](img/09_estancia_nueva.png)
 
-Una **estancia** agrupa los puestos de una o varias enseñanzas en un período:
+Una **estancia** agrupa los puestos de uno o varios niveles en un período:
 
-- Se eligen las **enseñanzas** (una o varias) y las **fechas** (inicio y fin).
+- Se eligen los **niveles** (p. ej. solo 2.º DAW) y las **fechas** (inicio y fin).
 - Una misma enseñanza puede tener **varias estancias** que se solapen
   (no todos los grupos hacen la FFEOE a la vez).
 
@@ -281,7 +281,7 @@ Una empresa puede ofrecer puestos de **varias enseñanzas** (p. ej. DAW y DAM):
 
 - Cada coordinación **asigna solo a su alumnado**, pero **ve** todo el de la estancia.
 - Un puesto compartido, una vez asignado, **deja de estar disponible** para cualquier otro estudiante.
-- **Preferencia temporal** de una enseñanza sobre un puesto, hasta una fecha.
+- **Preferencia temporal** de un nivel sobre un puesto, hasta una fecha.
 - **Panel de reparto** por enseñanza y aviso por correo a las demás coordinaciones.
 
 ---

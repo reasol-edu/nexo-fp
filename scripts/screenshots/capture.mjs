@@ -124,7 +124,7 @@ const SHOTS = [
     element: async (page) => page.locator('#stay-teachers') },
   { name: 'puesto-preferencia', group: 'manual', out: `${M}/puesto-preferencia.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [async (ctx) => { const href = await openStay(SHARED_STAY)(ctx); await ctx.page.goto(`${BASE}${href}/nuevo-puesto`, { waitUntil: 'networkidle' });
-      await ctx.page.selectOption('#priority_programme_id', { index: 1 }); await ctx.page.fill('#priority_until', new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10)); }] },
+      await ctx.page.selectOption('#priority_programme_year_id', { index: 1 }); await ctx.page.fill('#priority_until', new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10)); }] },
   { name: 'estancia-acciones-masivas', group: 'manual', out: `${M}/estancia-acciones-masivas.png`, size: [1440, 900, 1], user: 'diego.romero',
     steps: [openStay(SHARED_STAY), wait(1200), async ({ page }) => {
       const boxes = page.locator('[data-bulk-select-target="row"]');

@@ -11,13 +11,13 @@ configura quien despliega la aplicación; si no te llega ningún aviso, consulta
   cambia el existente), el tutor/a recibe un correo con el enlace a la estancia.
 - **Nuevos puestos formativos:** al crear puestos en una estancia, los docentes de enlace de la empresa
   reciben un aviso (excepto quien los creó).
-- **Puestos compartidos:** en una estancia con varias enseñanzas, cuando una coordinación **asigna** un puesto
-  que también se ofertaba a otras enseñanzas, o **elimina** un puesto libre compartido, las coordinaciones
-  de esas otras enseñanzas reciben un correo para que no sigan ofreciéndolo.
+- **Puestos compartidos:** en una estancia con varios niveles, cuando una coordinación **asigna** un puesto
+  que también se ofertaba a otros niveles, o **elimina** un puesto libre compartido, las coordinaciones
+  de esos otros niveles reciben un correo para que no sigan ofreciéndolo.
 - **Recordatorios de firma:** aviso **diario** por cada puesto formativo en estado «Registrado en Séneca»
   que aún no esté firmado y cuya estancia **comience** en los próximos días (7 por defecto, lo decide la
   administración). Se envía a todas las personas con responsabilidad sobre el puesto —el **tutor/a dual
-  docente**, la **coordinación de FP dual** de la enseñanza y la **jefatura de la familia profesional**—,
+  docente**, la **coordinación de FP dual** del nivel y la **jefatura de la familia profesional**—,
   con un único correo por persona que agrupa las estancias y, en cada una, sus estudiantes (centro de
   trabajo y tutores asignados). Quien es solo tutor/a ve únicamente sus estudiantes; coordinación y jefatura
   ven todos los de su área de responsabilidad. Se sigue avisando cada día hasta que el puesto se firma,

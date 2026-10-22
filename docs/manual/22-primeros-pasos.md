@@ -87,7 +87,8 @@ un elemento de la columna anterior.
    nombre **tal cual aparece en Séneca**.
 5. **Completa los datos de cada elemento.** Al seleccionar cualquier familia, enseñanza, nivel o grupo,
    a la derecha se abre un panel donde puedes cambiar su nombre, escribir observaciones y asignar al
-   personal correspondiente (responsable de familia, coordinadores/as, tutores/as y docentes). Para
+   personal correspondiente (responsable de familia, coordinadores/as de cada nivel o de toda la
+   enseñanza, tutores/as y docentes). Para
    asignar personal, pulsa el desplegable y elige de la lista o escribe unas letras para filtrar; las
    asignaciones de personal **se guardan solas**, y el nombre y las observaciones se confirman con
    **Guardar cambios**.

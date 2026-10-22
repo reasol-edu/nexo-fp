@@ -31,7 +31,7 @@ al día».
   Ambos umbrales son [ajustes configurables](25-ajustes-y-bloqueos.md). Un puesto completo listo para
   Séneca nunca es crítico, y la falta de puestos libres es siempre informativa.
 - **Próximos 30 días**: hitos con fecha (inicio y fin de estancias, firmas por completar antes del inicio,
-  fin de la preferencia de una enseñanza en puestos compartidos, puestos que empiezan).
+  fin de la preferencia de un nivel en puestos compartidos, puestos que empiezan).
 - **Mis estancias**: una tarjeta por estancia no finalizada con su periodo, el avance en cuatro etapas
   (puesto, tutores, Séneca, firmado) y el siguiente paso, que enlaza con el filtro rápido
   correspondiente. Con muchas estancias se muestra como tabla.
@@ -59,10 +59,10 @@ permisos (nueva estancia, nueva empresa, importar empresas, docentes o estudiant
 
 ![Listado de estancias con filtros por familia, enseñanza y período](img/estancias.png)
 
-Una **estancia** agrupa un conjunto de puestos formativos de una o varias enseñanzas dentro de un periodo
+Una **estancia** agrupa un conjunto de puestos formativos de uno o varios niveles (de una o varias enseñanzas) dentro de un periodo
 concreto. Desde esta sección se puede:
 
-- Crear y editar estancias con nombre, enseñanza y fechas de inicio y fin.
+- Crear y editar estancias con nombre, niveles y fechas de inicio y fin.
 - Añadir, editar y eliminar **puestos formativos** dentro de cada estancia.
 - Inscribir o retirar estudiantes de la estancia.
 - Asignar estudiantes y tutores directamente desde el detalle, con un modo de **asignación rápida** que
@@ -76,8 +76,8 @@ concreto. Desde esta sección se puede:
   navegador y se restauran automáticamente al volver al listado.
 
 !!! warning "Visibilidad según rol"
-    Solo ves en el listado las estancias de las enseñanzas en las que tienes algún rol. Las estancias de
-    otras enseñanzas no aparecen ni son accesibles (consulta [Roles y permisos](21-roles-y-permisos.md)).
+    Solo ves en el listado las estancias de los niveles y enseñanzas en los que tienes algún rol. Las
+    estancias de otros no aparecen ni son accesibles (consulta [Roles y permisos](21-roles-y-permisos.md)).
 
 !!! warning "Puestos sin asignar"
     Los tutores/as y docentes de grupo ven el detalle de la estancia y los puestos formativos de sus
