@@ -290,7 +290,7 @@ class TrainingPosition
         $studentYearIds = [];
         foreach ($student->getGroups() as $group) {
             $programmeYear = $group->getProgrammeYear();
-            if ($this->stay->hasProgramme($programmeYear->getProgramme())) {
+            if ($this->stay->hasProgrammeYear($programmeYear)) {
                 $studentYearIds[$programmeYear->getId()->toRfc4122()] = true;
             }
         }

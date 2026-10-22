@@ -255,7 +255,7 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             SELECT DISTINCT t
             FROM App\Entity\Teacher t, App\Entity\Group g
             JOIN g.programmeYear py
-            WHERE EXISTS(SELECT 1 FROM App\Entity\Stay xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = py.programme)
+            WHERE EXISTS(SELECT 1 FROM App\Entity\Stay xs JOIN xs.programmeYears xy WHERE xs.id = :stay AND xy = py)
               AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)
             ORDER BY t.name.lastName ASC, t.name.firstName ASC
         ')
@@ -279,7 +279,7 @@ class TeacherRepository extends ServiceEntityRepository implements PasswordUpgra
             // Grupos del curso (profesorado y tutoría)
             ['SELECT DISTINCT t FROM App\Entity\Teacher t, App\Entity\Group g JOIN g.programmeYear py JOIN py.programme p
               WHERE p.academicYear = :year AND (t MEMBER OF g.tutors OR t MEMBER OF g.teachers)', 'year'],
-            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\Programme p JOIN p.coordinators c WHERE c = t AND p.academicYear = :year)', 'year'],
+            ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\ProgrammeYear cpy JOIN cpy.programme p JOIN cpy.coordinators c WHERE c = t AND p.academicYear = :year)', 'year'],
             ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\ProfessionalFamily f WHERE f.head = t AND f.academicYear = :year)', 'year'],
             ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\TrainingPosition tp JOIN tp.stay s WHERE tp.academicTutor = t AND s.academicYear = :year)', 'year'],
             ['SELECT t FROM App\Entity\Teacher t WHERE EXISTS(SELECT 1 FROM App\Entity\EducationalCentre c JOIN c.admins a WHERE a = t AND c = :centre)', 'centre'],

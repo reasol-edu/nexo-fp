@@ -31,14 +31,34 @@ class Programme
     #[ORM\JoinColumn(nullable: false)]
     private ProfessionalFamily $professionalFamily;
 
-    /** @var Collection<int, Teacher> */
-    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
-    #[ORM\JoinTable(name: 'programme_coordinator')]
-    private Collection $coordinators;
+    /**
+     * Niveles de la enseñanza (lado inverso). La coordinación dual y las estancias se asignan por nivel;
+     * esta colección permite también hacerlo «a toda la enseñanza» de una vez.
+     *
+     * @var Collection<int, ProgrammeYear>
+     */
+    #[ORM\OneToMany(targetEntity: ProgrammeYear::class, mappedBy: 'programme')]
+    private Collection $programmeYears;
 
     public function __construct()
     {
-        $this->coordinators = new ArrayCollection();
+        $this->programmeYears = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, ProgrammeYear>
+     */
+    public function getProgrammeYears(): Collection
+    {
+        return $this->programmeYears;
+    }
+
+    /** Lo llama {@see ProgrammeYear::setProgramme()} para mantener el lado inverso al día. */
+    public function registerProgrammeYear(ProgrammeYear $programmeYear): void
+    {
+        if (!$this->programmeYears->contains($programmeYear)) {
+            $this->programmeYears->add($programmeYear);
+        }
     }
 
     public function getId(): Uuid
@@ -95,25 +115,67 @@ class Programme
     }
 
     /**
-     * @return Collection<int, Teacher>
+     * Docentes que coordinan **todos** los niveles de la enseñanza: es lo que muestra y edita el panel de
+     * la enseñanza (el «atajo» que asigna la coordinación a todos sus niveles de una vez). Quien coordina
+     * solo algunos niveles no aparece aquí.
+     *
+     * @return list<Teacher>
      */
-    public function getCoordinators(): Collection
+    public function getCoordinatorsOfAllLevels(): array
     {
-        return $this->coordinators;
+        $levels = $this->programmeYears->toArray();
+        if ($levels === []) {
+            return [];
+        }
+
+        $common = $levels[0]->getCoordinators()->toArray();
+        foreach (array_slice($levels, 1) as $level) {
+            $common = array_filter($common, static fn (Teacher $t): bool => $level->getCoordinators()->contains($t));
+        }
+
+        return array_values($common);
     }
 
+    /**
+     * Docentes que coordinan **al menos un** nivel de la enseñanza, sin repetir. Es lo que hace falta para
+     * comprobaciones generales (¿coordina algo de esta enseñanza?), no para decidir sobre un estudiante concreto.
+     *
+     * @return list<Teacher>
+     */
+    public function getCoordinatorsOfAnyLevel(): array
+    {
+        $result = [];
+        foreach ($this->programmeYears as $level) {
+            foreach ($level->getCoordinators() as $teacher) {
+                $result[$teacher->getId()->toRfc4122()] = $teacher;
+            }
+        }
+
+        return array_values($result);
+    }
+
+    /**
+     * Asigna la coordinación a todos los niveles de la enseñanza. Una enseñanza sin niveles no puede
+     * guardar coordinadores (la coordinación vive en el nivel).
+     */
     public function addCoordinator(Teacher $coordinator): static
     {
-        if (!$this->coordinators->contains($coordinator)) {
-            $this->coordinators->add($coordinator);
+        if ($this->programmeYears->isEmpty()) {
+            throw new \LogicException('La enseñanza no tiene niveles: crea antes un nivel para asignar la coordinación dual.');
+        }
+        foreach ($this->programmeYears as $level) {
+            $level->addCoordinator($coordinator);
         }
 
         return $this;
     }
 
+    /** Quita la coordinación de todos los niveles de la enseñanza. */
     public function removeCoordinator(Teacher $coordinator): static
     {
-        $this->coordinators->removeElement($coordinator);
+        foreach ($this->programmeYears as $level) {
+            $level->removeCoordinator($coordinator);
+        }
 
         return $this;
     }

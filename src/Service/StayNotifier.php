@@ -164,7 +164,7 @@ class StayNotifier
             if (in_array($programme->getId()->toRfc4122(), $ownIds, true)) {
                 continue;
             }
-            foreach ($programme->getCoordinators() as $coordinator) {
+            foreach ($programmeYear->getCoordinators() as $coordinator) {
                 $recipients[$coordinator->getId()->toRfc4122()] = $coordinator;
             }
         }

@@ -439,7 +439,8 @@ class CompanyVoterTest extends RepositoryTestCase
         $year    = $this->makeYear($centre);
         $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
-        $this->persist($centre, $year, $family, $prog, $teacher);
+        $level   = (new \App\Entity\ProgrammeYear())->setName('1.º DAW')->setProgramme($prog);
+        $this->persist($centre, $year, $family, $prog, $level, $teacher);
         $prog->addCoordinator($teacher);
         $this->flush();
 
@@ -457,7 +458,8 @@ class CompanyVoterTest extends RepositoryTestCase
         $yearA    = $this->makeYear($centreA);
         $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($yearA);
         $prog     = (new Programme())->setName('DAW')->setAcademicYear($yearA)->setProfessionalFamily($family);
-        $this->persist($centreA, $centreB, $yearA, $family, $prog, $teacher);
+        $level    = (new \App\Entity\ProgrammeYear())->setName('1.º DAW')->setProgramme($prog);
+        $this->persist($centreA, $centreB, $yearA, $family, $prog, $level, $teacher);
         $prog->addCoordinator($teacher);
         $this->flush();
 
@@ -475,7 +477,8 @@ class CompanyVoterTest extends RepositoryTestCase
         $year    = $this->makeYear($centre);
         $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
-        $this->persist($centre, $company, $year, $family, $prog, $teacher);
+        $level   = (new \App\Entity\ProgrammeYear())->setName('1.º DAW')->setProgramme($prog);
+        $this->persist($centre, $company, $year, $family, $prog, $level, $teacher);
         $prog->addCoordinator($teacher);
         $this->flush();
 
@@ -494,7 +497,8 @@ class CompanyVoterTest extends RepositoryTestCase
         $yearA    = $this->makeYear($centreA);
         $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($yearA);
         $prog     = (new Programme())->setName('DAW')->setAcademicYear($yearA)->setProfessionalFamily($family);
-        $this->persist($centreA, $centreB, $companyB, $yearA, $family, $prog, $teacher);
+        $level    = (new \App\Entity\ProgrammeYear())->setName('1.º DAW')->setProgramme($prog);
+        $this->persist($centreA, $centreB, $companyB, $yearA, $family, $prog, $level, $teacher);
         $prog->addCoordinator($teacher);
         $this->flush();
 
@@ -512,7 +516,8 @@ class CompanyVoterTest extends RepositoryTestCase
         $year    = $this->makeYear($centre);
         $family  = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
-        $this->persist($centre, $company, $year, $family, $prog, $teacher);
+        $level   = (new \App\Entity\ProgrammeYear())->setName('1.º DAW')->setProgramme($prog);
+        $this->persist($centre, $company, $year, $family, $prog, $level, $teacher);
         $prog->addCoordinator($teacher);
         $this->flush();
 

@@ -246,9 +246,10 @@ class CompanyRepositoryTest extends RepositoryTestCase
         $year    = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $family  = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $prog    = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family);
+        $level   = (new \App\Entity\ProgrammeYear())->setName('1º')->setProgramme($prog);
         $stay    = $this->makeStay($year, $prog, 'FFEOE DAM ' . $centreCode);
         $company = $this->makeCompany('Empresa S.L.', 'B' . substr(md5($centreCode), 0, 8), $centre);
-        $this->persist($centre, $year, $family, $prog, $stay, $company);
+        $this->persist($centre, $year, $family, $prog, $level, $stay, $company);
         return [$centre, $stay, $company];
     }
 }

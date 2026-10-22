@@ -873,7 +873,11 @@ class StayVoterTest extends RepositoryTestCase
 
     private function makeProgramme(AcademicYear $year, ProfessionalFamily $family, string $name): Programme
     {
-        return (new Programme())->setName($name)->setAcademicYear($year)->setProfessionalFamily($family);
+        $programme = (new Programme())->setName($name)->setAcademicYear($year)->setProfessionalFamily($family);
+        // Las estancias y la coordinación se componen de niveles: toda enseñanza de prueba tiene el nivel «1º».
+        $this->em->persist((new ProgrammeYear())->setName('1º')->setProgramme($programme));
+
+        return $programme;
     }
 
     private function makeStay(AcademicYear $year, Programme $programme): Stay
@@ -904,8 +908,15 @@ class StayVoterTest extends RepositoryTestCase
             ->setAdmin($admin);
     }
 
+    /** El nivel de ese nombre de la enseñanza (el «1º» ya existe y es el de la estancia), o uno nuevo. */
     private function makeProgrammeYear(Programme $programme, string $name = '1º'): ProgrammeYear
     {
+        foreach ($programme->getProgrammeYears() as $existing) {
+            if ($existing->getName() === $name) {
+                return $existing;
+            }
+        }
+
         return (new ProgrammeYear())->setName($name)->setProgramme($programme);
     }
 

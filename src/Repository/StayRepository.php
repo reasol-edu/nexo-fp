@@ -9,6 +9,7 @@ use App\Entity\Company;
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
@@ -431,7 +432,8 @@ class StayRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('s')
             ->select('DISTINCT s.id AS stay_id', 'f.id AS family_id', 'f.name AS family_name')
-            ->join('s.programmes', 'p')
+            ->join('s.programmeYears', 'sy')
+            ->join('sy.programme', 'p')
             ->join('p.professionalFamily', 'f')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid');
@@ -461,7 +463,8 @@ class StayRepository extends ServiceEntityRepository
             ->join('s.students', 'st')
             ->join('st.groups', 'g')
             ->join('g.programmeYear', 'gpy')
-            ->join('s.programmes', 'sp', 'WITH', 'sp = gpy.programme')
+            ->join('s.programmeYears', 'sy', 'WITH', 'sy = gpy')
+            ->join('sy.programme', 'sp')
             ->join('sp.professionalFamily', 'f')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid');
@@ -643,7 +646,8 @@ class StayRepository extends ServiceEntityRepository
         ?Teacher $viewer = null,
     ): array {
         $qb = $this->createQueryBuilder('s')
-            ->join('s.programmes', 'p')->addSelect('p')
+            ->join('s.programmeYears', 'sy')->addSelect('sy')
+            ->join('sy.programme', 'p')->addSelect('p')
             ->join('p.professionalFamily', 'f')->addSelect('f')
             ->leftJoin('s.trainingPositions', 'tp')->addSelect('tp')
             ->where('s.academicYear = :year')
@@ -797,7 +801,7 @@ class StayRepository extends ServiceEntityRepository
         // combinar búsqueda, familia y enseñanza. La condición se escribe con {p} (enseñanza) y {f} (familia).
         $n = ++$this->existsCounter;
 
-        return 'EXISTS(SELECT 1 FROM ' . Stay::class . ' xs' . $n . ' JOIN xs' . $n . '.programmes xp' . $n
+        return 'EXISTS(SELECT 1 FROM ' . Stay::class . ' xs' . $n . ' JOIN xs' . $n . '.programmeYears xy' . $n . ' JOIN xy' . $n . '.programme xp' . $n
             . ' JOIN xp' . $n . '.professionalFamily xf' . $n
             . ' WHERE xs' . $n . ' = s AND (' . strtr($condition, ['{p}' => 'xp' . $n, '{f}' => 'xf' . $n]) . '))';
     }
@@ -817,9 +821,9 @@ class StayRepository extends ServiceEntityRepository
         $qb->join('s.academicYear', 'vvay')
            ->join('vvay.educationalCentre', 'vvc');
 
-        // Cualquier enseñanza de la estancia que el docente coordine, dirija (familia) o imparta.
-        $viaProgramme = 'EXISTS(SELECT 1 FROM ' . Stay::class . ' vs JOIN vs.programmes vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
-            . 'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)'
+        // Cualquier nivel de la estancia que el docente coordine, o enseñanza suya cuya familia dirija o en la que imparta.
+        $viaProgramme = 'EXISTS(SELECT 1 FROM ' . Stay::class . ' vs JOIN vs.programmeYears vvy JOIN vvy.programme vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
+            . ':vViewer MEMBER OF vvy.coordinators'
             . ' OR vvf.head = :vViewer'
             . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
             . '))';
@@ -850,8 +854,9 @@ class StayRepository extends ServiceEntityRepository
     public function findForDashboard(AcademicYear $year, Teacher $viewer): array
     {
         $qb = $this->createQueryBuilder('s')
-            ->addSelect('p', 'f')
-            ->leftJoin('s.programmes', 'p')
+            ->addSelect('sy', 'p', 'f')
+            ->leftJoin('s.programmeYears', 'sy')
+            ->leftJoin('sy.programme', 'p')
             ->leftJoin('p.professionalFamily', 'f')
             ->where('s.academicYear = :year')
             ->orderBy('s.startDate', 'ASC')

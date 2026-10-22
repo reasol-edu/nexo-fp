@@ -526,10 +526,14 @@ class TrainingPositionRepositoryTest extends RepositoryTestCase
 
     private function makeProgramme(AcademicYear $year, ProfessionalFamily $family): Programme
     {
-        return (new Programme())
+        $programme = (new Programme())
             ->setName('DAM')
             ->setAcademicYear($year)
             ->setProfessionalFamily($family);
+        // Las estancias se componen de niveles: la enseñanza de prueba tiene uno.
+        $this->em->persist((new \App\Entity\ProgrammeYear())->setName('1.º DAM')->setProgramme($programme));
+
+        return $programme;
     }
 
     private function makeStay(AcademicYear $year, Programme $programme): Stay

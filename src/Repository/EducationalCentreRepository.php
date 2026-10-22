@@ -7,6 +7,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -193,12 +194,11 @@ class EducationalCentreRepository extends ServiceEntityRepository
             $merged[$ec->getId()->toRfc4122()] = $ec;
         }
 
-        // Centres where teacher coordinates a programme (CompanyVoter/StayVoter ya les dan acceso a la sección)
+        // Centres where teacher coordinates a level of a programme (CompanyVoter/StayVoter ya les dan acceso a la sección)
         foreach ($this->getEntityManager()->createQueryBuilder()
             ->select('p')
             ->from(Programme::class, 'p')
-            ->join('p.coordinators', 'c')
-            ->where('c.id = :tid')
+            ->where('EXISTS(SELECT 1 FROM ' . ProgrammeYear::class . ' cpy JOIN cpy.coordinators c WHERE cpy.programme = p AND c.id = :tid)')
             ->setParameter('tid', $tid, 'uuid')
             ->getQuery()
             ->getResult() as $programme) {

@@ -8,6 +8,7 @@ use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Student;
 use App\Entity\StudentYearProfile;
 use App\Entity\Teacher;
@@ -171,8 +172,8 @@ class StudentRepository extends ServiceEntityRepository
     }
 
     /**
-     * ¿Es el docente responsable del estudiante en el curso? Lo es quien coordina una enseñanza o dirige
-     * la familia de alguno de sus grupos del curso, o tutoriza alguno de esos grupos.
+     * ¿Es el docente responsable del estudiante en el curso? Lo es quien coordina el nivel o dirige la
+     * familia de alguno de sus grupos del curso, o tutoriza alguno de esos grupos.
      */
     public function isResponsibleInYear(Teacher $teacher, Student $student, AcademicYear $year): bool
     {
@@ -208,7 +209,7 @@ class StudentRepository extends ServiceEntityRepository
             ->join('py.programme', 'prog')
             ->join('prog.professionalFamily', 'f')
             ->leftJoin('g.tutors', 'gt')
-            ->leftJoin('prog.coordinators', 'pc')
+            ->leftJoin('py.coordinators', 'pc')
             ->where('f.academicYear = :year')
             ->andWhere('gt.id = :teacher OR pc.id = :teacher OR f.head = :teacher')
             ->setParameter('year', $year->getId(), 'uuid')
@@ -235,7 +236,7 @@ class StudentRepository extends ServiceEntityRepository
             $qb->andWhere($qb->expr()->orX(
                 'EXISTS(SELECT 1 FROM ' . AcademicYear::class . ' vay JOIN vay.educationalCentre vvec JOIN vvec.admins vadm WHERE vay.id = :year AND vadm.id = :viewer)',
                 'f.head = :viewer',
-                'EXISTS(SELECT 1 FROM ' . Programme::class . ' vp JOIN vp.coordinators vc WHERE vp = prog AND vc.id = :viewer)',
+                'EXISTS(SELECT 1 FROM ' . ProgrammeYear::class . ' vpy JOIN vpy.coordinators vc WHERE vpy = py AND vc.id = :viewer)',
                 'EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy WHERE vgpy.programme = prog AND (:viewer MEMBER OF vg.tutors OR :viewer MEMBER OF vg.teachers))',
             ))->setParameter('viewer', $viewer->getId(), 'uuid');
         }

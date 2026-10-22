@@ -1,33 +1,126 @@
 #!/usr/bin/env bash
-# Comprueba las migraciones recientes (2.9.0: estancias con varias enseñanzas) contra bases de datos
-# reales en Docker: PostgreSQL 16, MySQL 8 y MariaDB 11. SQLite se prueba aparte (no necesita Docker).
+# Comprueba la última migración de datos (la coordinación dual y las estancias pasan de la enseñanza al
+# nivel: programme_coordinator → programme_year_coordinator y stay_programme → stay_programme_year) contra
+# bases de datos reales: PostgreSQL 16, MySQL 8 y MariaDB 11 en Docker, y SQLite (sin Docker).
 #
-# Para cada motor: parte de la migración anterior con datos reales, sube, comprueba que los datos se
-# han trasladado, baja, vuelve a subir, comprueba que no se puede borrar una enseñanza en uso (FK RESTRICT)
-# y muestra las diferencias entre el esquema migrado y el mapeo del ORM.
+# Para cada motor: parte de la migración anterior con datos reales, comprueba que se rechaza una
+# enseñanza sin niveles con coordinadores (en vez de perderlos), sube, comprueba que los datos se han
+# copiado a todos los niveles y que las claves foráneas (RESTRICT / CASCADE) se comportan, baja
+# conservando lo que se puede, vuelve a subir y muestra las diferencias entre el esquema migrado y el
+# mapeo del ORM.
 #
 # Además carga las fixtures de demostración y comprueba que los contadores de la oferta formativa
 # (consultas con `IN (:entidades)`) devuelven datos: con ids binarios (MySQL, SQLite con migraciones)
-# devolvían 0 y los tests en memoria no lo detectaban.
+# devolvían 0 y los tests en memoria no lo detectaban. Y elimina un curso con datos (AcademicYearEraser).
 #
-# USO:   scripts/check-migrations.sh [pg|mysql|mariadb|sqlite|all]      (necesita Docker; cada motor tarda ~1 min)
-# Variables: FROM=<versión anterior> (por defecto 20260702000000), KEEP=1 para no parar los contenedores.
+# USO:   scripts/check-migrations.sh [pg|mysql|mariadb|sqlite|all]      (Docker para pg, mysql y mariadb; cada uno ~1 min)
+# Variables: FROM=<versión anterior> (por defecto 20261020000000), KEEP=1 para no parar los contenedores.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-FROM="${FROM:-20260702000000}"
+FROM="${FROM:-20261020000000}"
+TARGET="${TARGET:-20261022000000}"
 ONLY="${1:-all}"
 FAILS=0
 export APP_ENV=dev APP_DEBUG=0 APP_LOG=false MAILER_DSN=null://null
 
 ok()   { echo "  ✅ $*"; }
 fail() { echo "  ❌ $*"; FAILS=$((FAILS+1)); }
-mig()  { php -d memory_limit=1G bin/console doctrine:migrations:migrate "$@" --no-interaction 2>&1 | grep -E "OK|rror|xception" | head -3; }
+mig()  { php -d memory_limit=1G bin/console doctrine:migrations:migrate "$@" --no-interaction 2>&1 | grep -E "OK|rror|xception|sin niveles" | head -3; }
 
 # id fijos para los datos de prueba
 C=11111111-1111-4111-8111-111111111111; Y=22222222-2222-4222-8222-222222222222; F=33333333-3333-4333-8333-333333333333
-P1=44444444-4444-4444-8444-444444444441; P2=44444444-4444-4444-8444-444444444442
+P1=44444444-4444-4444-8444-444444444441; P2=44444444-4444-4444-8444-444444444442; P3=44444444-4444-4444-8444-444444444443
+L11=77777777-7777-4777-8777-777777777711; L12=77777777-7777-4777-8777-777777777712
+L21=77777777-7777-4777-8777-777777777721; L22=77777777-7777-4777-8777-777777777722
+T1=66666666-6666-4666-8666-666666666661; T2=66666666-6666-4666-8666-666666666662
 S1=55555555-5555-4555-8555-555555555551; S2=55555555-5555-4555-8555-555555555552
+
+# q <pg|my|ma|sq> "<sql>": ejecuta SQL y devuelve el valor (sin cabeceras ni espacios)
+q() {
+  case "$1" in
+    pg) docker exec -i nx-pg psql -U app -d app -tA -v ON_ERROR_STOP=1 -c "$2" ;;
+    my) docker exec -i nx-mysql mysql -uroot -ppw app -N -s -e "$2" 2>/dev/null ;;
+    ma) docker exec -i nx-mariadb mariadb -uroot -ppw app -N -s -e "$2" 2>/dev/null ;;
+    sq) sqlite3 -cmd 'PRAGMA foreign_keys = ON' "$SQLITE_DB" "$2" ;;
+  esac | tr -d '[:space:]'
+}
+# Ejecuta SQL y devuelve su código de salida (para comprobar que algo se rechaza)
+qx() {
+  case "$1" in
+    pg) docker exec -i nx-pg psql -U app -d app -v ON_ERROR_STOP=1 -c "$2" >/dev/null 2>&1 ;;
+    my) docker exec -i nx-mysql mysql -uroot -ppw app -e "$2" >/dev/null 2>&1 ;;
+    ma) docker exec -i nx-mariadb mariadb -uroot -ppw app -e "$2" >/dev/null 2>&1 ;;
+    sq) sqlite3 -cmd 'PRAGMA foreign_keys = ON' "$SQLITE_DB" "$2" >/dev/null 2>&1 ;;
+  esac
+}
+tablecount() {
+  case "$1" in
+    sq) q sq "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '$2'" ;;
+    pg) q pg "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '$2' AND table_schema = current_schema()" ;;
+    *)  q "$1" "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '$2' AND table_schema = DATABASE()" ;;
+  esac
+}
+
+# Con el motor listo y la base en $FROM: datos de prueba, migración y comprobaciones.
+check_levels_migration() {
+  local kind="$1" S=
+  if [ "$kind" = my ] || [ "$kind" = ma ]; then U() { echo "UNHEX(REPLACE('$1','-',''))"; }; else U() { echo "'$1'"; }; fi
+
+  echo "▸ datos de prueba (3 enseñanzas, 4 niveles, 2 coordinadores, 2 estancias)"
+  qx "$kind" "INSERT INTO educational_centre (id, code, name, city) VALUES ($(U $C), '41000001', 'IES', 'Sevilla');
+    INSERT INTO academic_year (id, educational_centre_id, name) VALUES ($(U $Y), $(U $C), '2025-2026');
+    INSERT INTO professional_family (id, academic_year_id, name) VALUES ($(U $F), $(U $Y), 'Informática');
+    INSERT INTO programme (id, academic_year_id, professional_family_id, name) VALUES ($(U $P1), $(U $Y), $(U $F), 'DAW'), ($(U $P2), $(U $Y), $(U $F), 'DAM'), ($(U $P3), $(U $Y), $(U $F), 'SinNiveles');
+    INSERT INTO programme_year (id, programme_id, name) VALUES ($(U $L11), $(U $P1), '1.º DAW'), ($(U $L12), $(U $P1), '2.º DAW'), ($(U $L21), $(U $P2), '1.º DAM'), ($(U $L22), $(U $P2), '2.º DAM');
+    INSERT INTO teacher (id, name_first_name, name_last_name, username, admin, external, active) VALUES
+      ($(U $T1), 'Ana', 'Uno', 'ana.uno', FALSE, FALSE, TRUE), ($(U $T2), 'Beto', 'Dos', 'beto.dos', FALSE, FALSE, TRUE);
+    INSERT INTO programme_coordinator (programme_id, teacher_id) VALUES ($(U $P1), $(U $T1)), ($(U $P1), $(U $T2)), ($(U $P2), $(U $T2));
+    INSERT INTO stay (id, academic_year_id, name, start_date, end_date) VALUES
+      ($(U $S1), $(U $Y), 'E1', '2026-03-01', '2026-06-30'), ($(U $S2), $(U $Y), 'E2', '2026-03-01', '2026-06-30');
+    INSERT INTO stay_programme (stay_id, programme_id) VALUES ($(U $S1), $(U $P1)), ($(U $S2), $(U $P1)), ($(U $S2), $(U $P2));" \
+    && ok "datos insertados" || { fail "no se pudieron insertar los datos"; return 1; }
+
+  echo "▸ una enseñanza sin niveles con coordinadores aborta la migración (no se pierde nada en silencio)"
+  qx "$kind" "INSERT INTO programme_coordinator (programme_id, teacher_id) VALUES ($(U $P3), $(U $T1))"
+  local out; out="$(mig "DoctrineMigrations\\Version$TARGET")"
+  if echo "$out" | grep -q "sin niveles"; then ok "migración rechazada con aviso"; else fail "no avisó de la enseñanza sin niveles: «$out»"; fi
+  [ "$(tablecount "$kind" programme_coordinator)" = 1 ] && ok "las tablas antiguas siguen intactas" || fail "se tocaron las tablas antiguas tras abortar"
+  qx "$kind" "DELETE FROM programme_coordinator WHERE programme_id = $(U $P3)"
+
+  echo "▸ subiendo a la última versión"; mig
+  [ "$(q "$kind" "SELECT COUNT(*) FROM programme_year_coordinator")" = 6 ] && ok "coordinación copiada a todos los niveles (6 filas: 2×2 + 1×2)" || fail "programme_year_coordinator no tiene 6 filas"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 6 ] && ok "estancias copiadas a todos los niveles (6 filas: 2 + 2 + 2)" || fail "stay_programme_year no tiene 6 filas"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay WHERE id = $(U $S1)")" = 1 ] && ok "las estancias siguen ahí" || fail "faltan estancias"
+  [ "$(tablecount "$kind" programme_coordinator)" = 0 ] && [ "$(tablecount "$kind" stay_programme)" = 0 ] && ok "tablas antiguas eliminadas" || fail "siguen las tablas antiguas"
+
+  echo "▸ un nivel en uso por una estancia no se puede borrar (RESTRICT)"
+  if qx "$kind" "DELETE FROM programme_year WHERE id = $(U $L11)"; then fail "se borró un nivel en uso"; else ok "el borrado se rechaza"; fi
+
+  echo "▸ borrar una estancia o un docente limpia las filas de unión (CASCADE)"
+  qx "$kind" "DELETE FROM stay WHERE id = $(U $S1)"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 4 ] && ok "al borrar E1 desaparecen sus 2 niveles (quedan 4)" || fail "no se limpió stay_programme_year al borrar la estancia"
+  qx "$kind" "INSERT INTO stay (id, academic_year_id, name, start_date, end_date) VALUES ($(U $S1), $(U $Y), 'E1', '2026-03-01', '2026-06-30'); INSERT INTO stay_programme_year (stay_id, programme_year_id) VALUES ($(U $S1), $(U $L11)), ($(U $S1), $(U $L12))"
+
+  echo "▸ bajando: la coordinación de un solo nivel vuelve a ser de la enseñanza"
+  qx "$kind" "INSERT INTO programme_year_coordinator (programme_year_id, teacher_id) VALUES ($(U $L22), $(U $T1))"
+  mig "DoctrineMigrations\\Version$FROM"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM programme_coordinator")" = 4 ] && ok "programme_coordinator recreada (T1 y T2 en DAW, T2 y T1 en DAM: 4 filas sin repetir)" || fail "programme_coordinator incorrecta tras bajar"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 3 ] && ok "stay_programme recreada (E1: DAW; E2: DAW y DAM)" || fail "stay_programme incorrecta tras bajar"
+
+  echo "▸ volviendo a subir"; mig
+  [ "$(q "$kind" "SELECT COUNT(*) FROM programme_year_coordinator")" = 8 ] && ok "coordinación de nuevo por niveles (8 filas)" || fail "programme_year_coordinator incorrecta tras volver a subir"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 6 ] && ok "estancias de nuevo por niveles (6 filas)" || fail "stay_programme_year incorrecta tras volver a subir"
+
+  check_counts
+  check_erase
+
+  # SQLite guarda los ids como CHAR(36) y el mapeo del ORM espera BLOB: siempre hay diferencias de tipo, sin interés.
+  [ "$kind" = sq ] && return
+  echo "▸ diferencias esquema migrado ↔ mapeo del ORM (en las tablas de esta versión):"
+  local diff; diff="$(php -d memory_limit=1G bin/console doctrine:schema:update --dump-sql 2>&1 | grep -iE "programme_year_coordinator|stay_programme_year|stay_programme\b|programme_coordinator" || true)"
+  if [ -z "$diff" ]; then ok "sin diferencias"; else fail "diferencias de esquema:"; echo "$diff" | sed 's/^/    /'; fi
+}
 
 run_engine() {
   local name="$1" image="$2" port="$3" mpath="$4" url="$5" kind="$6"; shift 6
@@ -40,43 +133,7 @@ run_engine() {
 
   export MIGRATIONS_PATH="$mpath" DATABASE_URL="$url"
   echo "▸ migrando hasta $FROM"; mig "DoctrineMigrations\\Version$FROM"
-
-  echo "▸ datos de prueba (2 estancias, 2 enseñanzas)"
-  if [ "$kind" = pg ]; then U() { echo "'$1'"; }; else U() { echo "UNHEX(REPLACE('$1','-',''))"; }; fi
-  q "$kind" "INSERT INTO educational_centre (id, code, name, city) VALUES ($(U $C), '41000001', 'IES', 'Sevilla');
-    INSERT INTO academic_year (id, educational_centre_id, name) VALUES ($(U $Y), $(U $C), '2025-2026');
-    INSERT INTO professional_family (id, academic_year_id, name) VALUES ($(U $F), $(U $Y), 'Informática');
-    INSERT INTO programme (id, academic_year_id, professional_family_id, name) VALUES ($(U $P1), $(U $Y), $(U $F), 'DAW'), ($(U $P2), $(U $Y), $(U $F), 'DAM');
-    INSERT INTO stay (id, academic_year_id, programme_id, name, start_date, end_date) VALUES
-      ($(U $S1), $(U $Y), $(U $P1), 'E1', '2026-03-01', '2026-06-30'), ($(U $S2), $(U $Y), $(U $P2), 'E2', '2026-03-01', '2026-06-30');" >/dev/null \
-    && ok "datos insertados" || { fail "no se pudieron insertar los datos"; return; }
-
-  echo "▸ subiendo a la última versión"; mig
-  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 2 ] && ok "stay_programme copiada (2 filas)" || fail "stay_programme no tiene 2 filas"
-  [ "$(q "$kind" "SELECT COUNT(*) FROM stay WHERE id = $(U $S1)")" = 1 ] && ok "las estancias siguen ahí" || fail "faltan estancias"
-  colcount "$kind" stay programme_id | grep -qx 0 && ok "stay.programme_id eliminada" || fail "stay.programme_id sigue existiendo"
-  colcount "$kind" training_position priority_until | grep -qx 1 && ok "training_position.priority_until creada" || fail "falta priority_until"
-  [ "$(q "$kind" "SELECT COUNT(*) FROM setting_definition WHERE $(kq "$kind") = 'email.notification.shared_position'")" = 1 ] && ok "ajuste shared_position creado" || fail "falta el ajuste shared_position"
-
-  echo "▸ una enseñanza en uso no se puede borrar (RESTRICT)"
-  if q "$kind" "DELETE FROM programme WHERE id = $(U $P1)" >/dev/null 2>&1; then fail "se borró una enseñanza en uso"; else ok "el borrado se rechaza"; fi
-
-  echo "▸ añadiendo una 2.ª enseñanza a E1 y bajando hasta la versión anterior a las estancias multi-enseñanza"
-  q "$kind" "INSERT INTO stay_programme (stay_id, programme_id) VALUES ($(U $S1), $(U $P2))" >/dev/null
-  mig 'DoctrineMigrations\Version20260702000000'
-  [ "$(q "$kind" "SELECT COUNT(*) FROM stay WHERE programme_id IS NOT NULL")" = 2 ] && ok "programme_id restaurada en las 2 estancias" || fail "programme_id no restaurada"
-  [ "$(q "$kind" "SELECT p.name FROM stay s JOIN programme p ON p.id = s.programme_id WHERE s.id = $(U $S1)")" = DAM ] && ok "E1 conserva una enseñanza (la 1.ª por nombre: DAM)" || fail "E1 no conserva la enseñanza esperada"
-  colcount "$kind" training_position priority_until | grep -qx 0 && ok "columnas de preferencia eliminadas" || fail "siguen las columnas de preferencia"
-
-  echo "▸ volviendo a subir"; mig
-  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 2 ] && ok "stay_programme recreada con los datos" || fail "stay_programme incorrecta tras volver a subir"
-
-  check_counts
-  check_erase
-
-  echo "▸ diferencias esquema migrado ↔ mapeo del ORM (relativas a esta versión):"
-  php -d memory_limit=1G bin/console doctrine:schema:update --dump-sql 2>&1 | grep -iE "stay_programme|priority|training_position|shared" | sed 's/^/    /' || true
-  echo "    (vacío = sin diferencias en las tablas tocadas)"
+  check_levels_migration "$kind"
   [ -n "${KEEP:-}" ] || docker stop "nx-$name" >/dev/null 2>&1
 }
 
@@ -163,25 +220,13 @@ PHP
   esac
 }
 
-# q <pg|my> "<sql>": ejecuta SQL y devuelve el valor (sin cabeceras ni espacios)
-q() {
-  case "$1" in
-    pg) docker exec -i nx-pg psql -U app -d app -tA -v ON_ERROR_STOP=1 -c "$2" ;;
-    my) docker exec -i nx-mysql mysql -uroot -ppw app -N -s -e "$2" 2>/dev/null ;;
-    ma) docker exec -i nx-mariadb mariadb -uroot -ppw app -N -s -e "$2" 2>/dev/null ;;
-  esac | tr -d '[:space:]'
-}
-kq() { [ "$1" = pg ] && echo '"key"' || echo '`key`'; }
-colcount() { q "$1" "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = '$2' AND column_name = '$3' AND table_schema = $( [ "$1" = pg ] && echo "current_schema()" || echo "DATABASE()" )"; echo; }
-
 run_sqlite() {
   echo; echo "══ sqlite ══"
-  local db; db="$(mktemp -u).db"
-  export MIGRATIONS_PATH=migrations/sqlite DATABASE_URL="sqlite:///$db"
-  echo "▸ migrando"; mig
-  check_counts
-  check_erase
-  rm -f "$db"
+  SQLITE_DB="$(mktemp -u).db"
+  export MIGRATIONS_PATH=migrations/sqlite DATABASE_URL="sqlite:///$SQLITE_DB"
+  echo "▸ migrando hasta $FROM"; mig "DoctrineMigrations\\Version$FROM"
+  check_levels_migration sq
+  rm -f "$SQLITE_DB"
 }
 
 [[ "$ONLY" = all || "$ONLY" = sqlite ]] && run_sqlite

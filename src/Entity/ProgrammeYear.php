@@ -2,6 +2,8 @@
 namespace App\Entity;
 
 use App\Repository\ProgrammeYearRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -21,10 +23,24 @@ class ProgrammeYear
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $details = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'programmeYears')]
     #[ORM\JoinColumn(nullable: false)]
     private Programme $programme;
 
+    /**
+     * Docentes que coordinan la FP dual de este nivel. Se pueden asignar a un solo nivel (p. ej. solo 2.º)
+     * o a todos los de la enseñanza de una vez (ver {@see Programme::addCoordinator()}).
+     *
+     * @var Collection<int, Teacher>
+     */
+    #[ORM\ManyToMany(targetEntity: Teacher::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinTable(name: 'programme_year_coordinator')]
+    private Collection $coordinators;
+
+    public function __construct()
+    {
+        $this->coordinators = new ArrayCollection();
+    }
 
     public function getId(): Uuid
     {
@@ -63,6 +79,31 @@ class ProgrammeYear
     public function setProgramme(Programme $programme): static
     {
         $this->programme = $programme;
+        $programme->registerProgrammeYear($this);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Teacher>
+     */
+    public function getCoordinators(): Collection
+    {
+        return $this->coordinators;
+    }
+
+    public function addCoordinator(Teacher $coordinator): static
+    {
+        if (!$this->coordinators->contains($coordinator)) {
+            $this->coordinators->add($coordinator);
+        }
+
+        return $this;
+    }
+
+    public function removeCoordinator(Teacher $coordinator): static
+    {
+        $this->coordinators->removeElement($coordinator);
 
         return $this;
     }

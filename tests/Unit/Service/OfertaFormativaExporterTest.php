@@ -244,10 +244,14 @@ class OfertaFormativaExporterTest extends TestCase
     private function makeProgramme(string $name, ?string $details, ProfessionalFamily $family, array $coordinators): Programme
     {
         $prog = (new Programme())->setName($name)->setDetails($details)->setProfessionalFamily($family)->setAcademicYear($this->year);
+        $this->setId($prog);
+        if ($coordinators !== []) {
+            // La coordinación vive en los niveles: se le da un nivel a la enseñanza para poder asignarla.
+            $this->setId((new ProgrammeYear())->setName('1º')->setProgramme($prog));
+        }
         foreach ($coordinators as $c) {
             $prog->addCoordinator($c);
         }
-        $this->setId($prog);
 
         return $prog;
     }

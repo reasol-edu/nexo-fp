@@ -282,7 +282,7 @@
                                 </div>
                             {% elseif type == 'programme' %}
                                 {% set coord_sel = [] %}
-                                {% for c in sel_programme.coordinators %}{% set coord_sel = coord_sel|merge([{value: c.id.toRfc4122, text: c.name.lastName ~ ', ' ~ c.name.firstName}]) %}{% endfor %}
+                                {% for c in sel_programme.coordinatorsOfAllLevels %}{% set coord_sel = coord_sel|merge([{value: c.id.toRfc4122, text: c.name.lastName ~ ', ' ~ c.name.firstName}]) %}{% endfor %}
                                 <div class="border-t border-gray-100 pt-4 sm:col-span-3">
                                     <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'programme.field.coordinators'|trans({}, 'admin') }}</label>
                                     <select id="staff-coordinators" multiple class="js-staff-select w-full"
@@ -290,6 +290,17 @@
                                             data-staff-url="{{ staff_url }}"
                                             data-selected="{{ coord_sel|json_encode|e('html_attr') }}"
                                             data-placeholder="{{ 'programme.field.coordinators_help'|trans({}, 'admin') }}"></select>
+                                </div>
+                            {% elseif type == 'level' %}
+                                {% set level_coord_sel = [] %}
+                                {% for c in sel_level.coordinators %}{% set level_coord_sel = level_coord_sel|merge([{value: c.id.toRfc4122, text: c.name.lastName ~ ', ' ~ c.name.firstName}]) %}{% endfor %}
+                                <div class="border-t border-gray-100 pt-4 sm:col-span-3">
+                                    <label class="mb-1 block text-xs font-medium text-gray-600">{{ 'level.field.coordinators'|trans({}, 'admin') }}</label>
+                                    <select id="staff-level-coordinators" multiple class="js-staff-select w-full"
+                                            data-staff-action="setLevelCoordinators" data-staff-arg="ids"
+                                            data-staff-url="{{ staff_url }}"
+                                            data-selected="{{ level_coord_sel|json_encode|e('html_attr') }}"
+                                            data-placeholder="{{ 'level.field.coordinators_help'|trans({}, 'admin') }}"></select>
                                 </div>
                             {% elseif type == 'group' %}
                                 {% set teacher_sel = [] %}

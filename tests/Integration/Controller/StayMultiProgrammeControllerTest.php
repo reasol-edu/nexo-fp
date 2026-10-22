@@ -590,11 +590,13 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $year     = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $family   = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
 
-        $daw = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDaw);
-        $dam = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDam);
+        $daw = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $dam = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
 
         $dawLevel = (new ProgrammeYear())->setName('2.º DAW')->setProgramme($daw);
         $damLevel = (new ProgrammeYear())->setName('2.º DAM')->setProgramme($dam);
+        $daw->addCoordinator($coordDaw);
+        $dam->addCoordinator($coordDam);
         $dawGroup = (new Group())->setName('DAW2A')->setProgrammeYear($dawLevel);
         $damGroup = (new Group())->setName('DAM2A')->setProgrammeYear($damLevel);
 

@@ -28,14 +28,19 @@ class Stay
     #[ORM\JoinColumn(nullable: false)]
     private AcademicYear $academicYear;
 
-    /** @var Collection<int, Programme> Enseñanzas que participan en la estancia (al menos una). */
-    #[ORM\ManyToMany(targetEntity: Programme::class)]
+    /**
+     * Niveles que participan en la estancia (al menos uno), de una o varias enseñanzas: la estancia puede
+     * incluir solo 2.º de una enseñanza. Las enseñanzas de la estancia se derivan de sus niveles.
+     *
+     * @var Collection<int, ProgrammeYear>
+     */
+    #[ORM\ManyToMany(targetEntity: ProgrammeYear::class)]
     #[ORM\JoinTable(
-        name: 'stay_programme',
-        // Una enseñanza que forma parte de una estancia no se puede borrar (como antes con stay.programme_id).
-        inverseJoinColumns: [new ORM\JoinColumn(name: 'programme_id', referencedColumnName: 'id', onDelete: 'RESTRICT')],
+        name: 'stay_programme_year',
+        // Un nivel que forma parte de una estancia no se puede borrar.
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'programme_year_id', referencedColumnName: 'id', onDelete: 'RESTRICT')],
     )]
-    private Collection $programmes;
+    private Collection $programmeYears;
 
     /** @var Collection<int, Student> */
     #[ORM\ManyToMany(targetEntity: Student::class, fetch: 'EXTRA_LAZY')]
@@ -64,7 +69,7 @@ class Stay
 
     public function __construct()
     {
-        $this->programmes = new ArrayCollection();
+        $this->programmeYears = new ArrayCollection();
         $this->students = new ArrayCollection();
         $this->trainingPositions = new ArrayCollection();
     }
@@ -99,37 +104,37 @@ class Stay
     }
 
     /**
-     * @return Collection<int, Programme>
+     * @return Collection<int, ProgrammeYear>
      */
-    public function getProgrammes(): Collection
+    public function getProgrammeYears(): Collection
     {
-        return $this->programmes;
+        return $this->programmeYears;
     }
 
-    public function addProgramme(Programme $programme): static
+    public function addProgrammeYear(ProgrammeYear $programmeYear): static
     {
-        if (!$this->hasProgramme($programme)) {
-            $this->programmes->add($programme);
+        if (!$this->hasProgrammeYear($programmeYear)) {
+            $this->programmeYears->add($programmeYear);
         }
 
         return $this;
     }
 
-    public function removeProgramme(Programme $programme): static
+    public function removeProgrammeYear(ProgrammeYear $programmeYear): static
     {
-        foreach ($this->programmes as $key => $existing) {
-            if (self::sameProgramme($existing, $programme)) {
-                $this->programmes->remove($key);
+        foreach ($this->programmeYears as $key => $existing) {
+            if (self::sameEntity(ProgrammeYear::class, $existing, $programmeYear)) {
+                $this->programmeYears->remove($key);
             }
         }
 
         return $this;
     }
 
-    public function hasProgramme(Programme $programme): bool
+    public function hasProgrammeYear(ProgrammeYear $programmeYear): bool
     {
-        foreach ($this->programmes as $existing) {
-            if (self::sameProgramme($existing, $programme)) {
+        foreach ($this->programmeYears as $existing) {
+            if (self::sameEntity(ProgrammeYear::class, $existing, $programmeYear)) {
                 return true;
             }
         }
@@ -138,21 +143,81 @@ class Stay
     }
 
     /**
-     * Misma enseñanza por identidad o, si ambas ya tienen id, por id. No exige que estén
-     * persistidas: una enseñanza recién creada aún no tiene id.
+     * Enseñanzas de la estancia: las de sus niveles, sin repetir, en el orden en que aparecen.
+     *
+     * @return Collection<int, Programme>
      */
-    private static function sameProgramme(Programme $a, Programme $b): bool
+    public function getProgrammes(): Collection
+    {
+        $result = [];
+        foreach ($this->programmeYears as $programmeYear) {
+            $programme = $programmeYear->getProgramme();
+            $result[self::key($programme)] = $programme;
+        }
+
+        return new ArrayCollection(array_values($result));
+    }
+
+    /** Añade **todos los niveles** de la enseñanza (atajo para «la enseñanza completa»). */
+    public function addProgramme(Programme $programme): static
+    {
+        foreach ($programme->getProgrammeYears() as $programmeYear) {
+            $this->addProgrammeYear($programmeYear);
+        }
+
+        return $this;
+    }
+
+    /** Quita **todos los niveles** de la enseñanza de la estancia. */
+    public function removeProgramme(Programme $programme): static
+    {
+        foreach ($this->programmeYears->toArray() as $existing) {
+            if (self::sameEntity(Programme::class, $existing->getProgramme(), $programme)) {
+                $this->removeProgrammeYear($existing);
+            }
+        }
+
+        return $this;
+    }
+
+    /** ¿Participa algún nivel de esa enseñanza en la estancia? */
+    public function hasProgramme(Programme $programme): bool
+    {
+        foreach ($this->programmeYears as $existing) {
+            if (self::sameEntity(Programme::class, $existing->getProgramme(), $programme)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Misma entidad por identidad o, si ambas ya tienen id, por id. No exige que estén persistidas:
+     * una entidad recién creada aún no tiene id.
+     *
+     * @param class-string<Programme|ProgrammeYear> $class
+     */
+    private static function sameEntity(string $class, Programme|ProgrammeYear $a, Programme|ProgrammeYear $b): bool
     {
         if ($a === $b) {
             return true;
         }
 
-        $id = new \ReflectionProperty(Programme::class, 'id');
+        $id = new \ReflectionProperty($class, 'id');
         if (!$id->isInitialized($a) || !$id->isInitialized($b)) {
             return false;
         }
 
         return $a->getId()->equals($b->getId());
+    }
+
+    /** Clave para deduplicar entidades con o sin id todavía. */
+    private static function key(Programme|ProgrammeYear $entity): string
+    {
+        $id = new \ReflectionProperty($entity::class, 'id');
+
+        return $id->isInitialized($entity) ? $entity->getId()->toRfc4122() : 'new-' . spl_object_id($entity);
     }
 
     /**
@@ -162,26 +227,43 @@ class Stay
      */
     public function getProgrammesSorted(): array
     {
-        $list = $this->programmes->toArray();
+        $list = $this->getProgrammes()->toArray();
         usort($list, static fn (Programme $a, Programme $b): int => $a->getName() <=> $b->getName());
 
         return $list;
     }
 
     /**
+     * Niveles de la estancia a los que pertenece el alumno según sus grupos. Un alumno sin grupo en
+     * ningún nivel de la estancia devuelve una lista vacía.
+     *
+     * @return list<ProgrammeYear>
+     */
+    public function getProgrammeYearsOfStudent(Student $student): array
+    {
+        $result = [];
+        foreach ($student->getGroups() as $group) {
+            $programmeYear = $group->getProgrammeYear();
+            if ($this->hasProgrammeYear($programmeYear)) {
+                $result[self::key($programmeYear)] = $programmeYear;
+            }
+        }
+
+        return array_values($result);
+    }
+
+    /**
      * Enseñanzas de la estancia a las que pertenece el alumno según sus grupos. Un alumno
-     * sin grupo en ninguna enseñanza de la estancia devuelve una lista vacía.
+     * sin grupo en ningún nivel de la estancia devuelve una lista vacía.
      *
      * @return list<Programme>
      */
     public function getProgrammesOfStudent(Student $student): array
     {
         $result = [];
-        foreach ($student->getGroups() as $group) {
-            $programme = $group->getProgrammeYear()->getProgramme();
-            if ($this->hasProgramme($programme)) {
-                $result[$programme->getId()->toRfc4122()] = $programme;
-            }
+        foreach ($this->getProgrammeYearsOfStudent($student) as $programmeYear) {
+            $programme = $programmeYear->getProgramme();
+            $result[self::key($programme)] = $programme;
         }
 
         return array_values($result);

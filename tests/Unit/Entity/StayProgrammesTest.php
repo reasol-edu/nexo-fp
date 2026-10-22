@@ -32,24 +32,44 @@ class StayProgrammesTest extends TestCase
 
     public function testProgrammesAreAddedOnceAndRemoved(): void
     {
-        $daw  = $this->programme('DAW', 'Informática');
+        $daw  = $this->programmeWithLevels('DAW', 'Informática');
         $stay = new Stay();
 
         $stay->addProgramme($daw)->addProgramme($daw);
         self::assertCount(1, $stay->getProgrammes());
+        self::assertCount(2, $stay->getProgrammeYears(), 'la enseñanza completa añade todos sus niveles, una sola vez');
         self::assertTrue($stay->hasProgramme($daw));
 
         $stay->removeProgramme($daw);
         self::assertCount(0, $stay->getProgrammes());
+        self::assertCount(0, $stay->getProgrammeYears());
+        self::assertFalse($stay->hasProgramme($daw));
+    }
+
+    public function testProgrammesAreDerivedFromTheStaysLevels(): void
+    {
+        $daw = $this->programmeWithLevels('DAW', 'Informática');
+        [$first, $second] = $daw->getProgrammeYears()->toArray();
+        $stay = (new Stay())->addProgrammeYear($second);
+
+        self::assertTrue($stay->hasProgramme($daw), 'basta un nivel para que la enseñanza participe');
+        self::assertTrue($stay->hasProgrammeYear($second));
+        self::assertFalse($stay->hasProgrammeYear($first), 'el otro nivel de la enseñanza no participa');
+        self::assertSame([$daw], $stay->getProgrammes()->toArray());
+
+        $stay->removeProgrammeYear($second);
         self::assertFalse($stay->hasProgramme($daw));
     }
 
     public function testProgrammesCanBeAddedBeforeTheyHaveAnId(): void
     {
-        // Una enseñanza recién creada todavía no tiene id: no debe fallar al añadirla.
+        // Una enseñanza (y su nivel) recién creados todavía no tienen id: no debe fallar al añadirlos.
         $stay = new Stay();
-        $stay->addProgramme((new Programme())->setName('DAW')->setAcademicYear($this->year));
-        $stay->addProgramme((new Programme())->setName('DAM')->setAcademicYear($this->year));
+        foreach (['DAW', 'DAM'] as $name) {
+            $programme = (new Programme())->setName($name)->setAcademicYear($this->year);
+            (new ProgrammeYear())->setName('1.º ' . $name)->setProgramme($programme);
+            $stay->addProgramme($programme);
+        }
 
         self::assertCount(2, $stay->getProgrammes());
     }
@@ -57,9 +77,9 @@ class StayProgrammesTest extends TestCase
     public function testProgrammeNamesAreSortedAndJoined(): void
     {
         $stay = (new Stay())
-            ->addProgramme($this->programme('DAW', 'Informática'))
-            ->addProgramme($this->programme('ASIR', 'Informática'))
-            ->addProgramme($this->programme('DAM', 'Informática'));
+            ->addProgramme($this->programmeWithLevels('DAW', 'Informática'))
+            ->addProgramme($this->programmeWithLevels('ASIR', 'Informática'))
+            ->addProgramme($this->programmeWithLevels('DAM', 'Informática'));
 
         self::assertSame('ASIR · DAM · DAW', $stay->getProgrammeNames());
     }
@@ -69,9 +89,9 @@ class StayProgrammesTest extends TestCase
         $informatica = $this->family('Informática');
         $sanidad     = $this->family('Sanidad');
         $stay = (new Stay())
-            ->addProgramme($this->programmeIn('DAW', $informatica))
-            ->addProgramme($this->programmeIn('DAM', $informatica))
-            ->addProgramme($this->programmeIn('Cuidados', $sanidad));
+            ->addProgramme($this->withLevels($this->programmeIn('DAW', $informatica)))
+            ->addProgramme($this->withLevels($this->programmeIn('DAM', $informatica)))
+            ->addProgramme($this->withLevels($this->programmeIn('Cuidados', $sanidad)));
 
         self::assertSame('Informática · Sanidad', $stay->getFamilyNames());
         self::assertCount(2, $stay->getProfessionalFamilies());
@@ -232,6 +252,20 @@ class StayProgrammesTest extends TestCase
     private function programmeIn(string $name, ProfessionalFamily $family): Programme
     {
         return $this->withId((new Programme())->setName($name)->setAcademicYear($this->year)->setProfessionalFamily($family));
+    }
+
+    /** Enseñanza con dos niveles: la coordinación y las estancias se componen de niveles. */
+    private function programmeWithLevels(string $name, string $familyName): Programme
+    {
+        return $this->withLevels($this->programme($name, $familyName));
+    }
+
+    private function withLevels(Programme $programme): Programme
+    {
+        $this->level($programme, '1.º ' . $programme->getName());
+        $this->level($programme, '2.º ' . $programme->getName());
+
+        return $programme;
     }
 
     private function level(Programme $programme, string $name): ProgrammeYear

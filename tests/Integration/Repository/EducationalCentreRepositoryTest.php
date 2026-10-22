@@ -244,8 +244,9 @@ class EducationalCentreRepositoryTest extends RepositoryTestCase
         $year      = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
         $family    = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year);
         $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $level     = (new ProgrammeYear())->setName('1.º DAW')->setProgramme($programme);
         $teacher   = $this->makeTeacher('coord.only');
-        $this->persist($centre, $year, $family, $programme, $teacher);
+        $this->persist($centre, $year, $family, $programme, $level, $teacher);
 
         self::assertFalse($this->repo->isAccessibleByTeacher($centre, $teacher));
 

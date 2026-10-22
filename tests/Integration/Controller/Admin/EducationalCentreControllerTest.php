@@ -335,8 +335,9 @@ class EducationalCentreControllerTest extends ControllerTestCase
         $teacher->addAcademicYear($old);
 
         $family    = (new \App\Entity\ProfessionalFamily())->setName('Informática')->setAcademicYear($old);
-        $programme = (new \App\Entity\Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($old)->addCoordinator($teacher);
+        $programme = (new \App\Entity\Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($old);
         $level     = (new \App\Entity\ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $programme->addCoordinator($teacher);
         $group     = (new \App\Entity\Group())->setName('DAW1A')->setProgrammeYear($level)->addTutor($teacher);
         $student   = (new \App\Entity\Student(new PersonName('Ana', 'Martinez')))->setStudentId('2023-001');
         $group->addStudent($student);

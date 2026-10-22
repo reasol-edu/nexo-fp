@@ -314,7 +314,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher   = $this->makeTeacher('coord.one');
         $this->persist($centre, $year, $fam, $programme, $teacher);
 
-        $programme->addCoordinator($teacher);
+        $this->coordinate($programme, $teacher);
         $this->flush();
 
         self::assertTrue($this->repo->isCoordinatorOf($teacher, $programme));
@@ -342,7 +342,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher = $this->makeTeacher('coord.two');
         $this->persist($centre, $year, $fam, $progA, $progB, $teacher);
 
-        $progA->addCoordinator($teacher);
+        $this->coordinate($progA, $teacher);
         $this->flush();
 
         self::assertFalse($this->repo->isCoordinatorOf($teacher, $progB));
@@ -359,7 +359,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher   = $this->makeTeacher('coord.centre.1');
         $this->persist($centre, $year, $fam, $programme, $teacher);
 
-        $programme->addCoordinator($teacher);
+        $this->coordinate($programme, $teacher);
         $this->flush();
 
         self::assertTrue($this->repo->isCoordinatorInCentre($teacher, $centre));
@@ -387,7 +387,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher   = $this->makeTeacher('coord.centreA.only');
         $this->persist($centreA, $centreB, $yearA, $fam, $programme, $teacher);
 
-        $programme->addCoordinator($teacher);
+        $this->coordinate($programme, $teacher);
         $this->flush();
 
         self::assertFalse($this->repo->isCoordinatorInCentre($teacher, $centreB));
@@ -405,7 +405,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher = $this->makeTeacher('coord.only.dam');
         $this->persist($centre, $year, $fam, $progA, $progB, $teacher);
 
-        $progA->addCoordinator($teacher);
+        $this->coordinate($progA, $teacher);
         $this->flush();
 
         $results = $this->repo->findCoordinatedByAcademicYear($teacher, $year);
@@ -440,8 +440,8 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher = $this->makeTeacher('coord.year.a');
         $this->persist($centre, $yearA, $yearB, $famA, $famB, $progA, $progB, $teacher);
 
-        $progA->addCoordinator($teacher);
-        $progB->addCoordinator($teacher);
+        $this->coordinate($progA, $teacher);
+        $this->coordinate($progB, $teacher);
         $this->flush();
 
         $results = $this->repo->findCoordinatedByAcademicYear($teacher, $yearA);
@@ -462,9 +462,9 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $teacher = $this->makeTeacher('coord.order');
         $this->persist($centre, $year, $famA, $famB, $progA, $progB, $progC, $teacher);
 
-        $progA->addCoordinator($teacher);
-        $progB->addCoordinator($teacher);
-        $progC->addCoordinator($teacher);
+        $this->coordinate($progA, $teacher);
+        $this->coordinate($progB, $teacher);
+        $this->coordinate($progC, $teacher);
         $this->flush();
 
         $results = $this->repo->findCoordinatedByAcademicYear($teacher, $year);
@@ -485,7 +485,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $prog    = $this->makeProgramme($year, $fam, 'DAM');
         $teacher = $this->makeTeacher('creat.coord.1');
         $this->persist($centre, $year, $fam, $prog, $teacher);
-        $prog->addCoordinator($teacher);
+        $this->coordinate($prog, $teacher);
         $this->flush();
 
         $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
@@ -517,7 +517,7 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $fam     = (new ProfessionalFamily())->setName('Informatica')->setAcademicYear($year)->setHead($teacher);
         $prog    = $this->makeProgramme($year, $fam, 'DAM');
         $this->persist($centre, $year, $teacher, $fam, $prog);
-        $prog->addCoordinator($teacher);
+        $this->coordinate($prog, $teacher);
         $this->flush();
 
         $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
@@ -550,8 +550,8 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
         $progB   = $this->makeProgramme($year, $famB, 'DAM');
         $progC   = $this->makeProgramme($year, $famB, 'DAW');
         $this->persist($centre, $year, $teacher, $famA, $famB, $progA, $progB, $progC);
-        $progB->addCoordinator($teacher);
-        $progC->addCoordinator($teacher);
+        $this->coordinate($progB, $teacher);
+        $this->coordinate($progC, $teacher);
         $this->flush();
 
         $results = $this->repo->findCreatableByAcademicYear($teacher, $year);
@@ -582,6 +582,15 @@ class ProgrammeRepositoryTest extends RepositoryTestCase
     private function makeProgramme(AcademicYear $year, ProfessionalFamily $family, string $name): Programme
     {
         return (new Programme())->setName($name)->setAcademicYear($year)->setProfessionalFamily($family);
+    }
+
+    /** La coordinación vive en los niveles: si la enseñanza no tiene ninguno, se le da uno antes de asignarla. */
+    private function coordinate(Programme $programme, Teacher $teacher): void
+    {
+        if ($programme->getProgrammeYears()->isEmpty()) {
+            $this->em->persist((new ProgrammeYear())->setName('1.º ' . $programme->getName())->setProgramme($programme));
+        }
+        $programme->addCoordinator($teacher);
     }
 
     private function makeTeacher(string $username): Teacher

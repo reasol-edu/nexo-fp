@@ -8,6 +8,7 @@ use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Group;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Student;
 use App\Entity\Teacher;
@@ -239,8 +240,9 @@ class TrainingPositionRepository extends ServiceEntityRepository
             ->leftJoin('wc.company', 'co')->addSelect('co')
             ->leftJoin('tp.academicTutor', 'at')->addSelect('at')
             ->leftJoin('tp.workplaceMentor', 'wm')->addSelect('wm')
-            ->join('s.programmes', 'p')->addSelect('p')
-            ->leftJoin('p.coordinators', 'pc')->addSelect('pc')
+            ->join('s.programmeYears', 'sy')->addSelect('sy')
+            ->leftJoin('sy.coordinators', 'pc')->addSelect('pc')
+            ->join('sy.programme', 'p')->addSelect('p')
             ->join('p.professionalFamily', 'pf')->addSelect('pf')
             ->leftJoin('pf.head', 'ph')->addSelect('ph')
             ->join('p.academicYear', 'ay')
@@ -268,7 +270,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
         // Los alias de DQL son únicos en toda la consulta: cada subconsulta lleva los suyos.
         $n = ++$this->existsCounter;
 
-        return 'EXISTS(SELECT 1 FROM App\Entity\Stay xs' . $n . ' JOIN xs' . $n . '.programmes xp' . $n
+        return 'EXISTS(SELECT 1 FROM App\Entity\Stay xs' . $n . ' JOIN xs' . $n . '.programmeYears xy' . $n . ' JOIN xy' . $n . '.programme xp' . $n
             . ' JOIN xp' . $n . '.professionalFamily xf' . $n
             . ' WHERE xs' . $n . ' = s AND (' . strtr($condition, ['{p}' => 'xp' . $n, '{f}' => 'xf' . $n]) . '))';
     }
@@ -285,8 +287,9 @@ class TrainingPositionRepository extends ServiceEntityRepository
         $qb->join('s.academicYear', 'vvay')
            ->join('vvay.educationalCentre', 'vvc');
 
-        $viaProgramme = 'EXISTS(SELECT 1 FROM App\Entity\Stay vs JOIN vs.programmes vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
-            . 'EXISTS(SELECT 1 FROM ' . Programme::class . ' vprog JOIN vprog.coordinators vcrd WHERE vprog = vvp AND vcrd.id = :vViewer)'
+        // El docente ve el puesto si coordina un nivel de la estancia, dirige la familia de una de sus enseñanzas o imparte en ellas.
+        $viaProgramme = 'EXISTS(SELECT 1 FROM App\Entity\Stay vs JOIN vs.programmeYears vvy JOIN vvy.programme vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
+            . ':vViewer MEMBER OF vvy.coordinators'
             . ' OR vvf.head = :vViewer'
             . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
             . '))';

@@ -305,7 +305,7 @@ class StayControllerTest extends ControllerTestCase
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $stay         = $this->makeStay('Estancia DAW 2025', $year, $programme);
         $teacher      = $this->makeTeacher('teacher.in.group');
-        $programmeYear = (new ProgrammeYear())->setName('1º')->setProgramme($programme);
+        $programmeYear = $this->level($programme);
         $group        = (new Group())->setName('DAW1A')->setProgrammeYear($programmeYear);
         $this->persist($globalAdmin, $teacher, $centre, $year, $family, $programme, $stay, $programmeYear, $group);
         $group->addTeacher($teacher);
@@ -541,6 +541,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/nuevo-puesto', [
             '_token'       => $token,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'count'        => '1',
             'details'      => '',
         ]);
@@ -564,6 +565,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/nuevo-puesto', [
             '_token'        => 'token-invalido',
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'count'         => '1',
         ]);
 
@@ -718,7 +720,7 @@ class StayControllerTest extends ControllerTestCase
         $stay       = $this->makeStay('Estancia DAW 2025', $year, $programme);
         $company    = $this->makeCompany($centre);
         $workcenter = $this->makeWorkcenter($company);
-        $level      = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $level      = $this->level($programme);
         $position   = $this->makePosition($stay, $workcenter);
         $position->setDetails('Tareas de desarrollo web');
         $position->addProgrammeYear($level);
@@ -823,7 +825,7 @@ class StayControllerTest extends ControllerTestCase
         $target     = $this->makeStay('Estancia DAW mayo', $year, $programme);
         $company    = $this->makeCompany($centre);
         $workcenter = $this->makeWorkcenter($company);
-        $level      = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $level      = $this->level($programme);
         $position   = $this->makePosition($source, $workcenter);
         $position->setDetails('Desarrollo web')->addProgrammeYear($level);
         $this->persist($admin, $centre, $year, $family, $programme, $source, $target, $company, $workcenter, $level, $position);
@@ -951,6 +953,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'        => $token,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'details'       => 'Observaciones nuevas',
             'state'         => 'DRAFT',
         ]);
@@ -1008,6 +1011,7 @@ class StayControllerTest extends ControllerTestCase
             '_token'        => $token,
             'version'       => '0',
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'details'       => 'Cambio que no debe guardarse',
             'state'         => 'DRAFT',
         ]);
@@ -1049,6 +1053,7 @@ class StayControllerTest extends ControllerTestCase
             '_token'        => $token,
             'version'       => $version,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'details'       => 'Observaciones nuevas',
             'state'         => 'DRAFT',
         ]);
@@ -1082,6 +1087,7 @@ class StayControllerTest extends ControllerTestCase
             '_token'        => $token,
             'version'       => '1',
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'details'       => 'Observaciones nuevas',
             'state'         => 'DRAFT',
         ]);
@@ -1133,6 +1139,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'        => $token,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'state'         => 'PENDING',
             // no academic_tutor_id, no workplace_mentor_id
         ]);
@@ -1169,6 +1176,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'              => $token,
             'workcenter_id'       => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids'  => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'academic_tutor_id'   => $tutor->getId()->toRfc4122(),
             'workplace_mentor_id' => $worker->getId()->toRfc4122(),
             'state'               => 'PENDING',
@@ -1202,6 +1210,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'        => $token,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'state'         => 'DRAFT',
             'signed'        => '1',
         ]);
@@ -1217,7 +1226,7 @@ class StayControllerTest extends ControllerTestCase
         $workcenter  = $this->makeWorkcenter($company);
         $workcenter2 = $this->makeWorkcenter($company, 'Delegación B');
         $position    = $this->makePosition($stay, $workcenter);
-        $position->setState(TrainingPositionState::PENDING);
+        $position->setState(TrainingPositionState::PENDING)->addProgrammeYear($this->level($programme));
         $tutor  = $this->makeAdmin('admin.2');
         $position->setAcademicTutor($tutor);
         // Set a worker as workplace mentor
@@ -1359,7 +1368,7 @@ class StayControllerTest extends ControllerTestCase
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $coordinator = $this->makeTeacher('coord.new.1');
         $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme);
-        $programme->addCoordinator($coordinator);
+        $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
         $this->loginAs($coordinator, $centre);
@@ -1375,7 +1384,7 @@ class StayControllerTest extends ControllerTestCase
         $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
         $coordinator = $this->makeTeacher('coord.filter');
         $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
-        $programme->addCoordinator($coordinator);
+        $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
         $this->loginAs($coordinator, $centre);
@@ -1413,7 +1422,7 @@ class StayControllerTest extends ControllerTestCase
         $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
         $coordinator = $this->makeTeacher('coord.post.403');
         $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
-        $programme->addCoordinator($coordinator);
+        $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
         $this->loginAs($coordinator, $centre);
@@ -1438,7 +1447,7 @@ class StayControllerTest extends ControllerTestCase
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $stay = $this->makeStay('Estancia DAW 2025', $year, $programme);
         $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $stay);
-        $programme->addCoordinator($coordinator);
+        $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
         $this->loginAs($coordinator, $centre);
@@ -1663,6 +1672,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'            => $token,
             'workcenter_id'     => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'academic_tutor_id' => $tutor->getId()->toRfc4122(),
             'state'             => 'DRAFT',
         ]);
@@ -1697,6 +1707,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/puesto/' . $positionId . '/editar', [
             '_token'            => $token,
             'workcenter_id'     => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'academic_tutor_id' => $tutor->getId()->toRfc4122(),
             'state'             => 'DRAFT',
         ]);
@@ -1725,6 +1736,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/nuevo-puesto', [
             '_token'        => $token,
             'workcenter_id' => $workcenter->getId()->toRfc4122(),
+            'programme_year_ids' => [$programme->getProgrammeYears()->first()->getId()->toRfc4122()],
             'count'         => '2',
             'details'       => '',
         ]);
@@ -1773,12 +1785,40 @@ class StayControllerTest extends ControllerTestCase
         [$admin, $centre, $year] = $this->makeAdminCentreYear();
         $family    = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
         $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        // Las estancias y la coordinación se componen de niveles: toda enseñanza de prueba tiene el nivel «Primer curso».
+        $this->em->persist((new ProgrammeYear())->setName('Primer curso')->setProgramme($programme));
 
         return [$admin, $centre, $year, $family, $programme];
     }
 
+    /** El nivel de ese nombre de la enseñanza (el de la estancia, si ya existe) o uno nuevo. */
+    private function level(Programme $programme, string $name = 'Primer curso'): ProgrammeYear
+    {
+        foreach ($programme->getProgrammeYears() as $existing) {
+            if ($existing->getName() === $name) {
+                return $existing;
+            }
+        }
+
+        return (new ProgrammeYear())->setName($name)->setProgramme($programme);
+    }
+
+    /** La coordinación vive en los niveles: si la enseñanza no tiene ninguno, se le da uno antes de asignarla. */
+    private function coordinate(Programme $programme, Teacher $teacher): void
+    {
+        if ($programme->getProgrammeYears()->isEmpty()) {
+            $this->em->persist((new ProgrammeYear())->setName('1.º ' . $programme->getName())->setProgramme($programme));
+        }
+        $programme->addCoordinator($teacher);
+    }
+
     private function makeStay(string $name, AcademicYear $year, Programme $programme): Stay
     {
+        // Las estancias se componen de niveles: la enseñanza de prueba tiene uno si aún no lo tenía.
+        if ($programme->getProgrammeYears()->isEmpty()) {
+            $this->em->persist((new ProgrammeYear())->setName('1.º ' . $programme->getName())->setProgramme($programme));
+        }
+
         $stay = new Stay();
         $stay->setName($name)
              ->setAcademicYear($year)
@@ -1810,7 +1850,7 @@ class StayControllerTest extends ControllerTestCase
     /** @return array{0: ProgrammeYear, 1: Group, 2: Student} */
     private function makeGroupWithStudent(Programme $programme): array
     {
-        $level   = (new ProgrammeYear())->setName('Primer curso')->setProgramme($programme);
+        $level   = $this->level($programme);
         $group   = (new Group())->setName('DAW1A')->setProgrammeYear($level);
         $student = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
         $group->addStudent($student);

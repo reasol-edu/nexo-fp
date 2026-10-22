@@ -219,8 +219,9 @@ class CentreTeacherImportTest extends ControllerTestCase
         $head         = $this->makeTeacher('es.jefe');
         $centreAdmin  = $this->makeTeacher('es.admin.centro');
         $family       = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($this->year)->setHead($head);
-        $programme    = (new Programme())->setName('DAW')->setAcademicYear($this->year)->setProfessionalFamily($family)->addCoordinator($coordinator);
+        $programme    = (new Programme())->setName('DAW')->setAcademicYear($this->year)->setProfessionalFamily($family);
         $level        = (new ProgrammeYear())->setName('1.º DAW')->setProgramme($programme);
+        $programme->addCoordinator($coordinator);
         $group        = (new Group())->setName('DAW1A')->setProgrammeYear($level)->addTutor($tutor);
         $this->persist($tutor, $coordinator, $head, $centreAdmin, $family, $programme, $level, $group);
         $this->centre->addAdmin($centreAdmin);

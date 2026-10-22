@@ -11,6 +11,7 @@ use App\Entity\EducationalCentre;
 use App\Entity\PersonName;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\SettingDefinition;
 use App\Entity\SettingType;
 use App\Entity\Stay;
@@ -226,9 +227,11 @@ class SendRemindersCommandTest extends RepositoryTestCase
             ->setName('DAW')
             ->setProfessionalFamily($this->family)
             ->setAcademicYear($this->year);
+        // La coordinación y las estancias viven en los niveles: la enseñanza necesita uno.
+        $level = (new ProgrammeYear())->setName('2.º DAW')->setProgramme($this->programme);
         $this->programme->addCoordinator($this->coordinator);
 
-        $this->persist($this->centre, $this->year, $this->coordinator, $this->familyHead, $this->family, $this->programme);
+        $this->persist($this->centre, $this->year, $this->coordinator, $this->familyHead, $this->family, $this->programme, $level);
     }
 
     private function makeTeacher(string $first, string $last, string $email): Teacher

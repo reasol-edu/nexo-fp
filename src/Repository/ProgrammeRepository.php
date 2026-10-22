@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Teacher;
 use App\Entity\Stay;
@@ -34,7 +35,8 @@ class ProgrammeRepository extends ServiceEntityRepository
         $rows = $this->createQueryBuilder('p')
             ->select('DISTINCT p.id AS id', 'p.name AS name', 'CASE WHEN f.head = :teacher THEN 1 ELSE 0 END AS headed')
             ->join('p.professionalFamily', 'f')
-            ->leftJoin('p.coordinators', 'c')
+            ->leftJoin('p.programmeYears', 'cpy')
+            ->leftJoin('cpy.coordinators', 'c')
             ->where('p.academicYear = :year')
             ->andWhere('c.id = :teacher OR f.head = :teacher')
             ->setParameter('year', $year->getId(), 'uuid')
@@ -188,11 +190,13 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /** ¿Coordina el docente algún nivel de la enseñanza? */
     public function isCoordinatorOf(Teacher $teacher, Programme $programme): bool
     {
         return $this->createQueryBuilder('p')
             ->select('1')
-            ->join('p.coordinators', 'c')
+            ->join('p.programmeYears', 'py')
+            ->join('py.coordinators', 'c')
             ->where('p.id = :programme')
             ->andWhere('c.id = :teacher')
             ->setParameter('programme', $programme->getId(), 'uuid')
@@ -202,11 +206,13 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->getOneOrNullResult() !== null;
     }
 
+    /** ¿Coordina el docente algún nivel de alguna enseñanza del centro? */
     public function isCoordinatorInCentre(Teacher $teacher, EducationalCentre $centre): bool
     {
         return $this->createQueryBuilder('p')
             ->select('1')
-            ->join('p.coordinators', 'c')
+            ->join('p.programmeYears', 'py')
+            ->join('py.coordinators', 'c')
             ->join('p.academicYear', 'y')
             ->where('c.id = :teacher')
             ->andWhere('y.educationalCentre = :centre')
@@ -217,14 +223,17 @@ class ProgrammeRepository extends ServiceEntityRepository
             ->getOneOrNullResult() !== null;
     }
 
-    /** @return Programme[] */
+    /**
+     * Enseñanzas del curso de las que el docente coordina algún nivel.
+     *
+     * @return Programme[]
+     */
     public function findCoordinatedByAcademicYear(Teacher $teacher, AcademicYear $year): array
     {
         return $this->createQueryBuilder('p')
-            ->join('p.coordinators', 'c')
             ->join('p.professionalFamily', 'f')
             ->where('p.academicYear = :year')
-            ->andWhere('c.id = :teacher')
+            ->andWhere('EXISTS(SELECT 1 FROM ' . ProgrammeYear::class . ' cpy JOIN cpy.coordinators cc WHERE cpy.programme = p AND cc.id = :teacher)')
             ->setParameter('year', $year->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')
             ->orderBy('f.name', 'ASC')
@@ -270,15 +279,16 @@ class ProgrammeRepository extends ServiceEntityRepository
     }
 
     /**
-     * Enseñanzas de la estancia que el docente coordina.
+     * Enseñanzas de la estancia de las que el docente coordina algún nivel (de la estancia o no).
      *
      * @return list<Programme>
      */
     public function findCoordinatedByInStay(Teacher $teacher, Stay $stay): array
     {
         return $this->getEntityManager()->createQuery(
-            'SELECT p FROM ' . Programme::class . ' p JOIN p.coordinators c'
-            . ' WHERE c.id = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmes sp WHERE s.id = :stay AND sp = p)'
+            'SELECT p FROM ' . Programme::class . ' p'
+            . ' WHERE EXISTS(SELECT 1 FROM ' . ProgrammeYear::class . ' cpy JOIN cpy.coordinators cc WHERE cpy.programme = p AND cc.id = :teacher)'
+            . ' AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy.programme = p)'
         )
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')
@@ -294,7 +304,7 @@ class ProgrammeRepository extends ServiceEntityRepository
     {
         return $this->getEntityManager()->createQuery(
             'SELECT p FROM ' . Programme::class . ' p JOIN p.professionalFamily f'
-            . ' WHERE f.head = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmes sp WHERE s.id = :stay AND sp = p)'
+            . ' WHERE f.head = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy.programme = p)'
         )
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')

@@ -152,11 +152,13 @@ class StayNotifierSharedPositionTest extends TestCase
 
         $dawCoord = $this->teacher('Coord', 'Daw', 'daw@test.local');
         $damCoord = $this->teacher('Coord', 'Dam', 'dam@test.local');
-        $daw = $this->withId((new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family)->addCoordinator($dawCoord));
-        $dam = $this->withId((new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family)->addCoordinator($damCoord));
+        $daw = $this->withId((new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family));
+        $dam = $this->withId((new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($family));
 
         $dawLevel = $this->withId((new ProgrammeYear())->setName('2.º DAW')->setProgramme($daw));
         $damLevel = $this->withId((new ProgrammeYear())->setName('2.º DAM')->setProgramme($dam));
+        $daw->addCoordinator($dawCoord);
+        $dam->addCoordinator($damCoord);
 
         $dawStudent = $this->withId((new Student(new PersonName('Ana', 'Daw')))->setStudentId('S-1'));
         $dawStudent->addGroup($this->withId((new Group())->setName('DAW2A')->setProgrammeYear($dawLevel)));

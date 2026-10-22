@@ -456,7 +456,7 @@ class StayVoterTest extends TestCase
     {
         $stay    = $this->stayWithTwoProgrammes();
         $daw     = $stay->getProgrammesSorted()[1];
-        $level   = $this->withId((new ProgrammeYear())->setName('1.º DAW')->setProgramme($daw));
+        $level   = $daw->getProgrammeYears()->first();
         $group   = $this->withId((new Group())->setName('1DAW')->setProgrammeYear($level));
         $student = $this->student();
         $student->addGroup($group);
@@ -479,9 +479,12 @@ class StayVoterTest extends TestCase
 
     private function programme(string $name, AcademicYear $year): Programme
     {
-        $family = $this->withId((new ProfessionalFamily())->setName('Informática')->setAcademicYear($year));
+        $family    = $this->withId((new ProfessionalFamily())->setName('Informática')->setAcademicYear($year));
+        $programme = $this->withId((new Programme())->setName($name)->setAcademicYear($year)->setProfessionalFamily($family));
+        // Las estancias se componen de niveles: toda enseñanza de prueba tiene uno.
+        $this->withId((new ProgrammeYear())->setName('1.º ' . $name)->setProgramme($programme));
 
-        return $this->withId((new Programme())->setName($name)->setAcademicYear($year)->setProfessionalFamily($family));
+        return $programme;
     }
 
     private function company(Teacher ...$liaisons): Company

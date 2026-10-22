@@ -224,7 +224,7 @@ class GroupRepository extends ServiceEntityRepository
             ->leftJoin('sgpy.programme', 'sgp')->addSelect('sgp')
             ->join('g.programmeYear', 'py')->addSelect('py')
             ->join('py.programme', 'p')->addSelect('p')
-            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmeYears xy WHERE xs.id = :stay AND xy = py)')
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->orderBy('p.name', 'ASC')
             ->addOrderBy('py.name', 'ASC')
@@ -235,14 +235,14 @@ class GroupRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /** ¿Imparte o tutoriza el docente algún grupo de alguna enseñanza de la estancia? */
+    /** ¿Imparte o tutoriza el docente algún grupo de algún nivel de la estancia? */
     public function isTeacherInStayProgrammes(Teacher $teacher, Stay $stay): bool
     {
         return $this->createQueryBuilder('g')
             ->select('1')
             ->join('g.programmeYear', 'py')
             ->leftJoin('g.teachers', 't')
-            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = py.programme)')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmeYears xy WHERE xs.id = :stay AND xy = py)')
             ->andWhere(':teacher MEMBER OF g.tutors OR t.id = :teacher')
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->setParameter('teacher', $teacher->getId(), 'uuid')

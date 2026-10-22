@@ -34,8 +34,9 @@ class TeacherConnectedToYearTest extends RepositoryTestCase
         }
 
         $family = (new ProfessionalFamily())->setName('Inf')->setAcademicYear($year)->setHead($t['head']);
-        $prog   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family)->addCoordinator($t['coord']);
+        $prog   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($family);
         $level  = (new ProgrammeYear())->setName('1')->setProgramme($prog);
+        $prog->addCoordinator($t['coord']);
         $group  = (new Group())->setName('G')->setProgrammeYear($level)->addTutor($t['tutor'])->addTeacher($t['teacher']);
 
         // Vinculado solo en un curso anterior: no cuenta para el actual

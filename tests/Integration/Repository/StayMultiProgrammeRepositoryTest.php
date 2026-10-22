@@ -280,8 +280,8 @@ class StayMultiProgrammeRepositoryTest extends RepositoryTestCase
         $sanidad     = (new ProfessionalFamily())->setName('Sanidad')->setAcademicYear($year);
         $otherFamily = (new ProfessionalFamily())->setName('Hostelería')->setAcademicYear($year);
 
-        $daw  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($informatica)->addCoordinator($coordDaw);
-        $dam  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($informatica)->addCoordinator($coordDam);
+        $daw  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($informatica);
+        $dam  = (new Programme())->setName('DAM')->setAcademicYear($year)->setProfessionalFamily($informatica);
         $care = (new Programme())->setName('Cuidados Auxiliares Sanitaria')->setAcademicYear($year)->setProfessionalFamily($sanidad);
         $otherProgramme = (new Programme())->setName('Cocina')->setAcademicYear($year)->setProfessionalFamily($otherFamily);
 
@@ -289,6 +289,8 @@ class StayMultiProgrammeRepositoryTest extends RepositoryTestCase
         $damLevel     = (new ProgrammeYear())->setName('2.º DAM')->setProgramme($dam);
         $careLevel    = (new ProgrammeYear())->setName('2.º CUI')->setProgramme($care);
         $foreignLevel = (new ProgrammeYear())->setName('2.º COC')->setProgramme($otherProgramme);
+        $daw->addCoordinator($coordDaw);
+        $dam->addCoordinator($coordDam);
 
         $dawGroup  = (new Group())->setName('DAW2A')->setProgrammeYear($dawLevel)->addTutor($tutorDaw);
         $damGroup  = (new Group())->setName('DAM2A')->setProgrammeYear($damLevel)->addTutor($tutorDam);

@@ -36,6 +36,7 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
 
         $family = (new ProfessionalFamily())->setName('Informática')->setAcademicYear($year);
         $programme = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $level     = (new ProgrammeYear())->setName('2.º DAW')->setProgramme($programme);
 
         $stay = (new Stay())
             ->setName('Estancia DAW')
@@ -52,7 +53,7 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
             ->setSigned(false)
             ->setAcademicTutor($tutor);
 
-        $this->persist($centre, $year, $tutor, $family, $programme, $stay, $student, $position);
+        $this->persist($centre, $year, $tutor, $family, $programme, $level, $stay, $student, $position);
 
         /** @var MessageBusInterface $bus */
         $bus = self::getContainer()->get(MessageBusInterface::class);
@@ -79,10 +80,13 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
 
         $coordDaw = (new Teacher(new PersonName('Coord', 'Daw')))->setUsername('coord.daw.' . uniqid())->setEmail('daw@test.local');
         $coordDam = (new Teacher(new PersonName('Coord', 'Dam')))->setUsername('coord.dam.' . uniqid())->setEmail('dam@test.local');
-        $daw = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDaw);
-        $dam = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year)->addCoordinator($coordDam);
+        $daw = (new Programme())->setName('DAW')->setProfessionalFamily($family)->setAcademicYear($year);
+        $dam = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
 
         $dawLevel = (new ProgrammeYear())->setName('2.º DAW')->setProgramme($daw);
+        $damLevel = (new ProgrammeYear())->setName('2.º DAM')->setProgramme($dam);
+        $daw->addCoordinator($coordDaw);
+        $dam->addCoordinator($coordDam);
         $dawGroup = (new Group())->setName('DAW2A')->setProgrammeYear($dawLevel);
         $student  = (new Student(new PersonName('Ana', 'Martinez')))->setStudentId('2024-001');
         $dawGroup->addStudent($student);
@@ -102,7 +106,7 @@ class SendSignatureRemindersHandlerTest extends RepositoryTestCase
             ->setState(TrainingPositionState::DONE)
             ->setSigned(false);
 
-        $this->persist($centre, $year, $coordDaw, $coordDam, $family, $daw, $dam, $dawLevel, $dawGroup, $student, $stay, $position);
+        $this->persist($centre, $year, $coordDaw, $coordDam, $family, $daw, $dam, $dawLevel, $damLevel, $dawGroup, $student, $stay, $position);
 
         /** @var MessageBusInterface $bus */
         $bus = self::getContainer()->get(MessageBusInterface::class);

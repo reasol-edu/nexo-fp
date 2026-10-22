@@ -195,6 +195,7 @@ class AppFixtures extends Fixture
         $stmts = [
             'DELETE FROM ' . $q('training_position_programme_year'),
             'DELETE FROM ' . $q('stay_students'),
+            'DELETE FROM ' . $q('stay_programme_year'),
             'DELETE FROM ' . $q('training_position'),
             'DELETE FROM ' . $q('stay_teacher_hours'),
             'DELETE FROM ' . $q('student_year_profile'),
@@ -211,7 +212,7 @@ class AppFixtures extends Fixture
             'DELETE FROM ' . $q('group_tutor'),
             'DELETE FROM ' . $q('group_teacher'),
             'DELETE FROM ' . $q('group'),
-            'DELETE FROM ' . $q('programme_coordinator'),
+            'DELETE FROM ' . $q('programme_year_coordinator'),
             'DELETE FROM ' . $q('programme_year'),
             'DELETE FROM ' . $q('programme'),
             'DELETE FROM ' . $q('professional_family'),
@@ -458,10 +459,14 @@ class AppFixtures extends Fixture
             ->setName($name)
             ->setProfessionalFamily($family)
             ->setAcademicYear($year);
-        $p->addCoordinator($coordinator);
         $manager->persist($p);
+        // La coordinación vive en los niveles: se asigna al crearlos (makeProgrammeYears).
+        $this->programmeCoordinators[spl_object_id($p)] = $coordinator;
         return $p;
     }
+
+    /** @var array<int, Teacher> coordinador de cada enseñanza recién creada, a la espera de sus niveles */
+    private array $programmeCoordinators = [];
 
     /** @return array{ProgrammeYear, ProgrammeYear} */
     private function makeProgrammeYears(ObjectManager $manager, Programme $programme, string $abbr): array
@@ -470,6 +475,10 @@ class AppFixtures extends Fixture
         $py2 = (new ProgrammeYear())->setName('2.º ' . $abbr)->setProgramme($programme);
         $manager->persist($py1);
         $manager->persist($py2);
+        // El coordinador de la enseñanza lo es de sus dos niveles
+        if (($coordinator = $this->programmeCoordinators[spl_object_id($programme)] ?? null) !== null) {
+            $programme->addCoordinator($coordinator);
+        }
         return [$py1, $py2];
     }
 

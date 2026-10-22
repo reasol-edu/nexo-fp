@@ -302,13 +302,14 @@ class StayCalendarComponentTest extends RepositoryTestCase
         $year   = $centre->requireActiveAcademicYear();
         $family = (new ProfessionalFamily())->setName('Fam ' . $name)->setAcademicYear($year);
         $prog   = (new Programme())->setName('Prog ' . $name)->setAcademicYear($year)->setProfessionalFamily($family);
+        $level  = (new \App\Entity\ProgrammeYear())->setName('1º')->setProgramme($prog);
         $stay   = (new Stay())
             ->setName($name)
             ->setAcademicYear($year)
             ->addProgramme($prog)
             ->setStartDate(new \DateTimeImmutable($start))
             ->setEndDate(new \DateTimeImmutable($end));
-        $this->persist($family, $prog, $stay);
+        $this->persist($family, $prog, $level, $stay);
 
         for ($i = 0; $i < $signed; ++$i) {
             $this->persist((new TrainingPosition())->setStay($stay)->setSigned(true));

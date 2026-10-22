@@ -38,9 +38,10 @@ class OfertaFormativaExporter
             ];
 
             foreach ($this->programmes->findByFamilyOrderedByName($family) as $programme) {
+                // En la enseñanza: quienes coordinan todos sus niveles. En cada nivel: sus coordinadores exactos.
                 $coords = array_map(
                     static fn($t) => $t->getUsername(),
-                    $programme->getCoordinators()->toArray(),
+                    $programme->getCoordinatorsOfAllLevels(),
                 );
                 sort($coords);
 
@@ -52,10 +53,17 @@ class OfertaFormativaExporter
                 ];
 
                 foreach ($this->levels->findByProgrammeOrderedByName($programme) as $level) {
+                    $levelCoords = array_map(
+                        static fn($t) => $t->getUsername(),
+                        $level->getCoordinators()->toArray(),
+                    );
+                    sort($levelCoords);
+
                     $levelData = [
-                        'name'    => $level->getName(),
-                        'details' => $level->getDetails(),
-                        'groups'  => [],
+                        'name'         => $level->getName(),
+                        'details'      => $level->getDetails(),
+                        'coordinators' => $levelCoords,
+                        'groups'       => [],
                     ];
 
                     foreach ($this->groups->findByLevelOrderedByName($level) as $group) {

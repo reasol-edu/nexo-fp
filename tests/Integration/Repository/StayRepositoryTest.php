@@ -1145,6 +1145,11 @@ class StayRepositoryTest extends RepositoryTestCase
         string $start = '-30 days',
         string $end = '+365 days',
     ): Stay {
+        // Las estancias se componen de niveles: la enseñanza de prueba tiene uno si aún no lo tenía.
+        if ($programme->getProgrammeYears()->isEmpty()) {
+            $this->em->persist((new ProgrammeYear())->setName('1º ' . $programme->getName())->setProgramme($programme));
+        }
+
         return (new Stay())
             ->setName($name)
             ->setAcademicYear($year)

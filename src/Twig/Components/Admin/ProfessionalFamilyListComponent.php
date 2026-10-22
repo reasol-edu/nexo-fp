@@ -17,6 +17,7 @@ use App\Repository\ProgrammeYearRepository;
 use App\Repository\TeacherRepository;
 use App\Security\Voter\EducationalCentreVoter;
 use App\Service\TenantContext;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
@@ -487,14 +488,42 @@ class ProfessionalFamilyListComponent extends AbstractController
             return;
         }
 
+        if ($programme->getProgrammeYears()->isEmpty()) {
+            $this->addFlash('error', $this->t('programme.flash.no_levels'));
+
+            return;
+        }
+
+        // Atajo: asigna o quita la coordinación en todos los niveles de la enseñanza. Quien coordina solo
+        // algunos niveles no aparece aquí y no se toca; se gestiona en el panel de cada nivel.
         $this->syncTeachers(
-            $programme->getCoordinators(),
+            new ArrayCollection($programme->getCoordinatorsOfAllLevels()),
             $ids,
             fn (Teacher $t) => $programme->addCoordinator($t),
             fn (Teacher $t) => $programme->removeCoordinator($t),
         );
         $this->em->flush();
         $this->addFlash('success', $this->t('programme.flash.saved'));
+    }
+
+    /** @param string[] $ids */
+    #[LiveAction]
+    public function setLevelCoordinators(#[LiveArg] array $ids): void
+    {
+        $this->requireWritableCentre();
+        $level = $this->getSelectedLevel();
+        if ($level === null) {
+            return;
+        }
+
+        $this->syncTeachers(
+            $level->getCoordinators(),
+            $ids,
+            fn (Teacher $t) => $level->addCoordinator($t),
+            fn (Teacher $t) => $level->removeCoordinator($t),
+        );
+        $this->em->flush();
+        $this->addFlash('success', $this->t('level.flash.saved'));
     }
 
     /** @param string[] $ids */

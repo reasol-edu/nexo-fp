@@ -85,7 +85,7 @@ class ProgrammeYearRepository extends ServiceEntityRepository
     }
 
     /**
-     * Niveles de todas las enseñanzas de la estancia, ordenados por enseñanza y nivel.
+     * Niveles de la estancia, ordenados por enseñanza y nivel.
      *
      * @return list<ProgrammeYear>
      */
@@ -93,7 +93,7 @@ class ProgrammeYearRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('py')
             ->join('py.programme', 'p')->addSelect('p')
-            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->where('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmeYears xy WHERE xs.id = :stay AND xy = py)')
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->orderBy('p.name', 'ASC')
             ->addOrderBy('py.name', 'ASC')
@@ -101,13 +101,13 @@ class ProgrammeYearRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /** Un nivel por id, siempre que pertenezca a una enseñanza de la estancia. */
+    /** Un nivel por id, siempre que forme parte de la estancia. */
     public function findByStayAndId(Stay $stay, string $id): ?ProgrammeYear
     {
         return $this->createQueryBuilder('py')
             ->join('py.programme', 'p')
             ->where('py.id = :id')
-            ->andWhere('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmes xp WHERE xs.id = :stay AND xp = p)')
+            ->andWhere('EXISTS(SELECT 1 FROM ' . Stay::class . ' xs JOIN xs.programmeYears xy WHERE xs.id = :stay AND xy = py)')
             ->setParameter('id', $id, 'uuid')
             ->setParameter('stay', $stay->getId(), 'uuid')
             ->getQuery()
