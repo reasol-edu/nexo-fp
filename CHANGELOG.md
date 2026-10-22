@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.19.1] - 2026-10-22
+
+### Security
+
+- Los binarios descargables pasan a FrankenPHP 1.13.2, que lleva PHP 8.5.12, y la imagen Docker se reconstruye siempre sobre la última imagen base de PHP 8.4 (8.4.27 o posterior). Con ello se corrige **PHP2Shell** (CVE-2026-109618 y CVE-2026-109619), dos fallos críticos que permiten ejecutar código en el servidor sin autenticarse. Las versiones anteriores, también las descargables, son vulnerables: actualiza cuanto antes. Cambiar el `php.ini` no lo evita.
+- FrankenPHP 1.13.2 corrige además cuatro vulnerabilidades propias, entre ellas una de gravedad alta sobre la extracción de aplicaciones embebidas en un directorio temporal predecible.
+
+### Changed
+
+- Ya no se publica el binario para Mac con procesador Intel: FrankenPHP dejó de ofrecerlo. Quien lo use puede recurrir a Docker o a un servidor; el manual lo explica.
+- Las pruebas automáticas se ejecutan con PHP 8.4 y 8.5, porque los binarios llevan ahora PHP 8.5. Los 1596 tests pasan con el propio binario de FrankenPHP 1.13.2 (PHP 8.5.12).
+- La configuración del servidor (`Caddyfile` de los binarios y de Docker) declara el modo de compatibilidad de Mercure (`protocol_version_compatibility 8`). Sin esa línea, el Mercure incluido en FrankenPHP 1.13 no arrancaba con el secreto JWT simple que usa Nexo FP, y el servidor no se levantaba.
+
+### Fixed
+
+- Se elimina una llamada a `curl_close()`, sin efecto desde PHP 8.0 y obsoleta en PHP 8.5, en la validación de IdEA de Séneca.
+
 ## [2.19.0] - 2026-10-22
 
 ### Added
