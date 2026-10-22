@@ -82,12 +82,15 @@ class ProgrammeRepository extends ServiceEntityRepository
     /** @return Programme[] */
     public function findByAcademicYearOrderedByFamilyAndName(AcademicYear $year): array
     {
+        // Con sus niveles cargados: el formulario de estancias los ofrece agrupados por enseñanza.
         return $this->createQueryBuilder('p')
             ->join('p.professionalFamily', 'f')
+            ->leftJoin('p.programmeYears', 'py')->addSelect('py')
             ->where('p.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid')
             ->orderBy('f.name', 'ASC')
             ->addOrderBy('p.name', 'ASC')
+            ->addOrderBy('py.name', 'ASC')
             ->getQuery()
             ->getResult();
     }

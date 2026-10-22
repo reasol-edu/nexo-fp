@@ -7,13 +7,13 @@ namespace App\Controller;
 use App\Entity\AcademicYear;
 use App\Entity\ProfessionalFamily;
 use App\Entity\Programme;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPosition;
 use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
-use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
 use App\Security\StayScope;
 use App\Security\Voter\StayVoter;
@@ -39,6 +39,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mercure\Authorization;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -59,7 +60,6 @@ class StayController extends AbstractController
         private readonly ProgrammeYearRepository $programmeYears,
         private readonly GroupRepository $groups,
         private readonly ProgrammeRepository $programmes,
-        private readonly ProfessionalFamilyRepository $families,
         private readonly StayScope $scope,
         private readonly \App\Repository\StudentYearProfileRepository $studentProfiles,
         private readonly TeacherRepository $teachers,
@@ -113,18 +113,24 @@ class StayController extends AbstractController
         $canSeeAll = $teacher->isAdmin()
             || $centre->getAdmins()->exists(fn(int $k, Teacher $a) => $a->getId()->toRfc4122() === $uid);
 
-        // Una estancia puede reunir varias enseñanzas: se ofrecen todas las del curso, pero quien no
-        // administra el centro debe poder crear estancias para al menos una de las elegidas.
+        // Una estancia reúne niveles sueltos de una o varias enseñanzas: se ofrecen todos los del curso, pero
+        // quien no administra el centro debe poder crear estancias para al menos uno de los elegidos.
         $allProgrammes = $this->programmes->findByAcademicYearOrderedByFamilyAndName($year);
         $creatableIds  = [];
-        foreach ($canSeeAll ? $allProgrammes : $this->programmes->findCreatableByAcademicYear($teacher, $year) as $p) {
-            $creatableIds[$p->getId()->toRfc4122()] = true;
+        if ($canSeeAll) {
+            foreach ($allProgrammes as $p) {
+                foreach ($p->getProgrammeYears() as $level) {
+                    $creatableIds[$level->getId()->toRfc4122()] = true;
+                }
+            }
+        } else {
+            $creatableIds = array_fill_keys($this->programmeYears->findCreatableIdsByAcademicYear($teacher, $year), true);
         }
 
         $byFamily = $this->groupProgrammesByFamily($allProgrammes);
 
         $errors = [];
-        $values = ['name' => '', 'programme_ids' => [], 'start_date' => '', 'end_date' => '', 'calculate_by_teacher' => false];
+        $values = ['name' => '', 'programme_year_ids' => [], 'start_date' => '', 'end_date' => '', 'calculate_by_teacher' => false];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_stay', $request->request->getString('_token'))) {
@@ -133,7 +139,7 @@ class StayController extends AbstractController
 
             $values = [
                 'name'                 => trim($request->request->getString('name')),
-                'programme_ids'        => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'programme_year_ids'   => array_values(array_map('strval', $request->request->all('programme_year_ids'))),
                 'start_date'           => trim($request->request->getString('start_date')),
                 'end_date'             => trim($request->request->getString('end_date')),
                 'calculate_by_teacher' => $request->request->getBoolean('calculate_by_teacher'),
@@ -145,12 +151,12 @@ class StayController extends AbstractController
                 $errors['name'] = $this->t('stays.error.name_duplicate');
             }
 
-            $selectedProgrammes = $this->findProgrammesOfYear($year, $values['programme_ids']);
-            if ($selectedProgrammes === [] || count($selectedProgrammes) !== count(array_unique($values['programme_ids']))) {
-                $errors['programme_ids'] = $this->t('stays.error.programme_required');
+            $selectedLevels = $this->findLevelsOfYear($year, $values['programme_year_ids']);
+            if ($selectedLevels === [] || count($selectedLevels) !== count(array_unique($values['programme_year_ids']))) {
+                $errors['programme_year_ids'] = $this->t('stays.error.programme_required');
             } else {
                 $anyCreatable = false;
-                foreach ($selectedProgrammes as $selected) {
+                foreach ($selectedLevels as $selected) {
                     $anyCreatable = $anyCreatable || isset($creatableIds[$selected->getId()->toRfc4122()]);
                 }
                 if (!$anyCreatable) {
@@ -183,15 +189,15 @@ class StayController extends AbstractController
                 }
             }
 
-            if (empty($errors) && $selectedProgrammes !== [] && $startDate !== null && $endDate !== null) {
+            if (empty($errors) && $selectedLevels !== [] && $startDate !== null && $endDate !== null) {
                 $stay = new Stay();
                 $stay->setName($values['name'])
                      ->setAcademicYear($year)
                      ->setStartDate($startDate)
                      ->setEndDate($endDate)
                      ->setCalculateByTeacher($values['calculate_by_teacher']);
-                foreach ($selectedProgrammes as $selected) {
-                    $stay->addProgramme($selected);
+                foreach ($selectedLevels as $selected) {
+                    $stay->addProgrammeYear($selected);
                 }
 
                 $this->em->persist($stay);
@@ -270,13 +276,13 @@ class StayController extends AbstractController
         /** @var Teacher $teacher */
         $teacher = $this->getUser();
 
-        // Enseñanzas que no se pueden quitar porque ya tienen alumnado matriculado o puestos ofertados.
-        $lockedProgrammeIds = $this->programmeIdsInUse($stay);
+        // Niveles que no se pueden quitar porque ya tienen alumnado matriculado o puestos ofertados.
+        $lockedLevelIds = $this->levelIdsInUse($stay);
 
         $errors = [];
         $values = [
             'name'          => $stay->getName(),
-            'programme_ids' => array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $stay->getProgrammes()->toArray()),
+            'programme_year_ids' => array_map(static fn (ProgrammeYear $l): string => $l->getId()->toRfc4122(), $stay->getProgrammeYears()->toArray()),
             'start_date'    => $stay->getStartDate()->format('Y-m-d'),
             'end_date'      => $stay->getEndDate()->format('Y-m-d'),
             'calculate_by_teacher' => $stay->isCalculateByTeacher(),
@@ -289,31 +295,31 @@ class StayController extends AbstractController
 
             $values = [
                 'name'                 => trim($request->request->getString('name')),
-                'programme_ids'        => array_values(array_map('strval', $request->request->all('programme_ids'))),
+                'programme_year_ids'   => array_values(array_map('strval', $request->request->all('programme_year_ids'))),
                 'start_date'           => trim($request->request->getString('start_date')),
                 'end_date'             => trim($request->request->getString('end_date')),
                 'calculate_by_teacher' => $request->request->getBoolean('calculate_by_teacher'),
             ];
 
-            $selectedIds = [];
-            $selectedProgrammes = $this->findProgrammesOfYear($year, $values['programme_ids']);
-            if ($selectedProgrammes === [] || count($selectedProgrammes) !== count(array_unique($values['programme_ids']))) {
-                $errors['programme_ids'] = $this->t('stays.error.programme_required');
+            $selectedIds    = [];
+            $selectedLevels = $this->findLevelsOfYear($year, $values['programme_year_ids']);
+            if ($selectedLevels === [] || count($selectedLevels) !== count(array_unique($values['programme_year_ids']))) {
+                $errors['programme_year_ids'] = $this->t('stays.error.programme_required');
             } else {
-                $selectedIds = array_map(static fn (Programme $p): string => $p->getId()->toRfc4122(), $selectedProgrammes);
-                if (array_diff($lockedProgrammeIds, $selectedIds) !== []) {
-                    $errors['programme_ids'] = $this->t('stays.error.programme_in_use');
+                $selectedIds = array_map(static fn (ProgrammeYear $l): string => $l->getId()->toRfc4122(), $selectedLevels);
+                if (array_diff($lockedLevelIds, $selectedIds) !== []) {
+                    $errors['programme_year_ids'] = $this->t('stays.error.programme_in_use');
                 } else {
-                    // Quien edita debe seguir gestionando al menos una de las enseñanzas resultantes.
-                    $keepsAccess = $teacher->isAdmin();
-                    foreach ($selectedProgrammes as $selected) {
-                        $keepsAccess = $keepsAccess
-                            || $this->programmes->isCoordinatorOf($teacher, $selected)
-                            || $this->families->isFamilyHeadOfProgramme($teacher, $selected)
-                            || $centre->getAdmins()->contains($teacher);
+                    // Quien edita debe seguir gestionando al menos uno de los niveles resultantes.
+                    $keepsAccess = $teacher->isAdmin() || $centre->getAdmins()->contains($teacher);
+                    if (!$keepsAccess) {
+                        $manageable = array_flip($this->programmeYears->findCreatableIdsByAcademicYear($teacher, $year));
+                        foreach ($selectedIds as $selectedId) {
+                            $keepsAccess = $keepsAccess || isset($manageable[$selectedId]);
+                        }
                     }
                     if (!$keepsAccess) {
-                        $errors['programme_ids'] = $this->t('stays.error.programme_keep_one');
+                        $errors['programme_year_ids'] = $this->t('stays.error.programme_keep_one');
                     }
                 }
             }
@@ -354,13 +360,13 @@ class StayController extends AbstractController
                      ->setStartDate($startDate)
                      ->setEndDate($endDate)
                      ->setCalculateByTeacher($values['calculate_by_teacher']);
-                foreach ($stay->getProgrammes()->toArray() as $current) {
+                foreach ($stay->getProgrammeYears()->toArray() as $current) {
                     if (!in_array($current->getId()->toRfc4122(), $selectedIds, true)) {
-                        $stay->removeProgramme($current);
+                        $stay->removeProgrammeYear($current);
                     }
                 }
-                foreach ($selectedProgrammes as $selected) {
-                    $stay->addProgramme($selected);
+                foreach ($selectedLevels as $selected) {
+                    $stay->addProgrammeYear($selected);
                 }
 
                 $this->em->flush();
@@ -376,7 +382,7 @@ class StayController extends AbstractController
             'centre'     => $centre,
             'stay'       => $stay,
             'by_family'  => $this->groupProgrammesByFamily($this->programmes->findByAcademicYearOrderedByFamilyAndName($year)),
-            'locked_ids' => $lockedProgrammeIds,
+            'locked_ids' => $lockedLevelIds,
             'errors'     => $errors,
             'values'     => $values,
         ]);
@@ -1563,18 +1569,21 @@ class StayController extends AbstractController
     }
 
     /**
-     * Enseñanzas del curso a partir de ids recibidos del formulario (ignora los desconocidos).
+     * Niveles del curso a partir de ids recibidos del formulario (ignora los desconocidos).
      *
      * @param list<string> $ids
-     * @return list<Programme>
+     * @return list<ProgrammeYear>
      */
-    private function findProgrammesOfYear(AcademicYear $year, array $ids): array
+    private function findLevelsOfYear(AcademicYear $year, array $ids): array
     {
         $found = [];
         foreach (array_unique($ids) as $id) {
-            $programme = $this->programmes->findByAcademicYearAndId($year, $id);
-            if ($programme !== null) {
-                $found[] = $programme;
+            if (!Uuid::isValid($id)) {
+                continue;
+            }
+            $level = $this->programmeYears->findByAcademicYearAndId($year, $id);
+            if ($level !== null) {
+                $found[] = $level;
             }
         }
 
@@ -1582,22 +1591,22 @@ class StayController extends AbstractController
     }
 
     /**
-     * Ids de las enseñanzas de la estancia que ya tienen alumnado matriculado o puestos
-     * ofertados a alguno de sus niveles; no se pueden quitar de la estancia.
+     * Ids de los niveles de la estancia que ya tienen alumnado matriculado o puestos ofertados;
+     * no se pueden quitar de la estancia.
      *
      * @return list<string>
      */
-    private function programmeIdsInUse(Stay $stay): array
+    private function levelIdsInUse(Stay $stay): array
     {
         $ids = [];
         foreach ($stay->getStudents() as $student) {
-            foreach ($stay->getProgrammesOfStudent($student) as $programme) {
-                $ids[$programme->getId()->toRfc4122()] = true;
+            foreach ($stay->getProgrammeYearsOfStudent($student) as $level) {
+                $ids[$level->getId()->toRfc4122()] = true;
             }
         }
         foreach ($this->positions->findByStayOrdered($stay) as $position) {
             foreach ($position->getProgrammeYears() as $programmeYear) {
-                $ids[$programmeYear->getProgramme()->getId()->toRfc4122()] = true;
+                $ids[$programmeYear->getId()->toRfc4122()] = true;
             }
         }
 

@@ -127,6 +127,43 @@ class ProgrammeYearRepository extends ServiceEntityRepository
         return array_map(static fn (array $r): array => ['level' => $r['level'], 'programme' => $r['programme'], 'name' => $r['name'], 'headed' => (int) $r['headed'] === 1], $rows);
     }
 
+    /** Un nivel del curso por id, o null si no existe o es de otro curso. */
+    public function findByAcademicYearAndId(AcademicYear $year, string $id): ?ProgrammeYear
+    {
+        return $this->createQueryBuilder('py')
+            ->join('py.programme', 'p')->addSelect('p')
+            ->where('py.id = :id')
+            ->andWhere('p.academicYear = :year')
+            ->setParameter('id', $id, 'uuid')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Ids de los niveles del curso para los que el docente puede crear estancias: los que coordina o
+     * cuya familia profesional dirige.
+     *
+     * @return list<string>
+     */
+    public function findCreatableIdsByAcademicYear(Teacher $teacher, AcademicYear $year): array
+    {
+        /** @var list<array{id: mixed}> $rows */
+        $rows = $this->createQueryBuilder('py')
+            ->select('DISTINCT py.id AS id')
+            ->join('py.programme', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->leftJoin('py.coordinators', 'c')
+            ->where('p.academicYear = :year')
+            ->andWhere('c.id = :teacher OR f.head = :teacher')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_map(static fn (array $row): string => $row['id'] instanceof \Symfony\Component\Uid\Uuid ? $row['id']->toRfc4122() : (string) $row['id'], $rows);
+    }
+
     /**
      * Niveles de la estancia que el docente coordina.
      *

@@ -97,7 +97,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => $token,
             'name'          => 'Estancia DAW 2025',
-            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'programme_year_ids' => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);
@@ -121,7 +121,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'               => $token,
             'name'                 => 'Estancia con reparto',
-            'programme_ids'        => [$programme->getId()->toRfc4122()],
+            'programme_year_ids'   => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'           => '2025-03-01',
             'end_date'             => '2025-06-30',
             'calculate_by_teacher' => '1',
@@ -144,7 +144,7 @@ class StayControllerTest extends ControllerTestCase
         $stayId = $stay->getId()->toRfc4122();
         $fields = [
             'name'          => 'Estancia DAW 2025',
-            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'programme_year_ids' => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ];
@@ -178,7 +178,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => 'token-invalido',
             'name'          => 'Estancia DAW 2025',
-            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'programme_year_ids' => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);
@@ -245,7 +245,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'       => $token,
             'name'          => 'Estancia DAW 2025',
-            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'programme_year_ids' => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'   => '2025-06-30',
             'end_date'     => '2025-03-01', // antes del inicio
         ]);
@@ -371,7 +371,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/editar', [
             '_token'        => $token,
             'name'          => 'Estancia DAW Modificada',
-            'programme_ids' => [$programme->getId()->toRfc4122()],
+            'programme_year_ids' => [$this->level($programme)->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ]);
@@ -1382,8 +1382,9 @@ class StayControllerTest extends ControllerTestCase
     {
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $otherLevel  = (new ProgrammeYear())->setName('Primer curso DAM')->setProgramme($otherProg);
         $coordinator = $this->makeTeacher('coord.filter');
-        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
+        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg, $otherLevel);
         $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
@@ -1392,17 +1393,18 @@ class StayControllerTest extends ControllerTestCase
         $crawler = $this->client->request('GET', '/estancias/nueva');
 
         self::assertResponseIsSuccessful();
-        $options = $crawler->filter('option[value="' . $programme->getId()->toRfc4122() . '"]');
-        self::assertCount(1, $options, 'El coordinador debe ver su propia enseñanza');
-        $otherOptions = $crawler->filter('option[value="' . $otherProg->getId()->toRfc4122() . '"]');
+        $options = $crawler->filter('option[value="' . $this->level($programme)->getId()->toRfc4122() . '"]');
+        self::assertCount(1, $options, 'El coordinador debe ver los niveles de su propia enseñanza');
+        $otherOptions = $crawler->filter('option[value="' . $otherLevel->getId()->toRfc4122() . '"]');
         self::assertCount(1, $otherOptions, 'Una estancia puede reunir enseñanzas de otras coordinaciones');
     }
 
     public function testNewAdminSeesAllProgrammes(): void
     {
         [$admin, $centre, $year, $family, $programme] = $this->makeFullContext();
-        $otherProg = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
-        $this->persist($admin, $centre, $year, $family, $programme, $otherProg);
+        $otherProg  = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $otherLevel = (new ProgrammeYear())->setName('Primer curso DAM')->setProgramme($otherProg);
+        $this->persist($admin, $centre, $year, $family, $programme, $otherProg, $otherLevel);
         $centre->setActiveAcademicYear($year);
         $this->flush();
         $this->loginAs($admin, $centre);
@@ -1410,9 +1412,9 @@ class StayControllerTest extends ControllerTestCase
         $crawler = $this->client->request('GET', '/estancias/nueva');
 
         self::assertResponseIsSuccessful();
-        $options = $crawler->filter('option[value="' . $programme->getId()->toRfc4122() . '"]');
+        $options = $crawler->filter('option[value="' . $this->level($programme)->getId()->toRfc4122() . '"]');
         self::assertCount(1, $options);
-        $otherOptions = $crawler->filter('option[value="' . $otherProg->getId()->toRfc4122() . '"]');
+        $otherOptions = $crawler->filter('option[value="' . $otherLevel->getId()->toRfc4122() . '"]');
         self::assertCount(1, $otherOptions);
     }
 
@@ -1420,8 +1422,9 @@ class StayControllerTest extends ControllerTestCase
     {
         [$globalAdmin, $centre, $year, $family, $programme] = $this->makeFullContext();
         $otherProg   = (new Programme())->setName('DAM')->setProfessionalFamily($family)->setAcademicYear($year);
+        $otherLevel  = (new ProgrammeYear())->setName('Primer curso DAM')->setProgramme($otherProg);
         $coordinator = $this->makeTeacher('coord.post.403');
-        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg);
+        $this->persist($globalAdmin, $coordinator, $centre, $year, $family, $programme, $otherProg, $otherLevel);
         $this->coordinate($programme, $coordinator);
         $centre->setActiveAcademicYear($year);
         $this->flush();
@@ -1433,7 +1436,7 @@ class StayControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'        => $token,
             'name'          => 'Estancia Intrusa',
-            'programme_ids' => [$otherProg->getId()->toRfc4122()],
+            'programme_year_ids' => [$otherLevel->getId()->toRfc4122()],
             'start_date'   => '2025-03-01',
             'end_date'     => '2025-06-30',
         ]);

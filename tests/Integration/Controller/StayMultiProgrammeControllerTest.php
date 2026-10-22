@@ -39,7 +39,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/nueva', [
             '_token'        => $token,
             'name'          => 'FFEOE compartida',
-            'programme_ids' => [$s['daw']->getId()->toRfc4122(), $s['dam']->getId()->toRfc4122()],
+            'programme_year_ids' => [$s['dawLevel']->getId()->toRfc4122(), $s['damLevel']->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ]);
@@ -67,7 +67,63 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Debes seleccionar al menos una enseñanza.');
+        self::assertSelectorTextContains('body', 'Debes seleccionar al menos un nivel.');
+    }
+
+    public function testACoordinatorCreatesAStayWithOnlyOneLevel(): void
+    {
+        $s = $this->makeScenario(withStay: false);
+        $this->loginAs($s['coordDaw'], $s['centre']);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/nueva', [
+            '_token'             => $token,
+            'name'               => 'Solo 2.º DAW',
+            'programme_year_ids' => [$s['dawLevel']->getId()->toRfc4122()],
+            'start_date'         => '2025-03-01',
+            'end_date'           => '2025-06-30',
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        $stay = $this->em->getRepository(Stay::class)->findOneBy(['name' => 'Solo 2.º DAW']);
+        self::assertNotNull($stay);
+        self::assertCount(1, $stay->getProgrammeYears());
+        self::assertSame('2.º DAW', $stay->getLevelSummary());
+    }
+
+    public function testACoordinatorCannotCreateAStayOnlyWithLevelsOfAnotherCoordination(): void
+    {
+        $s = $this->makeScenario(withStay: false);
+        $this->loginAs($s['coordDaw'], $s['centre']);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/estancias/nueva', [
+            '_token'             => $token,
+            'name'               => 'Solo DAM',
+            'programme_year_ids' => [$s['damLevel']->getId()->toRfc4122()],
+            'start_date'         => '2025-03-01',
+            'end_date'           => '2025-06-30',
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testTheNewStayFormOffersLevelsGroupedByProgrammeWithAWholeProgrammeShortcut(): void
+    {
+        $s = $this->makeScenario(withStay: false);
+        $this->loginAs($s['admin'], $s['centre']);
+
+        $crawler = $this->client->request('GET', '/estancias/nueva');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('select#programme_year_ids[multiple][name="programme_year_ids[]"]'));
+        self::assertCount(2, $crawler->filter('select#programme_year_ids optgroup'), 'una por enseñanza con niveles');
+        self::assertStringContainsString('Toda la enseñanza', (string) $crawler->filter('select#programme_year_ids')->attr('data-all-label'));
     }
 
     public function testEditAddsAnotherProgramme(): void
@@ -84,7 +140,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/editar', [
             '_token'        => $token,
             'name'          => 'FFEOE 2025',
-            'programme_ids' => [$s['daw']->getId()->toRfc4122(), $s['dam']->getId()->toRfc4122()],
+            'programme_year_ids' => [$s['dawLevel']->getId()->toRfc4122(), $s['damLevel']->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ]);
@@ -107,13 +163,13 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/editar', [
             '_token'        => $token,
             'name'          => 'FFEOE 2025',
-            'programme_ids' => [$s['daw']->getId()->toRfc4122()],
+            'programme_year_ids' => [$s['dawLevel']->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'No se puede quitar una enseñanza que ya tiene alumnado matriculado');
+        self::assertSelectorTextContains('body', 'No se puede quitar un nivel que ya tiene alumnado matriculado');
         $this->em->clear();
         self::assertCount(2, $this->em->find(Stay::class, $s['stay']->getId())->getProgrammes());
     }
@@ -134,13 +190,13 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $this->client->request('POST', '/estancias/' . $stayId . '/editar', [
             '_token'        => $token,
             'name'          => 'FFEOE 2025',
-            'programme_ids' => [$s['dam']->getId()->toRfc4122()],
+            'programme_year_ids' => [$s['damLevel']->getId()->toRfc4122()],
             'start_date'    => '2025-03-01',
             'end_date'      => '2025-06-30',
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Debes conservar al menos una enseñanza que tú gestiones.');
+        self::assertSelectorTextContains('body', 'Debes conservar al menos un nivel que tú gestiones.');
     }
 
     public function testCoordinatorOfOneProgrammeCannotDeleteASharedStay(): void
