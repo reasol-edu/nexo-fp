@@ -287,6 +287,9 @@ class StayDetailComponent extends AbstractController
             'can_delete'                       => $canDelete,
             'programme_summary'                => $programmeSummary,
             'manageable_student_ids'           => $manageableStudentIds,
+            // Gestiona algún nivel de la estancia pero no todos (p. ej. solo 2.º de una enseñanza): hay estudiantes ajenos
+            // aunque la estancia tenga una sola enseñanza, así que se muestran los candados y el filtro «Mis estudiantes».
+            'partial_scope'                    => $this->scope->canManageAny($actor, $stay) && !$this->scope->canManageEveryLevel($actor, $stay),
             'can_add_position'                 => $canAddPosition,
             'can_view_unassigned'              => $canViewUnassigned,
             'manageable_position_ids'          => $manageablePositionIds,

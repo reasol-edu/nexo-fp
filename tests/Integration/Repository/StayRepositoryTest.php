@@ -328,7 +328,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $stayA  = $this->makeStay($year, $progA, 'FFEOE DAM');
         $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor  = (new Teacher(new PersonName('T', 'Utor')))->setUsername('tutor.cfilter.1');
-        $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level  = $this->levelOf($progA);
         $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
         $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $tutor, $level, $group);
 
@@ -348,7 +348,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
         $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.cfilter.1');
-        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level   = $this->levelOf($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
         $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $teacher, $level, $group);
         $group->addTeacher($teacher);
@@ -453,7 +453,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
         $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.1');
-        $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level = $this->levelOf($progA);
         $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
         $this->persist($progB, $stayB, $tutor, $level, $group);
 
@@ -470,7 +470,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $progB  = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
         $stayB  = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor  = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.dash.2');
-        $level  = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level  = $this->levelOf($progA);
         $group  = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
         $company    = $this->makeCompany($centre, 'Empresa Dash S.L.');
         $workcenter = $this->makeWorkcenter($company, 'Oficina');
@@ -584,7 +584,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $progB   = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
         $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
         $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
-        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level   = $this->levelOf($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
         $this->persist($centre, $year, $teacher, $fam, $progA, $progB, $stayA, $stayB, $level, $group);
         $group->addTeacher($teacher);
@@ -615,7 +615,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $progB = (new Programme())->setName('DAW')->setAcademicYear($year)->setProfessionalFamily($fam);
         $stayB = $this->makeStay($year, $progB, 'FFEOE DAW');
         $tutor = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.upcoming.1');
-        $level = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level = $this->levelOf($progA);
         $group = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
         $this->persist($progB, $stayB, $tutor, $level, $group);
 
@@ -693,7 +693,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $stayA   = $this->makeStay($year, $progA, 'FFEOE DAM');
         $stayB   = $this->makeStay($year, $progB, 'FFEOE DAW');
         $teacher = (new Teacher(new PersonName('D', 'Ocente')))->setUsername('teacher.upcoming.2');
-        $level   = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level   = $this->levelOf($progA);
         $group   = (new Group())->setName('DAM1A')->setProgrammeYear($level);
         $this->persist($centre, $year, $fam, $progA, $progB, $stayA, $stayB, $teacher, $level, $group);
         $group->addTeacher($teacher);
@@ -878,7 +878,7 @@ class StayRepositoryTest extends RepositoryTestCase
         $studentA = (new Student(new PersonName('Ana', 'García')))->setStudentId('S-73A');
         $studentB = (new Student(new PersonName('Luis', 'Pérez')))->setStudentId('S-73B');
         $tutor    = (new Teacher(new PersonName('Tu', 'Tor')))->setUsername('tutor.nopos.73');
-        $level    = (new ProgrammeYear())->setName('1º')->setProgramme($progA);
+        $level    = $this->levelOf($progA);
         $group    = (new Group())->setName('DAM1A')->setProgrammeYear($level)->addTutor($tutor);
         $this->persist($progB, $stayB, $studentA, $studentB, $tutor, $level, $group);
         $stayA->addStudent($studentA);
@@ -1156,6 +1156,12 @@ class StayRepositoryTest extends RepositoryTestCase
             ->addProgramme($programme)
             ->setStartDate(new \DateTimeImmutable($start))
             ->setEndDate(new \DateTimeImmutable($end));
+    }
+
+    /** El nivel de la enseñanza que ya participa en la estancia (lo crea makeStay), o uno nuevo si no tiene ninguno. */
+    private function levelOf(Programme $programme): ProgrammeYear
+    {
+        return $programme->getProgrammeYears()->first() ?: (new ProgrammeYear())->setName('1º')->setProgramme($programme);
     }
 
     private function makeCompany(EducationalCentre $centre, string $name): Company

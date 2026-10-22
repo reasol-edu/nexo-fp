@@ -163,22 +163,12 @@ final class StayVoter extends Voter
     }
 
     /**
-     * Eliminar exige gestionar todas las enseñanzas de la estancia: con una sola enseñanza
-     * coincide con «gestionar»; con varias, evita que una coordinación borre lo de las demás.
+     * Eliminar exige gestionar todos los niveles de la estancia: con un solo nivel (o con todos
+     * los suyos) coincide con «gestionar»; con varias coordinaciones, evita que una borre lo de las demás.
      */
     private function canDelete(Teacher $user, Stay $stay): bool
     {
-        if ($this->scope->manageableProgrammeIds($user, $stay) === null) {
-            return true;
-        }
-
-        foreach ($stay->getProgrammes() as $programme) {
-            if (!$this->scope->canManageProgramme($user, $stay, $programme)) {
-                return false;
-            }
-        }
-
-        return $stay->getProgrammes()->count() > 0;
+        return $this->scope->canManageEveryLevel($user, $stay);
     }
 
     private function canAddPosition(Teacher $user, Stay $stay): bool

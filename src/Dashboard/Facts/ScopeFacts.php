@@ -11,10 +11,11 @@ namespace App\Dashboard\Facts;
 final readonly class ScopeFacts
 {
     /**
-     * @param array<string, string> $manageProgrammes   enseñanzas que coordina o cuya familia dirige (id → nombre)
+     * @param array<string, string> $manageProgrammes   enseñanzas de las que coordina algún nivel o cuya familia dirige (id → nombre)
      * @param list<string>          $headedProgrammeIds enseñanzas cuya familia dirige (subconjunto de las anteriores)
      * @param list<GroupRef>        $groups             grupos en los que es tutor/a o docente
      * @param list<CompanyRef>      $companies          empresas de las que es docente de enlace
+     * @param list<string>          $manageLevelIds     niveles que coordina o cuya familia dirige: la gestión se decide por nivel
      */
     public function __construct(
         public string $userId,
@@ -23,6 +24,7 @@ final readonly class ScopeFacts
         public array $headedProgrammeIds,
         public array $groups,
         public array $companies,
+        public array $manageLevelIds = [],
     ) {}
 
     /** @return list<string> */
@@ -33,13 +35,13 @@ final readonly class ScopeFacts
 
     public function manages(): bool
     {
-        return $this->isAdmin || $this->manageProgrammes !== [];
+        return $this->isAdmin || $this->manageLevelIds !== [];
     }
 
-    /** ¿Gestiona al menos una enseñanza de la estancia? */
+    /** ¿Gestiona al menos un nivel de la estancia? */
     public function managesStay(StayFacts $stay): bool
     {
-        return $this->isAdmin || array_intersect($stay->programmeIds(), $this->manageProgrammeIds()) !== [];
+        return $this->isAdmin || array_intersect($stay->levelIds, $this->manageLevelIds) !== [];
     }
 
     public function isLiaison(): bool

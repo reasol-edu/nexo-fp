@@ -96,7 +96,7 @@ final class DashboardBuilder
             $managed = [];
             if ($manages) {
                 foreach ($facts->students[$stay->id] ?? [] as $studentId => $student) {
-                    if ($this->isManaged($student, $scope->isAdmin, $scope->manageProgrammeIds())) {
+                    if ($this->isManaged($student, $scope->isAdmin, $scope->manageLevelIds)) {
                         $managed[(string) $studentId] = true;
                     }
                 }
@@ -125,14 +125,14 @@ final class DashboardBuilder
     }
 
     /**
-     * Un estudiante lo gestiona quien coordina o dirige alguna de sus enseñanzas; el que no tiene grupo en
-     * ninguna enseñanza de la estancia lo gestiona cualquiera que gestione alguna (igual que StayScope).
+     * Un estudiante lo gestiona quien coordina o dirige alguno de sus niveles; el que no tiene grupo en
+     * ningún nivel de la estancia lo gestiona cualquiera que gestione alguno (igual que StayScope).
      *
-     * @param list<string> $manageProgrammeIds
+     * @param list<string> $manageLevelIds
      */
-    private function isManaged(StudentFacts $student, bool $isAdmin, array $manageProgrammeIds): bool
+    private function isManaged(StudentFacts $student, bool $isAdmin, array $manageLevelIds): bool
     {
-        return $isAdmin || $student->levels === [] || array_intersect($student->programmeIds(), $manageProgrammeIds) !== [];
+        return $isAdmin || $student->levels === [] || array_intersect($student->levelIds(), $manageLevelIds) !== [];
     }
 
     // ── Atención ahora ───────────────────────────────────────────────────────

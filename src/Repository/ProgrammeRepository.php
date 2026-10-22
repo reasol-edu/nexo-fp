@@ -25,29 +25,6 @@ class ProgrammeRepository extends ServiceEntityRepository
     }
 
     /**
-     * Enseñanzas del curso que el docente coordina o cuya familia profesional dirige (una consulta).
-     *
-     * @return list<array{id: mixed, name: string, headed: bool}>
-     */
-    public function findManagedByTeacherInYear(AcademicYear $year, Teacher $teacher): array
-    {
-        /** @var list<array{id: mixed, name: string, headed: mixed}> $rows */
-        $rows = $this->createQueryBuilder('p')
-            ->select('DISTINCT p.id AS id', 'p.name AS name', 'CASE WHEN f.head = :teacher THEN 1 ELSE 0 END AS headed')
-            ->join('p.professionalFamily', 'f')
-            ->leftJoin('p.programmeYears', 'cpy')
-            ->leftJoin('cpy.coordinators', 'c')
-            ->where('p.academicYear = :year')
-            ->andWhere('c.id = :teacher OR f.head = :teacher')
-            ->setParameter('year', $year->getId(), 'uuid')
-            ->setParameter('teacher', $teacher->getId(), 'uuid')
-            ->getQuery()
-            ->getResult();
-
-        return array_map(static fn (array $r): array => ['id' => $r['id'], 'name' => $r['name'], 'headed' => (int) $r['headed'] === 1], $rows);
-    }
-
-    /**
      * Programmes visible to a teacher: they teach a group in it, are tutor of a group, or are head of its family.
      *
      * @return Programme[]
@@ -276,38 +253,5 @@ class ProgrammeRepository extends ServiceEntityRepository
         );
 
         return $all;
-    }
-
-    /**
-     * Enseñanzas de la estancia de las que el docente coordina algún nivel (de la estancia o no).
-     *
-     * @return list<Programme>
-     */
-    public function findCoordinatedByInStay(Teacher $teacher, Stay $stay): array
-    {
-        return $this->getEntityManager()->createQuery(
-            'SELECT p FROM ' . Programme::class . ' p'
-            . ' WHERE EXISTS(SELECT 1 FROM ' . ProgrammeYear::class . ' cpy JOIN cpy.coordinators cc WHERE cpy.programme = p AND cc.id = :teacher)'
-            . ' AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy.programme = p)'
-        )
-            ->setParameter('stay', $stay->getId(), 'uuid')
-            ->setParameter('teacher', $teacher->getId(), 'uuid')
-            ->getResult();
-    }
-
-    /**
-     * Enseñanzas de la estancia cuya familia profesional dirige el docente.
-     *
-     * @return list<Programme>
-     */
-    public function findHeadedByInStay(Teacher $teacher, Stay $stay): array
-    {
-        return $this->getEntityManager()->createQuery(
-            'SELECT p FROM ' . Programme::class . ' p JOIN p.professionalFamily f'
-            . ' WHERE f.head = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy.programme = p)'
-        )
-            ->setParameter('stay', $stay->getId(), 'uuid')
-            ->setParameter('teacher', $teacher->getId(), 'uuid')
-            ->getResult();
     }
 }

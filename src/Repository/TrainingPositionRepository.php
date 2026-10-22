@@ -291,7 +291,7 @@ class TrainingPositionRepository extends ServiceEntityRepository
         $viaProgramme = 'EXISTS(SELECT 1 FROM App\Entity\Stay vs JOIN vs.programmeYears vvy JOIN vvy.programme vvp JOIN vvp.professionalFamily vvf WHERE vs = s AND ('
             . ':vViewer MEMBER OF vvy.coordinators'
             . ' OR vvf.head = :vViewer'
-            . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy.programme = vvp AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
+            . ' OR EXISTS(SELECT 1 FROM ' . Group::class . ' vg JOIN vg.programmeYear vgpy LEFT JOIN vg.teachers vgt WHERE vgpy = vvy AND (:vViewer MEMBER OF vg.tutors OR vgt.id = :vViewer))'
             . '))';
 
         $qb->andWhere($qb->expr()->orX(

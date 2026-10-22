@@ -15,7 +15,8 @@
 {%- set can_manage                     = d.can_manage -%}
 {%- set can_delete                     = d.can_delete -%}
 {%- set manageable_student_ids        = d.manageable_student_ids -%}
-{%- set multi_programme               = stay.programmes|length > 1 -%}
+{# «Varias coordinaciones»: más de una enseñanza, o quien consulta gestiona solo algunos de los niveles de la estancia. #}
+{%- set multi_programme               = stay.programmes|length > 1 or d.partial_scope -%}
 {%- set can_add_position               = d.can_add_position -%}
 {%- set can_view_unassigned            = d.can_view_unassigned -%}
 {%- set manageable_position_ids        = d.manageable_position_ids -%}

@@ -15,12 +15,13 @@ use App\Dashboard\Facts\StayFacts;
 use App\Dashboard\Facts\StudentFacts;
 use App\Entity\AcademicYear;
 use App\Entity\EducationalCentre;
+use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
 use App\Entity\Teacher;
 use App\Entity\TrainingPositionState;
 use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
-use App\Repository\ProgrammeRepository;
+use App\Repository\ProgrammeYearRepository;
 use App\Repository\StayRepository;
 use App\Repository\StayTeacherHoursRepository;
 use App\Repository\StudentYearProfileRepository;
@@ -42,7 +43,7 @@ final class DashboardLoader
 {
     public function __construct(
         private readonly StayRepository $stays,
-        private readonly ProgrammeRepository $programmes,
+        private readonly ProgrammeYearRepository $levels,
         private readonly GroupRepository $groups,
         private readonly CompanyRepository $companies,
         private readonly StayTeacherHoursRepository $hours,
@@ -81,11 +82,13 @@ final class DashboardLoader
         // La administración gestiona todo: no hace falta saber qué enseñanzas coordina o dirige.
         $manage = [];
         $headed = [];
+        $levels = [];
         if (!$isAdmin) {
-            foreach ($this->programmes->findManagedByTeacherInYear($year, $viewer) as $row) {
-                $id          = (string) $row['id'];
+            foreach ($this->levels->findManagedByTeacherInYear($year, $viewer) as $row) {
+                $id          = $this->id($row['programme']) ?? '';
                 $manage[$id] = $row['name'];
-                if ($row['headed']) {
+                $levels[]    = $this->id($row['level']) ?? '';
+                if ($row['headed'] && !\in_array($id, $headed, true)) {
                     $headed[] = $id;
                 }
             }
@@ -100,7 +103,7 @@ final class DashboardLoader
             $this->companies->findLiaisonSummaryForTeacher($centre, $viewer),
         );
 
-        return new ScopeFacts($viewer->getId()->toRfc4122(), $isAdmin, $manage, $headed, $groups, $companies);
+        return new ScopeFacts($viewer->getId()->toRfc4122(), $isAdmin, $manage, $headed, $groups, $companies, array_values(array_unique($levels)));
     }
 
     private function stayFacts(Stay $stay): StayFacts
@@ -123,6 +126,7 @@ final class DashboardLoader
             $stay->getStartDate(),
             $stay->getEndDate(),
             $stay->isCalculateByTeacher(),
+            array_map(static fn (ProgrammeYear $l): string => $l->getId()->toRfc4122(), $stay->getProgrammeYears()->toArray()),
         );
     }
 
@@ -173,9 +177,9 @@ final class DashboardLoader
      */
     private function students(AcademicYear $year, Teacher $viewer, array $stayFacts): array
     {
-        $programmesOfStay = [];
+        $levelsOfStay = [];
         foreach ($stayFacts as $stay) {
-            $programmesOfStay[$stay->id] = array_flip($stay->programmeIds());
+            $levelsOfStay[$stay->id] = array_flip($stay->levelIds);
         }
 
         /** @var array<string, array<string, list<LevelFacts>>> $levels */
@@ -183,15 +187,16 @@ final class DashboardLoader
         foreach ($this->stays->findDashboardStudentRows($year, $viewer) as $row) {
             $stayId    = (string) $row['stay'];
             $studentId = (string) $row['student'];
-            if (!isset($programmesOfStay[$stayId])) {
+            if (!isset($levelsOfStay[$stayId])) {
                 continue;
             }
             $levels[$stayId][$studentId] ??= [];
 
-            // Solo cuentan los grupos de las enseñanzas de la estancia.
+            // Solo cuentan los grupos de los niveles de la estancia.
+            $levelId     = $this->id($row['level']);
             $programmeId = $this->id($row['programme']);
-            if ($programmeId !== null && isset($programmesOfStay[$stayId][$programmeId])) {
-                $levels[$stayId][$studentId][] = new LevelFacts((string) $row['level'], $programmeId, (string) $row['grp'], (string) $row['groupName']);
+            if ($levelId !== null && $programmeId !== null && isset($levelsOfStay[$stayId][$levelId])) {
+                $levels[$stayId][$studentId][] = new LevelFacts($levelId, $programmeId, (string) $row['grp'], (string) $row['groupName']);
             }
         }
 

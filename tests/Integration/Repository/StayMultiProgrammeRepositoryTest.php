@@ -179,19 +179,19 @@ class StayMultiProgrammeRepositoryTest extends RepositoryTestCase
 
     // ── Repositorios de apoyo a la gestión por enseñanza ──────────────────────
 
-    public function testFindCoordinatedAndHeadedProgrammesInStay(): void
+    public function testFindCoordinatedAndHeadedLevelsInStay(): void
     {
         $s = $this->scenario();
 
-        $coordinated = $this->programmes->findCoordinatedByInStay($s['coordDam'], $s['stay']);
-        self::assertSame(['DAM'], array_map(static fn (Programme $p): string => $p->getName(), $coordinated));
+        $coordinated = $this->levels->findCoordinatedByInStay($s['coordDam'], $s['stay']);
+        self::assertSame(['2.º DAM'], array_map(static fn (ProgrammeYear $l): string => $l->getName(), $coordinated));
 
-        $headed = array_map(static fn (Programme $p): string => $p->getName(), $this->programmes->findHeadedByInStay($s['head'], $s['stay']));
+        $headed = array_map(static fn (ProgrammeYear $l): string => $l->getName(), $this->levels->findHeadedByInStay($s['head'], $s['stay']));
         sort($headed);
-        self::assertSame(['DAM', 'DAW'], $headed);
+        self::assertSame(['2.º DAM', '2.º DAW'], $headed);
 
-        self::assertSame([], $this->programmes->findCoordinatedByInStay($s['outsider'], $s['stay']));
-        self::assertSame([], $this->programmes->findHeadedByInStay($s['outsider'], $s['stay']));
+        self::assertSame([], $this->levels->findCoordinatedByInStay($s['outsider'], $s['stay']));
+        self::assertSame([], $this->levels->findHeadedByInStay($s['outsider'], $s['stay']));
     }
 
     public function testStayGroupsIncludeEveryProgrammeOfTheStayButNotOthers(): void

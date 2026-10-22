@@ -247,7 +247,7 @@ class DashboardBuilderTest extends TestCase
     public function testAPositionOfferedToAnotherLevelDoesNotCountAsSupply(): void
     {
         $this->stay('s', -5, 85, [$this->daw]);
-        $this->student('s', 'd1', $this->daw, level: 'daw-1');
+        $this->student('s', 'd1', $this->daw);
         $this->position('free1', 's', null, levels: ['daw-2']);
 
         $view = $this->build($this->scope('diego', manage: [$this->daw]));
@@ -579,6 +579,8 @@ class DashboardBuilderTest extends TestCase
             $this->today->modify(\sprintf('%+d days', $startOffset)),
             $this->today->modify(\sprintf('%+d days', $endOffset)),
             $calculateByTeacher,
+            // Cada enseñanza de prueba aporta su nivel por defecto («lvl-<enseñanza>»).
+            array_map(static fn (ProgrammeRef $p): string => 'lvl-' . $p->id, $programmes),
         );
     }
 
@@ -637,7 +639,15 @@ class DashboardBuilderTest extends TestCase
             $manageMap[$p->id] = $p->name;
         }
 
-        return new ScopeFacts($userId, $admin, $manageMap, array_map(static fn (ProgrammeRef $p): string => $p->id, $headed), [], []);
+        return new ScopeFacts(
+            $userId,
+            $admin,
+            $manageMap,
+            array_map(static fn (ProgrammeRef $p): string => $p->id, $headed),
+            [],
+            [],
+            array_map(static fn (ProgrammeRef $p): string => 'lvl-' . $p->id, $manage),
+        );
     }
 
     private function build(ScopeFacts $scope, ?AttentionThresholds $thresholds = null, string $funnelMode = DashboardBuilder::FUNNEL_ACTIVE): DashboardView

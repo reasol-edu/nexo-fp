@@ -6,7 +6,10 @@ namespace App\Dashboard\Facts;
 
 final readonly class StayFacts
 {
-    /** @param list<ProgrammeRef> $programmes */
+    /**
+     * @param list<ProgrammeRef> $programmes enseñanzas de la estancia (las de sus niveles)
+     * @param list<string>       $levelIds   niveles que participan en la estancia
+     */
     public function __construct(
         public string $id,
         public string $name,
@@ -14,6 +17,7 @@ final readonly class StayFacts
         public \DateTimeImmutable $start,
         public \DateTimeImmutable $end,
         public bool $calculateByTeacher,
+        public array $levelIds = [],
     ) {}
 
     /** @return list<string> */

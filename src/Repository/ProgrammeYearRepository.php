@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\AcademicYear;
 use App\Entity\Programme;
 use App\Entity\ProgrammeYear;
 use App\Entity\Stay;
+use App\Entity\Teacher;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -99,6 +101,68 @@ class ProgrammeYearRepository extends ServiceEntityRepository
             ->addOrderBy('py.name', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Niveles del curso que el docente coordina o cuya familia profesional dirige (una consulta), con su
+     * enseñanza. Es lo que decide qué gestiona en el inicio: la gestión es por nivel.
+     *
+     * @return list<array{level: mixed, programme: mixed, name: string, headed: bool}>
+     */
+    public function findManagedByTeacherInYear(AcademicYear $year, Teacher $teacher): array
+    {
+        /** @var list<array{level: mixed, programme: mixed, name: string, headed: mixed}> $rows */
+        $rows = $this->createQueryBuilder('py')
+            ->select('DISTINCT py.id AS level', 'p.id AS programme', 'p.name AS name', 'CASE WHEN f.head = :teacher THEN 1 ELSE 0 END AS headed')
+            ->join('py.programme', 'p')
+            ->join('p.professionalFamily', 'f')
+            ->leftJoin('py.coordinators', 'c')
+            ->where('p.academicYear = :year')
+            ->andWhere('c.id = :teacher OR f.head = :teacher')
+            ->setParameter('year', $year->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $r): array => ['level' => $r['level'], 'programme' => $r['programme'], 'name' => $r['name'], 'headed' => (int) $r['headed'] === 1], $rows);
+    }
+
+    /**
+     * Niveles de la estancia que el docente coordina.
+     *
+     * @return list<ProgrammeYear>
+     */
+    public function findCoordinatedByInStay(Teacher $teacher, Stay $stay): array
+    {
+        /** @var list<ProgrammeYear> $levels */
+        $levels = $this->getEntityManager()->createQuery(
+            'SELECT py FROM ' . ProgrammeYear::class . ' py JOIN py.coordinators c'
+            . ' WHERE c.id = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy = py)'
+        )
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getResult();
+
+        return $levels;
+    }
+
+    /**
+     * Niveles de la estancia cuya familia profesional dirige el docente.
+     *
+     * @return list<ProgrammeYear>
+     */
+    public function findHeadedByInStay(Teacher $teacher, Stay $stay): array
+    {
+        /** @var list<ProgrammeYear> $levels */
+        $levels = $this->getEntityManager()->createQuery(
+            'SELECT py FROM ' . ProgrammeYear::class . ' py JOIN py.programme p JOIN p.professionalFamily f'
+            . ' WHERE f.head = :teacher AND EXISTS(SELECT 1 FROM ' . Stay::class . ' s JOIN s.programmeYears sy WHERE s.id = :stay AND sy = py)'
+        )
+            ->setParameter('stay', $stay->getId(), 'uuid')
+            ->setParameter('teacher', $teacher->getId(), 'uuid')
+            ->getResult();
+
+        return $levels;
     }
 
     /** Un nivel por id, siempre que forme parte de la estancia. */

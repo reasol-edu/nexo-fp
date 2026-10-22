@@ -21,6 +21,7 @@ use App\Repository\CompanyRepository;
 use App\Repository\GroupRepository;
 use App\Repository\ProfessionalFamilyRepository;
 use App\Repository\ProgrammeRepository;
+use App\Repository\ProgrammeYearRepository;
 use App\Security\StayScope;
 use App\Security\Voter\PositionAssignment;
 use App\Security\Voter\StayVoter;
@@ -39,6 +40,7 @@ use Symfony\Component\Uid\Uuid;
 class StayVoterTest extends TestCase
 {
     private ProgrammeRepository&MockObject $programmes;
+    private ProgrammeYearRepository&MockObject $levels;
     private ProfessionalFamilyRepository&MockObject $families;
     private GroupRepository&MockObject $groups;
     private CompanyRepository&MockObject $companies;
@@ -47,6 +49,7 @@ class StayVoterTest extends TestCase
     protected function setUp(): void
     {
         $this->programmes = $this->createMock(ProgrammeRepository::class);
+        $this->levels     = $this->createMock(ProgrammeYearRepository::class);
         $this->families   = $this->createMock(ProfessionalFamilyRepository::class);
         $this->groups     = $this->createMock(GroupRepository::class);
         $this->companies  = $this->createMock(CompanyRepository::class);
@@ -54,7 +57,7 @@ class StayVoterTest extends TestCase
             $this->programmes,
             $this->groups,
             $this->companies,
-            new StayScope($this->programmes),
+            new StayScope($this->levels),
             $this->families,
         );
     }
@@ -130,7 +133,7 @@ class StayVoterTest extends TestCase
         $stay    = $this->stay();
         $stay->getAcademicYear()->getEducationalCentre()->addAdmin($teacher);
 
-        $this->programmes->expects($this->never())->method('findCoordinatedByInStay');
+        $this->levels->expects($this->never())->method('findCoordinatedByInStay');
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($this->token($teacher), $stay, [StayVoter::VIEW]));
     }
@@ -146,7 +149,7 @@ class StayVoterTest extends TestCase
     public function testViewGrantedToFamilyHead(): void
     {
         $stay = $this->stay();
-        $this->programmes->method('findHeadedByInStay')->willReturn([$stay->getProgrammesSorted()[0]]);
+        $this->levels->method('findHeadedByInStay')->willReturn($stay->getProgrammesSorted()[0]->getProgrammeYears()->toArray());
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voter->vote($this->token($this->teacher()), $stay, [StayVoter::VIEW]));
     }
@@ -319,7 +322,7 @@ class StayVoterTest extends TestCase
     {
         [$stay, $dawStudent] = $this->twoProgrammeStayWithStudents();
         $position = $this->position($stay, $this->company());
-        $this->programmes->method('findHeadedByInStay')->willReturn([$stay->getProgrammesSorted()[1]]);
+        $this->levels->method('findHeadedByInStay')->willReturn($stay->getProgrammesSorted()[1]->getProgrammeYears()->toArray());
 
         $result = $this->voter->vote($this->token($this->teacher()), new PositionAssignment($position, $dawStudent), [StayVoter::ASSIGN]);
 
@@ -405,7 +408,11 @@ class StayVoterTest extends TestCase
     /** El docente de la prueba coordina estas enseñanzas de la estancia. */
     private function coordinates(Programme ...$programmes): void
     {
-        $this->programmes->method('findCoordinatedByInStay')->willReturn(array_values($programmes));
+        $levels = [];
+        foreach ($programmes as $programme) {
+            array_push($levels, ...$programme->getProgrammeYears()->toArray());
+        }
+        $this->levels->method('findCoordinatedByInStay')->willReturn($levels);
     }
 
     private function teacher(bool $admin = false): Teacher
