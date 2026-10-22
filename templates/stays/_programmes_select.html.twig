@@ -83,9 +83,9 @@ const ts = new TomSelect(el, {
     // Los niveles con alumnado o puestos no se pueden quitar de la estancia
     onDelete:           (values) => !values.some(v => locked.includes(String(v))),
     render: {
-        optgroup_header: (d, esc) => `<div class="optgroup-header flex items-center justify-between gap-2">`
-            + `<span><span class="font-semibold">${esc(d.label)}</span>${d.family ? ` <span class="text-gray-400 font-normal">· ${esc(d.family)}</span>` : ''}</span>`
-            + `<button type="button" data-select-group="${esc(d.id)}" class="rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-plum-700 hover:bg-plum-50">${esc(allLabel)}</button>`
+        optgroup_header: (d, esc) => `<div class="optgroup-header flex items-center justify-between gap-3">`
+            + `<span class="min-w-0"><span class="block font-semibold normal-case tracking-normal text-gray-800">${esc(d.label)}</span>${d.family ? `<span class="block text-[11px] font-normal normal-case tracking-normal text-gray-400">${esc(d.family)}</span>` : ''}</span>`
+            + `<button type="button" data-select-group="${esc(d.id)}" class="shrink-0 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium normal-case tracking-normal text-plum-700 hover:bg-plum-50">${esc(allLabel)}</button>`
             + `</div>`,
         option:     (d, esc) => `<div class="py-0.5">${esc(d.text)}</div>`,
         item:       (d, esc) => `<div>${esc(optgroupLabel(d))} · ${esc(d.text)}</div>`,

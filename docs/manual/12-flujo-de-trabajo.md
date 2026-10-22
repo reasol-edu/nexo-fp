@@ -25,10 +25,13 @@ Antes de crear puestos, el personal con acceso a **Empresas** registra:
 Una **estancia** agrupa un conjunto de puestos formativos de una o varias enseñanzas dentro de un periodo
 concreto (por ejemplo, «DAW y DAM - 2.º curso, marzo-mayo 2027»).
 
-1. En **Estancias → Nueva estancia**, se seleccionan las **enseñanzas** (una o varias) y se define el nombre
-   y las fechas.
+1. En **Estancias → Nueva estancia**, se seleccionan los **niveles** (uno o varios, de una o varias
+   enseñanzas: por ejemplo, solo 2.º DAW) y se define el nombre y las fechas. Cada enseñanza ofrece un
+   botón **Toda la enseñanza** para marcar de una vez todos sus niveles.
+
+   ![Selector de niveles agrupados por enseñanza, con «Toda la enseñanza»](img/estancia-nueva-niveles.png)
 2. Dentro de la estancia, se añaden los **puestos formativos**: para cada puesto se indica el centro de
-   trabajo y los **niveles** a los que se oferta, que pueden ser de cualquiera de las enseñanzas de la
+   trabajo y los **niveles** a los que se oferta, que pueden ser de cualquiera de los niveles de la
    estancia (así una empresa puede ofrecer un mismo puesto a alumnado de DAW y de DAM).
 3. Cada coordinación inscribe a sus **estudiantes** en la estancia para que puedan asignarse a los puestos.
 
@@ -51,16 +54,16 @@ tutores ni preferencia).
   disponible para cualquier otro estudiante, sea o no de la misma enseñanza. Si dos coordinaciones lo
   intentan a la vez, la segunda recibe un aviso con el nombre de quien se ha adelantado y no se pierde
   nada. Las coordinaciones de las demás enseñanzas a las que se ofertaba el puesto reciben un correo.
-- **Preferencia temporal**: al crear o editar un puesto compartido se puede indicar una **enseñanza
+- **Preferencia temporal**: al crear o editar un puesto compartido se puede indicar un **nivel
   preferente** y una fecha límite (inclusive). Hasta esa fecha el puesto solo se puede asignar a alumnado
-  de esa enseñanza; después se abre a todas las demás a las que se oferta.
+  de ese nivel; después se abre a todos los demás a los que se oferta.
 - **Reparto por enseñanza**: un panel resume, para cada enseñanza, cuántos estudiantes tiene, cuántos sin
-  puesto y cuántos puestos libres puede ocupar (separando los reservados a otra enseñanza).
+  puesto y cuántos puestos libres puede ocupar (separando los reservados a otro nivel).
 - Solo se puede asignar un puesto a un estudiante si está ofertado a su nivel.
 
 ![Formulario de nuevo puesto con niveles agrupados por enseñanza y preferencia temporal](img/puesto-preferencia.png)
 
-- Una enseñanza con alumnado inscrito o con puestos ofertados no se puede quitar de la estancia.
+- Un nivel con alumnado inscrito o con puestos ofertados no se puede quitar de la estancia.
 
 ![Listado de estancias con filtros por familia, enseñanza y período](img/estancias.png)
 

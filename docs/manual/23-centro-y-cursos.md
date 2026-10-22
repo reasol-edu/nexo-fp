@@ -37,9 +37,19 @@ grupos. Cada nueva columna se va rellenando sin recargar la página, y un buscad
 familias en ofertas grandes.
 
 El elemento seleccionado se **edita en el mismo panel**, sin pasar a otra pantalla: su nombre, sus
-observaciones y el personal asociado (responsable de familia, coordinadores/as de la enseñanza y
+observaciones y el personal asociado (responsable de familia, coordinadores/as de FP dual y
 tutores/as y docentes de cada grupo). Los cambios de personal se guardan al instante; el resto se
 confirma con **Guardar cambios**.
+
+La coordinación de FP dual se asigna **por nivel**: en el panel de un nivel se eligen quienes lo
+coordinan (por ejemplo, solo 2.º DAW).
+
+![Panel de un nivel con sus coordinadores/as de FP dual](img/oferta-coordinacion-nivel.png)
+
+El panel de la **enseñanza** funciona como atajo: los coordinadores/as que se indican ahí se asignan a
+todos sus niveles de una vez.
+
+![Panel de una enseñanza con el atajo de coordinación para todos sus niveles](img/oferta-coordinacion-ensenanza.png)
 
 ### Exportar e importar la oferta formativa
 
@@ -47,7 +57,7 @@ Desde la página principal de **Oferta formativa** están disponibles dos accion
 
 - **Exportar JSON** — descarga un fichero `.json` con toda la estructura del curso activo: familias
   profesionales, enseñanzas, niveles, grupos y los nombres de usuario de los docentes asignados
-  (responsable de familia, coordinadores de enseñanza, docentes y tutores de cada grupo).
+  (responsable de familia, coordinadores de cada nivel, docentes y tutores de cada grupo).
 - **Importar JSON** — carga un fichero exportado previamente y crea o actualiza la estructura en el
   curso activo del centro. Si una familia, enseñanza, nivel o grupo con el mismo nombre ya existe, se
   actualiza (no se duplica). Los docentes se buscan por nombre de usuario; si alguno no existe en el

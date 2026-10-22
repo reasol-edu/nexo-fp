@@ -55,7 +55,7 @@ Términos que se usan a lo largo del manual y dentro de la aplicación.
 |---------|-------------|
 | **Administrador/a global** | Acceso completo a todos los centros y a la sección de Administración. |
 | **Administrador/a de centro** | Responsable de un centro concreto (normalmente el equipo directivo). |
-| **Coordinador/a de FP dual** | Gestiona las estancias y puestos de las enseñanzas que coordina y, en una estancia con varias enseñanzas, asigna puestos solo a su propio alumnado. |
+| **Coordinador/a de FP dual** | Gestiona las estancias y puestos de los niveles que coordina (uno, varios o todos los de una enseñanza) y, en una estancia con varios niveles, asigna puestos solo a su propio alumnado. |
 | **Jefe/a de departamento de familia profesional** | Gestiona las estancias de las enseñanzas de su familia. |
 | **Docente de enlace** | Docente asignado a una o varias empresas; prepara puestos sin estudiante asignado. |
 | **Tutor/a de grupo / Docente de grupo** | Consulta las estancias de su enseñanza y los puestos de su alumnado. |

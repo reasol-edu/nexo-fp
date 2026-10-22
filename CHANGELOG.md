@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- La coordinación de FP dual se asigna por nivel: se puede coordinar solo 2.º de una enseñanza. En la oferta formativa, el panel de la enseñanza sigue ofreciendo un atajo para asignar a todos sus niveles de una vez.
+- Una estancia se compone de niveles sueltos (por ejemplo, solo 2.º DAW). El formulario los ofrece agrupados por enseñanza, con un botón «Toda la enseñanza».
+- Los listados, fichas, informes y avisos muestran enseñanza y nivel («2.º DAW» o «DAW (1.º y 2.º)»).
+
+### Changed
+
+- Los permisos de las estancias (gestión del alumnado, de los puestos libres y asignados, edición de la ficha y eliminación) se deciden por nivel y no por enseñanza.
+- La preferencia temporal de un puesto pasa de «enseñanza preferente» a «nivel preferente». La migración conserva un único nivel por puesto: si la enseñanza preferente tenía varios, se queda con el primero.
+- La exportación JSON de la oferta formativa incluye los coordinadores de cada nivel.
+- La migración se detiene con un aviso si alguna enseñanza con coordinadores o estancias no tiene niveles, porque no hay a qué asignarlos.
+
 ## [2.19.1] - 2026-10-22
 
 ### Security

@@ -29,19 +29,22 @@ estancias. No tiene acceso a la sección de administración global.
 
 ### Coordinador/a de FP dual
 
-Docente asignado como coordinador/a de una o varias enseñanzas. Tiene acceso a la sección **Empresas**
-(ver y editar todas las empresas del centro) y puede crear, modificar y eliminar estancias de las
-enseñanzas que coordina, así como gestionar sus puestos formativos y las asignaciones de estudiantes y
-tutores. Una estancia puede reunir **varias enseñanzas**: al crearla, el coordinador/a debe poder crearla
-para al menos una de las que elige, pero puede añadir otras para compartir puestos con sus compañeros.
+Docente asignado como coordinador/a de uno o varios **niveles** (por ejemplo, solo 2.º de una enseñanza, o
+todos los niveles de un ciclo: en la oferta formativa, el panel de la enseñanza es un atajo para asignarla a
+todos sus niveles de una vez). Tiene acceso a la sección **Empresas** (ver y editar todas las empresas del
+centro) y puede crear, modificar y eliminar estancias de los niveles que coordina, así como gestionar sus
+puestos formativos y las asignaciones de estudiantes y tutores. Una estancia reúne los **niveles** que se
+elijan, de una o de varias enseñanzas: al crearla, el coordinador/a debe poder crearla para al menos uno de
+los que elige, pero puede añadir otros para compartir puestos con sus compañeros.
 
-En una estancia con varias enseñanzas, cada coordinación **gestiona solo a su alumnado** (matricularlo,
-asignarle puesto, designar sus tutores), mientras que **ve** todo el alumnado de la estancia y todas las
-asignaciones, aunque no sean suyas. Los puestos **libres** son
-compartidos: cualquier coordinación de la estancia puede crearlos, editarlos o eliminarlos (se avisa por
-correo a las demás coordinaciones a las que se ofertaban); un puesto **asignado** solo lo gestiona la
-coordinación del estudiante. Por último, una estancia solo se puede **eliminar** quien gestiona todas sus
-enseñanzas.
+En una estancia con varios niveles de coordinaciones distintas, cada coordinación **gestiona solo a los
+estudiantes de sus niveles** (matricularlos, asignarles puesto, designar sus tutores, editar su ficha),
+mientras que **ve** todo el alumnado de la estancia y todas las asignaciones, aunque no sean suyas. Quien
+coordina solo 2.º de una enseñanza no gestiona a los de 1.º, aunque esa enseñanza participe en la estancia.
+Los puestos **libres** son compartidos: cualquier coordinación de la estancia puede crearlos, editarlos o
+eliminarlos (se avisa por correo a las coordinaciones de los demás niveles a los que se ofertaban); un
+puesto **asignado** solo lo gestiona la coordinación del nivel del estudiante. Por último, una estancia solo
+se puede **eliminar** quien gestiona todos sus niveles.
 
 ### Jefe/a de departamento de familia profesional
 
@@ -75,7 +78,7 @@ Educativo.
 ## Tabla de permisos
 
 Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es parcial se indica el
-ámbito: **«Su familia prof.»** = estancias o enseñanzas de su familia profesional; **«Sus enseñanzas»**
+ámbito: **«Su familia prof.»** = estancias o enseñanzas de su familia profesional; **«Sus niveles»**
 = las que coordina; **«Sus empresas»** = las que tiene asignadas como enlace.
 
 | Abrev. | Rol |
@@ -104,16 +107,16 @@ Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es
 
 | Acción | ADM | ED | JFP | CFD | DE | TG | D |
 |--------|:---:|:--:|:---:|:---:|:--:|:--:|:-:|
-| Ver estancias | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
-| Ver puestos sin asignar | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
-| Crear estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁵ | ❌ | ❌ | ❌ |
-| Editar estancia | ✅ | ✅ | Su familia prof. | Sus enseñanzas | ❌ | ❌ | ❌ |
-| Eliminar estancia | ✅ | ✅ | Su familia prof.⁶ | Sus enseñanzas⁶ | ❌ | ❌ | ❌ |
-| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | ❌ | ❌ |
-| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁷ | Sus empresas³⁴ | ❌ | ❌ |
-| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus enseñanzas⁷ | ❌ | ❌ | ❌ |
+| Ver estancias | ✅ | ✅ | Su familia prof. | Sus niveles | Sus empresas³ | Sus niveles | ❌ |
+| Ver puestos sin asignar | ✅ | ✅ | Su familia prof. | Sus niveles | Sus empresas³ | ❌ | ❌ |
+| Crear estancia | ✅ | ✅ | Su familia prof. | Sus niveles⁵ | ❌ | ❌ | ❌ |
+| Editar estancia | ✅ | ✅ | Su familia prof. | Sus niveles | ❌ | ❌ | ❌ |
+| Eliminar estancia | ✅ | ✅ | Su familia prof.⁶ | Sus niveles⁶ | ❌ | ❌ | ❌ |
+| Añadir puestos formativos | ✅ | ✅ | Su familia prof. | Sus niveles | Sus empresas³ | ❌ | ❌ |
+| Editar / eliminar puestos formativos | ✅ | ✅ | Su familia prof. | Sus niveles⁷ | Sus empresas³⁴ | ❌ | ❌ |
+| Inscribir / retirar estudiantes | ✅ | ✅ | Su familia prof. | Sus niveles⁷ | ❌ | ❌ | ❌ |
 | Asignar un puesto a un estudiante | ✅ | ✅ | Su familia prof.⁷ | Sus estudiantes⁷ | Sus empresas³⁴ | ❌ | ❌ |
-| Descargar informe PDF / exportar a Excel | ✅ | ✅ | Su familia prof. | Sus enseñanzas | Sus empresas³ | Sus enseñanzas | ❌ |
+| Descargar informe PDF / exportar a Excel | ✅ | ✅ | Su familia prof. | Sus niveles | Sus empresas³ | Sus niveles | ❌ |
 
 ### Empresas
 
@@ -148,7 +151,7 @@ Las celdas con ✅ indican acceso completo; ❌, sin acceso. Cuando el acceso es
 ³ Solo estancias/puestos donde intervienen sus empresas asignadas.
 ⁴ Solo puestos sin estudiante asignado. Los puestos con estudiante asignado no pueden ser modificados ni
 eliminados por el docente de enlace.
-⁵ Puede incluir además enseñanzas de otras coordinaciones, siempre que al menos una sea suya.
-⁶ En una estancia con varias enseñanzas, solo si gestiona **todas** ellas.
-⁷ En una estancia con varias enseñanzas, solo respecto al alumnado de las enseñanzas que gestiona; los
+⁵ Puede incluir además niveles de otras coordinaciones, siempre que al menos uno sea suyo.
+⁶ En una estancia con varias coordinaciones, solo si gestiona **todos** sus niveles.
+⁷ En una estancia con varias coordinaciones, solo respecto al alumnado de los niveles que gestiona; los
 puestos libres, al ser compartidos, los puede gestionar cualquier coordinación de la estancia.

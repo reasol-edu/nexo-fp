@@ -154,6 +154,11 @@ const SHOTS = [
   { name: 'revision-datos', group: 'manual', out: `${M}/revision-datos.png`, size: [1440, 900, 1], steps: [go('/mi-centro/revision-datos'), wait(800)] },
   { name: 'oferta-formativa', group: 'manual', out: `${M}/oferta-formativa.png`, size: [1440, 900, 1],
     steps: [drill('selectFamily', 'selectProgramme', 'selectLevel', 'selectGroup'), wait(500)] },
+  // La coordinación dual se asigna por nivel; el panel de la enseñanza es el atajo para todos sus niveles.
+  { name: 'oferta-coordinacion-nivel', group: 'manual', out: `${M}/oferta-coordinacion-nivel.png`, size: [1440, 1000, 1],
+    steps: [drill('selectFamily', 'selectProgramme', 'selectLevel'), wait(600)] },
+  { name: 'oferta-coordinacion-ensenanza', group: 'manual', out: `${M}/oferta-coordinacion-ensenanza.png`, size: [1440, 1000, 1],
+    steps: [drill('selectFamily', 'selectProgramme'), wait(600)] },
   { name: 'docentes-importar-vista-previa', group: 'manual', out: `${M}/docentes-importar-vista-previa.png`, size: [1440, 900, 1], full: true,
     steps: [teacherImportPreview(true), wait(400)] },
   { name: 'administracion', group: 'manual', out: `${M}/administracion.png`, size: [1440, 900, 1], steps: [go('/admin'), wait(800)] },
@@ -182,8 +187,8 @@ const SHOTS = [
   { name: 'slide-estancia-nueva', group: 'slides', out: `${S}/09_estancia_nueva.png`, size: [592, 450, 2], user: 'diego.romero',
     steps: [go('/estancias/nueva'), wait(800), async ({ page }) => {
       await page.evaluate(() => {
-        const el = document.getElementById('programme_ids');
-        el.tomselect.setValue([...el.options].filter((o) => /Aplicaciones Web|Microinform/.test(o.textContent)).map((o) => o.value));
+        const el = document.getElementById('programme_year_ids');
+        el.tomselect.setValue([...el.options].filter((o) => /2\.º (DAW|SMR)/.test(o.textContent)).map((o) => o.value));
         document.querySelector('input[name="name"]').value = 'FFEOE DAW + SMR (compartida)';
       });
     }] },
@@ -224,6 +229,14 @@ const SHOTS = [
   // Tarjetas del móvil (390 px) a tamaño real: barra de búsqueda, grupo y primeras tarjetas.
   { name: 'movil-tarjetas', group: 'responsive', out: 'var/screenshots/responsive/movil-tarjetas.png', size: [390, 1900, 1], region: { x: 0, y: 560, width: 390, height: 1300 },
     steps: [openStay(DAW_STAY), wait(1500)] },
+  // Formulario de nueva estancia con el desplegable de niveles abierto: agrupados por enseñanza y «Toda la enseñanza».
+  { name: 'estancia-nueva-niveles', group: 'manual', out: `${M}/estancia-nueva-niveles.png`, size: [1440, 900, 1], keepDropdown: true,
+    steps: [go('/estancias/nueva'), wait(800), async ({ page }) => {
+      await page.evaluate(() => { document.getElementById('programme_year_ids').tomselect.setValue([]); });
+      await page.locator('.ts-wrapper').first().click();
+      await page.waitForSelector('.ts-dropdown .optgroup-header');
+      await page.waitForTimeout(400);
+    }] },
   // Barra de búsqueda y cabecera fijas tras hacer scroll, con un grupo plegado y una búsqueda activa.
   { name: 'barra-fija', group: 'responsive', out: 'var/screenshots/responsive/barra-fija.png', size: [1280, 800, 1], keepScroll: true,
     steps: [openStay(DAW_STAY), wait(1200), async ({ page }) => {

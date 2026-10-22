@@ -174,6 +174,29 @@ const TESTS = [
     },
   },
   {
+    name: 'nueva estancia: niveles agrupados por enseñanza y «Toda la enseñanza» marca los de un grupo',
+    run: async (page) => {
+      await page.goto(`${BASE}/estancias/nueva`, { waitUntil: 'networkidle' });
+      assert(await page.locator('#programme_year_ids').count() === 1, 'debería haber un selector de niveles');
+      const groups = await page.evaluate(() => {
+        const el = document.getElementById('programme_year_ids');
+        return Array.from(el.querySelectorAll('optgroup')).map((og) => ({ label: og.label, levels: og.querySelectorAll('option').length }));
+      });
+      assert(groups.length > 1, 'los niveles deberían ir agrupados por enseñanza');
+      assert(groups.every((g) => g.levels >= 1), 'cada enseñanza ofrece sus niveles');
+
+      // Abre el desplegable y pulsa «Toda la enseñanza» del primer grupo con varios niveles
+      const target = groups.findIndex((g) => g.levels > 1);
+      assert(target >= 0, 'alguna enseñanza debería tener más de un nivel');
+      await page.locator('.ts-wrapper').first().click();
+      const button = page.locator(`.ts-dropdown [data-select-group="${target}"]`);
+      await button.waitFor({ state: 'visible', timeout: 3000 });
+      await button.click();
+      const chosen = await page.evaluate(() => document.getElementById('programme_year_ids').tomselect.items.length);
+      assert(chosen === groups[target].levels, `«Toda la enseñanza» debería marcar sus ${groups[target].levels} niveles (marcados: ${chosen})`);
+    },
+  },
+  {
     name: 'menú «⋯» del estado: se abre, ofrece volver a borrador y Escape lo cierra',
     run: async (page) => {
       await openStay(page, DAW_STAY);
