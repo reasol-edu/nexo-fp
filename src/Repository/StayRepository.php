@@ -877,7 +877,7 @@ class StayRepository extends ServiceEntityRepository
      * @return list<array{
      *     id: mixed, stay: mixed, state: mixed, signed: bool, student: mixed, tutor: mixed, mentor: mixed,
      *     workcenter: mixed, company: mixed, startDate: ?\DateTimeImmutable, endDate: ?\DateTimeImmutable,
-     *     priorityUntil: ?\DateTimeImmutable, priorityProgramme: mixed
+     *     priorityUntil: ?\DateTimeImmutable, priorityLevel: mixed
      * }>
      */
     public function findDashboardPositionRows(AcademicYear $year, Teacher $viewer): array
@@ -896,7 +896,7 @@ class StayRepository extends ServiceEntityRepository
                 'tp.startDate AS startDate',
                 'tp.endDate AS endDate',
                 'tp.priorityUntil AS priorityUntil',
-                'pp.id AS priorityProgramme',
+                'pl.id AS priorityLevel',
             )
             ->from(Stay::class, 's')
             ->join('s.trainingPositions', 'tp')
@@ -905,12 +905,12 @@ class StayRepository extends ServiceEntityRepository
             ->leftJoin('tp.workplaceMentor', 'wm')
             ->leftJoin('tp.workcenter', 'wc')
             ->leftJoin('wc.company', 'co')
-            ->leftJoin('tp.priorityProgramme', 'pp')
+            ->leftJoin('tp.priorityProgrammeYear', 'pl')
             ->where('s.academicYear = :year')
             ->setParameter('year', $year->getId(), 'uuid');
         $this->addViewerFilter($qb, $viewer, true);
 
-        /** @var list<array{id: mixed, stay: mixed, state: mixed, signed: bool, student: mixed, tutor: mixed, mentor: mixed, workcenter: mixed, company: mixed, startDate: ?\DateTimeImmutable, endDate: ?\DateTimeImmutable, priorityUntil: ?\DateTimeImmutable, priorityProgramme: mixed}> $rows */
+        /** @var list<array{id: mixed, stay: mixed, state: mixed, signed: bool, student: mixed, tutor: mixed, mentor: mixed, workcenter: mixed, company: mixed, startDate: ?\DateTimeImmutable, endDate: ?\DateTimeImmutable, priorityUntil: ?\DateTimeImmutable, priorityLevel: mixed}> $rows */
         $rows = $qb->getQuery()->getResult();
 
         return $rows;

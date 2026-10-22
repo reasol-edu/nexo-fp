@@ -234,7 +234,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('input[value="' . $s['dawLevel']->getId()->toRfc4122() . '"]'));
         self::assertCount(1, $crawler->filter('input[value="' . $s['damLevel']->getId()->toRfc4122() . '"]'));
-        self::assertSelectorExists('select[name="priority_programme_id"]');
+        self::assertSelectorExists('select[name="priority_programme_year_id"]');
         $token = $crawler->filter('[name="_token"]')->first()->attr('value');
 
         $this->client->request('POST', '/estancias/' . $stayId . '/nuevo-puesto', [
@@ -250,7 +250,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $created = $this->em->getRepository(TrainingPosition::class)->findOneBy(['details' => 'Puesto compartido']);
         self::assertNotNull($created);
         self::assertCount(2, $created->getProgrammeYears());
-        self::assertNull($created->getPriorityProgramme());
+        self::assertNull($created->getPriorityProgrammeYear());
     }
 
     public function testNewPositionStoresPriorityForOneOfTheOfferedProgrammes(): void
@@ -266,7 +266,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
             '_token'                => $token,
             'workcenter_id'         => $s['workcenter']->getId()->toRfc4122(),
             'programme_year_ids'    => [$s['dawLevel']->getId()->toRfc4122(), $s['damLevel']->getId()->toRfc4122()],
-            'priority_programme_id' => $s['daw']->getId()->toRfc4122(),
+            'priority_programme_year_id' => $s['dawLevel']->getId()->toRfc4122(),
             'priority_until'        => '2025-04-15',
             'details'               => 'Con preferencia',
             'count'                 => '1',
@@ -275,7 +275,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         self::assertResponseRedirects();
         $this->em->clear();
         $created = $this->em->getRepository(TrainingPosition::class)->findOneBy(['details' => 'Con preferencia']);
-        self::assertSame('DAW', $created->getPriorityProgramme()?->getName());
+        self::assertSame('2.º DAW', $created->getPriorityProgrammeYear()?->getName());
         self::assertSame('2025-04-15', $created->getPriorityUntil()?->format('Y-m-d'));
     }
 
@@ -293,13 +293,13 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
             '_token'                => $token,
             'workcenter_id'         => $s['workcenter']->getId()->toRfc4122(),
             'programme_year_ids'    => [$s['dawLevel']->getId()->toRfc4122()],
-            'priority_programme_id' => $s['dam']->getId()->toRfc4122(),
+            'priority_programme_year_id' => $s['damLevel']->getId()->toRfc4122(),
             'priority_until'        => '2025-04-15',
             'count'                 => '1',
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'La enseñanza preferente debe ser una de las enseñanzas a las que se oferta el puesto.');
+        self::assertSelectorTextContains('body', 'El nivel preferente debe ser uno de los niveles a los que se oferta el puesto.');
     }
 
     public function testNewPositionRequiresADateWhenAPriorityProgrammeIsChosen(): void
@@ -315,12 +315,12 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
             '_token'                => $token,
             'workcenter_id'         => $s['workcenter']->getId()->toRfc4122(),
             'programme_year_ids'    => [$s['dawLevel']->getId()->toRfc4122(), $s['damLevel']->getId()->toRfc4122()],
-            'priority_programme_id' => $s['daw']->getId()->toRfc4122(),
+            'priority_programme_year_id' => $s['dawLevel']->getId()->toRfc4122(),
             'count'                 => '1',
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Indica hasta qué fecha (inclusive) tiene preferencia esa enseñanza.');
+        self::assertSelectorTextContains('body', 'Indica hasta qué fecha (inclusive) tiene preferencia ese nivel.');
     }
 
     public function testEditPositionOffersOnlyOwnStudentsToCoordinator(): void
@@ -413,7 +413,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
     public function testEditPositionRejectsAStudentOfAnotherProgrammeWhileItHasPriority(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['dam'], new \DateTimeImmutable('+10 days'));
+        $s['shared']->setPriority($s['damLevel'],new \DateTimeImmutable('+10 days'));
         $this->flush();
         $this->loginAs($s['coordDaw'], $s['centre']);
         $stayId     = $s['stay']->getId()->toRfc4122();
@@ -427,14 +427,14 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
             'version'               => (string) $s['shared']->getVersion(),
             'workcenter_id'         => $s['workcenter']->getId()->toRfc4122(),
             'programme_year_ids'    => [$s['dawLevel']->getId()->toRfc4122(), $s['damLevel']->getId()->toRfc4122()],
-            'priority_programme_id' => $s['dam']->getId()->toRfc4122(),
+            'priority_programme_year_id' => $s['damLevel']->getId()->toRfc4122(),
             'priority_until'        => (new \DateTimeImmutable('+10 days'))->format('Y-m-d'),
             'student_id'            => $s['dawStudent']->getId()->toRfc4122(),
             'state'                 => 'DRAFT',
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'Ese puesto tiene preferencia para otra enseñanza hasta la fecha indicada.');
+        self::assertSelectorTextContains('body', 'Ese puesto tiene preferencia para otro nivel hasta la fecha indicada.');
     }
 
     public function testCoordinatorCannotEditAnotherProgrammesAssignedPosition(): void
@@ -470,7 +470,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
     public function testDuplicatePositionKeepsPriority(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['daw'], new \DateTimeImmutable('2025-04-15'));
+        $s['shared']->setPriority($s['dawLevel'],new \DateTimeImmutable('2025-04-15'));
         $this->flush();
         $this->loginAs($s['coordDaw'], $s['centre']);
         $stayId     = $s['stay']->getId()->toRfc4122();
@@ -484,7 +484,7 @@ class StayMultiProgrammeControllerTest extends ControllerTestCase
         $this->em->clear();
         $copies = array_filter(
             $this->em->getRepository(TrainingPosition::class)->findAll(),
-            static fn (TrainingPosition $p): bool => $p->getPriorityProgramme() !== null,
+            static fn (TrainingPosition $p): bool => $p->getPriorityProgrammeYear() !== null,
         );
         self::assertCount(2, $copies);
     }

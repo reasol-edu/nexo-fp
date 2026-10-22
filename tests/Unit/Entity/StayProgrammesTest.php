@@ -165,9 +165,9 @@ class StayProgrammesTest extends TestCase
 
     public function testPriorityReservesThePositionAgainstOtherProgrammesUntilTheDateInclusive(): void
     {
-        [$stay, $daw, , $dawStudent, $damStudent, $dawLevel, $damLevel] = $this->twoProgrammeStay();
+        [$stay, , , $dawStudent, $damStudent, $dawLevel, $damLevel] = $this->twoProgrammeStay();
         $position = (new TrainingPosition())->setStay($stay)->addProgrammeYear($dawLevel)->addProgrammeYear($damLevel)
-            ->setPriority($daw, new \DateTimeImmutable('2025-04-15'));
+            ->setPriority($dawLevel, new \DateTimeImmutable('2025-04-15'));
 
         $before = new \DateTimeImmutable('2025-04-01 10:00');
         $lastDay = new \DateTimeImmutable('2025-04-15 23:59');
@@ -181,38 +181,54 @@ class StayProgrammesTest extends TestCase
         self::assertFalse($position->hasActivePriority($after));
     }
 
-    public function testPriorityNeedsBothProgrammeAndDate(): void
+    public function testPriorityNeedsBothLevelAndDate(): void
     {
-        [$stay, $daw, , , $damStudent] = $this->twoProgrammeStay();
+        [$stay, , , , $damStudent, $dawLevel] = $this->twoProgrammeStay();
         $position = (new TrainingPosition())->setStay($stay);
 
-        $position->setPriority($daw, null);
-        self::assertNull($position->getPriorityProgramme());
+        $position->setPriority($dawLevel, null);
+        self::assertNull($position->getPriorityProgrammeYear());
         self::assertNull($position->getPriorityUntil());
 
         $position->setPriority(null, new \DateTimeImmutable('2025-04-15'));
-        self::assertNull($position->getPriorityProgramme());
+        self::assertNull($position->getPriorityProgrammeYear());
         self::assertFalse($position->isReservedAgainst($damStudent, new \DateTimeImmutable('2025-04-01')));
+    }
+
+    public function testPriorityOfALevelReservesTheStayAgainstOtherLevelsOfTheSameProgramme(): void
+    {
+        $daw    = $this->programmeWithLevels('DAW', 'Informática');
+        [$first, $second] = $daw->getProgrammeYears()->toArray();
+        $stay   = (new Stay())->addProgramme($daw)->setAcademicYear($this->year);
+        $firstStudent  = $this->student('Ana', 'Primero');
+        $secondStudent = $this->student('Eva', 'Segundo');
+        $firstStudent->addGroup($this->group($first));
+        $secondStudent->addGroup($this->group($second));
+        $position = (new TrainingPosition())->setStay($stay)->setPriority($second, new \DateTimeImmutable('2025-04-15'));
+        $today    = new \DateTimeImmutable('2025-04-01');
+
+        self::assertTrue($position->isReservedAgainst($firstStudent, $today), '1.º DAW queda excluido aunque sea la misma enseñanza');
+        self::assertFalse($position->isReservedAgainst($secondStudent, $today));
     }
 
     public function testStudentWithoutGroupIsNeverReservedAgainst(): void
     {
-        [$stay, $daw] = $this->twoProgrammeStay();
-        $position = (new TrainingPosition())->setStay($stay)->setPriority($daw, new \DateTimeImmutable('2025-04-15'));
+        [$stay, , , , , $dawLevel] = $this->twoProgrammeStay();
+        $position = (new TrainingPosition())->setStay($stay)->setPriority($dawLevel, new \DateTimeImmutable('2025-04-15'));
 
         self::assertFalse($position->isReservedAgainst($this->student('Sin', 'Grupo'), new \DateTimeImmutable('2025-04-01')));
     }
 
     public function testIsReservedAgainstCanEvaluateASubmittedPriority(): void
     {
-        [$stay, $daw, , $dawStudent, $damStudent] = $this->twoProgrammeStay();
+        [$stay, , , $dawStudent, $damStudent, $dawLevel] = $this->twoProgrammeStay();
         $position = (new TrainingPosition())->setStay($stay);
         $today    = new \DateTimeImmutable('2025-04-01');
         $until    = new \DateTimeImmutable('2025-04-15');
 
         self::assertFalse($position->isReservedAgainst($damStudent, $today));
-        self::assertTrue($position->isReservedAgainst($damStudent, $today, $daw, $until));
-        self::assertFalse($position->isReservedAgainst($dawStudent, $today, $daw, $until));
+        self::assertTrue($position->isReservedAgainst($damStudent, $today, $dawLevel, $until));
+        self::assertFalse($position->isReservedAgainst($dawStudent, $today, $dawLevel, $until));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

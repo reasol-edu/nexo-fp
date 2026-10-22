@@ -119,6 +119,11 @@ final class DashboardLoader
             );
         }
 
+        $levelLabels = [];
+        foreach ($stay->getProgrammeYears() as $level) {
+            $levelLabels[$level->getId()->toRfc4122()] = $level->getLabel();
+        }
+
         return new StayFacts(
             $stay->getId()->toRfc4122(),
             $stay->getName(),
@@ -127,6 +132,7 @@ final class DashboardLoader
             $stay->getEndDate(),
             $stay->isCalculateByTeacher(),
             array_map(static fn (ProgrammeYear $l): string => $l->getId()->toRfc4122(), $stay->getProgrammeYears()->toArray()),
+            $levelLabels,
         );
     }
 
@@ -163,7 +169,7 @@ final class DashboardLoader
                 $row['startDate'],
                 $row['endDate'],
                 $row['priorityUntil'],
-                $this->id($row['priorityProgramme']),
+                $this->id($row['priorityLevel']),
                 $levelsByPosition[$id] ?? [],
             );
         }

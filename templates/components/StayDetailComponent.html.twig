@@ -138,7 +138,7 @@
                         {% endif %}
                     </div>
                     <h1 class="text-2xl font-bold text-gray-900 leading-tight line-clamp-2 min-w-0" title="{{ stay.name }}">{{ stay.name }}</h1>
-                    <p class="mt-0.5 text-sm text-gray-500">{{ stay.programmeNames }}</p>
+                    <p class="mt-0.5 text-sm text-gray-500">{{ stay.levelSummary }}</p>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
@@ -710,10 +710,10 @@
                                     {% else %}
                                         <span class="text-gray-300">—</span>
                                     {% endif %}
-                                    {% if position.priorityProgramme and position.priorityUntil|date('Y-m-d') >= today_str %}
+                                    {% if position.priorityProgrammeYear and position.priorityUntil|date('Y-m-d') >= today_str %}
                                         <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                                             {{ ux_icon('heroicons:star', {class: 'h-3 w-3 shrink-0'}) }}
-                                            {{ 'stays.position.priority_badge'|trans({'%programme%': position.priorityProgramme.name, '%date%': position.priorityUntil|date('d/m/Y')}, 'stays') }}
+                                            {{ 'stays.position.priority_badge'|trans({'%programme%': position.priorityProgrammeYear.label, '%date%': position.priorityUntil|date('d/m/Y')}, 'stays') }}
                                         </p>
                                     {% endif %}
                                 </td>

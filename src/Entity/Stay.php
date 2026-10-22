@@ -269,6 +269,47 @@ class Stay
         return array_values($result);
     }
 
+    /**
+     * Niveles ordenados por enseñanza y nombre, para mostrarlos siempre en el mismo orden.
+     *
+     * @return list<ProgrammeYear>
+     */
+    public function getProgrammeYearsSorted(): array
+    {
+        $list = $this->programmeYears->toArray();
+        usort($list, static fn (ProgrammeYear $a, ProgrammeYear $b): int => [$a->getProgramme()->getName(), $a->getName()] <=> [$b->getProgramme()->getName(), $b->getName()]);
+
+        return $list;
+    }
+
+    /**
+     * Qué enseñanzas y niveles reúne la estancia, agrupado por enseñanza: «2.º DAW» si de una enseñanza solo
+     * participa un nivel, «DAW (1.º y 2.º)» si participan varios, separadas por « · ».
+     */
+    public function getLevelSummary(): string
+    {
+        /** @var array<string, list<ProgrammeYear>> $byProgramme */
+        $byProgramme = [];
+        foreach ($this->getProgrammeYearsSorted() as $level) {
+            $byProgramme[$level->getProgramme()->getName()][] = $level;
+        }
+
+        $parts = [];
+        foreach ($byProgramme as $programmeName => $levels) {
+            if (\count($levels) === 1) {
+                $level   = $levels[0];
+                $parts[] = stripos($level->getName(), $programmeName) !== false ? $level->getName() : $programmeName . ' (' . $level->getShortName() . ')';
+                continue;
+            }
+
+            $names   = array_map(static fn (ProgrammeYear $l): string => $l->getShortName(), $levels);
+            $last    = array_pop($names);
+            $parts[] = $programmeName . ' (' . implode(', ', $names) . ' y ' . $last . ')';
+        }
+
+        return implode(' · ', $parts);
+    }
+
     /** Nombres de las enseñanzas separados por « · » (p. ej. «DAW · DAM»). */
     public function getProgrammeNames(): string
     {

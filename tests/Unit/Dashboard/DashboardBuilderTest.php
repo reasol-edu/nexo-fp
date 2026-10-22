@@ -237,7 +237,7 @@ class DashboardBuilderTest extends TestCase
         $this->stay('s', -5, 85, [$this->daw, $this->smr]);
         $this->student('s', 'd1', $this->daw);
         // Libre, pero reservado a SMR hasta dentro de 10 días: el estudiante de DAW no puede ocuparlo.
-        $this->position('free1', 's', null, priorityProgramme: 'prog-smr', priorityUntil: '+10 days');
+        $this->position('free1', 's', null, priorityLevel: 'lvl-prog-smr',priorityUntil: '+10 days');
 
         $view = $this->build($this->scope('diego', manage: [$this->daw]));
 
@@ -427,7 +427,7 @@ class DashboardBuilderTest extends TestCase
         $this->stay('s', 10, 100, [$this->daw, $this->smr]);
         $this->student('s', 'd1', $this->daw);
         $this->position('p1', 's', 'd1', tutor: 't1', mentor: 'm1', state: TrainingPositionState::DONE, signed: false);
-        $this->position('free', 's', null, priorityProgramme: 'prog-smr', priorityUntil: '+20 days');
+        $this->position('free', 's', null, priorityLevel: 'lvl-prog-smr',priorityUntil: '+20 days');
         $this->stay('ending', -60, 14, [$this->daw]);
 
         $view = $this->build($this->scope('diego', manage: [$this->daw]));
@@ -439,7 +439,7 @@ class DashboardBuilderTest extends TestCase
         self::assertArrayHasKey(Milestone::STAY_STARTS . '|s', $byKey);
         self::assertArrayHasKey(Milestone::STAY_ENDS . '|ending', $byKey);
         self::assertSame(1, $byKey[Milestone::SIGNATURE_DUE . '|s']->count);
-        self::assertSame('SMR', $byKey[Milestone::PRIORITY_ENDS . '|s']->subject);
+        self::assertSame('SMR · 2.º', $byKey[Milestone::PRIORITY_ENDS . '|s']->subject);
         self::assertArrayNotHasKey(Milestone::STAY_ENDS . '|s', $byKey, 'termina dentro de 100 días: fuera de los 30');
 
         $dates = array_map(static fn (Milestone $m): string => $m->date->format('Y-m-d'), $view->milestones);
@@ -581,6 +581,10 @@ class DashboardBuilderTest extends TestCase
             $calculateByTeacher,
             // Cada enseñanza de prueba aporta su nivel por defecto («lvl-<enseñanza>»).
             array_map(static fn (ProgrammeRef $p): string => 'lvl-' . $p->id, $programmes),
+            array_combine(
+                array_map(static fn (ProgrammeRef $p): string => 'lvl-' . $p->id, $programmes),
+                array_map(static fn (ProgrammeRef $p): string => $p->name . ' · 2.º', $programmes),
+            ),
         );
     }
 
@@ -609,7 +613,7 @@ class DashboardBuilderTest extends TestCase
         TrainingPositionState $state = TrainingPositionState::DRAFT,
         bool $signed = false,
         ?string $company = null,
-        ?string $priorityProgramme = null,
+        ?string $priorityLevel = null,
         ?string $priorityUntil = null,
         array $levels = [],
     ): void {
@@ -626,7 +630,7 @@ class DashboardBuilderTest extends TestCase
             null,
             null,
             $priorityUntil !== null ? $this->today->modify($priorityUntil) : null,
-            $priorityProgramme,
+            $priorityLevel,
             $student === null ? $levels : [],
         );
     }

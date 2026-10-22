@@ -566,7 +566,7 @@ class StayDetailComponent extends AbstractController
                 if (isset($offeredIds[$index]) && !isset($offeredIds[$index][$pid])) {
                     continue;
                 }
-                if ($position->hasActivePriority($today) && !$position->getPriorityProgramme()?->getId()->equals($programme->getId())) {
+                if ($position->hasActivePriority($today) && !$position->getPriorityProgrammeYear()?->getProgramme()->getId()->equals($programme->getId())) {
                     ++$row['reserved_elsewhere'];
                     continue;
                 }
@@ -632,7 +632,7 @@ class StayDetailComponent extends AbstractController
         if ($position->isReservedAgainst($student, $this->clock->now())) {
             $this->toast('stays.toast.position_reserved', [
                 '%student%'   => $student->getName()->getFirstName() . ' ' . $student->getName()->getLastName(),
-                '%programme%' => $position->getPriorityProgramme()?->getName() ?? '',
+                '%programme%' => $position->getPriorityProgrammeYear()?->getLabel() ?? '',
                 '%date%'      => $position->getPriorityUntil()?->format('d/m/Y') ?? '',
             ]);
 

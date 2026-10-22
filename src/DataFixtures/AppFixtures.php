@@ -1079,8 +1079,9 @@ class AppFixtures extends Fixture
         $stay = (new Stay())
             ->setName('FFEOE DAW + SMR (compartida)')
             ->setAcademicYear($year)
-            ->addProgramme($daw)
-            ->addProgramme($smr)
+            // Solo 2.º de cada enseñanza: una estancia puede reunir niveles sueltos
+            ->addProgrammeYear($py2daw)
+            ->addProgrammeYear($py2smr)
             ->setStartDate($this->stayStart('ongoing'))
             ->setEndDate($this->stayEnd('ongoing'))
             ->setCalculateByTeacher(true);
@@ -1114,7 +1115,7 @@ class AppFixtures extends Fixture
         $position($workcenters[0 % $wcCount], $py2daw, $py2smr);
         $position($workcenters[1 % $wcCount], $py2daw, $py2smr);
         // Compartido con preferencia para SMR durante los próximos 15 días: después se abre a DAW
-        $position($workcenters[2 % $wcCount], $py2daw, $py2smr)->setPriority($smr, $this->daysFromToday(15));
+        $position($workcenters[2 % $wcCount], $py2daw, $py2smr)->setPriority($py2smr, $this->daysFromToday(15));
         // Puestos exclusivos de cada enseñanza
         $position($workcenters[3 % $wcCount], $py2smr);
         $position($workcenters[4 % $wcCount], $py2daw);

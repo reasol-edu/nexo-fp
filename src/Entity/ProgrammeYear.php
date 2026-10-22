@@ -76,6 +76,29 @@ class ProgrammeYear
         return $this->programme;
     }
 
+    /**
+     * El nivel sin repetir el nombre de su enseñanza: «2.º DAW» en DAW → «2.º»; «Primero» se queda igual.
+     * Es lo que se muestra entre paréntesis detrás del nombre de la enseñanza.
+     */
+    public function getShortName(): string
+    {
+        $programmeName = trim($this->programme->getName());
+        if ($programmeName !== '') {
+            $short = trim(str_ireplace($programmeName, '', $this->name), " \t-·");
+            if ($short !== '') {
+                return $short;
+            }
+        }
+
+        return $this->name;
+    }
+
+    /** Enseñanza y nivel para cuando hay varias enseñanzas a la vista: «DAW · 2.º». */
+    public function getLabel(): string
+    {
+        return $this->programme->getName() . ' · ' . $this->getShortName();
+    }
+
     public function setProgramme(Programme $programme): static
     {
         $this->programme = $programme;

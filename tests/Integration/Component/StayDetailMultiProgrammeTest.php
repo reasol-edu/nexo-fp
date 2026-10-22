@@ -111,7 +111,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
     public function testPriorityKeepsPositionForItsProgrammeUntilTheDate(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['daw'], new \DateTimeImmutable('+10 days'));
+        $s['shared']->setPriority($s['dawLevel'],new \DateTimeImmutable('+10 days'));
         $this->flush();
 
         $component = $this->component($s['stay'], $s['coordDam']);
@@ -120,7 +120,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
             'positionId' => $s['shared']->getId()->toRfc4122(),
         ]);
 
-        self::assertStringContainsString('tiene preferencia para DAW hasta el', (string) $component->render());
+        self::assertStringContainsString('tiene preferencia para DAW · 2.º hasta el', (string) $component->render());
         $this->em->clear();
         self::assertNull($this->em->find(TrainingPosition::class, $s['shared']->getId())->getStudent());
     }
@@ -128,7 +128,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
     public function testPriorityIsReleasedAfterTheDate(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['daw'], new \DateTimeImmutable('-1 day'));
+        $s['shared']->setPriority($s['dawLevel'],new \DateTimeImmutable('-1 day'));
         $this->flush();
 
         $component = $this->component($s['stay'], $s['coordDam']);
@@ -143,7 +143,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
     public function testPriorityOnItsLastDayStillAppliesAndProgrammeStudentsAreNotAffected(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['daw'], new \DateTimeImmutable('today'));
+        $s['shared']->setPriority($s['dawLevel'],new \DateTimeImmutable('today'));
         $this->flush();
 
         $component = $this->component($s['stay'], $s['coordDaw']);
@@ -199,7 +199,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
     public function testSummaryMarksPositionsReservedForAnotherProgramme(): void
     {
         $s = $this->makeScenario();
-        $s['shared']->setPriority($s['daw'], new \DateTimeImmutable('+10 days'));
+        $s['shared']->setPriority($s['dawLevel'],new \DateTimeImmutable('+10 days'));
         $this->flush();
 
         /** @var array<string, mixed> $data */
@@ -289,7 +289,7 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
     /**
      * @return array{
      *     admin: Teacher, coordDaw: Teacher, coordDam: Teacher, stay: Stay, daw: Programme, dam: Programme,
-     *     dawStudent: Student, damStudent: Student, shared: TrainingPosition, damOnly: TrainingPosition
+     *     dawLevel: ProgrammeYear, damLevel: ProgrammeYear, dawStudent: Student, damStudent: Student, shared: TrainingPosition, damOnly: TrainingPosition
      * }
      */
     private function makeScenario(): array
@@ -339,6 +339,6 @@ class StayDetailMultiProgrammeTest extends ControllerTestCase
         $centre->setActiveAcademicYear($year);
         $this->flush();
 
-        return compact('admin', 'coordDaw', 'coordDam', 'stay', 'daw', 'dam', 'dawStudent', 'damStudent', 'shared', 'damOnly');
+        return compact('admin', 'coordDaw', 'coordDam', 'stay', 'daw', 'dam', 'dawLevel', 'damLevel', 'dawStudent', 'damStudent', 'shared', 'damOnly');
     }
 }

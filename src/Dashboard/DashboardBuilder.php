@@ -294,10 +294,10 @@ final class DashboardBuilder
 
     private function accepts(PositionFacts $position, StudentFacts $student, \DateTimeImmutable $today): bool
     {
-        // Preferencia vigente a una enseñanza: los estudiantes de otras no pueden ocuparlo todavía.
-        if ($position->priorityProgrammeId !== null && $position->priorityUntil !== null && $today <= $position->priorityUntil) {
-            $programmes = $student->programmeIds();
-            if ($programmes !== [] && !\in_array($position->priorityProgrammeId, $programmes, true)) {
+        // Preferencia vigente a un nivel: los estudiantes de otros no pueden ocuparlo todavía.
+        if ($position->priorityLevelId !== null && $position->priorityUntil !== null && $today <= $position->priorityUntil) {
+            $studentLevels = $student->levelIds();
+            if ($studentLevels !== [] && !\in_array($position->priorityLevelId, $studentLevels, true)) {
                 return false;
             }
         }
@@ -351,19 +351,14 @@ final class DashboardBuilder
             // Fin de la preferencia de una enseñanza en puestos libres compartidos.
             $byDate = [];
             foreach ($c['positions'] as $p) {
-                if ($p->isFree() && $p->priorityProgrammeId !== null && $p->priorityUntil !== null && $inRange($p->priorityUntil)) {
-                    $byDate[$p->priorityUntil->format('Y-m-d') . '|' . $p->priorityProgrammeId][] = $p;
+                if ($p->isFree() && $p->priorityLevelId !== null && $p->priorityUntil !== null && $inRange($p->priorityUntil)) {
+                    $byDate[$p->priorityUntil->format('Y-m-d') . '|' . $p->priorityLevelId][] = $p;
                 }
             }
             foreach ($byDate as $group) {
                 $first = $group[0];
                 \assert($first->priorityUntil !== null);
-                $name = null;
-                foreach ($stay->programmes as $programme) {
-                    if ($programme->id === $first->priorityProgrammeId) {
-                        $name = $programme->name;
-                    }
-                }
+                $name = $first->priorityLevelId !== null ? ($stay->levelLabels[$first->priorityLevelId] ?? null) : null;
                 $items[] = new Milestone($first->priorityUntil, Milestone::PRIORITY_ENDS, $stay->id, $stay->name, \count($group), $name);
             }
 

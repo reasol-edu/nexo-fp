@@ -51,10 +51,10 @@ class TrainingPosition
     #[ORM\ManyToMany(targetEntity: ProgrammeYear::class, fetch: 'EXTRA_LAZY')]
     private Collection $programmeYears;
 
-    /** Enseñanza con preferencia sobre el puesto hasta {@see $priorityUntil}; después se abre a todas. */
+    /** Nivel con preferencia sobre el puesto hasta {@see $priorityUntil}; después se abre a todos. */
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
-    private ?Programme $priorityProgramme = null;
+    private ?ProgrammeYear $priorityProgrammeYear = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $priorityUntil = null;
@@ -209,9 +209,9 @@ class TrainingPosition
         return $this;
     }
 
-    public function getPriorityProgramme(): ?Programme
+    public function getPriorityProgrammeYear(): ?ProgrammeYear
     {
-        return $this->priorityProgramme;
+        return $this->priorityProgrammeYear;
     }
 
     public function getPriorityUntil(): ?\DateTimeImmutable
@@ -219,13 +219,13 @@ class TrainingPosition
         return $this->priorityUntil;
     }
 
-    /** Fija (o quita, con null) la enseñanza preferente y la fecha hasta la que lo es. */
-    public function setPriority(?Programme $programme, ?\DateTimeImmutable $until): static
+    /** Fija (o quita, con null) el nivel preferente y la fecha hasta la que lo es. */
+    public function setPriority(?ProgrammeYear $programmeYear, ?\DateTimeImmutable $until): static
     {
-        $active = $programme !== null && $until !== null;
+        $active = $programmeYear !== null && $until !== null;
 
-        $this->priorityProgramme = $active ? $programme : null;
-        $this->priorityUntil     = $active ? $until : null;
+        $this->priorityProgrammeYear = $active ? $programmeYear : null;
+        $this->priorityUntil         = $active ? $until : null;
 
         return $this;
     }
@@ -233,39 +233,39 @@ class TrainingPosition
     /** ¿Hay una preferencia vigente el día indicado? La fecha límite es inclusive. */
     public function hasActivePriority(\DateTimeImmutable $today): bool
     {
-        return $this->priorityProgramme !== null
+        return $this->priorityProgrammeYear !== null
             && $this->priorityUntil !== null
             && $today->setTime(0, 0) <= $this->priorityUntil;
     }
 
     /**
-     * ¿Está el puesto reservado, por una preferencia vigente, a otra enseñanza distinta de las del
-     * alumno? Un alumno sin grupo en ninguna enseñanza de la estancia no se considera excluido.
+     * ¿Está el puesto reservado, por una preferencia vigente, a otro nivel distinto de los del
+     * alumno? Un alumno sin grupo en ningún nivel de la estancia no se considera excluido.
      *
-     * @param Programme|null          $programme preferencia a evaluar en lugar de la guardada
-     *                                           (p. ej. la recién enviada en un formulario)
-     * @param \DateTimeImmutable|null $until     fecha límite a evaluar en lugar de la guardada
+     * @param ProgrammeYear|null      $programmeYear preferencia a evaluar en lugar de la guardada
+     *                                               (p. ej. la recién enviada en un formulario)
+     * @param \DateTimeImmutable|null $until         fecha límite a evaluar en lugar de la guardada
      */
     public function isReservedAgainst(
         Student $student,
         \DateTimeImmutable $today,
-        ?Programme $programme = null,
+        ?ProgrammeYear $programmeYear = null,
         ?\DateTimeImmutable $until = null,
     ): bool {
-        $programme ??= $this->priorityProgramme;
-        $until     ??= $this->priorityUntil;
+        $programmeYear ??= $this->priorityProgrammeYear;
+        $until         ??= $this->priorityUntil;
 
-        if ($programme === null || $until === null || $today->setTime(0, 0) > $until) {
+        if ($programmeYear === null || $until === null || $today->setTime(0, 0) > $until) {
             return false;
         }
 
-        $studentProgrammes = $this->stay->getProgrammesOfStudent($student);
-        if ($studentProgrammes === []) {
+        $studentLevels = $this->stay->getProgrammeYearsOfStudent($student);
+        if ($studentLevels === []) {
             return false;
         }
 
-        foreach ($studentProgrammes as $studentProgramme) {
-            if ($studentProgramme->getId()->equals($programme->getId())) {
+        foreach ($studentLevels as $studentLevel) {
+            if ($studentLevel->getId()->equals($programmeYear->getId())) {
                 return false;
             }
         }

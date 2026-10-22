@@ -9,6 +9,7 @@ final readonly class StayFacts
     /**
      * @param list<ProgrammeRef> $programmes enseñanzas de la estancia (las de sus niveles)
      * @param list<string>       $levelIds   niveles que participan en la estancia
+     * @param array<string, string> $levelLabels nombre de cada nivel (id → «DAW · 2.º»), para los avisos
      */
     public function __construct(
         public string $id,
@@ -18,6 +19,7 @@ final readonly class StayFacts
         public \DateTimeImmutable $end,
         public bool $calculateByTeacher,
         public array $levelIds = [],
+        public array $levelLabels = [],
     ) {}
 
     /** @return list<string> */

@@ -42,7 +42,7 @@ final class PositionSnapshot
                 static fn ($py): string => $py->getId()->toRfc4122(),
                 $position->getProgrammeYears()->toArray(),
             ),
-            'priority'    => $position->getPriorityProgramme()?->getId()->toRfc4122(),
+            'priority'    => $position->getPriorityProgrammeYear()?->getId()->toRfc4122(),
             'priorityEnd' => $position->getPriorityUntil()?->format('Y-m-d'),
             'start'       => $position->getStartDate()?->format('Y-m-d'),
             'end'         => $position->getEndDate()?->format('Y-m-d'),
@@ -72,9 +72,9 @@ final class PositionSnapshot
         }
 
         if (\is_string($data['priority'] ?? null)) {
-            foreach ($stay->getProgrammes() as $programme) {
-                if ($programme->getId()->toRfc4122() === $data['priority']) {
-                    $position->setPriority($programme, $this->date($data['priorityEnd'] ?? null));
+            foreach ($stay->getProgrammeYears() as $level) {
+                if ($level->getId()->toRfc4122() === $data['priority']) {
+                    $position->setPriority($level, $this->date($data['priorityEnd'] ?? null));
                 }
             }
         }

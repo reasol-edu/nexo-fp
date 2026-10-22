@@ -19,6 +19,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 FROM="${FROM:-20261020000000}"
+# Primera migración de la serie (coordinación y estancias por nivel); la siguiente pasa la preferencia del puesto a nivel.
 TARGET="${TARGET:-20261022000000}"
 ONLY="${1:-all}"
 FAILS=0
@@ -35,6 +36,9 @@ L11=77777777-7777-4777-8777-777777777711; L12=77777777-7777-4777-8777-7777777777
 L21=77777777-7777-4777-8777-777777777721; L22=77777777-7777-4777-8777-777777777722
 T1=66666666-6666-4666-8666-666666666661; T2=66666666-6666-4666-8666-666666666662
 S1=55555555-5555-4555-8555-555555555551; S2=55555555-5555-4555-8555-555555555552
+# puestos con preferencia de enseñanza (migración de la preferencia a nivel)
+X1=88888888-8888-4888-8888-888888888881; X2=88888888-8888-4888-8888-888888888882
+X3=88888888-8888-4888-8888-888888888883; X4=88888888-8888-4888-8888-888888888884
 
 # q <pg|my|ma|sq> "<sql>": ejecuta SQL y devuelve el valor (sin cabeceras ni espacios)
 q() {
@@ -52,6 +56,14 @@ qx() {
     my) docker exec -i nx-mysql mysql -uroot -ppw app -e "$2" >/dev/null 2>&1 ;;
     ma) docker exec -i nx-mariadb mariadb -uroot -ppw app -e "$2" >/dev/null 2>&1 ;;
     sq) sqlite3 -cmd 'PRAGMA foreign_keys = ON' "$SQLITE_DB" "$2" >/dev/null 2>&1 ;;
+  esac
+}
+# ¿Cuántas columnas con ese nombre tiene la tabla? (en cualquier motor)
+colcount_any() {
+  case "$1" in
+    sq) q sq "SELECT COUNT(*) FROM pragma_table_info('$2') WHERE name = '$3'" ;;
+    pg) q pg "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = '$2' AND column_name = '$3' AND table_schema = current_schema()" ;;
+    *)  q "$1" "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = '$2' AND column_name = '$3' AND table_schema = DATABASE()" ;;
   esac
 }
 tablecount() {
@@ -78,7 +90,14 @@ check_levels_migration() {
     INSERT INTO programme_coordinator (programme_id, teacher_id) VALUES ($(U $P1), $(U $T1)), ($(U $P1), $(U $T2)), ($(U $P2), $(U $T2));
     INSERT INTO stay (id, academic_year_id, name, start_date, end_date) VALUES
       ($(U $S1), $(U $Y), 'E1', '2026-03-01', '2026-06-30'), ($(U $S2), $(U $Y), 'E2', '2026-03-01', '2026-06-30');
-    INSERT INTO stay_programme (stay_id, programme_id) VALUES ($(U $S1), $(U $P1)), ($(U $S2), $(U $P1)), ($(U $S2), $(U $P2));" \
+    INSERT INTO stay_programme (stay_id, programme_id) VALUES ($(U $S1), $(U $P1)), ($(U $S2), $(U $P1)), ($(U $S2), $(U $P2));
+    INSERT INTO training_position (id, stay_id, signed, state, priority_programme_id, priority_until) VALUES
+      ($(U $X1), $(U $S1), FALSE, 'DRAFT', $(U $P1), '2026-12-31'),
+      ($(U $X2), $(U $S2), FALSE, 'DRAFT', $(U $P2), '2026-12-31'),
+      ($(U $X3), $(U $S2), FALSE, 'DRAFT', $(U $P3), '2026-12-31'),
+      ($(U $X4), $(U $S2), FALSE, 'DRAFT', $(U $P1), '2026-12-31');
+    INSERT INTO training_position_programme_year (training_position_id, programme_year_id) VALUES
+      ($(U $X1), $(U $L12)), ($(U $X1), $(U $L11)), ($(U $X2), $(U $L21)), ($(U $X4), $(U $L21));" \
     && ok "datos insertados" || { fail "no se pudieron insertar los datos"; return 1; }
 
   echo "▸ una enseñanza sin niveles con coordinadores aborta la migración (no se pierde nada en silencio)"
@@ -94,19 +113,30 @@ check_levels_migration() {
   [ "$(q "$kind" "SELECT COUNT(*) FROM stay WHERE id = $(U $S1)")" = 1 ] && ok "las estancias siguen ahí" || fail "faltan estancias"
   [ "$(tablecount "$kind" programme_coordinator)" = 0 ] && [ "$(tablecount "$kind" stay_programme)" = 0 ] && ok "tablas antiguas eliminadas" || fail "siguen las tablas antiguas"
 
+  echo "▸ la preferencia de enseñanza de un puesto pasa a ser de un nivel"
+  has() { [ "$(q "$kind" "SELECT COUNT(*) FROM training_position WHERE id = $(U $1) AND priority_programme_year_id = $(U $2)")" = 1 ]; }
+  has "$X1" "$L11" && ok "X1: de entre los niveles que ofrece (1.º y 2.º DAW), el primero por nombre (1.º DAW)" || fail "X1 no tiene como preferente 1.º DAW"
+  has "$X2" "$L21" && ok "X2: su único nivel ofrecido (1.º DAM)" || fail "X2 no tiene como preferente 1.º DAM"
+  has "$X4" "$L11" && ok "X4: no ofrece ningún nivel de DAW, se toma el primero de DAW (1.º DAW)" || fail "X4 no tiene como preferente 1.º DAW"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM training_position WHERE id = $(U $X3) AND priority_programme_year_id IS NULL AND priority_until IS NULL")" = 1 ] && ok "X3: una enseñanza sin niveles descarta la preferencia" || fail "X3 conserva una preferencia sin nivel"
+  [ "$(colcount_any "$kind" training_position priority_programme_id)" = 0 ] && ok "priority_programme_id eliminada" || fail "sigue existiendo priority_programme_id"
+
   echo "▸ un nivel en uso por una estancia no se puede borrar (RESTRICT)"
   if qx "$kind" "DELETE FROM programme_year WHERE id = $(U $L11)"; then fail "se borró un nivel en uso"; else ok "el borrado se rechaza"; fi
 
-  echo "▸ borrar una estancia o un docente limpia las filas de unión (CASCADE)"
-  qx "$kind" "DELETE FROM stay WHERE id = $(U $S1)"
-  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 4 ] && ok "al borrar E1 desaparecen sus 2 niveles (quedan 4)" || fail "no se limpió stay_programme_year al borrar la estancia"
-  qx "$kind" "INSERT INTO stay (id, academic_year_id, name, start_date, end_date) VALUES ($(U $S1), $(U $Y), 'E1', '2026-03-01', '2026-06-30'); INSERT INTO stay_programme_year (stay_id, programme_year_id) VALUES ($(U $S1), $(U $L11)), ($(U $S1), $(U $L12))"
+  echo "▸ borrar una estancia limpia las filas de unión (CASCADE)"
+  local S3=55555555-5555-4555-8555-555555555553
+  qx "$kind" "INSERT INTO stay (id, academic_year_id, name, start_date, end_date) VALUES ($(U $S3), $(U $Y), 'E3', '2026-03-01', '2026-06-30'); INSERT INTO stay_programme_year (stay_id, programme_year_id) VALUES ($(U $S3), $(U $L11)), ($(U $S3), $(U $L12))"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 8 ] || fail "la estancia E3 no se ha creado con sus 2 niveles"
+  qx "$kind" "DELETE FROM stay WHERE id = $(U $S3)"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme_year")" = 6 ] && ok "al borrar E3 desaparecen sus 2 niveles (quedan 6)" || fail "no se limpió stay_programme_year al borrar la estancia"
 
   echo "▸ bajando: la coordinación de un solo nivel vuelve a ser de la enseñanza"
   qx "$kind" "INSERT INTO programme_year_coordinator (programme_year_id, teacher_id) VALUES ($(U $L22), $(U $T1))"
   mig "DoctrineMigrations\\Version$FROM"
   [ "$(q "$kind" "SELECT COUNT(*) FROM programme_coordinator")" = 4 ] && ok "programme_coordinator recreada (T1 y T2 en DAW, T2 y T1 en DAM: 4 filas sin repetir)" || fail "programme_coordinator incorrecta tras bajar"
   [ "$(q "$kind" "SELECT COUNT(*) FROM stay_programme")" = 3 ] && ok "stay_programme recreada (E1: DAW; E2: DAW y DAM)" || fail "stay_programme incorrecta tras bajar"
+  [ "$(q "$kind" "SELECT COUNT(*) FROM training_position WHERE id = $(U $X1) AND priority_programme_id = $(U $P1)")" = 1 ] && ok "la preferencia vuelve a ser de la enseñanza del nivel (X1: DAW)" || fail "preferencia de X1 incorrecta tras bajar"
 
   echo "▸ volviendo a subir"; mig
   [ "$(q "$kind" "SELECT COUNT(*) FROM programme_year_coordinator")" = 8 ] && ok "coordinación de nuevo por niveles (8 filas)" || fail "programme_year_coordinator incorrecta tras volver a subir"

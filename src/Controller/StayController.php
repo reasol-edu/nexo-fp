@@ -715,7 +715,7 @@ class StayController extends AbstractController
         $programmeYears = $this->programmeYears->findByStayOrderedByName($stay);
 
         $errors = [];
-        $values = ['workcenter_id' => '', 'programme_year_ids' => [], 'priority_programme_id' => '', 'priority_until' => '', 'details' => '', 'count' => '1'];
+        $values = ['workcenter_id' => '', 'programme_year_ids' => [], 'priority_programme_year_id' => '', 'priority_until' => '', 'details' => '', 'count' => '1'];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('new_position_' . $id, $request->request->getString('_token'))) {
@@ -725,7 +725,7 @@ class StayController extends AbstractController
             $values = [
                 'workcenter_id'      => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids' => $request->request->all('programme_year_ids'),
-                'priority_programme_id' => trim($request->request->getString('priority_programme_id')),
+                'priority_programme_year_id' => trim($request->request->getString('priority_programme_year_id')),
                 'priority_until'     => trim($request->request->getString('priority_until')),
                 'details'            => trim($request->request->getString('details')),
                 'count'              => trim($request->request->getString('count')),
@@ -760,8 +760,8 @@ class StayController extends AbstractController
                 $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
             }
 
-            [$priorityProgramme, $priorityUntil] = $this->resolvePriority(
-                $stay, $selectedYears, $values['priority_programme_id'], $values['priority_until'], $errors,
+            [$priorityLevel, $priorityUntil] = $this->resolvePriority(
+                $stay, $selectedYears, $values['priority_programme_year_id'], $values['priority_until'], $errors,
             );
 
             if (empty($errors)) {
@@ -769,7 +769,7 @@ class StayController extends AbstractController
                     $position = new TrainingPosition();
                     $position->setStay($stay)
                              ->setWorkcenter($workcenter)
-                             ->setPriority($priorityProgramme, $priorityUntil)
+                             ->setPriority($priorityLevel, $priorityUntil)
                              ->setDetails($values['details'] !== '' ? $values['details'] : null);
                     foreach ($selectedYears as $py) {
                         $position->addProgrammeYear($py);
@@ -1071,7 +1071,7 @@ class StayController extends AbstractController
             $copy = new TrainingPosition();
             $copy->setStay($stay)
                  ->setWorkcenter($original->getWorkcenter())
-                 ->setPriority($original->getPriorityProgramme(), $original->getPriorityUntil())
+                 ->setPriority($original->getPriorityProgrammeYear(), $original->getPriorityUntil())
                  ->setDetails($original->getDetails());
             foreach ($original->getProgrammeYears() as $py) {
                 $copy->addProgrammeYear($py);
@@ -1228,7 +1228,7 @@ class StayController extends AbstractController
         $values = [
             'workcenter_id'       => $position->getWorkcenter()?->getId()->toRfc4122() ?? '',
             'programme_year_ids'  => $currentPyIds,
-            'priority_programme_id' => $position->getPriorityProgramme()?->getId()->toRfc4122() ?? '',
+            'priority_programme_year_id' => $position->getPriorityProgrammeYear()?->getId()->toRfc4122() ?? '',
             'priority_until'      => $position->getPriorityUntil()?->format('Y-m-d') ?? '',
             'details'             => $position->getDetails() ?? '',
             'student_id'          => $currentStudentId,
@@ -1246,7 +1246,7 @@ class StayController extends AbstractController
             $values = [
                 'workcenter_id'       => trim($request->request->getString('workcenter_id')),
                 'programme_year_ids'  => $request->request->all('programme_year_ids'),
-                'priority_programme_id' => trim($request->request->getString('priority_programme_id')),
+                'priority_programme_year_id' => trim($request->request->getString('priority_programme_year_id')),
                 'priority_until'      => trim($request->request->getString('priority_until')),
                 'details'             => trim($request->request->getString('details')),
                 'student_id'          => trim($request->request->getString('student_id')),
@@ -1262,7 +1262,7 @@ class StayController extends AbstractController
                 $values['academic_tutor_id'] = $currentTutorId;
                 $values['workplace_mentor_id'] = $currentMentorId;
                 $values['programme_year_ids'] = $currentPyIds;
-                $values['priority_programme_id'] = $position->getPriorityProgramme()?->getId()->toRfc4122() ?? '';
+                $values['priority_programme_year_id'] = $position->getPriorityProgrammeYear()?->getId()->toRfc4122() ?? '';
                 $values['priority_until'] = $position->getPriorityUntil()?->format('Y-m-d') ?? '';
             }
 
@@ -1317,9 +1317,9 @@ class StayController extends AbstractController
                 $errors['programme_year_ids'] = $this->t('stays.error.programme_year_required');
             }
 
-            [$priorityProgramme, $priorityUntil] = $isAssignmentLocked
-                ? [$position->getPriorityProgramme(), $position->getPriorityUntil()]
-                : $this->resolvePriority($stay, $selectedYears, $values['priority_programme_id'], $values['priority_until'], $errors);
+            [$priorityLevel, $priorityUntil] = $isAssignmentLocked
+                ? [$position->getPriorityProgrammeYear(), $position->getPriorityUntil()]
+                : $this->resolvePriority($stay, $selectedYears, $values['priority_programme_year_id'], $values['priority_until'], $errors);
 
             // Validate student (optional)
             $student = null;
@@ -1336,8 +1336,8 @@ class StayController extends AbstractController
                     ) {
                         $errors['student_id'] = $this->t('stays.error.student_incompatible');
                     } elseif ($values['student_id'] !== $currentStudentId
-                        && $priorityProgramme !== null && $priorityUntil !== null
-                        && $position->isReservedAgainst($enrolledStudents[$values['student_id']], $this->clock->now(), $priorityProgramme, $priorityUntil)
+                        && $priorityLevel !== null && $priorityUntil !== null
+                        && $position->isReservedAgainst($enrolledStudents[$values['student_id']], $this->clock->now(), $priorityLevel, $priorityUntil)
                     ) {
                         $errors['student_id'] = $this->t('stays.error.student_reserved');
                     } else {
@@ -1393,7 +1393,7 @@ class StayController extends AbstractController
                 // Apply assignment changes first so the state-machine guards
                 // evaluate the new tutors before deciding the transition.
                 $position->setWorkcenter($workcenter)
-                         ->setPriority($priorityProgramme, $priorityUntil)
+                         ->setPriority($priorityLevel, $priorityUntil)
                          ->setDetails($values['details'] !== '' ? $values['details'] : null)
                          ->setStudent($student)
                          ->setAcademicTutor($academicTutor)
@@ -1605,33 +1605,31 @@ class StayController extends AbstractController
     }
 
     /**
-     * Interpreta la preferencia de enseñanza de un puesto (enseñanza + fecha límite). Sin ninguno de
-     * los dos campos no hay preferencia. La enseñanza debe ser una de las de los niveles elegidos
-     * (o de la estancia si el puesto no tiene niveles).
+     * Interpreta la preferencia de nivel de un puesto (nivel + fecha límite). Sin ninguno de los dos
+     * campos no hay preferencia. El nivel debe ser uno de los elegidos para el puesto (o de la estancia
+     * si el puesto no tiene niveles).
      *
      * @param list<\App\Entity\ProgrammeYear> $selectedYears
      * @param array<string, string>              $errors
-     * @return array{0: ?Programme, 1: ?\DateTimeImmutable}
+     * @return array{0: ?\App\Entity\ProgrammeYear, 1: ?\DateTimeImmutable}
      */
-    private function resolvePriority(Stay $stay, array $selectedYears, string $programmeId, string $until, array &$errors): array
+    private function resolvePriority(Stay $stay, array $selectedYears, string $programmeYearId, string $until, array &$errors): array
     {
-        if ($programmeId === '' && $until === '') {
+        if ($programmeYearId === '' && $until === '') {
             return [null, null];
         }
 
-        $candidates = $selectedYears !== []
-            ? array_map(static fn ($py): Programme => $py->getProgramme(), $selectedYears)
-            : $stay->getProgrammes()->toArray();
+        $candidates = $selectedYears !== [] ? $selectedYears : $stay->getProgrammeYears()->toArray();
 
-        $programme = null;
+        $level = null;
         foreach ($candidates as $candidate) {
-            if ($candidate->getId()->toRfc4122() === $programmeId) {
-                $programme = $candidate;
+            if ($candidate->getId()->toRfc4122() === $programmeYearId) {
+                $level = $candidate;
                 break;
             }
         }
-        if ($programme === null) {
-            $errors['priority_programme_id'] = $this->t('stays.error.priority_programme_invalid');
+        if ($level === null) {
+            $errors['priority_programme_year_id'] = $this->t('stays.error.priority_programme_invalid');
         }
 
         $date = $until !== '' ? \DateTimeImmutable::createFromFormat('!Y-m-d', $until) : false;
@@ -1640,7 +1638,7 @@ class StayController extends AbstractController
             $date = null;
         }
 
-        return [$programme, $date];
+        return [$level, $date];
     }
 
     private function t(string $key): string

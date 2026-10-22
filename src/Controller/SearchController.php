@@ -79,7 +79,7 @@ class SearchController extends AbstractController
         if ($stays !== []) {
             $groups['stays'] = array_map(fn ($s) => [
                 'label'    => $s->getName(),
-                'sublabel' => $s->getProgrammeNames(),
+                'sublabel' => $s->getLevelSummary(),
                 'url'      => $this->generateUrl('app_stays_show', ['id' => $s->getId()->toRfc4122()]),
             ], $stays);
         }

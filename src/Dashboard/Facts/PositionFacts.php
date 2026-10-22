@@ -23,7 +23,7 @@ final readonly class PositionFacts
         public ?\DateTimeImmutable $start,
         public ?\DateTimeImmutable $end,
         public ?\DateTimeImmutable $priorityUntil,
-        public ?string $priorityProgrammeId,
+        public ?string $priorityLevelId,
         public array $levelIds = [],
     ) {}
 
