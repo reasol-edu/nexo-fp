@@ -133,6 +133,15 @@ Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzars
   php bin/console cache:clear
   ```
 
+!!! danger "Actualizaciones de seguridad de PHP"
+    El **binario nativo** (y el paquete de Ubuntu Server) lleva su propio PHP dentro, y la **imagen Docker** el
+    de su imagen base: ninguno se actualiza con el PHP del sistema. Cuando PHP publica un parche de
+    seguridad, se incorpora en una versión nueva de Nexo FP, y hay que instalarla (en Docker, con
+    `docker compose pull`). Un caso reciente es **PHP2Shell** (CVE-2026-109618 y CVE-2026-109619, de
+    octubre de 2026), que permite ejecutar código sin autenticarse: están corregidos desde la versión **2.19.1**
+    (PHP 8.5.12 en los binarios, 8.4.27 en la imagen Docker) y cambiar el `php.ini` no lo evita. En Plesk
+    o en cualquier instalación con el PHP del sistema, actualiza PHP a 8.4.27 o posterior (8.5.12 o posterior en 8.5).
+
 ## Protección de datos (RGPD)
 
 Nexo FP almacena **datos personales** de alumnado (nombre, NIE) y profesorado, así como información de

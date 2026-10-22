@@ -29,6 +29,9 @@
     # lo genera el script de arranque. Sin «anonymous»: toda suscripción requiere
     # la cookie de autorización que emite la aplicación.
     mercure {
+        # Mercure reciente exige elegir el modo: con claves JWT simples (publisher_jwt/subscriber_jwt)
+        # hay que declarar el modo de compatibilidad, o el servidor no arranca.
+        protocol_version_compatibility 8
         publisher_jwt {env.MERCURE_JWT_SECRET}
         subscriber_jwt {env.MERCURE_JWT_SECRET}
     }

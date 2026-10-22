@@ -141,7 +141,7 @@ class SenecaAuthenticatorService
                 'error' => curl_error($curl),
             ]);
         }
-        curl_close($curl);
+        // Sin curl_close(): desde PHP 8.0 no hace nada (el recurso se libera al salir del ámbito) y en 8.5 está obsoleta.
 
         return $str === false ? '' : (string) $str;
     }
