@@ -191,6 +191,7 @@ class StayListComponent extends AbstractController
         }
 
         $this->itemsCache = iterator_to_array($this->getPagination()->getItems(), false);
+        $this->stays->hydrateLevels($this->itemsCache);
         $this->statsCache = $this->stays->findStatsForStays($this->itemsCache);
 
         return $this->itemsCache;

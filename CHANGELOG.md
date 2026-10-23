@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.20.0] - 2026-10-23
 
 ### Added
 
@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - La preferencia temporal de un puesto pasa de «enseñanza preferente» a «nivel preferente». La migración conserva un único nivel por puesto: si la enseñanza preferente tenía varios, se queda con el primero.
 - La exportación JSON de la oferta formativa incluye los coordinadores de cada nivel.
 - La migración se detiene con un aviso si alguna enseñanza con coordinadores o estancias no tiene niveles, porque no hay a qué asignarlos.
+- El listado de estancias carga los niveles de todas las estancias de la página en una sola consulta, en lugar de una por estancia.
+
+### Fixed
+
+- En PostgreSQL, los puestos sin centro de trabajo se ordenaban al final de la estancia; ahora van primero, como en los demás motores.
+- La columna `key` de los ajustes va entrecomillada en el mapeo, por ser palabra reservada en MySQL y MariaDB. Las pruebas automáticas se pueden ejecutar ya en PostgreSQL, MySQL y MariaDB, y pasan en los tres.
 
 ## [2.19.1] - 2026-10-22
 

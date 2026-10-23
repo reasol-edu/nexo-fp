@@ -248,7 +248,7 @@ class PastYearGuardTest extends ControllerTestCase
         $seq++;
 
         $admin      = (new Teacher(new PersonName('Admin', 'Guard')))->setUsername("admin.guard.{$seq}")->setAdmin(true);
-        $centre     = (new EducationalCentre())->setCode("4100{$seq}999")->setName("IES Guard {$seq}")->setCity('Sevilla');
+        $centre     = (new EducationalCentre())->setCode(sprintf('4100%04d', $seq))->setName("IES Guard {$seq}")->setCity('Sevilla');
         $activeYear = (new AcademicYear())->setName('2025-2026')->setEducationalCentre($centre);
         $pastYear   = (new AcademicYear())->setName('2024-2025')->setEducationalCentre($centre);
 

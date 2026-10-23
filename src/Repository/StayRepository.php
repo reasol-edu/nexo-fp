@@ -103,6 +103,33 @@ class StayRepository extends ServiceEntityRepository
         return $qb->getQuery();
     }
 
+    /**
+     * Carga de una vez los niveles (y sus enseñanzas) de las estancias dadas, para que mostrarlos en un listado
+     * no lance una consulta por estancia. No devuelve nada: rellena las colecciones de las propias entidades.
+     *
+     * @param list<Stay> $stays
+     */
+    public function hydrateLevels(array $stays): void
+    {
+        if ($stays === []) {
+            return;
+        }
+
+        // Condiciones OR con tipo 'uuid' explícito: IN (:array) con UUID binarios falla en MySQL.
+        $qb = $this->createQueryBuilder('s')
+            ->select('s', 'sy', 'p')
+            ->join('s.programmeYears', 'sy')
+            ->join('sy.programme', 'p');
+
+        $or = $qb->expr()->orX();
+        foreach ($stays as $i => $stay) {
+            $or->add('s.id = :stay' . $i);
+            $qb->setParameter('stay' . $i, $stay->getId(), 'uuid');
+        }
+
+        $qb->where($or)->getQuery()->getResult();
+    }
+
     /** @return Query<null, Stay> */
     public function findNoneQuery(): Query
     {

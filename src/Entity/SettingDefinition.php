@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SettingDefinitionRepository::class)]
-#[ORM\UniqueConstraint(name: 'uq_setting_definition_key', columns: ['key'])]
+#[ORM\UniqueConstraint(name: 'uq_setting_definition_key', columns: ['`key`'])]
 class SettingDefinition
 {
     #[ORM\Id]
@@ -18,7 +18,8 @@ class SettingDefinition
     #[ORM\Column(type: 'uuid')]
     private Uuid $id;
 
-    #[ORM\Column(length: 100, unique: true)]
+    // `key` es palabra reservada en MySQL/MariaDB: el nombre de la columna va entrecomillado
+    #[ORM\Column(name: '`key`', length: 100, unique: true)]
     private string $key;
 
     #[ORM\Column(enumType: SettingType::class)]
