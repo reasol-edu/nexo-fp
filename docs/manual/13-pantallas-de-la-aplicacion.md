@@ -65,8 +65,7 @@ concreto. Desde esta sección se puede:
 - Crear y editar estancias con nombre, niveles y fechas de inicio y fin.
 - Añadir, editar y eliminar **puestos formativos** dentro de cada estancia.
 - Inscribir o retirar estudiantes de la estancia.
-- Asignar estudiantes y tutores directamente desde el detalle, con un modo de **asignación rápida** que
-  muestra los selectores en todas las filas a la vez.
+- Asignar estudiantes y tutores directamente desde el detalle, sin cambiar de pantalla.
 - Descargar un **informe PDF** con el detalle de todos los puestos y sus asignaciones. Para cada empresa
   se incluye el CIF y, si están registrados, el representante (nombre, DNI y cargo); junto al tutor/a dual
   de empresa se muestra su DNI.

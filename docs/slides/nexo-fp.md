@@ -266,8 +266,7 @@ Cada fila es un **puesto formativo**:
 - **Tutor dual docente** · **Tutor dual de empresa**
 - **Estado** (Borrador, Pendiente, Registrado en Séneca)
 
-Se asignan estudiantes y tutores con un modo de **asignación rápida** (selectores en
-todas las filas) y se exporta el **informe PDF** y los puestos a **Excel**.
+Se asignan estudiantes y tutores desde la propia fila del estudiante y se exporta el **informe PDF** y los puestos a **Excel**.
 
 ---
 

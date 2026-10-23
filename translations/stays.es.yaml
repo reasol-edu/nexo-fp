@@ -280,8 +280,6 @@ stays.teachers.missing: '{1} Falta 1|]1,Inf[ Faltan %count%'
 stays.teachers.extra: '{1} Sobra 1|]1,Inf[ Sobran %count%'
 stays.toast.workplace_mentor_set: '%mentor% asignado/a como tutor/a dual de empresa.'
 
-stays.quick_mode.toggle: 'Asignación rápida'
-stays.quick_mode.hint: 'Muestra los selectores de asignación en todas las filas.'
 
 stays.show.students_title: 'Estudiantes'
 stays.show.students_empty: 'No hay estudiantes inscritos en esta estancia.'

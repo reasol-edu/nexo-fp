@@ -228,21 +228,6 @@ const TESTS = [
     },
   },
   {
-    name: 'preferencias recordadas en el navegador (modo asignación rápida)',
-    run: async (page) => {
-      await openStay(page, DAW_STAY);
-      await page.evaluate(() => window.localStorage.removeItem('nexo.stay.quickMode'));
-      const toggle = page.locator('.js-quick-toggle').first();
-      if (!(await toggle.count())) return; // sin alumnado asignable no hay modo rápido
-      await toggle.click();
-      const stored = await page.evaluate(() => window.localStorage.getItem('nexo.stay.quickMode'));
-      assert(stored === '1', `la preferencia debería guardarse en localStorage (valor: ${stored})`);
-      await page.reload({ waitUntil: 'networkidle' });
-      assert((await page.locator('.js-quick-toggle').first().getAttribute('aria-pressed')) === 'true', 'el modo rápido debería recordarse al recargar');
-      await page.locator('.js-quick-toggle').first().click();
-    },
-  },
-  {
     name: 'duplicar un puesto pregunta cuántas copias',
     run: async (page) => {
       await openStay(page, DAW_STAY);

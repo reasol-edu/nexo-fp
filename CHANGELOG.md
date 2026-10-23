@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - La migración se detiene con un aviso si alguna enseñanza con coordinadores o estancias no tiene niveles, porque no hay a qué asignarlos.
 - El listado de estancias carga los niveles de todas las estancias de la página en una sola consulta, en lugar de una por estancia.
 
+### Removed
+
+- El botón «Asignación rápida» del detalle de la estancia. Desde que cada fila ofrece un selector de puesto ordenado por encaje y sugerencias de tutor, mostrar los selectores en todas las filas solo ahorraba un clic y recargaba la pantalla.
+
 ### Fixed
 
 - En PostgreSQL, los puestos sin centro de trabajo se ordenaban al final de la estancia; ahora van primero, como en los demás motores.

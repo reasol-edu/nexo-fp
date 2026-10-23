@@ -326,17 +326,6 @@
                     {{ 'stays.show.mine_only'|trans({}, 'stays') }}
                 </button>
             {% endif %}
-            {% if manageable_position_ids is not empty and (by_group is not empty or ungrouped_students is not empty) %}
-                <button type="button"
-                        aria-pressed="false"
-                        class="js-quick-toggle inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
-                               px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs
-                               hover:border-gray-400 hover:bg-gray-50 transition-colors shrink-0"
-                        title="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}" aria-label="{{ 'stays.quick_mode.hint'|trans({}, 'stays') }}">
-                    {{ ux_icon('heroicons:bolt', {class: 'h-3.5 w-3.5'}) }}
-                    {{ 'stays.quick_mode.toggle'|trans({}, 'stays') }}
-                </button>
-            {% endif %}
             {% if can_manage %}
                 <a href="{{ path('app_stays_manage_students', {id: stay.id.toRfc4122}) }}"
                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white
@@ -785,7 +774,6 @@ function writePref(key, value) {
     try { window.localStorage.setItem('nexo.stay.' + key, value ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
 }
 
-let quickMode = readPref('quickMode');
 let mineOnly  = readPref('mineOnly');
 const FILTERS = ['sin-puesto', 'sin-tutor', 'sin-empresa', 'sin-firmar', 'libres', 'sin-nuss', 'no-ffeoe'];
 let activeFilter = new URLSearchParams(window.location.search).get('filtro');
@@ -988,15 +976,6 @@ function setupEventDelegation() {
             return;
         }
 
-        // Quick assignment mode toggle
-        const quickToggle = e.target.closest('.js-quick-toggle');
-        if (quickToggle) {
-            quickMode = !quickMode;
-            writePref('quickMode', quickMode);
-            applyQuickMode();
-            return;
-        }
-
         // Confirm dialog: modal centrado anclado a <body>, así nunca lo recorta
         // el contenedor de la fila (antes era un panel posicionado que se cortaba
         // al final de la tabla). Accesible: role=dialog, Escape, foco atrapado.
@@ -1121,7 +1100,6 @@ function initAssignForm(form) {
             liveComp.action('assignPosition', { studentId, positionId });
         },
         onDropdownClose: function () {
-            if (quickMode) return;
             wrap.classList.add('hidden');
             trigger.classList.remove('hidden');
         },
@@ -1155,7 +1133,6 @@ function initInlineForm(form) {
             liveComp.action(actionName, params);
         },
         onDropdownClose: function () {
-            if (quickMode) return;
             wrap.classList.add('hidden');
             trigger.classList.remove('hidden');
         },
@@ -1165,29 +1142,6 @@ function initInlineForm(form) {
 function initAllForms() {
     liveEl.querySelectorAll('.js-assign-form').forEach(initAssignForm);
     liveEl.querySelectorAll('.js-inline-assign-form').forEach(initInlineForm);
-}
-
-// ── Quick assignment mode ─────────────────────────────────────────────────────
-// Pure client-side: reveals the (already rendered) assignment selectors in every
-// row. Re-applied after each render because Idiomorph restores the server HTML.
-function applyQuickMode() {
-    liveEl.querySelectorAll('.js-assign-form, .js-inline-assign-form').forEach(function (form) {
-        const trigger = form.querySelector('.js-assign-trigger, .js-inline-trigger');
-        const wrap    = form.querySelector('.js-assign-select, .js-inline-select-wrap');
-        if (!trigger || !wrap) return;
-        wrap.classList.toggle('hidden', !quickMode);
-        trigger.classList.toggle('hidden', quickMode);
-    });
-    const btn = liveEl.querySelector('.js-quick-toggle');
-    if (btn) {
-        btn.setAttribute('aria-pressed', quickMode ? 'true' : 'false');
-        btn.classList.toggle('bg-plum-600', quickMode);
-        btn.classList.toggle('border-plum-600', quickMode);
-        btn.classList.toggle('text-white', quickMode);
-        btn.classList.toggle('bg-white', !quickMode);
-        btn.classList.toggle('border-gray-300', !quickMode);
-        btn.classList.toggle('text-gray-700', !quickMode);
-    }
 }
 
 function syncToolbarHeight() {
@@ -1305,7 +1259,6 @@ function dismissToasts() {
 
 function onRender() {
     initAllForms();
-    applyQuickMode();
     applyVisibility();
     dismissToasts();
 }

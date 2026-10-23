@@ -640,7 +640,7 @@ class StayDetailComponent extends AbstractController
         }
 
         // Un alumno solo puede tener un puesto por estancia. Sin esta comprobación, dos asignaciones
-        // seguidas (asignación rápida agrupada en un lote, o dos docentes a la vez) violarían la
+        // seguidas (varias asignaciones agrupadas en un lote, o dos docentes a la vez) violarían la
         // restricción única y devolverían un error 500 dejando la pantalla desincronizada.
         if ($this->positions->findByStayAndStudent($stay, $student) !== null) {
             $this->toast('stays.toast.student_already_assigned', [

@@ -405,7 +405,7 @@ summary:focus-visible {
     color: var(--color-plum-600);
 }
 
-/* Asignación rápida de puesto: opción con empresa / centro / observaciones */
+/* Asignación de puesto: opción con empresa / centro / observaciones */
 .ts-pos-option                  { padding: 0.125rem 0; line-height: 1.35; }
 .ts-pos-option .ts-pos-company  { font-size: 0.8125rem; font-weight: 500; color: #111827; }
 .ts-pos-option .ts-pos-sub      { font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem; }
