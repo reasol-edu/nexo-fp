@@ -142,6 +142,10 @@ Si se prefiere un disparo externo (o para una ejecución puntual), puede lanzars
     (PHP 8.5.12 en los binarios, 8.4.27 en la imagen Docker) y cambiar el `php.ini` no lo evita. En Plesk
     o en cualquier instalación con el PHP del sistema, actualiza PHP a 8.4.27 o posterior (8.5.12 o posterior en 8.5).
 
+    Si en Linux el servicio se detiene con `status=4/ILL` («instrucción ilegal») en cuanto recibe una petición,
+    tienes el binario de la 2.19.1 o la 2.20.0 en una CPU sin las instrucciones SHA-NI (habitual en máquinas
+    virtuales): actualiza a una versión posterior, que usa un FrankenPHP sin ese defecto y con el mismo PHP corregido.
+
 ## Protección de datos (RGPD)
 
 Nexo FP almacena **datos personales** de alumnado (nombre, NIE) y profesorado, así como información de

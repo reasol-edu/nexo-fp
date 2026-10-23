@@ -14,10 +14,15 @@ on:
 env:
   # Actualizar cuando salga una nueva versión estable de FrankenPHP
   # https://github.com/php/frankenphp/releases
-  # El binario lleva dentro su propio PHP (desde la 1.13.2, PHP 8.5.12, que corrige PHP2Shell,
+  # El binario lleva dentro su propio PHP (desde la 1.13.1, PHP 8.5.12, que corrige PHP2Shell,
   # CVE-2026-109618 y CVE-2026-109619): cada versión de FrankenPHP trae el PHP con el que se compiló,
-  # así que hay que subirla también cuando salga un parche de seguridad de PHP.
-  FRANKENPHP_VERSION: "1.13.2"
+  # así que hay que subirla también cuando salga un parche de seguridad de PHP. NO bajar de la 1.13.1:
+  # las anteriores llevan PHP con PHP2Shell.
+  # No usar la 1.13.2 mientras no haya una versión posterior que lo corrija: sus binarios estáticos de Linux
+  # se compilaron para la CPU del servidor de CI y mueren con SIGILL (status=4/ILL) en CPUs sin SHA-NI
+  # al llamar a hash('sha256') (https://github.com/php/frankenphp/issues/2743, corregido en main por el
+  # PR #2749 pero aún sin publicar). Comprobar que la nueva versión corrige eso antes de subirla.
+  FRANKENPHP_VERSION: "1.13.1"
   # Solo para compilar la aplicación (composer, assets); el PHP que ejecuta la app es el del binario.
   PHP_VERSION: "8.4"
 
@@ -96,7 +101,10 @@ jobs:
             fp_asset:   frankenphp-linux-aarch64
             binary:     frankenphp
             archive:    tar.gz
-          # Sin binario para Mac con procesador Intel: FrankenPHP 1.13 solo lo publica para Apple Silicon.
+          - platform: macos-x86_64
+            fp_asset:   frankenphp-mac-x86_64
+            binary:     frankenphp
+            archive:    tar.gz
           - platform: macos-arm64
             fp_asset:   frankenphp-mac-arm64
             binary:     frankenphp
