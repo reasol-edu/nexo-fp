@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.2] - 2026-10-23
+
+### Fixed
+
+- Los binarios descargables pasan a FrankenPHP 1.13.3. La 1.13.1 (la que llevaba la 2.20.1) no arrancaba con la configuración de Mercure de Nexo FP: el servicio terminaba al iniciarse con «an issuer identifier is required in modern mode», también al actualizar un servidor Ubuntu. La 1.13.3 arranca, lleva el mismo PHP 8.5.12 (sigue corrigiendo **PHP2Shell**) y corrige además el fallo de los binarios de Linux que morían con `status=4/ILL` en CPUs sin SHA-NI.
+
+### Changed
+
+- Vuelve a no publicarse el binario para Mac con procesador Intel, porque FrankenPHP 1.13.3 solo lo ofrece para Apple Silicon.
+
 ## [2.20.1] - 2026-10-23
 
 ### Fixed
