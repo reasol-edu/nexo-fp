@@ -79,7 +79,7 @@ git push && git push origin vX.Y.Z
 ```
 
 Pushing a `v*` tag triggers `.github/workflows/build.yml`, which builds standalone FrankenPHP
-binaries for Linux (x86_64/aarch64), macOS (x86_64/arm64), and Windows (x86_64), and
+binaries for Linux (x86_64/aarch64), macOS (arm64), and Windows (x86_64), and
 `.github/workflows/docker.yml` for the Docker image. `.github/workflows/tests.yml` runs on regular
 pushes/PRs.
 

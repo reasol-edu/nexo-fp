@@ -16,13 +16,16 @@ env:
   # https://github.com/php/frankenphp/releases
   # El binario lleva dentro su propio PHP (desde la 1.13.1, PHP 8.5.12, que corrige PHP2Shell,
   # CVE-2026-109618 y CVE-2026-109619): cada versión de FrankenPHP trae el PHP con el que se compiló,
-  # así que hay que subirla también cuando salga un parche de seguridad de PHP. NO bajar de la 1.13.1:
-  # las anteriores llevan PHP con PHP2Shell.
-  # No usar la 1.13.2 mientras no haya una versión posterior que lo corrija: sus binarios estáticos de Linux
-  # se compilaron para la CPU del servidor de CI y mueren con SIGILL (status=4/ILL) en CPUs sin SHA-NI
-  # al llamar a hash('sha256') (https://github.com/php/frankenphp/issues/2743, corregido en main por el
-  # PR #2749 pero aún sin publicar). Comprobar que la nueva versión corrige eso antes de subirla.
-  FRANKENPHP_VERSION: "1.13.1"
+  # así que hay que subirla también cuando salga un parche de seguridad de PHP. NO bajar de la 1.13.3:
+  # - Las anteriores a la 1.13.1 llevan PHP con PHP2Shell.
+  # - La 1.13.2 y anteriores publican binarios estáticos de Linux compilados para la CPU del servidor de CI
+  #   que mueren con SIGILL (status=4/ILL) en CPUs sin SHA-NI al llamar a hash('sha256')
+  #   (https://github.com/php/frankenphp/issues/2743; corregido en la 1.13.3).
+  # - La 1.13.1 no arranca con el Mercure de nuestro Caddyfile («an issuer identifier is required in modern
+  #   mode») aunque se declare protocol_version_compatibility; la 1.13.2 y posteriores sí.
+  # La 1.13.3 no publica binario para Mac con procesador Intel.
+  # Antes de subir de versión, comprobar el Caddyfile con el binario real: frankenphp validate --adapter caddyfile.
+  FRANKENPHP_VERSION: "1.13.3"
   # Solo para compilar la aplicación (composer, assets); el PHP que ejecuta la app es el del binario.
   PHP_VERSION: "8.4"
 
@@ -101,10 +104,7 @@ jobs:
             fp_asset:   frankenphp-linux-aarch64
             binary:     frankenphp
             archive:    tar.gz
-          - platform: macos-x86_64
-            fp_asset:   frankenphp-mac-x86_64
-            binary:     frankenphp
-            archive:    tar.gz
+          # Sin binario para Mac con procesador Intel: FrankenPHP 1.13.2 y posteriores solo lo publican para Apple Silicon.
           - platform: macos-arm64
             fp_asset:   frankenphp-mac-arm64
             binary:     frankenphp

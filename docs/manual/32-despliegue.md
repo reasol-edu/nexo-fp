@@ -25,17 +25,19 @@ Los archivos descargables están en el apartado **Assets** de la última versió
 |--------------|---------------------|
 | **Windows** | `nexo-fp-…-windows-x86_64.zip` |
 | **Mac con chip Apple** (M1, M2, M3, M4…) | `nexo-fp-…-macos-arm64.tar.gz` |
-| **Mac con procesador Intel** | `nexo-fp-…-macos-x86_64.tar.gz` |
 | **Linux** (PC habitual) | `nexo-fp-…-linux-x86_64.tar.gz` |
 | **Linux ARM** (p. ej. Raspberry Pi) | `nexo-fp-…-linux-aarch64.tar.gz` |
 
 !!! question "¿Qué Mac tengo?"
     Abre el menú Apple () arriba a la izquierda → **Acerca de este Mac**.
-    Si aparece «Chip Apple M…» elige el archivo *arm64*; si aparece «Procesador Intel», el *x86_64*.
+    Si aparece «Chip Apple M…» elige el archivo *arm64*.
 
-!!! warning "Versiones con la vulnerabilidad PHP2Shell"
-    Los archivos de las versiones **anteriores a la 2.19.1** llevan una versión de PHP con la vulnerabilidad
-    PHP2Shell, así que no los uses. Descarga siempre la última versión.
+!!! warning "Mac con procesador Intel"
+    No hay descarga para Mac con procesador Intel, porque FrankenPHP (el servidor que va dentro del archivo)
+    dejó de publicar ese binario. Las versiones anteriores con descarga para Intel (hasta la 2.20.1)
+    **llevan una versión de PHP con la vulnerabilidad PHP2Shell** (hasta la 2.19.0) o no arrancan, así que no
+    las uses. En esos equipos, usa [Docker](#despliegue-con-docker) o el
+    [despliegue en un servidor](31-instalacion-y-requisitos.md).
 
 !!! info "Cada archivo lleva su propio PHP"
     Los archivos descargables incluyen su propio PHP, que no depende del que haya instalado en tu equipo.
