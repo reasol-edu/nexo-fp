@@ -64,6 +64,7 @@ abstract class ControllerTestCase extends WebTestCase
             ['email.digest_hour',                     SettingType::Integer, '7',    true,  false, true,  0,    23],
             ['attention.urgent_days',                 SettingType::Integer, '7',    true,  true,  false, 1,    60],
             ['attention.soon_days',                   SettingType::Integer, '21',   true,  true,  false, 2,    180],
+            ['maintenance.enabled',                   SettingType::Boolean, 'false', true, false, false, null, null],
         ];
 
         foreach ($defs as [$key, $type, $default, $global, $centre, $teacher, $min, $max]) {

@@ -257,6 +257,18 @@
         </header>
 
         <main class="flex-1">
+            {# Modo mantenimiento: mientras está activado solo llegan aquí los administradores globales, y se les recuerda. #}
+            {% if is_granted('ROLE_ADMIN') and maintenance_active() %}
+                <div class="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900" role="status">
+                    {{ ux_icon('heroicons:wrench-screwdriver', {class: 'mt-0.5 h-5 w-5 shrink-0 text-amber-600'}) }}
+                    <p>
+                        <strong class="font-semibold">{{ 'maintenance.banner.title'|trans({}, 'navigation') }}</strong>
+                        {{ 'maintenance.banner.text'|trans({}, 'navigation') }}
+                        <a href="{{ path('app_admin_settings') }}" class="font-medium underline hover:text-amber-700">{{ 'maintenance.banner.link'|trans({}, 'navigation') }}</a>
+                    </p>
+                </div>
+            {% endif %}
+
             {# Flash messages — región live para lectores de pantalla. Los success
                se anuncian con polite (no interrumpen); los error con assertive. #}
             {% set flashes = app.flashes(['success', 'error']) %}

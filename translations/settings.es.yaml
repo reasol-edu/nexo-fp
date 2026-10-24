@@ -20,6 +20,9 @@ settings.hub.manage: 'Configurar'
 settings.key.page_size.label: 'Resultados por página'
 settings.key.page_size.description: 'Número de elementos que se muestran en los listados.'
 
+settings.key.maintenance_enabled.label: 'Modo mantenimiento'
+settings.key.maintenance_enabled.description: 'Con el modo mantenimiento activado, solo los administradores globales pueden usar la aplicación: el resto del profesorado, tenga o no la sesión iniciada, ve una página de mantenimiento. Los avisos por correo y las demás tareas automáticas siguen funcionando.'
+
 settings.key.email_notifications.label: 'Notificaciones por email'
 settings.key.email_notifications.description: 'Activa o desactiva todos los correos automáticos de la aplicación.'
 

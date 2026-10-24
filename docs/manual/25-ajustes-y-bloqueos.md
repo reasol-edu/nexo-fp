@@ -39,3 +39,12 @@ restablecerse al valor por defecto.
 | `attention.soon_days` | Entero (2–180) | Global, centro | Días hasta el inicio por debajo de los cuales las tareas son *próximas* (por defecto 21). Siempre se aplica un valor mayor que el de `attention.urgent_days` |
 | `email.log_retention_days` | Entero (0–3650) | Global | Días que se conserva cada entrada del [registro de correos enviados](26-control-y-registro-de-correos.md#registro-de-correos-enviados) antes de que la limpieza semanal la elimine. `0` desactiva la limpieza (por defecto 90) |
 | `security.idle_timeout_minutes` | Entero (0–1440) | Global | Minutos sin actividad tras los que se cierra la sesión de un docente, para que un equipo compartido que se deja abierto no quede utilizable por otra persona. `0` lo desactiva (por defecto 120). La pantalla de inicio de sesión explica por qué se ha cerrado |
+| `maintenance.enabled` | Booleano | Global | **Modo mantenimiento** (por defecto desactivado). Con él activado solo los administradores globales pueden usar la aplicación, también si usan «Acceder como»: el resto del profesorado ve una página de mantenimiento (código 503) y la pantalla de inicio de sesión lo avisa. Los administradores ven una franja que les recuerda que está activado. Los avisos por correo y las demás tareas automáticas siguen funcionando |
+
+## Modo mantenimiento
+
+Actívalo en **Administración → Ajustes globales** antes de tareas delicadas, como actualizar la aplicación o
+restaurar una copia de seguridad: el profesorado deja de poder entrar y no trabaja sobre datos que van a
+cambiar. Solo siguen abiertos el acceso, la salida y los recursos estáticos; todo lo demás, incluido el
+restablecimiento de contraseña, devuelve la página de mantenimiento. Al terminar, desactiva el ajuste desde
+el enlace de la franja que ve la administración.

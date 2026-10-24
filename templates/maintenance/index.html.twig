@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Aplicación en mantenimiento · {{ app_name }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="{{ asset('fonts/inter/inter.css') }}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --plum-300: #bfadd8;
+            --plum-400: #a38dc5;
+            --plum-500: #876baf;
+            --plum-600: #67597a;
+            --plum-700: #574a68;
+            --plum-800: #453a54;
+            --plum-900: #362d42;
+            --plum-950: #1f192a;
+            --amber-400: #fbbf24;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            background: var(--plum-950);
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Parallax orbs ────────────────────────────────────────────────── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .orb-a { width: 440px; height: 440px; top: -130px;  right: -130px; background: rgba(251,191,36,0.035); }
+        .orb-b { width: 280px; height: 280px; top: 44%;     right: -55px;  background: rgba(103,89,122,0.22);  }
+        .orb-c { width: 360px; height: 360px; bottom: -95px; left: -95px;  background: rgba(255,255,255,0.018);}
+        .orb-d { width:  90px; height:  90px; top: 16%;     left: 7%;      background: rgba(251,191,36,0.07);  }
+
+        /* ── Content ──────────────────────────────────────────────────────── */
+        .page {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ── Logo with a turning gear ─────────────────────────────────────── */
+        .badge-wrap {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: logo-float 5s ease-in-out infinite;
+            filter: drop-shadow(0 0 18px rgba(135,107,175,0.35));
+        }
+
+        .gear {
+            position: absolute;
+            right: -14px;
+            bottom: -6px;
+            width: 40px;
+            height: 40px;
+            padding: 8px;
+            border-radius: 50%;
+            background: var(--plum-900);
+            border: 1px solid var(--plum-700);
+            color: var(--amber-400);
+        }
+        .gear svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            animation: gear-turn 8s linear infinite;
+        }
+
+        @keyframes logo-float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
+        }
+
+        @keyframes gear-turn {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── Typography ───────────────────────────────────────────────────── */
+        .code-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--amber-400);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .title {
+            margin-top: 1.75rem;
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: white;
+        }
+
+        .subtitle {
+            margin-top: 0.625rem;
+            font-size: 1rem;
+            line-height: 1.65;
+            color: var(--plum-400);
+            max-width: 26rem;
+        }
+
+        /* ── Actions ──────────────────────────────────────────────────────── */
+        .actions {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--plum-600);
+            color: white;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--plum-700);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(103,89,122,0.5);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: var(--plum-400);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--plum-800);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .btn-ghost:hover {
+            color: var(--plum-300);
+            border-color: var(--plum-600);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:focus-visible, .btn-ghost:focus-visible {
+            outline: 2px solid var(--plum-300);
+            outline-offset: 2px;
+        }
+
+        /* ── Footer ───────────────────────────────────────────────────────── */
+        .footer {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--plum-600);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .badge-wrap img, .gear svg { animation: none; }
+            .btn-primary:hover, .btn-ghost:hover { transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-a" data-speed="28"></div>
+    <div class="orb orb-b" data-speed="50"></div>
+    <div class="orb orb-c" data-speed="34"></div>
+    <div class="orb orb-d" data-speed="65"></div>
+
+    <main class="page">
+        <div class="badge-wrap" aria-hidden="true">
+            <img src="/static/logo.svg" alt="">
+            <span class="gear">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                </svg>
+            </span>
+        </div>
+
+        <p class="code-badge">Mantenimiento</p>
+        <h1 class="title">Aplicación en mantenimiento</h1>
+        <p class="subtitle">Estamos realizando tareas de mantenimiento y ahora mismo solo pueden entrar los administradores de la plataforma. Vuelve a intentarlo dentro de un rato.</p>
+
+        <div class="actions">
+            <button type="button" onclick="location.reload()" class="btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                </svg>
+                Intentar de nuevo
+            </button>
+            {% if signed_in %}
+                <a href="{{ path('app_logout', {'_csrf_token': csrf_token('logout')}) }}" class="btn-ghost">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/>
+                    </svg>
+                    Cerrar sesión
+                </a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="btn-ghost">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                    </svg>
+                    Acceso de administradores
+                </a>
+            {% endif %}
+        </div>
+    </main>
+
+    <p class="footer">{{ app_name }}{% if app_version %} · v{{ app_version }}{% endif %}</p>
+
+    <script>
+    (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var orbs = document.querySelectorAll('.orb[data-speed]');
+        var tx = 0, ty = 0, cx = 0, cy = 0;
+        document.addEventListener('mousemove', function (e) {
+            tx = e.clientX / window.innerWidth  - 0.5;
+            ty = e.clientY / window.innerHeight - 0.5;
+        });
+        (function tick() {
+            cx += (tx - cx) * 0.06;
+            cy += (ty - cy) * 0.06;
+            orbs.forEach(function (o) {
+                var s = +o.dataset.speed;
+                o.style.transform = 'translate(' + (cx*s).toFixed(1) + 'px,' + (cy*s).toFixed(1) + 'px)';
+            });
+            requestAnimationFrame(tick);
+        }());
+    }());
+    </script>
+</body>
+</html>
