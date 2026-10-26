@@ -26,6 +26,7 @@ final class CompanyWorkbook
         self::SHEET_COMPANIES => [
             'name'                       => [true, 34],
             'vat_number'                 => [true, 16],
+            'centre_code'                => [false, 16],
             'city'                       => [true, 22],
             'representative_first_name'  => [false, 22],
             'representative_last_name'   => [false, 26],
@@ -37,11 +38,13 @@ final class CompanyWorkbook
         ],
         self::SHEET_WORKCENTERS => [
             'company_vat_number' => [true, 18],
+            'company_centre_code' => [false, 18],
             'name'               => [true, 34],
             'city'               => [false, 22],
         ],
         self::SHEET_WORKERS => [
             'company_vat_number' => [true, 18],
+            'company_centre_code' => [false, 18],
             'first_name'         => [true, 22],
             'last_name'          => [true, 28],
             'national_id'        => [true, 16],
@@ -100,6 +103,17 @@ final class CompanyWorkbook
         }
 
         return $html;
+    }
+
+    /**
+     * Clave de una empresa: su CIF/NIF normalizado y, si lo tiene, su código de centro (los centros educativos
+     * comparten CIF y se distinguen por el código).
+     */
+    public static function companyKey(string $vat, string $centreCode = ''): string
+    {
+        $centreCode = trim($centreCode);
+
+        return self::vatKey($vat) . ($centreCode !== '' ? '#' . $centreCode : '');
     }
 
     /** Clave de comparación de un CIF/NIF: sin espacios ni guiones y en mayúsculas. */

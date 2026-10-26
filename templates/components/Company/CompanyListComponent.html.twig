@@ -91,7 +91,7 @@
                             {% endif %}
                         </td>
                         <td data-label="{{ 'companies.city'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 text-gray-600">{{ company.city }}</td>
-                        <td data-label="{{ 'companies.vat_number'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-500">{{ company.vatNumber }}</td>
+                        <td data-label="{{ 'companies.vat_number'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4 font-mono text-xs text-gray-500">{{ company.vatNumber }}{% if company.centreCode != '' %}<span class="block text-gray-400">{{ company.centreCode }}</span>{% endif %}</td>
                         <td data-label="{{ 'companies.liaisons'|trans({}, 'companies')|e('html_attr') }}" class="px-6 py-4">
                             {% set liaisons = company.liaisons.toArray() %}
                             {% if liaisons is empty %}

@@ -34,7 +34,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *    vincula a la empresa sin modificar sus datos.
  *  - Todo o nada: si alguna fila es errónea no se escribe nada.
  *
- * @phpstan-type CompanyFields array{name: string, vat_number: string, city: string, representative_first_name: ?string, representative_last_name: ?string, representative_national_id: ?string, representative_role: ?string, contact_information: ?string, exceptional_circumstances: ?string}
+ * @phpstan-type CompanyFields array{name: string, vat_number: string, centre_code: string, city: string, representative_first_name: ?string, representative_last_name: ?string, representative_national_id: ?string, representative_role: ?string, contact_information: ?string, exceptional_circumstances: ?string}
  */
 final class CompanyXlsxImporter
 {
@@ -44,6 +44,7 @@ final class CompanyXlsxImporter
     private const PROPERTY_COLUMNS = [
         'name'                    => 'name',
         'vatNumber'               => 'vat_number',
+        'centreCode'              => 'centre_code',
         'city'                    => 'city',
         'representativeFirstName' => 'representative_first_name',
         'representativeLastName'  => 'representative_last_name',
@@ -109,17 +110,17 @@ final class CompanyXlsxImporter
 
         $excluded = array_flip($excludedKeys);
         $columns  = [
-            CompanyWorkbook::SHEET_COMPANIES   => 'vat_number',
-            CompanyWorkbook::SHEET_WORKCENTERS => 'company_vat_number',
-            CompanyWorkbook::SHEET_WORKERS     => 'company_vat_number',
+            CompanyWorkbook::SHEET_COMPANIES   => ['vat_number', 'centre_code'],
+            CompanyWorkbook::SHEET_WORKCENTERS => ['company_vat_number', 'company_centre_code'],
+            CompanyWorkbook::SHEET_WORKERS     => ['company_vat_number', 'company_centre_code'],
         ];
-        foreach ($columns as $sheetKey => $column) {
+        foreach ($columns as $sheetKey => [$column, $codeColumn]) {
             if (!isset($sheets[$sheetKey])) {
                 continue;
             }
             $sheets[$sheetKey] = array_values(array_filter(
                 $sheets[$sheetKey],
-                static fn (array $row): bool => !isset($excluded[CompanyWorkbook::vatKey($row['values'][$column] ?? '')]),
+                static fn (array $row): bool => !isset($excluded[CompanyWorkbook::companyKey($row['values'][$column] ?? '', $row['values'][$codeColumn] ?? '')]),
             ));
         }
 
@@ -214,7 +215,7 @@ final class CompanyXlsxImporter
                 continue;
             }
 
-            $values = array_fill_keys($columnByIndex, '');
+            $values = array_fill_keys(array_keys(CompanyWorkbook::COLUMNS[$sheetKey]), '');
             foreach ($columnByIndex as $index => $column) {
                 $values[$column] = $cells[$index] ?? '';
             }
@@ -250,7 +251,7 @@ final class CompanyXlsxImporter
         /** @var array<string, Company> $existing empresas del centro por clave de CIF */
         $existing = [];
         foreach ($this->companies->findAllByCentre($centre) as $company) {
-            $existing[CompanyWorkbook::vatKey($company->getVatNumber())] = $company;
+            $existing[CompanyWorkbook::companyKey($company->getVatNumber(), $company->getCentreCode())] = $company;
         }
 
         /** @var array<string, list<Workcenter>> $centresByCompany */
@@ -289,7 +290,7 @@ final class CompanyXlsxImporter
         $seen  = [];
 
         foreach ($rows as ['row' => $row, 'values' => $v]) {
-            $key = CompanyWorkbook::vatKey($v['vat_number']);
+            $key = CompanyWorkbook::companyKey($v['vat_number'], $v['centre_code']);
 
             $missing = false;
             foreach (['name', 'vat_number', 'city'] as $required) {
@@ -332,7 +333,7 @@ final class CompanyXlsxImporter
                     $this->em->persist($company);
                 };
                 ++$this->result->companiesCreated;
-                $this->result->companies[$key] = ['key' => $key, 'vat' => $fields['vat_number'], 'name' => $fields['name'], 'city' => $fields['city'], 'status' => 'new'];
+                $this->result->companies[$key] = ['key' => $key, 'vat' => $this->vatLabel($fields['vat_number'], $fields['centre_code']), 'name' => $fields['name'], 'city' => $fields['city'], 'status' => 'new'];
 
                 continue;
             }
@@ -347,7 +348,7 @@ final class CompanyXlsxImporter
                 ++$this->result->companiesUnchanged;
                 $status = 'same';
             }
-            $this->result->companies[$key] = ['key' => $key, 'vat' => $fields['vat_number'], 'name' => $fields['name'], 'city' => $fields['city'], 'status' => $status];
+            $this->result->companies[$key] = ['key' => $key, 'vat' => $this->vatLabel($fields['vat_number'], $fields['centre_code']), 'name' => $fields['name'], 'city' => $fields['city'], 'status' => $status];
             $targets[$key] = ['company' => $current, 'city' => $fields['city'], 'entity' => $current, 'editable' => true];
         }
     }
@@ -371,6 +372,7 @@ final class CompanyXlsxImporter
         return [
             'name'                       => $v['name'],
             'vat_number'                 => $v['vat_number'],
+            'centre_code'                => $v['centre_code'],
             'city'                       => $v['city'],
             'representative_first_name'  => $keep($v['representative_first_name'], $current?->getRepresentativeFirstName()),
             'representative_last_name'   => $keep($v['representative_last_name'], $current?->getRepresentativeLastName()),
@@ -381,11 +383,18 @@ final class CompanyXlsxImporter
         ];
     }
 
+    /** CIF/NIF con su código de centro, si lo tiene, para los resúmenes y los errores. */
+    private function vatLabel(string $vat, string $centreCode): string
+    {
+        return $centreCode !== '' ? $vat . ' (' . $centreCode . ')' : $vat;
+    }
+
     /** @param CompanyFields $f */
     private function fillCompany(Company $company, array $f): void
     {
         $company->setName((string) $f['name'])
             ->setVatNumber((string) $f['vat_number'])
+            ->setCentreCode((string) $f['centre_code'])
             ->setCity((string) $f['city'])
             ->setRepresentativeFirstName($f['representative_first_name'])
             ->setRepresentativeLastName($f['representative_last_name'])
@@ -400,6 +409,7 @@ final class CompanyXlsxImporter
     {
         return $company->getName() !== $f['name']
             || $company->getVatNumber() !== $f['vat_number']
+            || $company->getCentreCode() !== $f['centre_code']
             || $company->getCity() !== $f['city']
             || $company->getRepresentativeFirstName() !== $f['representative_first_name']
             || $company->getRepresentativeLastName() !== $f['representative_last_name']
@@ -439,7 +449,7 @@ final class CompanyXlsxImporter
         $seen  = [];
 
         foreach ($rows as ['row' => $row, 'values' => $v]) {
-            $key = CompanyWorkbook::vatKey($v['company_vat_number']);
+            $key = CompanyWorkbook::companyKey($v['company_vat_number'], $v['company_centre_code']);
 
             if ($v['company_vat_number'] === '' || $v['name'] === '') {
                 $required = $v['company_vat_number'] === '' ? 'company_vat_number' : 'name';
@@ -450,7 +460,7 @@ final class CompanyXlsxImporter
 
             $target = $targets[$key] ?? null;
             if ($target === null) {
-                $this->rowError($sheet, $row, $this->tr('companies.import.error.unknown_company', ['%vat%' => $v['company_vat_number']]));
+                $this->rowError($sheet, $row, $this->tr('companies.import.error.unknown_company', ['%vat%' => $this->vatLabel($v['company_vat_number'], $v['company_centre_code'])]));
 
                 continue;
             }
@@ -539,7 +549,7 @@ final class CompanyXlsxImporter
         $created = [];
 
         foreach ($rows as ['row' => $row, 'values' => $v]) {
-            $key = CompanyWorkbook::vatKey($v['company_vat_number']);
+            $key = CompanyWorkbook::companyKey($v['company_vat_number'], $v['company_centre_code']);
 
             foreach (['company_vat_number', 'first_name', 'last_name', 'national_id'] as $required) {
                 if ($v[$required] === '') {
@@ -551,7 +561,7 @@ final class CompanyXlsxImporter
 
             $target = $targets[$key] ?? null;
             if ($target === null) {
-                $this->rowError($sheet, $row, $this->tr('companies.import.error.unknown_company', ['%vat%' => $v['company_vat_number']]));
+                $this->rowError($sheet, $row, $this->tr('companies.import.error.unknown_company', ['%vat%' => $this->vatLabel($v['company_vat_number'], $v['company_centre_code'])]));
 
                 continue;
             }

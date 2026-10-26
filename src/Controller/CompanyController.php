@@ -78,6 +78,7 @@ class CompanyController extends AbstractController
         $values = [
             'name'                       => '',
             'vat_number'                 => '',
+            'centre_code'                => '',
             'city'                       => '',
             'representative_first_name'  => '',
             'representative_last_name'   => '',
@@ -93,6 +94,7 @@ class CompanyController extends AbstractController
             $values = [
                 'name'                       => trim($request->request->getString('name')),
                 'vat_number'                 => trim($request->request->getString('vat_number')),
+                'centre_code'                => trim($request->request->getString('centre_code')),
                 'city'                       => trim($request->request->getString('city')),
                 'representative_first_name'  => trim($request->request->getString('representative_first_name')),
                 'representative_last_name'   => trim($request->request->getString('representative_last_name')),
@@ -102,8 +104,8 @@ class CompanyController extends AbstractController
 
             $errors = $this->validateCompany($values);
 
-            if (empty($errors['vat_number'])) {
-                $existing = $this->companies->findByVatNumberAndCentre($values['vat_number'], $centre);
+            if (empty($errors['vat_number']) && empty($errors['centre_code'])) {
+                $existing = $this->companies->findByVatNumberAndCentre($values['vat_number'], $centre, $values['centre_code']);
                 if ($existing !== null) {
                     $errors['vat_number'] = $this->t('company.error.vat_number_duplicate');
                 }
@@ -113,6 +115,7 @@ class CompanyController extends AbstractController
                 $company = (new Company())
                     ->setName($values['name'])
                     ->setVatNumber($values['vat_number'])
+                    ->setCentreCode($values['centre_code'])
                     ->setCity($values['city'])
                     ->setRepresentativeFirstName($values['representative_first_name'] !== '' ? $values['representative_first_name'] : null)
                     ->setRepresentativeLastName($values['representative_last_name'] !== '' ? $values['representative_last_name'] : null)
@@ -292,6 +295,7 @@ class CompanyController extends AbstractController
         $values = [
             'name'                      => $company->getName(),
             'vat_number'                => $company->getVatNumber(),
+            'centre_code'               => $company->getCentreCode(),
             'city'                      => $company->getCity(),
             'contact_information'       => $company->getContactInformation() ?? '',
             'exceptional_circumstances' => $company->getExceptionalCircumstances() ?? '',
@@ -313,6 +317,7 @@ class CompanyController extends AbstractController
             $values = [
                 'name'                      => trim($request->request->getString('name')),
                 'vat_number'                => trim($request->request->getString('vat_number')),
+                'centre_code'               => trim($request->request->getString('centre_code')),
                 'city'                      => trim($request->request->getString('city')),
                 'contact_information'       => $this->contactSanitizer->sanitize($rawContactInfo),
                 'exceptional_circumstances' => trim($request->request->getString('exceptional_circumstances')),
@@ -324,8 +329,8 @@ class CompanyController extends AbstractController
 
             $errors = $this->validateCompany($values);
 
-            if (empty($errors['vat_number'])) {
-                $existing = $this->companies->findByVatNumberAndCentre($values['vat_number'], $company->getEducationalCentre());
+            if (empty($errors['vat_number']) && empty($errors['centre_code'])) {
+                $existing = $this->companies->findByVatNumberAndCentre($values['vat_number'], $company->getEducationalCentre(), $values['centre_code']);
                 if ($existing !== null && !$existing->getId()->equals($company->getId())) {
                     $errors['vat_number'] = $this->t('company.error.vat_number_duplicate');
                 }
@@ -350,6 +355,7 @@ class CompanyController extends AbstractController
             } else {
                 $company->setName($values['name'])
                     ->setVatNumber($values['vat_number'])
+                    ->setCentreCode($values['centre_code'])
                     ->setCity($values['city'])
                     ->setContactInformation($values['contact_information'] !== '' ? $values['contact_information'] : null)
                     ->setExceptionalCircumstances($values['exceptional_circumstances'] !== '' ? $values['exceptional_circumstances'] : null)
@@ -608,7 +614,7 @@ class CompanyController extends AbstractController
     private function mapViolations(\Symfony\Component\Validator\ConstraintViolationListInterface $violations): array
     {
         $errors = [];
-        $pathMap = ['vatNumber' => 'vat_number'];
+        $pathMap = ['vatNumber' => 'vat_number', 'centreCode' => 'centre_code'];
         foreach ($violations as $violation) {
             $path = $violation->getPropertyPath();
             $key  = $pathMap[$path] ?? $path;
@@ -634,6 +640,10 @@ class CompanyController extends AbstractController
 
         if ($values['vat_number'] === '') {
             $errors['vat_number'] = $this->t('company.error.vat_number_required');
+        }
+
+        if ($values['centre_code'] !== '' && preg_match('/^\d{8}$/', $values['centre_code']) !== 1) {
+            $errors['centre_code'] = $this->t('company.error.centre_code_invalid');
         }
 
         if ($values['city'] === '') {

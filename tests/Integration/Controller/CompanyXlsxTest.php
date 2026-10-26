@@ -64,12 +64,12 @@ class CompanyXlsxTest extends ControllerTestCase
 
         $row = $sheets['Empresas'][1];
         self::assertSame('=1+1 S.L.', $row[0], 'Un texto que empieza por = no debe convertirse en fórmula');
-        self::assertSame('Carmen', $row[3]);
-        self::assertSame('Serrano', $row[4]);
-        self::assertSame("Llamar por la mañana\nTel. 955000000", $row[7]);
-        self::assertSame(['B12345678', 'Sede Norte', 'Dos Hermanas'], $sheets['Centros de trabajo'][1]);
-        self::assertSame('12345678A', $sheets['Empleados'][1][3]);
-        self::assertSame('600123456', $sheets['Empleados'][1][5]);
+        self::assertSame('Carmen', $row[4]);
+        self::assertSame('Serrano', $row[5]);
+        self::assertSame("Llamar por la mañana\nTel. 955000000", $row[8]);
+        self::assertSame(['B12345678', '', 'Sede Norte', 'Dos Hermanas'], $sheets['Centros de trabajo'][1]);
+        self::assertSame('12345678A', $sheets['Empleados'][1][4]);
+        self::assertSame('600123456', $sheets['Empleados'][1][6]);
     }
 
     public function testExportAppliesSearchFilter(): void
@@ -222,6 +222,66 @@ class CompanyXlsxTest extends ControllerTestCase
         self::assertSame('Utrera', $companies[0]->getCity());
         self::assertSame('Directora', $companies[0]->getRepresentativeRole());
         self::assertSame('Carmen', $companies[0]->getRepresentativeFirstName(), 'Una celda vacía no borra el dato');
+    }
+
+    public function testImportTellsApartCompaniesWithTheSameVatByCentreCode(): void
+    {
+        [$centre, $admin] = $this->setUpCentreWithAdmin();
+        $this->loginAs($admin, $centre);
+
+        $path = $this->makeWorkbook([
+            'Empresas' => [
+                ['Nombre *', 'CIF/NIF *', 'Código de centro', 'Localidad *'],
+                ['IES Uno', 'S4111001F', '41000002', 'Sevilla'],
+                ['IES Dos', 'S4111001F', '41000003', 'Utrera'],
+            ],
+            'Centros de trabajo' => [
+                ['CIF/NIF de la empresa *', 'Código de centro de la empresa', 'Nombre del centro *'],
+                ['S4111001F', '41000003', 'Sede Utrera'],
+            ],
+        ]);
+
+        $crawler = $this->upload($path);
+        self::assertStringContainsString('2 empresa(s) nueva(s)', $crawler->text());
+        $this->confirm($crawler);
+
+        $this->em->clear();
+        $stored = $this->em->getRepository(Company::class)->findBy(['vatNumber' => 'S4111001F']);
+        self::assertCount(2, $stored);
+        $dos = $this->em->getRepository(Company::class)->findOneBy(['centreCode' => '41000003']);
+        self::assertSame('IES Dos', $dos->getName());
+        $names = array_map(static fn (Workcenter $w): string => $w->getName(), $this->em->getRepository(Workcenter::class)->findBy(['company' => $dos]));
+        self::assertSame(['Sede Utrera'], $names, 'El centro de trabajo va a la empresa con ese código');
+    }
+
+    public function testImportRejectsAnInvalidCentreCode(): void
+    {
+        [$centre, $admin] = $this->setUpCentreWithAdmin();
+        $this->loginAs($admin, $centre);
+
+        $path = $this->makeWorkbook([
+            'Empresas' => [
+                ['Nombre *', 'CIF/NIF *', 'Código de centro', 'Localidad *'],
+                ['IES Uno', 'S4111001F', '1234', 'Sevilla'],
+            ],
+        ]);
+
+        $crawler = $this->upload($path);
+        self::assertStringContainsString('El código de centro debe tener 8 dígitos', $crawler->text());
+    }
+
+    public function testExportedCentreCodesImportWithoutChanges(): void
+    {
+        [$centre, $admin] = $this->setUpCentreWithAdmin();
+        $one = $this->makeCompany($centre, 'IES Uno', 'S4111001F')->setCentreCode('41000002');
+        $two = $this->makeCompany($centre, 'IES Dos', 'S4111001F')->setCentreCode('41000003');
+        $this->persist($one, $two, (new Workcenter())->setName('Sede')->setCity('Sevilla')->setCompany($one), (new Workcenter())->setName('Sede')->setCity('Utrera')->setCompany($two));
+        $this->loginAs($admin, $centre);
+
+        $this->client->request('GET', '/empresas/exportar');
+        $crawler = $this->upload($this->saveResponse());
+
+        self::assertStringContainsString('no contiene cambios', $crawler->text());
     }
 
     public function testImportLinksExistingWorkerInsteadOfCreatingDuplicate(): void

@@ -90,6 +90,102 @@ class CompanyControllerTest extends ControllerTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testNewCompanyAllowsTheSameVatWithADifferentCentreCode(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $this->persist($centre, $teacher, $this->makeCompany($centre, 'IES Uno', 'S4111001F')->setCentreCode('41000002'));
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/empresas/nueva', [
+            '_token'      => $token,
+            'name'        => 'IES Dos',
+            'vat_number'  => 'S4111001F',
+            'centre_code' => '41000003',
+            'city'        => 'Sevilla',
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        $codes = array_map(static fn (Company $c): string => $c->getCentreCode(), $this->em->getRepository(Company::class)->findBy(['vatNumber' => 'S4111001F']));
+        sort($codes);
+        self::assertSame(['41000002', '41000003'], $codes);
+    }
+
+    public function testNewCompanyRejectsTheSameVatAndCentreCode(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $this->persist($centre, $teacher, $this->makeCompany($centre, 'IES Uno', 'S4111001F')->setCentreCode('41000002'));
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        $this->client->request('POST', '/empresas/nueva', [
+            '_token'      => $token,
+            'name'        => 'IES Repetido',
+            'vat_number'  => 'S4111001F',
+            'centre_code' => '41000002',
+            'city'        => 'Sevilla',
+        ]);
+
+        self::assertResponseIsSuccessful(); // permanece en el formulario
+        self::assertSelectorTextContains('form', 'Ya existe una empresa con este CIF/NIF y código de centro');
+    }
+
+    public function testNewCompanyRejectsACentreCodeThatIsNotEightDigits(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $this->persist($centre, $teacher);
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/nueva');
+        $token   = $crawler->filter('[name="_token"]')->first()->attr('value');
+
+        foreach (['4100001', '410000011', 'A1000001'] as $code) {
+            $this->client->request('POST', '/empresas/nueva', [
+                '_token'      => $token,
+                'name'        => 'IES',
+                'vat_number'  => 'S4111001F',
+                'centre_code' => $code,
+                'city'        => 'Sevilla',
+            ]);
+
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('form', 'El código de centro debe tener 8 dígitos');
+        }
+        self::assertCount(0, $this->em->getRepository(Company::class)->findAll());
+    }
+
+    public function testEditCompanyKeepsAndChangesTheCentreCode(): void
+    {
+        $centre  = $this->makeCentre('41000001');
+        $teacher = $this->makeAdmin('admin.1');
+        $company = $this->makeCompany($centre, 'IES Uno', 'S4111001F')->setCentreCode('41000002');
+        $this->persist($centre, $teacher, $company);
+        $this->loginAs($teacher, $centre);
+
+        $crawler = $this->client->request('GET', '/empresas/' . $company->getId()->toRfc4122());
+        self::assertSame('41000002', $crawler->filter('#centre_code')->attr('value'));
+
+        $this->client->request('POST', '/empresas/' . $company->getId()->toRfc4122(), [
+            '_token'      => $crawler->filter('[name="_token"]')->first()->attr('value'),
+            'name'        => 'IES Uno',
+            'vat_number'  => 'S4111001F',
+            'centre_code' => '41000009',
+            'city'        => 'Sevilla',
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertSame('41000009', $this->em->getRepository(Company::class)->find($company->getId())->getCentreCode());
+    }
+
     public function testNewCompanyPostSavesRepresentative(): void
     {
         $centre  = $this->makeCentre('41000001');

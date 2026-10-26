@@ -10,7 +10,7 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
-#[ORM\UniqueConstraint(name: 'uq_company_vat_centre', columns: ['vat_number', 'educational_centre_id'])]
+#[ORM\UniqueConstraint(name: 'uq_company_vat_code_centre', columns: ['vat_number', 'centre_code', 'educational_centre_id'])]
 class Company
 {
     #[ORM\Id]
@@ -28,6 +28,15 @@ class Company
     #[Assert\NotBlank]
     #[Assert\Length(min: 9, max: 50)]
     private string $vatNumber;
+
+    /**
+     * Código de centro de 8 dígitos, para distinguir las empresas que comparten CIF (todos los centros educativos
+     * de Andalucía tienen el mismo). Cadena vacía = sin código: así la restricción única sobre (CIF, código, centro)
+     * sigue funcionando en todos los motores, donde varios NULL no cuentan como repetidos.
+     */
+    #[ORM\Column(length: 8, options: ['default' => ''])]
+    #[Assert\Regex(pattern: '/^\d{8}$/', message: 'El código de centro debe tener 8 dígitos.')]
+    private string $centreCode = '';
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
@@ -101,6 +110,18 @@ class Company
     public function setVatNumber(string $vatNumber): static
     {
         $this->vatNumber = $vatNumber;
+
+        return $this;
+    }
+
+    public function getCentreCode(): string
+    {
+        return $this->centreCode;
+    }
+
+    public function setCentreCode(string $centreCode): static
+    {
+        $this->centreCode = $centreCode;
 
         return $this;
     }

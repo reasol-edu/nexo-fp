@@ -44,6 +44,18 @@ class CompanyRepositoryTest extends RepositoryTestCase
         self::assertSame($company->getId()->toRfc4122(), $result->getId()->toRfc4122());
     }
 
+    public function testFindByVatNumberAndCentreDistinguishesCompaniesByCentreCode(): void
+    {
+        $centre = $this->makeCentre('41000001');
+        $one    = $this->makeCompany('IES Uno', 'S4111001F', $centre)->setCentreCode('41000002');
+        $two    = $this->makeCompany('IES Dos', 'S4111001F', $centre)->setCentreCode('41000003');
+        $this->persist($centre, $one, $two);
+
+        self::assertSame('IES Dos', $this->repo->findByVatNumberAndCentre('S4111001F', $centre, '41000003')?->getName());
+        self::assertSame('IES Uno', $this->repo->findByVatNumberAndCentre('S4111001F', $centre, '41000002')?->getName());
+        self::assertNull($this->repo->findByVatNumberAndCentre('S4111001F', $centre), 'sin código no coincide con las que lo tienen');
+    }
+
     public function testFindByVatNumberAndCentreReturnsNullForDifferentCentre(): void
     {
         $centreA = $this->makeCentre('41000002');

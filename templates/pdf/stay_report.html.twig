@@ -8,7 +8,7 @@
 {% macro company_cell(tp) %}
     {% set company = tp.workcenter.company %}
     {{ company.name }}<br>
-    <span class="cell-sub">{{ 'stays.report.company_vat'|trans({}, 'stays') }}: {{ company.vatNumber }}</span><br>
+    <span class="cell-sub">{{ 'stays.report.company_vat'|trans({}, 'stays') }}: {{ company.vatNumber }}{% if company.centreCode != '' %} ({{ company.centreCode }}){% endif %}</span><br>
     {% if company.representativeFirstName or company.representativeLastName or company.representativeNationalId or company.representativeRole %}
         <span class="cell-sub">
             {{- 'stays.report.representative'|trans({}, 'stays') }}:

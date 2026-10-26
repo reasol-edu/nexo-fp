@@ -46,8 +46,25 @@
                     />
                 </div>
 
+                {# Código de centro (empresas con el mismo CIF, p. ej. los centros educativos) #}
+                <div>
+                    <twig:Form:Field
+                        id="centre_code"
+                        name="centre_code"
+                        label="{{ 'company.field.centre_code'|trans({}, 'companies') }}"
+                        value="{{ values.centre_code }}"
+                        placeholder="{{ 'company.field.centre_code_placeholder'|trans({}, 'companies') }}"
+                        :error="errors.centre_code ?? null"
+                        :mono="true"
+                        maxlength="8"
+                        inputmode="numeric"
+                        pattern="[0-9]{8}"
+                        autocomplete="off"
+                    />
+                </div>
+
                 {# Localidad #}
-                <div class="sm:col-span-3">
+                <div class="sm:col-span-2">
                     <twig:Form:Field
                         id="city"
                         name="city"

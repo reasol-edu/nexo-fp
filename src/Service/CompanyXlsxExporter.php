@@ -61,7 +61,7 @@ final class CompanyXlsxExporter
             if ($company === null) {
                 continue;
             }
-            $writer->addRow($this->textRow([$company->getVatNumber(), $workcenter->getName(), $workcenter->getCity()]));
+            $writer->addRow($this->textRow([$company->getVatNumber(), $company->getCentreCode(), $workcenter->getName(), $workcenter->getCity()]));
         }
 
         // Empleados
@@ -70,6 +70,7 @@ final class CompanyXlsxExporter
             foreach ($workersByCompany[$company->getId()->toRfc4122()] ?? [] as $worker) {
                 $writer->addRow($this->textRow([
                     $company->getVatNumber(),
+                    $company->getCentreCode(),
                     $worker->getName()->getFirstName(),
                     $worker->getName()->getLastName(),
                     $worker->getNationalIdNumber(),
@@ -106,6 +107,7 @@ final class CompanyXlsxExporter
         return [
             $company->getName(),
             $company->getVatNumber(),
+            $company->getCentreCode(),
             $company->getCity(),
             $company->getRepresentativeFirstName(),
             $company->getRepresentativeLastName(),

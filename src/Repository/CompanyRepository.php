@@ -76,6 +76,7 @@ class CompanyRepository extends ServiceEntityRepository
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(c.name)) LIKE UNACCENT(LOWER(:q))',
                     'UNACCENT(LOWER(c.vatNumber)) LIKE UNACCENT(LOWER(:q))',
+                    'c.centreCode LIKE :q',
                     'UNACCENT(LOWER(c.city)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
@@ -107,6 +108,7 @@ class CompanyRepository extends ServiceEntityRepository
                 $qb->expr()->orX(
                     'UNACCENT(LOWER(c.name)) LIKE UNACCENT(LOWER(:q))',
                     'UNACCENT(LOWER(c.vatNumber)) LIKE UNACCENT(LOWER(:q))',
+                    'c.centreCode LIKE :q',
                     'UNACCENT(LOWER(c.city)) LIKE UNACCENT(LOWER(:q))',
                 )
             )->setParameter('q', $q);
@@ -146,12 +148,15 @@ class CompanyRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function findByVatNumberAndCentre(string $vatNumber, EducationalCentre $centre): ?Company
+    /** La empresa se identifica por CIF y código de centro (vacío si no tiene) dentro del centro educativo. */
+    public function findByVatNumberAndCentre(string $vatNumber, EducationalCentre $centre, string $centreCode = ''): ?Company
     {
         return $this->createQueryBuilder('c')
             ->where('c.vatNumber = :vatNumber')
+            ->andWhere('c.centreCode = :centreCode')
             ->andWhere('c.educationalCentre = :centre')
             ->setParameter('vatNumber', $vatNumber)
+            ->setParameter('centreCode', $centreCode)
             ->setParameter('centre', $centre->getId(), 'uuid')
             ->getQuery()
             ->getOneOrNullResult();

@@ -176,7 +176,10 @@ detalle de la estancia.
 
 Directorio de empresas colaboradoras del centro. Permite registrar y gestionar:
 
-- **Datos de la empresa**: nombre, CIF/NIF y localidad.
+- **Datos de la empresa**: nombre, CIF/NIF, localidad y, opcionalmente, el **código de centro** (8 dígitos). El
+  código sirve para registrar por separado las empresas que comparten CIF, como los centros educativos de
+  Andalucía, que tienen todos el mismo: cada empresa se distingue por la pareja CIF/NIF y código de centro. Si
+  no se indica, la empresa se identifica solo por su CIF/NIF.
 - **Información de contacto**: campo de texto enriquecido (negrita, cursiva, listas, enlaces…) para
   anotar teléfonos, correos electrónicos, personas de referencia y cualquier otro dato de contacto.
 - **Representante** de la empresa (nombre, apellidos, DNI/NIE y cargo); todos los campos son opcionales.
@@ -194,9 +197,9 @@ mantener las empresas en un libro `.xlsx` fácil de rellenar a mano. El libro ti
 
 | Hoja | Contenido |
 |---|---|
-| **Empresas** | Una fila por empresa: nombre\*, CIF/NIF\*, localidad\*, representante (nombre, apellidos, DNI/NIE y cargo), información de contacto, observaciones y, solo como información, los docentes de enlace |
-| **Centros de trabajo** | Una fila por centro: CIF/NIF de la empresa\*, nombre del centro\* y localidad |
-| **Empleados** | Una fila por empleado: CIF/NIF de la empresa\*, nombre\*, apellidos\*, DNI/NIE\*, correo electrónico y teléfono |
+| **Empresas** | Una fila por empresa: nombre\*, CIF/NIF\*, código de centro, localidad\*, representante (nombre, apellidos, DNI/NIE y cargo), información de contacto, observaciones y, solo como información, los docentes de enlace |
+| **Centros de trabajo** | Una fila por centro: CIF/NIF de la empresa\*, código de centro de la empresa, nombre del centro\* y localidad |
+| **Empleados** | Una fila por empleado: CIF/NIF de la empresa\*, código de centro de la empresa, nombre\*, apellidos\*, DNI/NIE\*, correo electrónico y teléfono |
 | **Instrucciones** | Resumen de las reglas de este apartado, dentro del propio libro |
 
 Las columnas marcadas con \* son obligatorias. La exportación respeta el filtro de búsqueda activo, y el
@@ -204,8 +207,9 @@ botón **«Descargar plantilla»** de la pantalla de importación entrega el lib
 
 **Reglas de la importación:**
 
-- Cada empresa se identifica por su **CIF/NIF** dentro del centro (sin distinguir mayúsculas ni tener en
-  cuenta espacios o guiones): si ya existe se **actualiza** y, si no, se **crea**.
+- Cada empresa se identifica por su **CIF/NIF** y su **código de centro** (opcional) dentro del centro (sin
+  distinguir mayúsculas ni tener en cuenta espacios o guiones). En las hojas «Centros de trabajo» y
+  «Empleados», el código de centro de la empresa es necesario cuando varias empresas comparten CIF: si ya existe se **actualiza** y, si no, se **crea**.
 - **No se elimina nada**: lo que no aparezca en el libro se queda como está.
 - Al actualizar, una **celda vacía conserva el valor actual**; no borra datos.
 - Si una empresa nueva no tiene centros en la hoja «Centros de trabajo», se crea uno por defecto con la
