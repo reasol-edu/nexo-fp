@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.0] - 2026-10-26
+
+### Added
+
+- Código de centro de la empresa (8 dígitos, opcional) para registrar por separado las empresas que comparten CIF, como los centros educativos de Andalucía. La empresa se identifica por su CIF/NIF y su código dentro del centro educativo: se puede introducir al crearla y al editarla, se ve bajo el CIF en el listado, se puede buscar por él y aparece en el informe de la estancia. El Excel de empresas lo exporta e importa en una columna nueva en cada hoja (los libros antiguos, sin ella, siguen importándose).
+
 ## [2.21.0] - 2026-10-24
 
 ### Added
