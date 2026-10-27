@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.1] - 2026-10-27
+
+### Security
+
+- Los binarios descargables pasan a FrankenPHP 1.13.4, una versión de seguridad que corrige siete vulnerabilidades del servidor, entre ellas una de gravedad alta que afectaba a la 1.13.2 y a la 1.13.3 (las que llevaban las versiones anteriores): una petición sin autenticar que cortaba la conexión antes de ser atendida podía tumbar todo el proceso en modo worker. Lleva el mismo PHP 8.5.12 y el Caddyfile de Nexo FP se ha comprobado con el binario real. La imagen Docker, que se reconstruye sobre la última imagen base, recibe además la corrección de Brotli (CVE-2026-111497).
+
 ## [2.22.0] - 2026-10-26
 
 ### Added
