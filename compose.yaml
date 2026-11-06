@@ -22,6 +22,7 @@ x-app-environment: &app-environment
   DATABASE_URL:                 "postgresql://nexo:${DB_PASSWORD:-changeme}@database:5432/nexo?serverVersion=16&charset=utf8"
   DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
   MIGRATIONS_PATH:              migrations/postgresql
+  APP_TIMEZONE:                 "${APP_TIMEZONE:-Europe/Madrid}"
   APP_LOG:                      "${APP_LOG:-true}"
   APP_LOG_RETENTION_DAYS:       "${APP_LOG_RETENTION_DAYS:-90}"
   APP_PASSWORD_BREACH_CHECK:    "${APP_PASSWORD_BREACH_CHECK:-false}"
