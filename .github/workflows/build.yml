@@ -16,7 +16,9 @@ env:
   # https://github.com/php/frankenphp/releases
   # El binario lleva dentro su propio PHP (desde la 1.13.1, PHP 8.5.12, que corrige PHP2Shell,
   # CVE-2026-109618 y CVE-2026-109619): cada versión de FrankenPHP trae el PHP con el que se compiló,
-  # así que hay que subirla también cuando salga un parche de seguridad de PHP. NO bajar de la 1.13.4:
+  # así que hay que subirla también cuando salga un parche de seguridad de PHP. NO bajar de la 1.13.5:
+  # - Las anteriores a la 1.13.5 tienen 17 vulnerabilidades de FrankenPHP, la más grave permite ejecutar como PHP
+  #   un fichero subido que no sea PHP, y llevan un Caddy con fallos de seguridad.
   # - La 1.13.2 y la 1.13.3 tienen un fallo de gravedad alta en modo worker: una petición sin autenticar que
   #   cortaba la conexión antes de ser atendida tumbaba todo el proceso (GHSA-5f4m-ff4w-g458; corregido en la 1.13.4).
   # - Las anteriores a la 1.13.1 llevan PHP con PHP2Shell.
@@ -25,9 +27,9 @@ env:
   #   (https://github.com/php/frankenphp/issues/2743; corregido en la 1.13.3).
   # - La 1.13.1 no arranca con el Mercure de nuestro Caddyfile («an issuer identifier is required in modern
   #   mode») aunque se declare protocol_version_compatibility; la 1.13.2 y posteriores sí.
-  # La 1.13.4 (como la 1.13.3) no publica binario para Mac con procesador Intel.
+  # La 1.13.5 (como la 1.13.3) no publica binario para Mac con procesador Intel.
   # Antes de subir de versión, comprobar el Caddyfile con el binario real: frankenphp validate --adapter caddyfile.
-  FRANKENPHP_VERSION: "1.13.4"
+  FRANKENPHP_VERSION: "1.13.5"
   # Solo para compilar la aplicación (composer, assets); el PHP que ejecuta la app es el del binario.
   PHP_VERSION: "8.4"
 
