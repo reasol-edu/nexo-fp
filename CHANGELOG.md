@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.0] - 2026-11-06
+
+### Added
+
+- Zona horaria de la aplicación (`APP_TIMEZONE`, por defecto `Europe/Madrid`; Canarias: `Atlantic/Canary`). PHP ignora la zona del servidor y la aplicación trabajaba en UTC, así que las horas se veían desplazadas y «hoy» podía cambiar de día a deshoras. Ahora se muestra la hora local y las fechas con hora se siguen guardando en UTC, por lo que no hace falta migrar datos. Las instalaciones existentes (binarios, Ubuntu, Docker) usan el valor por defecto sin tocar nada.
+
+### Security
+
+- Los binarios descargables pasan a FrankenPHP 1.13.5, una versión de seguridad que corrige 17 vulnerabilidades del servidor, la más grave de las cuales permitía ejecutar como PHP un fichero subido que no fuera PHP. Incluye Caddy 2.11.9 y Mercure 1.1.6, con el mismo PHP 8.5.12; el Caddyfile de Nexo FP se ha comprobado con el binario real.
+
 ## [2.22.1] - 2026-10-27
 
 ### Security

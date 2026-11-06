@@ -9,8 +9,13 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "2.22.1"
-    app.pub_date:               "2026-10-27"
+    app.version:                "2.23.0"
+    app.pub_date:               "2026-11-06"
+    # Zona horaria de la aplicación (la que ven las personas y la de «hoy»). Las fechas con hora siguen guardándose
+    # en UTC; ver App\Doctrine\Type\UtcDateTimeImmutableType. Se cambia con APP_TIMEZONE. El valor por defecto cubre
+    # también las instalaciones existentes, cuyo app/.env no la define.
+    env(APP_TIMEZONE):          "Europe/Madrid"
+    app.timezone:               "%env(APP_TIMEZONE)%"
     # Avisos de Mercure como updates privados (true en prod). En dev se pone a
     # false (ver services_dev.yaml) porque el hub de desarrollo es anónimo y solo
     # entrega updates públicos. El canal solo lleva el UUID de la estancia.
