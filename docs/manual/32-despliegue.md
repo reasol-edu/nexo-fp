@@ -229,7 +229,7 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `APP_LOG` | Activar el [registro de actividad](24-administracion-global.md#registro-de-actividad). En el binario nativo es recomendable desactivarlo si no se necesita auditoría | `true` |
 | `APP_LOG_RETENTION_DAYS` | Días que se conservan las entradas del registro antes de la limpieza semanal automática | `90` |
 | `APP_PASSWORD_BREACH_CHECK` | Si es `true`, una contraseña nueva tampoco puede figurar en filtraciones de datos conocidas. Consulta el servicio externo «Have I Been Pwned» con k-anonimato (nunca se envía la contraseña) y se omite en pocos segundos si el servidor no tiene salida a Internet | `false` |
-| `SYMFONY_TRUSTED_PROXIES` | IPs del proxy inverso desde el que recibe peticiones la aplicación (p. ej. nginx, Caddy). Necesario para que el registro muestre la IP real del usuario. Déjalo sin definir si no usas proxy | *(sin definir)* |
+| `SYMFONY_TRUSTED_PROXIES` | IPs del proxy inverso desde el que recibe peticiones la aplicación (p. ej. nginx, Caddy). Necesario para que el registro muestre la IP real del usuario. Acepta también rangos (`172.18.0.0/16`) y debe ser la IP desde la que el proxy se conecta, tal como la ve la aplicación (en Docker, normalmente la de la red interna). El proxy tiene que enviar la cabecera `X-Forwarded-For`. Déjalo sin definir si no usas proxy | *(sin definir)* |
 
 ### Servidor sin salida directa a Séneca {#proxy-para-iseneca}
 

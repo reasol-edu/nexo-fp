@@ -23,6 +23,8 @@ x-app-environment: &app-environment
   DEFAULT_URI:                  "${DEFAULT_URI:-http://localhost}"
   MIGRATIONS_PATH:              migrations/postgresql
   APP_TIMEZONE:                 "${APP_TIMEZONE:-Europe/Madrid}"
+  # Vacía equivale a no definirla (no se confía en ningún proxy).
+  SYMFONY_TRUSTED_PROXIES:      "${SYMFONY_TRUSTED_PROXIES:-}"
   APP_LOG:                      "${APP_LOG:-true}"
   APP_LOG_RETENTION_DAYS:       "${APP_LOG_RETENTION_DAYS:-90}"
   APP_PASSWORD_BREACH_CHECK:    "${APP_PASSWORD_BREACH_CHECK:-false}"
