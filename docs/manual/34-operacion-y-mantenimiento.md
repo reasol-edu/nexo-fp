@@ -14,8 +14,8 @@ php bin/console app:backup [carpeta-o-fichero.zip] [--password[=CONTRASEÑA]]
 php bin/console app:restore <copia.zip> [--password[=CONTRASEÑA]] [--force]
 ```
 
-`app:backup` vuelca toda la base de datos a un único ZIP. Sin argumento lo deja en `var/backups/` con un
-nombre con la fecha y la hora; también acepta una carpeta de destino o la ruta completa de un `.zip`. El
+`app:backup` vuelca toda la base de datos a un único ZIP. Sin argumento lo deja en la carpeta de copias
+(`var/backups/`, o la que indique `APP_BACKUP_DIR`) con un nombre con la fecha y la hora; también acepta una carpeta de destino o la ruta completa de un `.zip`. El
 volcado es lógico e independiente del motor (una tabla por fichero NDJSON, con los valores binarios en
 base64 y un `manifest.json` con la versión de la aplicación, el motor y el número de filas de cada
 tabla), de modo que una copia hecha con SQLite se puede leer con PostgreSQL y al revés. La cola de correos
@@ -42,6 +42,27 @@ privilegios (el propietario de la base de datos o un superusuario), igual que
 `pg_restore --disable-triggers`. En SQLite y MySQL no hace falta nada especial. Tras restaurar,
 **reinicia los procesos de la aplicación** (incluido el worker de Messenger) para descartar cualquier dato
 en caché.
+
+### Desde la aplicación: copias manuales y automáticas
+
+Los administradores globales también pueden descargar y guardar copias desde **Administración →
+Copias de seguridad**, y activar las **copias automáticas** nocturnas con un ajuste global (consulta
+[Administración global](24-administracion-global.md#copias-de-seguridad)). Todas usan el mismo formato que
+`app:backup`, así que se restauran con `app:restore`, y comparten una carpeta: `var/backups/` por defecto,
+o la que indique la variable `APP_BACKUP_DIR`.
+
+La carpeta tiene que **sobrevivir a las actualizaciones**, o las copias se perderían con ellas:
+
+- **Docker:** `var/` es un volumen (`./data/var`), así que la carpeta por defecto ya sobrevive.
+- **Binario nativo y Ubuntu Server:** los scripts la apuntan a `data/backups/`, fuera de `app/`, que es lo
+  que se sustituye al actualizar.
+- **Otros despliegues:** define `APP_BACKUP_DIR` con una ruta fuera del código (otro disco, un recurso
+  montado, si quieres).
+
+Las copias automáticas las hace el *worker* de Messenger con su planificador
+(`messenger:consume async scheduler_default`): si no está en marcha, no se hacen. **Administración →
+Estado del sistema** lo comprueba con una señal de vida que el *worker* escribe cada 5 minutos en
+`var/state/`.
 
 ### Copia directa de los ficheros o de la base de datos
 

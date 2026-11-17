@@ -6,6 +6,9 @@ when@test:
         # En tests se desactiva el padding anti-timing del reset de contraseña
         # para no añadir ~900 ms a cada POST a /contrasena/recuperar.
         app.password_reset.request_min_duration_us: 0
+        # Copias y estado del sistema en la caché del kernel de test, para no tocar var/ ni compartirlos entre ejecuciones.
+        app.backup_dir: '%kernel.cache_dir%/backups'
+        app.state_dir: '%kernel.cache_dir%/state'
 
     services:
         # En test no hay hub Mercure: el notificador publica en un doble en memoria
@@ -23,3 +26,10 @@ when@test:
         App\Service\StayRealtimeNotifier:
             arguments:
                 $hub: '@App\Tests\Mercure\CollectingHub'
+
+        # La comprobación de Mercure de Estado del sistema también publica en el doble en memoria.
+        App\Service\MercureStatus:
+            public: true
+            arguments:
+                $hub: '@App\Tests\Mercure\CollectingHub'
+                $url: '%env(default::MERCURE_URL)%'

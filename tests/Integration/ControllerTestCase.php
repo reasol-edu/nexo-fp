@@ -65,6 +65,11 @@ abstract class ControllerTestCase extends WebTestCase
             ['attention.urgent_days',                 SettingType::Integer, '7',    true,  true,  false, 1,    60],
             ['attention.soon_days',                   SettingType::Integer, '21',   true,  true,  false, 2,    180],
             ['maintenance.enabled',                   SettingType::Boolean, 'false', true, false, false, null, null],
+            ['backup.auto_enabled',                   SettingType::Boolean, 'false', true, false, false, null, null],
+            ['backup.auto_keep_daily',                SettingType::Integer, '7',    true,  false, false, 1,    60],
+            ['backup.auto_keep_weekly',               SettingType::Integer, '4',    true,  false, false, 0,    52],
+            ['backup.auto_keep_monthly',              SettingType::Integer, '3',    true,  false, false, 0,    36],
+            ['backup.auto_max_size_mb',               SettingType::Integer, '0',    true,  false, false, 0,    1048576],
         ];
 
         foreach ($defs as [$key, $type, $default, $global, $centre, $teacher, $min, $max]) {

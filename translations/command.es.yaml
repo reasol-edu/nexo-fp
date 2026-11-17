@@ -29,7 +29,7 @@ setup.skipped: 'La base de datos ya contiene datos. Se omite la inicialización.
 setup.success: 'Aplicación inicializada: usuario "admin" y centro "IES Test" (23999999, Linares) creados.'
 
 backup.description: 'Crea una copia de seguridad completa de la base de datos en un único fichero ZIP'
-backup.argument.destination: 'Carpeta de destino o ruta de un fichero .zip (por defecto: var/backups)'
+backup.argument.destination: 'Carpeta de destino o ruta de un fichero .zip (por defecto: la carpeta de copias, APP_BACKUP_DIR, que es var/backups)'
 backup.option.password: 'Cifra la copia con esta contraseña (AES-256). Usa la opción sin valor para que se pida por consola.'
 backup.ask.password: 'Contraseña para cifrar la copia'
 backup.ask.password_confirm: 'Repite la contraseña'

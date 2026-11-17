@@ -1,0 +1,50 @@
+{# backup: AutomaticBackup::status(), full: bool — la antigüedad de la copia más reciente (con aviso si toca hacer otra) y el estado de las copias automáticas. #}
+{% set last = backup.last_backup_at %}
+{% set run = backup.last_run %}
+<div class="space-y-1.5 text-sm">
+    {% if backup.stale %}
+        <p class="flex items-start gap-1.5 font-medium text-amber-800" role="status">
+            {{ ux_icon('heroicons:exclamation-triangle', {class: 'mt-0.5 h-4 w-4 shrink-0 text-amber-600'}) }}
+            <span>
+                {% if last is null %}
+                    {{ 'system.backup_status.none'|trans({}, 'admin') }}
+                {% else %}
+                    {{ 'system.backup_status.stale'|trans({'%days%': ((date().timestamp - last) / 86400)|round(0, 'floor'), '%date%': last|date('d/m/Y H:i')}, 'admin') }}
+                {% endif %}
+            </span>
+        </p>
+    {% else %}
+        <p class="flex items-start gap-1.5 text-gray-600">
+            {{ ux_icon('heroicons:check-circle', {class: 'mt-0.5 h-4 w-4 shrink-0 text-emerald-600'}) }}
+            <span>{{ 'system.backup_status.last'|trans({'%date%': last|date('d/m/Y H:i')}, 'admin') }}</span>
+        </p>
+    {% endif %}
+
+    {% if full %}
+        <p class="flex items-start gap-1.5 text-gray-600">
+            {{ ux_icon('heroicons:clock', {class: 'mt-0.5 h-4 w-4 shrink-0 text-gray-400'}) }}
+            <span>
+                {% if backup.enabled and backup.max_size_mb > 0 %}
+                    {{ 'system.backup_status.auto_on_size'|trans({'%daily%': backup.tiers.daily, '%weekly%': backup.tiers.weekly, '%monthly%': backup.tiers.monthly, '%size%': backup.max_size_mb|number_format(0, ',', '.')}, 'admin') }}
+                {% elseif backup.enabled %}
+                    {{ 'system.backup_status.auto_on'|trans({'%daily%': backup.tiers.daily, '%weekly%': backup.tiers.weekly, '%monthly%': backup.tiers.monthly}, 'admin') }}
+                {% else %}
+                    {{ 'system.backup_status.auto_off'|trans({}, 'admin') }}
+                {% endif %}
+                <a href="{{ path('app_admin_settings') }}" class="font-medium text-plum-700 underline hover:text-plum-900">{{ 'system.backup_status.settings'|trans({}, 'admin') }}</a>
+            </span>
+        </p>
+        {% if backup.enabled and run %}
+            <p class="flex items-start gap-1.5 {{ run.ok ? 'text-gray-600' : 'font-medium text-red-700' }}">
+                {{ ux_icon(run.ok ? 'heroicons:check' : 'heroicons:x-circle', {class: 'mt-0.5 h-4 w-4 shrink-0 ' ~ (run.ok ? 'text-emerald-600' : 'text-red-600')}) }}
+                <span>
+                    {% if run.ok %}
+                        {{ 'system.backup_status.run_ok'|trans({'%date%': run.at|date('d/m/Y H:i'), '%file%': run.file}, 'admin') }}
+                    {% else %}
+                        {{ 'system.backup_status.run_failed'|trans({'%date%': run.at|date('d/m/Y H:i'), '%reason%': run.error}, 'admin') }}
+                    {% endif %}
+                </span>
+            </p>
+        {% endif %}
+    {% endif %}
+</div>

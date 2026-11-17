@@ -23,6 +23,17 @@ settings.key.page_size.description: 'Número de elementos que se muestran en los
 settings.key.maintenance_enabled.label: 'Modo mantenimiento'
 settings.key.maintenance_enabled.description: 'Con el modo mantenimiento activado, solo los administradores globales pueden usar la aplicación: el resto del profesorado, tenga o no la sesión iniciada, ve una página de mantenimiento. Los avisos por correo y las demás tareas automáticas siguen funcionando.'
 
+settings.key.backup_auto_enabled.label: 'Copias automáticas'
+settings.key.backup_auto_enabled.description: 'Si la aplicación guarda una copia de seguridad cada noche (02:30) en el servidor. Se guarda siempre una copia al día; con el tiempo se van borrando las antiguas según lo que indiques abajo, dejando una por semana y una por mes, para poder volver atrás si un problema se descubre tarde. Las copias que guardas a mano nunca se borran. Cada copia ocupa lo que la base de datos y se guarda sin cifrar en el mismo disco: no sustituye a una copia fuera del servidor. Necesita el proceso de segundo plano (worker) en marcha.'
+settings.key.backup_auto_keep_daily.label: 'Copias diarias que se conservan'
+settings.key.backup_auto_keep_daily.description: 'De cada uno de los últimos días con copia automática se conserva la más reciente. 7 por defecto.'
+settings.key.backup_auto_keep_weekly.label: 'Copias semanales que se conservan'
+settings.key.backup_auto_keep_weekly.description: 'De cada una de las últimas semanas con copia automática se conserva la más reciente, aunque ya haya pasado de los días diarios. 0 = ninguna. 4 por defecto.'
+settings.key.backup_auto_keep_monthly.label: 'Copias mensuales que se conservan'
+settings.key.backup_auto_keep_monthly.description: 'De cada uno de los últimos meses con copia automática se conserva la más reciente. 0 = ninguna. 3 por defecto.'
+settings.key.backup_auto_max_size_mb.label: 'Espacio máximo de las copias automáticas (MB)'
+settings.key.backup_auto_max_size_mb.description: 'Espacio que pueden ocupar, entre todas, las copias automáticas. Si se supera, se borran las más antiguas hasta que quepan; la más reciente se conserva siempre, aunque ella sola ocupe más. 0 = sin límite de espacio (solo cuentan las copias que se conservan).'
+
 settings.key.email_notifications.label: 'Notificaciones por email'
 settings.key.email_notifications.description: 'Activa o desactiva todos los correos automáticos de la aplicación.'
 

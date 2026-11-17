@@ -61,7 +61,7 @@ php bin/console app:backup [carpeta-o-fichero.zip] [--password[=CONTRASEÑA]]
 
 | Argumento / opción | Descripción | Valor por defecto |
 |--------------------|-------------|-------------------|
-| `carpeta-o-fichero.zip` | Carpeta de destino (el fichero se nombra con la fecha y la hora) o ruta completa de un `.zip` | `var/backups/` |
+| `carpeta-o-fichero.zip` | Carpeta de destino (el fichero se nombra con la fecha y la hora) o ruta completa de un `.zip` | La carpeta de copias (`var/backups/`, o `APP_BACKUP_DIR`) |
 | `--password` | Cifra la copia con AES-256. Sin valor, la contraseña se pide por consola y se confirma | Sin cifrar |
 
 ## app:restore

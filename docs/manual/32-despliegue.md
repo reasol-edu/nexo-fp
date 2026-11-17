@@ -226,6 +226,7 @@ de lanzar el script (tanto en Linux/macOS como en Windows); en Docker se definen
 | `MERCURE_PUBLIC_URL` | URL pública (navegador→hub), relativa al mismo origen | `/.well-known/mercure` |
 | `LOAD_FIXTURES` | Cargar datos de demostración al arrancar (⚠️ borra datos existentes) | `false` |
 | `APP_TIMEZONE` | Zona horaria de la aplicación: la hora que ve cada persona y la de «hoy». PHP ignora la zona del servidor, así que se indica aquí. Las fechas con hora se guardan siempre en UTC | `Europe/Madrid` (Canarias: `Atlantic/Canary`) |
+| `APP_BACKUP_DIR` | Carpeta de las [copias de seguridad](24-administracion-global.md#copias-de-seguridad) guardadas en el servidor (manuales, automáticas y las de `app:backup` sin destino). Tiene que sobrevivir a las actualizaciones. En el binario nativo y en Ubuntu Server la fijan los scripts de arranque | `var/backups` (en el binario y en Ubuntu, `data/backups`) |
 | `APP_LOG` | Activar el [registro de actividad](24-administracion-global.md#registro-de-actividad). En el binario nativo es recomendable desactivarlo si no se necesita auditoría | `true` |
 | `APP_LOG_RETENTION_DAYS` | Días que se conservan las entradas del registro antes de la limpieza semanal automática | `90` |
 | `APP_PASSWORD_BREACH_CHECK` | Si es `true`, una contraseña nueva tampoco puede figurar en filtraciones de datos conocidas. Consulta el servicio externo «Have I Been Pwned» con k-anonimato (nunca se envía la contraseña) y se omite en pocos segundos si el servidor no tiene salida a Internet | `false` |

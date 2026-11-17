@@ -1,0 +1,123 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ 'system.title'|trans({}, 'admin') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-3xl mx-auto space-y-6">
+
+    <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+            {% include 'components/_breadcrumb_home.html.twig' %}
+            <a href="{{ path('app_admin') }}" class="hover:text-plum-600 transition-colors">{{ 'administration'|trans({}, 'navigation') }}</a>
+            {{ ux_icon('heroicons:chevron-right', {class: 'h-4 w-4'}) }}
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ 'system.title'|trans({}, 'admin') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ 'system.subtitle'|trans({}, 'admin') }}</p>
+    </div>
+
+    {# ── Copia de seguridad ── #}
+    <section class="rounded-2xl border border-gray-200 bg-white shadow-xs">
+        <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600">
+                {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-5 w-5'}) }}
+            </div>
+            <h2 class="text-base font-semibold text-gray-900">{{ 'system.backup.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-4 space-y-3 text-sm text-gray-600">
+            <p>{{ 'system.backup.description'|trans({}, 'admin') }}</p>
+            {% include 'admin/system/_backup_status.html.twig' with {backup: backup, full: true} only %}
+            <p class="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-amber-800">
+                {{ ux_icon('heroicons:exclamation-triangle', {class: 'h-4 w-4 inline -mt-0.5 mr-1'}) }}{{ 'system.backup.warning'|trans({}, 'admin') }}
+            </p>
+        </div>
+
+        <form method="post" action="{{ path('app_admin_system_backup') }}" class="px-6 pb-4 text-sm">
+            <input type="hidden" name="_token" value="{{ csrf_token('system_backup') }}">
+            <label for="backup-password" class="block text-sm font-medium text-gray-700">{{ 'system.backup.password'|trans({}, 'admin') }}</label>
+            <input id="backup-password" type="password" name="password" autocomplete="new-password" maxlength="200"
+                   class="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900
+                          focus:border-plum-500 focus:outline-none focus:ring-3 focus:ring-plum-500/20 transition-colors sm:max-w-sm">
+            <p class="mt-1 text-xs text-gray-500">{{ 'system.backup.password_help'|trans({}, 'admin') }}</p>
+
+            {# En móvil el botón ocupa todo el ancho; desde «sm», alineado a la derecha. #}
+            <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-end">
+                <button type="submit"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-plum-600 px-4 py-3 text-sm font-semibold text-white
+                               hover:bg-plum-700 transition-colors shadow-xs sm:w-auto sm:py-2.5">
+                    {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-4 w-4'}) }}
+                    {{ 'system.backup.download'|trans({}, 'admin') }}
+                </button>
+            </div>
+        </form>
+
+        <form method="post" action="{{ path('app_admin_system_backup_save') }}"
+              class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex flex-col gap-2 rounded-b-2xl sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <input type="hidden" name="_token" value="{{ csrf_token('system_backup_save') }}">
+            <p class="text-xs text-gray-500">{{ 'system.backup.save_help'|trans({}, 'admin') }}</p>
+            <button type="submit"
+                    class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700
+                           hover:bg-gray-50 transition-colors shadow-xs sm:w-auto sm:py-2.5">
+                {{ ux_icon('heroicons:archive-box-arrow-down', {class: 'h-4 w-4'}) }}
+                {{ 'system.backup.save'|trans({}, 'admin') }}
+            </button>
+        </form>
+    </section>
+
+    {# ── Copias guardadas en el servidor ── #}
+    <section class="rounded-2xl border border-gray-200 bg-white shadow-xs">
+        <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-600">
+                {{ ux_icon('heroicons:server-stack', {class: 'h-5 w-5'}) }}
+            </div>
+            <h2 class="text-base font-semibold text-gray-900">{{ 'system.copies.title'|trans({}, 'admin') }}</h2>
+        </div>
+        <div class="px-6 py-4 space-y-3 text-sm text-gray-600">
+            <p>{{ 'system.copies.description'|trans({'%dir%': backup_dir}, 'admin') }}</p>
+        </div>
+
+        {% if copies is empty %}
+            <p class="px-6 pb-5 text-sm text-gray-400">{{ 'system.copies.empty'|trans({}, 'admin') }}</p>
+        {% else %}
+            <ul class="divide-y divide-gray-100 border-t border-gray-100">
+                {% for copy in copies %}
+                    <li class="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4">
+                        {# En pantallas estrechas el nombre ocupa toda la fila (y se parte si hace falta) y los botones van debajo; desde «sm», todo en una línea. #}
+                        <div class="min-w-0 basis-full sm:flex-1 sm:basis-0">
+                            <p class="break-words text-sm font-medium text-gray-900 sm:truncate" title="{{ copy.name }}">{{ copy.name }}</p>
+                            <p class="text-xs text-gray-500">
+                                {{ copy.modifiedAt|date('d/m/Y H:i') }} · {{ copy.size|file_size }}
+                                {% if copy.manifest %}· {{ app_name }} {{ copy.manifest.appVersion }}{% endif %}
+                                {% if copy.automatic %}· {{ 'system.copies.automatic'|trans({}, 'admin') }}{% endif %}
+                            </p>
+                            {% if copy.manifest is null %}
+                                <p class="mt-1 text-xs text-amber-700">{{ 'system.copies.unreadable'|trans({}, 'admin') }}</p>
+                            {% endif %}
+                        </div>
+                        {# Botones: en móvil, en columnas del mismo ancho y de altura táctil (~40 px); desde «sm», compactos y en línea. #}
+                        <div class="grid w-full grid-flow-col auto-cols-fr gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
+                            <form method="post" action="{{ path('app_admin_system_backup_download_stored', {name: copy.name}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('system_backup_download_' ~ copy.name) }}">
+                                <button type="submit"
+                                        class="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 px-2.5 py-3 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors sm:w-auto sm:py-1.5">
+                                    {{ ux_icon('heroicons:arrow-down-tray', {class: 'h-3.5 w-3.5'}) }}{{ 'system.copies.download'|trans({}, 'admin') }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('app_admin_system_backup_delete', {name: copy.name}) }}"
+                                  class="js-confirm-form" data-confirm="{{ 'system.copies.delete_confirm'|trans({'%name%': copy.name}, 'admin')|e('html_attr') }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('system_backup_delete_' ~ copy.name) }}">
+                                <button type="submit"
+                                        class="js-confirm-trigger inline-flex w-full items-center justify-center gap-1 rounded-lg border border-red-200 px-2.5 py-3 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors sm:w-auto sm:py-1.5">
+                                    {{ ux_icon('heroicons:trash', {class: 'h-3.5 w-3.5'}) }}{{ 'system.copies.delete'|trans({}, 'admin') }}
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 rounded-b-2xl">{{ 'system.restore.console_hint'|trans({}, 'admin') }}</div>
+    </section>
+
+</div>
+{% endblock %}
