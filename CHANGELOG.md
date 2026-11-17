@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.24.0] - 2026-11-17
+
+### Added
+
+- Copias de seguridad desde Administración (`/admin/sistema`), solo para administradores globales: descargar una copia nueva (opcionalmente cifrada con contraseña), guardarla en la carpeta de copias del servidor y descargar o eliminar las que ya están allí, con las que dejan `app:backup` o SSH. Cada descarga queda en el registro de actividad. Restaurar sigue haciéndose con `app:restore`.
+- Copias automáticas: con el ajuste global `backup.auto_enabled` cada noche (02:30) se guarda una copia y se poda según cuántas diarias, semanales y mensuales se quieran conservar (`backup.auto_keep_daily`, `backup.auto_keep_weekly` y `backup.auto_keep_monthly`) y un espacio máximo opcional (`backup.auto_max_size_mb`). Las copias hechas a mano nunca se borran. La pantalla y la tarjeta del panel avisan si la última copia tiene más de 7 días.
+- Estado del sistema (`/admin/estado`): señal de vida del proceso de segundo plano (worker), mensajes fallidos con reintento y descarte, correo de prueba a la dirección del propio administrador, comprobación de Mercure (publica un aviso de prueba en el hub y dice si lo acepta o por qué no) y espacio ocupado por la base de datos y las copias.
+- Variable `APP_BACKUP_DIR` para la carpeta de copias. En el binario nativo y en Ubuntu Server apunta por defecto a `data/backups`, fuera de `app/`, para que las copias sobrevivan a las actualizaciones.
+
+### Changed
+
+- `app:backup` sin destino deja la copia en la carpeta de copias (`APP_BACKUP_DIR`), que por defecto sigue siendo `var/backups`.
+
 ## [2.23.1] - 2026-11-13
 
 ### Fixed

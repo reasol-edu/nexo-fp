@@ -9,8 +9,8 @@
 parameters:
     # Versión de la aplicación
     app.name:                   "Nexo FP"
-    app.version:                "2.23.1"
-    app.pub_date:               "2026-11-13"
+    app.version:                "2.24.0"
+    app.pub_date:               "2026-11-17"
     # Zona horaria de la aplicación (la que ven las personas y la de «hoy»). Las fechas con hora siguen guardándose
     # en UTC; ver App\Doctrine\Type\UtcDateTimeImmutableType. Se cambia con APP_TIMEZONE. El valor por defecto cubre
     # también las instalaciones existentes, cuyo app/.env no la define.
@@ -32,6 +32,15 @@ parameters:
     # Una variable definida en .env, .env.local o en el entorno tiene siempre prioridad.
     env(APP_PASSWORD_BREACH_CHECK): 'false'
     env(APP_EXTERNAL_URL_PROXY): ''
+    # Carpeta de las copias de seguridad guardadas en el servidor. Debe sobrevivir a las actualizaciones: en Docker var/ es
+    # un volumen; en el binario nativo y en Ubuntu Server los scripts la apuntan a data/backups con APP_BACKUP_DIR.
+    env(APP_BACKUP_DIR): "%kernel.project_dir%/var/backups"
+    app.backup_dir:             "%env(APP_BACKUP_DIR)%"
+    # Pequeños datos del sistema en marcha (última copia automática, señal de vida del worker): ficheros compartidos por la
+    # web, la consola y el worker (ver App\Service\SystemState).
+    app.state_dir:              "%kernel.project_dir%/var/state"
+    # Días sin ninguna copia guardada a partir de los cuales Administración avisa de que toca hacer una.
+    app.backup_stale_days:      7
 
 services:
     # default configuration for services in *this* file
